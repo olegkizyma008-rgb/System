@@ -9,6 +9,20 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIGS_DIR="$SCRIPT_DIR/configs"
 ORIGINAL_CONFIG="$CONFIGS_DIR/original"
 
+# ПОПЕРЕДНЬО: Генерація унікального hostname з реальною назвою (без підозрілих цифр)
+# Формат: <CommonName>-<RandomName> (наприклад: Alex-Studio, James-Desktop)
+# Список реальних імен:
+REAL_NAMES=("Alex" "James" "Michael" "David" "Robert" "John" "Richard" "Charles" "Daniel" "Matthew" "Anthony" "Mark" "Donald" "Steven" "Paul" "Andrew" "Joshua" "Kenneth" "Kevin" "Brian" "George" "Edward" "Ronald" "Timothy" "Jason" "Jeffrey" "Ryan" "Jacob" "Gary" "Nicholas" "Eric" "Jonathan" "Stephen" "Larry" "Justin" "Scott" "Brandon" "Benjamin" "Samuel" "Frank" "Gregory" "Alexander" "Patrick" "Dennis" "Jerry" "Tyler" "Aaron" "Jose" "Adam" "Henry")
+PLACE_NAMES=("Studio" "Office" "Desktop" "Workspace" "Workstation" "Lab" "Server" "Machine" "System" "Device" "Node" "Box" "Computer" "Platform" "Station" "Terminal" "Host" "Client" "Instance" "Pod")
+
+# Вибір випадкових імені та місця
+RANDOM_NAME=${REAL_NAMES[$((RANDOM % ${#REAL_NAMES[@]}))]}
+RANDOM_PLACE=${PLACE_NAMES[$((RANDOM % ${#PLACE_NAMES[@]}))]}
+NEW_HOSTNAME="${RANDOM_NAME}-${RANDOM_PLACE}"
+
+# Отримання оригінального hostname
+ORIGINAL_HOSTNAME=$(scutil --get HostName 2>/dev/null || echo "DEVs-Mac-Studio")
+
 # Створити директорії якщо не існують
 mkdir -p "$CONFIGS_DIR"
 
@@ -69,9 +83,8 @@ if [ ! -d "$ORIGINAL_CONFIG" ]; then
     save_as_original
 fi
 
-# 1. ОСНОВНІ ПАПКИ WINDSURF
+# 1. ОСНОВНІ ПАПКИ WINDSURF (окрім Application Support - його очистимо пізніше)
 echo "\n[1/10] Видалення основних папок..."
-safe_remove ~/Library/Application\ Support/Windsurf
 safe_remove ~/Library/Application\ Support/windsurf
 safe_remove ~/Library/Preferences/Windsurf
 safe_remove ~/Library/Logs/Windsurf
@@ -80,6 +93,8 @@ safe_remove ~/.windsurf-server
 safe_remove ~/.config/Windsurf
 safe_remove ~/Library/Saved\ Application\ State/Windsurf.savedState
 safe_remove ~/Library/Saved\ Application\ State/com.windsurf.savedState
+
+echo "ℹ️  Application Support/Windsurf буде очищено пізніше (після резервування)"
 
 # 2. ВИДАЛЕННЯ ДОДАТКУ
 echo "\n[2/10] Видалення додатку Windsurf..."
@@ -139,6 +154,18 @@ for service in "Windsurf" "windsurf" "com.windsurf" "Windsurf Editor" "Codeium W
 done
 
 echo "✅ Keychain очищено"
+
+# ДОДАТКОВО: Очищення всіх баз даних та сховищ ДО резервування
+echo "\n🗑️  Очищення баз даних та локальних сховищ (перед резервуванням)..."
+safe_remove ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb
+safe_remove ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb.backup
+safe_remove ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb-shm
+safe_remove ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb-wal
+safe_remove ~/Library/Application\ Support/Windsurf/Local\ Storage
+safe_remove ~/Library/Application\ Support/Windsurf/Session\ Storage
+safe_remove ~/Library/Application\ Support/Windsurf/IndexedDB
+safe_remove ~/Library/Application\ Support/Windsurf/databases
+echo "✅ Бази даних очищено"
 
 # 8. РЕЗЕРВУВАННЯ ТА ПІДМІНА MACHINE-ID ТА DEVICE-ID
 echo "\n[8/10] Резервування та підміна machine-id та device-id файлів..."
@@ -215,7 +242,7 @@ echo "📁 Бекапи збережено в: $BACKUP_DIR"
 
 # Зберегти НОВУ конфігурацію в configs/
 echo "\n💾 Збереження нової конфігурації..."
-NEW_CONFIG_NAME="profile_$(date +%Y%m%d_%H%M%S)"
+NEW_CONFIG_NAME="$NEW_HOSTNAME"
 NEW_CONFIG_PATH="$CONFIGS_DIR/$NEW_CONFIG_NAME"
 mkdir -p "$NEW_CONFIG_PATH/User/globalStorage"
 
@@ -258,16 +285,32 @@ safe_remove ~/Library/Application\ Support/Windsurf/User
 # Видалення продуктових ідентифікаторів
 safe_remove ~/Library/Application\ Support/Windsurf/product.json
 
+# КРИТИЧНО: Видалення всіх файлів де може зберігатися API ключ Codeium
+echo "🔐 Очищення всіх можливих місць зберігання API ключів..."
+safe_remove ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb
+safe_remove ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb.backup
+safe_remove ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb-shm
+safe_remove ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb-wal
+safe_remove ~/Library/Application\ Support/Windsurf/User/workspaceStorage
+safe_remove ~/Library/Application\ Support/Windsurf/User/globalStorage
+safe_remove ~/Library/Application\ Support/Windsurf/Local\ Storage
+safe_remove ~/Library/Application\ Support/Windsurf/IndexedDB
+safe_remove ~/Library/Application\ Support/Windsurf/Session\ Storage
+
+# Видалення всіх можливих Codeium токенів з Keychain
+echo "🔑 Видалення Codeium токенів з Keychain..."
+for service in "Codeium" "codeium" "codeium.com" "api.codeium.com" "Codeium Windsurf" "codeium-windsurf"; do
+    security delete-generic-password -s "$service" 2>/dev/null
+    security delete-internet-password -s "$service" 2>/dev/null
+    security delete-generic-password -l "$service" 2>/dev/null
+done
+
+echo "✅ API ключі та токени очищено"
+
 # 10. ЗМІНА СИСТЕМНИХ ІДЕНТИФІКАТОРІВ
 echo "\n[10/10] Зміна системних ідентифікаторів..."
 
-# Генерація унікального hostname (випадковий)
-# Формат: Mac-<8 випадкових символів> (наприклад: Mac-A7F2E4B9)
-RANDOM_SUFFIX=$(openssl rand -hex 4 | tr '[:lower:]' '[:upper:]')
-NEW_HOSTNAME="Mac-${RANDOM_SUFFIX}"
-ORIGINAL_HOSTNAME=$(scutil --get HostName 2>/dev/null || echo "DEVs-Mac-Studio")
-
-echo "🔄 Зміна hostname на $NEW_HOSTNAME на 5 годин..."
+echo "🔄 Зміна hostname з $ORIGINAL_HOSTNAME на $NEW_HOSTNAME на 5 годин..."
 echo "📝 Оригінальний hostname: $ORIGINAL_HOSTNAME"
 echo "🎲 Новий унікальний hostname: $NEW_HOSTNAME"
 
@@ -278,20 +321,28 @@ sudo scutil --set ComputerName "$NEW_HOSTNAME"
 # Очищення DNS кешу
 echo "🔄 Очищення DNS кешу..."
 sudo dscacheutil -flushcache
-sudo killall -HUP mDNSResponder
+sudo killall -HUP mDNSResponder 2>/dev/null
 
 # Повернення hostname у фоні через 5 годин (18000 секунд)
-(
+# Запуск у фоні з перенаправленням логів
+{
     sleep 18000
     echo "\n⏰ 5 годин минуло. Відновлення оригінальних налаштувань..."
     
+    # Отримання оригінального hostname
+    if [ -f "$ORIGINAL_CONFIG/hostname.txt" ]; then
+        SAVED_HOSTNAME=$(cat "$ORIGINAL_CONFIG/hostname.txt")
+    else
+        SAVED_HOSTNAME="$ORIGINAL_HOSTNAME"
+    fi
+    
     # Відновлення hostname
-    echo "🔄 Повертаю оригінальний hostname: $ORIGINAL_HOSTNAME"
-    sudo scutil --set HostName "$ORIGINAL_HOSTNAME"
-    sudo scutil --set LocalHostName "$ORIGINAL_HOSTNAME"
-    sudo scutil --set ComputerName "$ORIGINAL_HOSTNAME"
+    echo "🔄 Повертаю оригінальний hostname: $SAVED_HOSTNAME"
+    sudo scutil --set HostName "$SAVED_HOSTNAME"
+    sudo scutil --set LocalHostName "$SAVED_HOSTNAME"
+    sudo scutil --set ComputerName "$SAVED_HOSTNAME"
     sudo dscacheutil -flushcache
-    sudo killall -HUP mDNSResponder
+    sudo killall -HUP mDNSResponder 2>/dev/null
     
     # Відновлення ОРИГІНАЛЬНОЇ конфігурації з configs/original
     if [ -d "$ORIGINAL_CONFIG" ]; then
@@ -321,17 +372,6 @@ sudo killall -HUP mDNSResponder
             echo "✅ Global Storage відновлено з оригіналу"
         fi
         
-        # Відновлення hostname з оригіналу
-        if [ -f "$ORIGINAL_CONFIG/hostname.txt" ]; then
-            SAVED_HOSTNAME=$(cat "$ORIGINAL_CONFIG/hostname.txt")
-            echo "🔄 Відновлення оригінального hostname: $SAVED_HOSTNAME"
-            sudo scutil --set HostName "$SAVED_HOSTNAME"
-            sudo scutil --set LocalHostName "$SAVED_HOSTNAME"
-            sudo scutil --set ComputerName "$SAVED_HOSTNAME"
-            sudo dscacheutil -flushcache
-            sudo killall -HUP mDNSResponder
-        fi
-        
         echo "✅ Оригінальна конфігурація повністю відновлена!"
     else
         echo "⚠️  Оригінальна конфігурація не знайдена в $ORIGINAL_CONFIG"
@@ -339,43 +379,20 @@ sudo killall -HUP mDNSResponder
     
     # Відновлення з тимчасового бекапу (для сумісності)
     if [ -d "$BACKUP_DIR" ]; then
-        echo "🔄 Відновлення з тимчасового бекапу (legacy)..."
-        
-        # Відновлення machineid
-        if [ -f "$BACKUP_DIR/machineid.bak" ]; then
-            MACHINEID_PATH=~/Library/Application\ Support/Windsurf/machineid
-            mkdir -p "$(dirname "$MACHINEID_PATH")"
-            cp "$BACKUP_DIR/machineid.bak" "$MACHINEID_PATH"
-            echo "✅ Machine-ID відновлено"
-        fi
-        
-        # Відновлення storage.json файлів
-        find "$BACKUP_DIR" -name "*.json.bak" | while read -r backup_file; do
-            # Визначення оригінального шляху
-            if [[ "$backup_file" == *"User_globalStorage"* ]]; then
-                RESTORE_PATH=~/Library/Application\ Support/Windsurf/User/globalStorage/storage.json
-            else
-                RESTORE_PATH=~/Library/Application\ Support/Windsurf/storage.json
-            fi
-            
-            mkdir -p "$(dirname "$RESTORE_PATH")"
-            cp "$backup_file" "$RESTORE_PATH"
-            echo "✅ Storage відновлено: $RESTORE_PATH"
-        done
-        
-        echo "🧹 Видалення директорії бекапів..."
+        echo "🔄 Видалення тимчасового бекапу..."
         rm -rf "$BACKUP_DIR"
-        echo "✅ Всі оригінальні налаштування відновлено!"
-    else
-        echo "⚠️  Директорія бекапів не знайдена: $BACKUP_DIR"
+        echo "✅ Бекап видалено"
     fi
     
     echo "\n🎉 Відновлення завершено! Система повернута до оригінального стану."
-) &
+} > /tmp/windsurf_restore_$$.log 2>&1 &
 
 RESTORE_PID=$!
-echo "✅ Hostname змінено. Процес відновлення (PID: $RESTORE_PID) запущено у фоні"
-echo "📁 Бекапи буде видалено після відновлення через 5 годин"
+echo ""
+echo "✅ Hostname змінено на: $NEW_HOSTNAME"
+echo "📋 Процес автовідновлення запущено (PID: $RESTORE_PID)"
+echo "⏰ Оригінальні налаштування будуть відновлено за 5 годин"
+echo ""
 
 # ФІНАЛЬНЕ ОЧИЩЕННЯ
 echo "\n🧹 Фінальне очищення залишкових файлів..."
@@ -385,6 +402,12 @@ find ~/.config -iname "*windsurf*" -exec rm -rf {} + 2>/dev/null
 # Очищення системних логів
 sudo rm -rf /var/log/*windsurf* 2>/dev/null
 sudo rm -rf /Library/Logs/*windsurf* 2>/dev/null
+
+# КРИТИЧНО: Повне видалення Application Support/Windsurf (після збереження всіх бекапів)
+echo "\n🔥 КРИТИЧНЕ ОЧИЩЕННЯ: Видалення всієї папки Application Support/Windsurf..."
+echo "⚠️  Це видалить ВСІ дані включно з базами даних де зберігаються API ключі!"
+safe_remove ~/Library/Application\ Support/Windsurf
+echo "✅ Application Support/Windsurf повністю видалено"
 
 echo "\n=================================================="
 echo "✅ ОЧИЩЕННЯ ЗАВЕРШЕНО УСПІШНО!"

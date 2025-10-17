@@ -37,8 +37,14 @@ brew install --cask windsurf
 # КОРИСНІ КОМАНДИ
 # ============================================
 
+# Перевірити всі можливі сліди API ключів
+./check_api_traces.sh
+
 # Знайти всі бекапи
 ls -lhd /tmp/windsurf_backup_*
+
+# Перевірити вміст бази даних state.vscdb (де зберігаються API ключі)
+# sqlite3 ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb "SELECT * FROM ItemTable WHERE key LIKE '%codeium%' OR key LIKE '%api%';"
 
 # Перевірити процес автовідновлення
 ps aux | grep "sleep 18000" | grep -v grep
