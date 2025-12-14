@@ -13,6 +13,7 @@ from system_ai.tools.executor import run_shell, open_app, run_applescript
 from system_ai.tools.screenshot import take_screenshot
 from system_ai.tools.filesystem import read_file, write_file, list_files
 from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
+from core.verification import AdaptiveVerifier
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -20,23 +21,25 @@ class TrinityState(TypedDict):
     current_agent: str
     task_status: str
     final_response: Optional[str]
+    plan: Optional[List[Dict[str, Any]]] # List of steps including verification checkpoints
 
 class TrinityRuntime:
     def __init__(self, verbose: bool = True):
         self.llm = CopilotLLM()
         self.verbose = verbose
+        self.verifier = AdaptiveVerifier(self.llm)
         self.workflow = self._build_graph()
 
     def _build_graph(self):
-        workflow = StateGraph(TrinityState)
+        builder = StateGraph(TrinityState)
 
-        workflow.add_node("atlas", self._atlas_node)
-        workflow.add_node("tetyana", self._tetyana_node)
-        workflow.add_node("grisha", self._grisha_node)
+        builder.add_node("atlas", self._atlas_node)
+        builder.add_node("tetyana", self._tetyana_node)
+        builder.add_node("grisha", self._grisha_node)
 
-        workflow.set_entry_point("atlas")
+        builder.set_entry_point("atlas")
         
-        workflow.add_conditional_edges(
+        builder.add_conditional_edges(
             "atlas", 
             self._router, 
             {"tetyana": "tetyana", "grisha": "grisha", "end": END}
@@ -59,8 +62,40 @@ class TrinityRuntime:
         context = state.get("messages", [])
         last_msg = context[-1].content if context else "Start"
         
-        # Invoke Atlas Persona
-        prompt = get_atlas_prompt(last_msg)
+        # 1. Check if we have a plan. If not, generate one.
+        plan = state.get("plan")
+        if not plan:
+            # TODO: Use LLM to generate structured plan. 
+            # For now, we wrap the user request as a single execution step.
+            raw_plan = [{
+                "id": 1, 
+                "type": "execute", 
+                "description": last_msg,
+                "agent": "tetyana"
+            }]
+            
+            # 2. Optimize Plan (Adaptive Verification)
+            # This inserts Grisha 'verify' steps at critical points
+            plan = self.verifier.optimize_plan(raw_plan)
+            
+            if self.verbose:
+                print(f"🌐 [Atlas] Plan Optimized: {len(plan)} steps.")
+                for step in plan:
+                    print(f"   - {step['type'].upper()}: {step['description']}")
+
+        # 3. Dispatch Logic (Simple First-Step approach for now)
+        # We look at the first incomplete step. 
+        # Since we don't have a 'completed' flag tracker in this simple dict yet,
+        # we assume for this iteration we just trigger the next agent based on the *first* step type.
+        
+        current_step = plan[0] if plan else None
+        
+        if not current_step:
+            return {"current_agent": "end", "messages": [AIMessage(content="No plan generated.")]}
+
+        # Invoke Atlas Persona to announce strategy
+        # (We keep this specifically to maintain the chat persona)
+        prompt = get_atlas_prompt(f"The plan is: {current_step['description']}. Announce it.")
         try:
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
@@ -68,14 +103,19 @@ class TrinityRuntime:
             content = f"Error invoking Atlas: {e}"
             return {"current_agent": "end", "messages": [AIMessage(content=content)]}
 
-        # Simple heuristic router based on content (Real reasoning would need structured output)
-        next_agent = "tetyana" if "tetyana" in content.lower() else "grisha" if "grisha" in content.lower() else "end"
-        
-        # Use a default next step if Atlas is vague
-        if next_agent == "end" and "plan" in content.lower():
+        # Router Logic based on Plan Step Type
+        step_type = current_step.get("type", "execute")
+        if step_type == "verify":
+            next_agent = "grisha"
+        else:
             next_agent = "tetyana"
-
-        return {"current_agent": next_agent, "messages": [AIMessage(content=content)]}
+            
+        # Update state with the plan
+        return {
+            "current_agent": next_agent, 
+            "messages": [AIMessage(content=content)],
+            "plan": plan
+        }
 
     def _tetyana_node(self, state: TrinityState):
         if self.verbose: print("💻 [Tetyana] Developing...")
