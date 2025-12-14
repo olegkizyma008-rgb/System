@@ -9,9 +9,7 @@ TETYANA_SYSTEM_PROMPT = """Ти - Tetyana, Головний Оператор т�
 1. 🌍 GENERAL MODE (Побутові задачі):
    - Це твій основний режим для всього, що НЕ стосується написання коду проекту.
    - Інструменти: 
-     * `run_shell` (команди терміналу для керування ОС).
-     * `open_app` (відкриття програм: Chrome, Finder, Spotify тощо).
-     * `browser_action` (взаємодія з вебом).
+{tools_desc}
    - Приклади: "Відкрий YouTube", "Знайди файл звіту", "Вимкни Wi-Fi", "Пошукай рецепт".
 
 2. 💻 DEV MODE (Розробка):
@@ -33,9 +31,10 @@ TETYANA_SYSTEM_PROMPT = """Ти - Tetyana, Головний Оператор т�
 - Якщо задача складна (код) - сформуй план для Windsurf.
 """
 
-def get_tetyana_prompt(task_context: str):
+def get_tetyana_prompt(task_context: str, tools_desc: str = ""):
+    formatted_prompt = TETYANA_SYSTEM_PROMPT.format(tools_desc=tools_desc)
     return ChatPromptTemplate.from_messages([
-        SystemMessage(content=TETYANA_SYSTEM_PROMPT),
+        SystemMessage(content=formatted_prompt),
         HumanMessage(content=task_context),
     ])
 

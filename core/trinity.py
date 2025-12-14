@@ -8,11 +8,7 @@ from core.agents.tetyana import get_tetyana_prompt
 from core.agents.grisha import get_grisha_prompt
 from providers.copilot import CopilotLLM
 
-# Import Tools
-from system_ai.tools.executor import run_shell, open_app, run_applescript
-from system_ai.tools.screenshot import take_screenshot
-from system_ai.tools.filesystem import read_file, write_file, list_files
-from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
+from core.mcp import MCPToolRegistry
 from core.verification import AdaptiveVerifier
 
 # Define the state of the Trinity system
@@ -27,6 +23,7 @@ class TrinityRuntime:
     def __init__(self, verbose: bool = True):
         self.llm = CopilotLLM()
         self.verbose = verbose
+        self.registry = MCPToolRegistry()
         self.verifier = AdaptiveVerifier(self.llm)
         self.workflow = self._build_graph()
 
@@ -122,7 +119,10 @@ class TrinityRuntime:
         context = state.get("messages", [])
         last_msg = context[-1].content
         
-        prompt = get_tetyana_prompt(last_msg)
+        
+        # Inject available tools into Tetyana's prompt
+        tools_list = self.registry.list_tools()
+        prompt = get_tetyana_prompt(last_msg, tools_desc=tools_list)
         try:
             response = self.llm.invoke(prompt.format_messages())
             # For now, we assume direct text or basic JSON. 
@@ -138,28 +138,10 @@ class TrinityRuntime:
                  for tool in tool_calls:
                      name = tool.get("name")
                      args = tool.get("args") or {}
-                     if name == "run_shell":
-                         res = run_shell(args.get("command"), allow=True)
-                         results.append(f"Result for {name}: {res}")
-                     elif name == "open_app":
-                         res = open_app(args.get("name"))
-                         results.append(f"Result for {name}: {res}")
-                     elif name == "read_file":
-                         res = read_file(args.get("path"))
-                         results.append(f"Result for {name}: {res}")
-                     elif name == "write_file":
-                         res = write_file(args.get("path"), args.get("content"), args.get("mode", "w"))
-                         results.append(f"Result for {name}: {res}")
-                     elif name == "list_files":
-                         res = list_files(args.get("path"))
-                         results.append(f"Result for {name}: {res}")
-                     elif name == "send_to_windsurf":
-                         res = send_to_windsurf(args.get("message"))
-                         results.append(f"Result for {name}: {res}")
-                     elif name == "open_file_in_windsurf":
-                         res = open_file_in_windsurf(args.get("path"), args.get("line", 0))
-                         results.append(f"Result for {name}: {res}")
-                     # Add other mappings
+                     
+                     # Execute via MCP Registry
+                     res = self.registry.execute(name, args)
+                     results.append(f"Result for {name}: {res}")
             
             # If we executed tools, append results to content
             if results:
