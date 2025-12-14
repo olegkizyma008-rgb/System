@@ -80,15 +80,15 @@
 
 Це "руки" Тетяни. Коли Тетяна вирішує писати код, вона активує цю підсистему.
 
-4.1 Архітектура Підсистеми (Nested Cascade)
-Тетяна керує ланцюжком: **Copilot (Brain) → Continue CLI (Driver) → Windsurf IDE (Execution)**.
-
-*   **Mode 1: Driver (Windsurf)**
-    *   Тетяна через Copilot формує інструкцію.
-    *   Continue CLI пересилає її в чат Windsurf (імітація користувача).
-    *   Windsurf пише код.
-*   **Mode 2: Fallback (Continue CLI Native)**
-    *   Якщо Windsurf не відповідає, Continue CLI бере керування на себе (читання, редагування файлів) за командою Тетяни.
+83: 4.1 Архітектура Підсистеми (Nested Cascade)
+84: Тетяна керує ланцюжком: **Copilot (Brain) → Continue CLI (Bridge) → Windsurf IDE (Primary)**.
+85: 
+86: System CLI (Continue) виконує подвійну роль:
+87: 
+88: *   **Роль 1: Посередник (Intermediary / Driver)**
+89:     *   У штатному режимі Continue CLI працює як "драйвер": він не пише код сам, а транслює команди Тетяни у GUI Windsurf.
+90: *   **Роль 2: Резервний Виконавець (Fallback Executor)**
+91:     *   Якщо Windsurf недоступний, Continue CLI бере керування на себе і редагує файли напряму.
 
 4.2 Провайдер (Provider Specs)
 *   **Провайдер:** Copilot.
