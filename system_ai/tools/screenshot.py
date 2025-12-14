@@ -25,7 +25,17 @@ def smart_capture(target_app: Optional[str] = None, output_path: Optional[str] =
         )
         if proc.returncode == 0 and os.path.exists(output_path):
             return {"status": "success", "path": output_path, "strategy": "fullscreen_fallback"}
-        return {"status": "error", "error": (proc.stderr or "Unknown error").strip()}
+        err = (proc.stderr or "Unknown error").strip()
+        lower = err.lower()
+        if "screen recording" in lower or "not permitted" in lower:
+            return {
+                "status": "error",
+                "error": err,
+                "error_type": "permission_required",
+                "permission": "screen_recording",
+                "settings_url": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+            }
+        return {"status": "error", "error": err}
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
@@ -41,6 +51,11 @@ def take_screenshot(app_name: Optional[str] = None) -> Dict[str, Any]:
                 "method": result.get("strategy", result.get("method")),
                 "app": result.get("app", app_name or "focused"),
             }
-        return {"tool": "take_screenshot", "status": "error", "error": result.get("error", "Unknown error")}
+        out: Dict[str, Any] = {"tool": "take_screenshot", "status": "error", "error": result.get("error", "Unknown error")}
+        if result.get("error_type") == "permission_required":
+            out["error_type"] = "permission_required"
+            out["permission"] = result.get("permission")
+            out["settings_url"] = result.get("settings_url")
+        return out
     except Exception as e:
         return {"tool": "take_screenshot", "status": "error", "error": str(e)}

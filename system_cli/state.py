@@ -42,6 +42,10 @@ class AppState:
     ui_unsafe_mode: bool = False
     ui_streaming: bool = True
     agent_processing: bool = False
+    agent_paused: bool = False
+    agent_pause_permission: Optional[str] = None
+    agent_pause_message: Optional[str] = None
+    agent_pause_pending_text: Optional[str] = None
 
 
 state = AppState()

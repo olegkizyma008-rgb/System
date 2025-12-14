@@ -110,6 +110,102 @@ agent_session = AgentSession()
 agent_chat_mode: bool = True
 
 
+def _is_complex_task(text: str) -> bool:
+    t = str(text or "").strip()
+    if not t:
+        return False
+    if t.startswith("/"):
+        return False
+    # Heuristics: long, multi-sentence, multi-line, or multi-step language.
+    if "\n" in t:
+        return True
+    if len(t) >= 240:
+        return True
+    if t.count(".") + t.count("!") + t.count("?") >= 3:
+        return True
+    lower = t.lower()
+    keywords = [
+        "потім",
+        "далі",
+        "крок",
+        "steps",
+        "step",
+        "і потім",
+        "спочатку",
+        "зроби",
+        "налаштуй",
+        "автоматиз",
+        "перевір",
+    ]
+    return sum(1 for k in keywords if k in lower) >= 2
+
+
+def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell: bool, allow_applescript: bool) -> None:
+    try:
+        from system_ai.autopilot.autopilot_agent import AutopilotAgent
+    except Exception as e:
+        log(f"Graph mode unavailable: {e}", "error")
+        return
+
+    try:
+        agent = AutopilotAgent(
+            allow_autopilot=bool(allow_autopilot),
+            allow_shell=bool(allow_shell),
+            allow_applescript=bool(allow_applescript),
+        )
+    except Exception as e:
+        log(f"Graph mode init error: {e}", "error")
+        return
+
+    log("[GRAPH] Auto-switch enabled for this request.", "info")
+    log(f"[GRAPH] shell={'ON' if allow_shell else 'OFF'} applescript={'ON' if allow_applescript else 'OFF'}", "info")
+
+    for event in agent.run_task(user_text, max_steps=30):
+        step = event.get("step")
+        plan = event.get("plan")
+        actions_results = event.get("actions_results") or []
+        thought = getattr(plan, "thought", "") if plan else ""
+        result_message = getattr(plan, "result_message", "") if plan else ""
+
+        log(f"[GRAPH] Step {step}: {thought}", "info")
+        if result_message:
+            log(f"[GRAPH] {result_message}", "action")
+
+        # Detect pause requests from the runtime (permission_required -> pause_info).
+        pause = None
+        if isinstance(plan, object) and hasattr(plan, "preflight"):
+            pass
+        for r in actions_results:
+            if isinstance(r, dict) and r.get("error_type") == "permission_required":
+                pause = r
+                break
+
+        if pause:
+            perm = str(pause.get("permission") or "").strip()
+            restart_hint = ""
+            if perm in {"accessibility", "screen_recording", "full_disk_access", "files_and_folders"}:
+                restart_hint = " Якщо після дозволу все одно не працює — перезапусти Terminal (Cmd+Q і відкрий знову)."
+
+            msg = str(pause.get("error") or "Permission required")
+            if perm == "automation":
+                msg = "Потрібен дозвіл Automation (Apple Events) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Automation, потім введи /resume." + restart_hint
+            elif perm == "screen_recording":
+                msg = "Потрібен дозвіл Screen Recording для Terminal. Дай доступ у System Settings -> Privacy & Security -> Screen Recording, потім введи /resume." + restart_hint
+            elif perm == "full_disk_access":
+                msg = "Потрібен дозвіл Full Disk Access для Terminal. Дай доступ у System Settings -> Privacy & Security -> Full Disk Access, потім введи /resume." + restart_hint
+            elif perm == "files_and_folders":
+                msg = "Потрібен дозвіл Files & Folders для Terminal. Дай доступ у System Settings -> Privacy & Security -> Files and Folders, потім введи /resume." + restart_hint
+
+            _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
+            log(f"[PAUSED] {msg}", "error")
+            break
+
+        if event.get("done"):
+            break
+
+    log("[GRAPH] Done.", "action")
+
+
 def _log_replace_last(text: str, category: str = "info") -> None:
     style_map = {
         "info": "class:log.info",
@@ -1049,10 +1145,14 @@ def _tool_run_automator(args: Dict[str, Any], allow_shell: bool) -> Dict[str, An
         return {"ok": False, "error": str(e)}
 
 
-def _tool_run_applescript(args: Dict[str, Any], allow_applescript: bool) -> Dict[str, Any]:
+def _tool_run_applescript(args: Dict[str, Any], allow_applescript: Optional[bool] = None) -> Dict[str, Any]:
     script = str(args.get("script", "")).strip()
     if not script:
         return {"ok": False, "error": "Missing script"}
+    if allow_applescript is None:
+        allow_applescript = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+            getattr(_agent_last_permissions, "allow_applescript", False)
+        )
     try:
         from system_ai.tools.executor import run_applescript
 
@@ -1160,8 +1260,17 @@ def _tool_take_screenshot(args: Dict[str, Any]) -> Dict[str, Any]:
         
         if result.returncode == 0 and os.path.exists(filename):
             return {"ok": True, "file": os.path.abspath(filename)}
-        else:
-            return {"ok": False, "error": f"Screenshot failed: {result.stderr}"}
+        err = str(result.stderr or "").strip()
+        low = err.lower()
+        if "screen recording" in low or "not permitted" in low:
+            return {
+                "ok": False,
+                "error": f"Screenshot failed: {err}",
+                "error_type": "permission_required",
+                "permission": "screen_recording",
+                "settings_url": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+            }
+        return {"ok": False, "error": f"Screenshot failed: {err}"}
             
     except Exception as e:
         return {"ok": False, "error": str(e)}
@@ -1402,6 +1511,35 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                         log(f"[RESULT] Tool {name} executed successfully: {out.get('ok', False)}", "action")
                         if out.get('ok'):
                             log(f"[DETAIL] Result: {out}", "info")
+                        inner = out.get("result") if isinstance(out, dict) and isinstance(out.get("result"), dict) else out
+                        if isinstance(inner, dict) and inner.get("error_type") == "permission_required":
+                            perm = str(inner.get("permission") or "").strip()
+                            try:
+                                from system_ai.tools import executor as _exec
+
+                                _exec.open_system_settings_privacy(perm)
+                            except Exception:
+                                pass
+
+                            restart_hint = ""
+                            if perm in {"accessibility", "screen_recording", "full_disk_access", "files_and_folders"}:
+                                restart_hint = " Якщо після дозволу все одно не працює — перезапусти Terminal (Cmd+Q і відкрий знову)."
+
+                            if perm == "automation":
+                                msg = "Потрібен дозвіл Automation (Apple Events) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Automation, потім введи /resume." + restart_hint
+                            elif perm == "screen_recording":
+                                msg = "Потрібен дозвіл Screen Recording для Terminal. Дай доступ у System Settings -> Privacy & Security -> Screen Recording, потім введи /resume." + restart_hint
+                            elif perm == "full_disk_access":
+                                msg = "Потрібен дозвіл Full Disk Access для Terminal. Дай доступ у System Settings -> Privacy & Security -> Full Disk Access, потім введи /resume." + restart_hint
+                            elif perm == "files_and_folders":
+                                msg = "Потрібен дозвіл Files & Folders для Terminal. Дай доступ у System Settings -> Privacy & Security -> Files and Folders, потім введи /resume." + restart_hint
+                            else:
+                                msg = "Потрібен дозвіл Accessibility (Assistive Access) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Accessibility, потім введи /resume." + restart_hint
+
+                            _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
+                            log(f"[PAUSED] {msg}", "error")
+                            state.agent_processing = False
+                            return True, msg
                         results.append(out)
                         if ToolMessage:  # Check if ToolMessage is available
                             agent_session.messages.append(ToolMessage(
@@ -1562,6 +1700,18 @@ def _agent_send(user_text: str) -> Tuple[bool, str]:
             if name == "run_shell":
                 out = _tool_run_shell_wrapper(args)
                 results.append({"name": name, "args": args, "result": out})
+                inner = out.get("result") if isinstance(out, dict) and isinstance(out.get("result"), dict) else out
+                if isinstance(inner, dict) and inner.get("error_type") == "permission_required":
+                    perm = str(inner.get("permission") or "").strip()
+                    try:
+                        from system_ai.tools import executor as _exec
+
+                        _exec.open_system_settings_privacy(perm)
+                    except Exception:
+                        pass
+                    msg = "Потрібен дозвіл для Terminal у System Settings -> Privacy & Security. Дай доступ і введи /resume. Якщо не допомогло — перезапусти Terminal (Cmd+Q)."
+                    _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
+                    return True, msg
                 continue
 
             if name == "run_shortcut":
@@ -1577,6 +1727,25 @@ def _agent_send(user_text: str) -> Tuple[bool, str]:
             if name == "run_applescript":
                 out = _tool_run_applescript(args, allow_applescript=allow_applescript)
                 results.append({"name": name, "args": args, "result": out})
+                inner = out.get("result") if isinstance(out, dict) and isinstance(out.get("result"), dict) else out
+                if isinstance(inner, dict) and inner.get("error_type") == "permission_required":
+                    perm = str(inner.get("permission") or "").strip()
+                    try:
+                        from system_ai.tools import executor as _exec
+
+                        _exec.open_system_settings_privacy(perm)
+                    except Exception:
+                        pass
+                    restart_hint = ""
+                    if perm in {"accessibility", "screen_recording", "full_disk_access", "files_and_folders"}:
+                        restart_hint = " Якщо після дозволу все одно не працює — перезапусти Terminal (Cmd+Q і відкрий знову)."
+
+                    if perm == "automation":
+                        msg = "Потрібен дозвіл Automation (Apple Events) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Automation, потім введи /resume." + restart_hint
+                    else:
+                        msg = "Потрібен дозвіл Accessibility (Assistive Access) для Terminal. Дай доступ у System Settings -> Privacy & Security -> Accessibility, потім введи /resume." + restart_hint
+                    _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
+                    return True, msg
                 continue
 
             tool = next((t for t in agent_session.tools if t.name == name), None)
@@ -2277,6 +2446,384 @@ def get_log_cursor_position():
 # ================== MENU CONTENT ==================
 
 
+def _clear_agent_pause_state() -> None:
+    state.agent_paused = False
+    state.agent_pause_permission = None
+    state.agent_pause_message = None
+    state.agent_pause_pending_text = None
+
+
+def _set_agent_pause(*, pending_text: str, permission: str, message: str) -> None:
+    state.agent_paused = True
+    state.agent_pause_permission = str(permission or "").strip() or None
+    state.agent_pause_message = str(message or "").strip() or None
+    state.agent_pause_pending_text = str(pending_text or "").strip() or None
+
+
+def _resume_paused_agent() -> None:
+    pending = str(getattr(state, "agent_pause_pending_text", "") or "").strip()
+    if not getattr(state, "agent_paused", False) or not pending:
+        log("Немає паузи для відновлення. Якщо потрібно — введи задачу ще раз.", "info")
+        return
+
+    _clear_agent_pause_state()
+    log(pending, "user")
+
+    if pending.startswith("/"):
+        _handle_command(pending)
+        return
+
+    def _run_agent() -> None:
+        use_stream = bool(getattr(state, "ui_streaming", True))
+        state.agent_processing = True
+        try:
+            ok, answer = _agent_send(pending)
+            if (not use_stream) and answer:
+                log(answer, "action" if ok else "error")
+        finally:
+            state.agent_processing = False
+            try:
+                from tui.layout import force_ui_update
+
+                force_ui_update()
+            except Exception:
+                pass
+
+    threading.Thread(target=_run_agent, daemon=True).start()
+
+
+def _handle_command(cmd: str) -> None:
+    global cleanup_cfg
+    parts = str(cmd or "").strip().split()
+    if not parts:
+        return
+    command = parts[0].lower().strip()
+    args = parts[1:]
+
+    if command == "/help" or command == "/h":
+        log("/help | /resume", "info")
+        log("/run <editor> [--dry] | /modules <editor> | /enable <editor> <id> | /disable <editor> <id>", "info")
+        log("/install <editor> | /locales <codes...>", "info")
+        log("/autopilot <task...> (CONFIRM_AUTOPILOT, optional CONFIRM_SHELL/CONFIRM_APPLESCRIPT)", "info")
+        log("/monitor status|start|stop|source <watchdog|fs_usage|opensnoop>|sudo <on|off>", "info")
+        log("/monitor-targets list|add <key>|remove <key>|clear|save", "info")
+        log("/llm status|set provider <copilot>|set main <model>|set vision <model>", "info")
+        log("/theme status|set <monaco|dracula|nord|gruvbox>", "info")
+        log("/lang status|set ui <code>|set chat <code>", "info")
+        log("/agent-reset | /agent-on | /agent-off | /agent-mode [on|off|toggle]", "info")
+        return
+
+    if command == "/resume":
+        _resume_paused_agent()
+        return
+
+    if command == "/agent-reset":
+        agent_session.reset()
+        log("Agent session reset.", "action")
+        return
+
+    if command == "/agent-on":
+        agent_session.enabled = True
+        log("Agent chat enabled.", "action")
+        return
+
+    if command == "/agent-off":
+        agent_session.enabled = False
+        log("Agent chat disabled.", "action")
+        return
+
+    if command == "/agent-mode":
+        global agent_chat_mode
+        mode = (args[0].lower() if args else "").strip()
+        if mode in {"", "status"}:
+            log(f"Agent mode: {'ON' if agent_chat_mode else 'OFF'}", "info")
+            return
+        if mode == "toggle":
+            agent_chat_mode = not agent_chat_mode
+            log(f"Agent mode: {'ON' if agent_chat_mode else 'OFF'}", "action")
+            return
+        if mode in {"on", "enable", "enabled"}:
+            agent_chat_mode = True
+            log("Agent mode: ON", "action")
+            return
+        if mode in {"off", "disable", "disabled"}:
+            agent_chat_mode = False
+            log("Agent mode: OFF", "action")
+            return
+        log("Usage: /agent-mode [on|off|toggle]", "error")
+        return
+
+    cleanup_cfg = _load_cleanup_config()
+
+    if command == "/run":
+        if not args:
+            log("Usage: /run <editor> [--dry]", "error")
+            return
+        editor = args[0]
+        dry = "--dry" in args or "--dry-run" in args
+        ok, msg = _run_cleanup(cleanup_cfg, editor, dry_run=dry)
+        log(msg, "action" if ok else "error")
+        return
+
+    if command == "/modules":
+        if not args:
+            log("Usage: /modules <editor>", "error")
+            return
+        editor = args[0]
+        meta = cleanup_cfg.get("editors", {}).get(editor)
+        if not meta:
+            log(f"Невідомий редактор: {editor}", "error")
+            return
+        mods = meta.get("modules", [])
+        if not mods:
+            log(f"Модулів для {editor} немає.", "info")
+            return
+        for m in mods:
+            mark = "ON" if m.get("enabled") else "OFF"
+            log(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})", "info")
+        return
+
+    if command in {"/enable", "/disable"}:
+        if len(args) < 2:
+            log("Usage: /enable <editor> <id> | /disable <editor> <id>", "error")
+            return
+        editor = args[0]
+        mid = args[1]
+        ref = _find_module(cleanup_cfg, editor, mid)
+        if not ref:
+            log("Модуль не знайдено.", "error")
+            return
+        enabled = command == "/enable"
+        ok = _set_module_enabled(cleanup_cfg, ref, enabled)
+        if ok:
+            log(f"Модуль {'увімкнено' if enabled else 'вимкнено'}: {editor}/{mid}", "action")
+        else:
+            log("Не вдалося змінити статус модуля.", "error")
+        return
+
+    if command == "/install":
+        if not args:
+            log("Usage: /install <editor>", "error")
+            return
+        ok, msg = _perform_install(cleanup_cfg, args[0])
+        log(msg, "action" if ok else "error")
+        return
+
+    if command == "/locales":
+        if not args:
+            log("Usage: /locales <codes...>", "error")
+            return
+        codes: List[str] = []
+        for token in args:
+            code = token.strip().upper().strip(".,;")
+            if any(l.code == code for l in AVAILABLE_LOCALES):
+                if code not in codes:
+                    codes.append(code)
+            else:
+                log(f"Невідома локаль: {token}", "error")
+        if not codes:
+            return
+        localization.selected = codes
+        localization.primary = codes[0]
+        localization.save()
+        log(f"Оновлено локалі: primary={localization.primary}, selected={' '.join(localization.selected)}", "action")
+        return
+
+    if command == "/theme":
+        sub = (args[0].lower() if args else "status").strip()
+        if sub in {"status", ""}:
+            log(f"Theme: {state.ui_theme}", "info")
+            return
+        if sub == "set":
+            if len(args) < 2:
+                log("Usage: /theme set <monaco|dracula|nord|gruvbox>", "error")
+                return
+            out = _tool_ui_theme_set({"theme": args[1]})
+            log(str(out.get("theme") or out.get("error") or ""), "action" if out.get("ok") else "error")
+            return
+        log("Usage: /theme status|set <...>", "error")
+        return
+
+    if command == "/lang":
+        sub = (args[0].lower() if args else "status").strip()
+        if sub in {"status", ""}:
+            log(f"ui={state.ui_lang} chat={state.chat_lang}", "info")
+            return
+        if sub == "set":
+            if len(args) < 3:
+                log("Usage: /lang set ui <code> | /lang set chat <code>", "error")
+                return
+            which = args[1].lower().strip()
+            code = normalize_lang(args[2])
+            if which == "ui":
+                state.ui_lang = code
+            elif which == "chat":
+                state.chat_lang = code
+            else:
+                log("Usage: /lang set ui <code> | /lang set chat <code>", "error")
+                return
+            _save_ui_settings()
+            log(f"ui={state.ui_lang} chat={state.chat_lang}", "action")
+            return
+        log("Usage: /lang status|set ...", "error")
+        return
+
+    if command == "/llm":
+        sub = (args[0].lower() if args else "status").strip()
+        rest = args[1:]
+        if sub in {"", "status"}:
+            out = _tool_llm_status()
+            if out.get("ok"):
+                log(f"provider={out.get('provider')} main={out.get('main_model')} vision={out.get('vision_model')}", "info")
+            else:
+                log(str(out.get("error") or ""), "error")
+            return
+        if sub == "set":
+            if len(rest) < 2:
+                log("Usage: /llm set provider <copilot> | /llm set main <model> | /llm set vision <model>", "error")
+                return
+            key = rest[0].lower().strip()
+            val = " ".join(rest[1:]).strip()
+            payload: Dict[str, Any] = {}
+            if key == "provider":
+                payload["provider"] = val
+            elif key == "main":
+                payload["main_model"] = val
+            elif key == "vision":
+                payload["vision_model"] = val
+            else:
+                log("Usage: /llm set provider|main|vision <value>", "error")
+                return
+            out = _tool_llm_set(payload)
+            log("OK" if out.get("ok") else str(out.get("error") or "Failed"), "action" if out.get("ok") else "error")
+            return
+        log("Usage: /llm status|set ...", "error")
+        return
+
+    if command == "/monitor":
+        sub = (args[0].lower() if args else "status").strip()
+        rest = args[1:]
+        if sub in {"", "status"}:
+            st = _tool_monitor_status()
+            log(
+                f"Monitoring: active={st.get('active')} source={st.get('source')} sudo={st.get('use_sudo')} targets={st.get('targets_count')}",
+                "info",
+            )
+            return
+        if sub == "start":
+            out = _tool_monitor_start()
+            log(str(out.get("message") or ""), "action" if out.get("ok") else "error")
+            return
+        if sub == "stop":
+            out = _tool_monitor_stop()
+            log(str(out.get("message") or ""), "action" if out.get("ok") else "error")
+            return
+        if sub == "source":
+            if not rest:
+                log("Usage: /monitor source <watchdog|fs_usage|opensnoop>", "error")
+                return
+            out = _tool_monitor_set_source({"source": rest[0]})
+            log(str(out.get("source") or out.get("error") or ""), "action" if out.get("ok") else "error")
+            return
+        if sub == "sudo":
+            if not rest:
+                log("Usage: /monitor sudo <on|off>", "error")
+                return
+            raw = rest[0].strip().lower()
+            use_sudo = raw in {"1", "true", "yes", "on", "enable", "enabled"}
+            out = _tool_monitor_set_use_sudo({"use_sudo": use_sudo})
+            if out.get("ok"):
+                log(f"sudo={'ON' if out.get('use_sudo') else 'OFF'}", "action")
+            else:
+                log(str(out.get("error") or ""), "error")
+            return
+        log("Usage: /monitor status|start|stop|source <...>|sudo <on|off>", "error")
+        return
+
+    if command in {"/monitor-targets", "/monitor_targets"}:
+        sub = (args[0].lower() if args else "list").strip()
+        rest = args[1:]
+        if sub in {"list", "ls", "status"}:
+            if not state.monitor_targets:
+                log("Monitor targets: (none)", "info")
+                return
+            for k in sorted(state.monitor_targets):
+                log(f"[x] {k}", "info")
+            return
+        if sub in {"add", "+"}:
+            if not rest:
+                log("Usage: /monitor-targets add <key>", "error")
+                return
+            out = _tool_monitor_targets({"action": "add", "key": rest[0]})
+            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
+            return
+        if sub in {"remove", "rm", "-"}:
+            if not rest:
+                log("Usage: /monitor-targets remove <key>", "error")
+                return
+            out = _tool_monitor_targets({"action": "remove", "key": rest[0]})
+            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
+            return
+        if sub == "clear":
+            out = _tool_monitor_targets({"action": "clear"})
+            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
+            return
+        if sub == "save":
+            out = _tool_monitor_targets({"action": "save"})
+            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
+            return
+        log("Usage: /monitor-targets list|add|remove|clear|save", "error")
+        return
+
+    if command == "/autopilot":
+        task = " ".join(args).strip()
+        if not task:
+            log("Usage: /autopilot <task...> [CONFIRM_AUTOPILOT]", "error")
+            return
+
+        allow_autopilot = "confirm_autopilot" in cmd.lower()
+        allow_shell = "confirm_shell" in cmd.lower() or bool(getattr(state, "ui_unsafe_mode", False))
+        allow_applescript = "confirm_applescript" in cmd.lower() or bool(getattr(state, "ui_unsafe_mode", False))
+        if not allow_autopilot and not bool(getattr(state, "ui_unsafe_mode", False)):
+            log("Autopilot confirmation required. Add CONFIRM_AUTOPILOT to the same line.", "error")
+            return
+
+        def _runner() -> None:
+            try:
+                from system_ai.autopilot.autopilot_agent import AutopilotAgent
+
+                agent = AutopilotAgent(
+                    allow_autopilot=True,
+                    allow_shell=bool(allow_shell),
+                    allow_applescript=bool(allow_applescript),
+                )
+                log(f"Autopilot started. shell={'ON' if allow_shell else 'OFF'} applescript={'ON' if allow_applescript else 'OFF'}", "action")
+                for event in agent.run_task(task, max_steps=30):
+                    step = event.get("step")
+                    plan = event.get("plan")
+                    actions_results = event.get("actions_results") or []
+                    thought = getattr(plan, "thought", "") if plan else ""
+                    result_message = getattr(plan, "result_message", "") if plan else ""
+                    log(f"[AP] Step {step}: {thought}", "info")
+                    if result_message:
+                        log(f"[AP] {result_message}", "action")
+                    for r in actions_results:
+                        tool = r.get("tool")
+                        status = r.get("status")
+                        if tool and status:
+                            log(f"[AP] tool={tool} status={status}", "info")
+                    if event.get("done"):
+                        break
+                log("Autopilot done.", "action")
+            except Exception as e:
+                log(f"Autopilot error: {e}", "error")
+
+        threading.Thread(target=_runner, daemon=True).start()
+        return
+
+    log("Невідома команда. Використай /help.", "error")
+
+
 def _get_editors_list() -> List[Tuple[str, str]]:
     global cleanup_cfg
     _ensure_cleanup_cfg_loaded()
@@ -2288,6 +2835,10 @@ def _handle_input(buff: Buffer) -> None:
     if not text:
         return
     buff.text = ""
+
+    if getattr(state, "agent_paused", False) and not text.lower().startswith(("/resume", "/help", "/h")):
+        log(str(getattr(state, "agent_pause_message", "") or "Стан паузи. Дай дозвіл і введи /resume."), "error")
+        return
 
     if text.startswith("/"):
         _handle_command(text)
@@ -2314,13 +2865,20 @@ def _handle_input(buff: Buffer) -> None:
             use_stream = bool(getattr(state, "ui_streaming", True))
             state.agent_processing = True
             try:
-                try:
-                    from tui.layout import force_ui_update
-                    force_ui_update()
-                except Exception:
-                    pass
-
-                ok, answer = _agent_send(text)
+                # Auto-switch to graph runtime for complex tasks when permitted.
+                allow_graph = bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_autopilot(text)
+                if _is_complex_task(text) and allow_graph:
+                    _run_graph_agent_task(
+                        text,
+                        allow_autopilot=True,
+                        allow_shell=bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_shell(text),
+                        allow_applescript=bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_applescript(text),
+                    )
+                    ok, answer = True, ""
+                else:
+                    if _is_complex_task(text) and not allow_graph:
+                        log("[HINT] Для складних задач доступний Graph mode: додай CONFIRM_AUTOPILOT або увімкни Unsafe mode.", "info")
+                    ok, answer = _agent_send(text)
 
                 # When streaming is enabled, `_agent_send_with_stream` already renders the assistant output.
                 if (not use_stream) and answer:

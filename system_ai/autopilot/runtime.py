@@ -62,10 +62,13 @@ SYSTEM_PROMPT = """Ти — системний автопілот, що керу
 {
   "thought": "коротко що робиш",
   "summary": "оновлений підсумок стану (memory)",
+  "preflight": [ {"type": "...", "details": "..."} ],
   "actions": [ {"tool": "...", "args": { ... }} ],
   "done": true|false,
   "result_message": "що сказати користувачу"
 }
+
+preflight — це список кроків підготовки (перевірка прав/контексту/готовності інструментів). Якщо плануєш UI automation (run_applescript/run_shortcut), включай preflight з вимогами Accessibility/Automation.
 
 Після виконання actions, ти отримаєш tool_results і observation (VISION). Використай їх для корекції плану.
 Якщо verify каже "off_track", будь готовий до переплануння (система автоматично перепланує).
@@ -97,6 +100,7 @@ class ToolAction:
 class StepPlan:
     thought: str
     summary: str
+    preflight: List[Dict[str, Any]]
     actions: List[ToolAction]
     done: bool
     result_message: str
@@ -152,6 +156,11 @@ class AutopilotRuntime:
             "successful_examples": successful_examples,
             "last_results": last_results[-10:],
             "observation": last_observation,
+            "permissions": {
+                "allow_autopilot": bool(self.permissions.allow_autopilot),
+                "allow_shell": bool(self.permissions.allow_shell),
+                "allow_applescript": bool(self.permissions.allow_applescript),
+            },
         }
         if verify_hint:
             user_payload["verify_hint"] = str(verify_hint)
@@ -209,6 +218,18 @@ class AutopilotRuntime:
         *,
         step: int,
     ) -> Dict[str, Any]:
+        pause_info = self._run_state.get("pause_info")
+        if pause_info:
+            return {
+                "on_track": False,
+                "done": True,
+                "issues": str(pause_info.get("message") or "Permission required"),
+                "next_hint": "",
+                "replan": False,
+                "paused": True,
+                "pause_info": dict(pause_info),
+            }
+
         verify_interval = int(self._run_state.get("verify_interval") or 3)
         should_verify = (step % verify_interval == 0) or bool(getattr(plan, "done", False))
         if not should_verify:
@@ -276,6 +297,7 @@ class AutopilotRuntime:
             return StepPlan(
                 thought="Модель повернула не-JSON відповідь",
                 summary=self.memory.summary,
+                preflight=[],
                 actions=[],
                 done=True,
                 result_message=text,
@@ -293,9 +315,17 @@ class AutopilotRuntime:
                 if tool:
                     actions.append(ToolAction(tool=tool, args=dict(args) if isinstance(args, dict) else {}))
 
+        preflight_raw = data.get("preflight") or []
+        preflight: List[Dict[str, Any]] = []
+        if isinstance(preflight_raw, list):
+            for item in preflight_raw:
+                if isinstance(item, dict):
+                    preflight.append(dict(item))
+
         return StepPlan(
             thought=str(data.get("thought", "")),
             summary=str(data.get("summary", "")),
+            preflight=preflight,
             actions=actions,
             done=bool(data.get("done", False)),
             result_message=str(data.get("result_message", "")) or text,
@@ -324,6 +354,19 @@ class AutopilotRuntime:
                         allow=self.permissions.allow_applescript and self.permissions.allow_autopilot,
                     )
                 )
+                last = results[-1]
+                if isinstance(last, dict) and last.get("error_type") == "permission_required":
+                    perm = str(last.get("permission") or "")
+                    try:
+                        results.append(executor.open_system_settings_privacy(perm))
+                    except Exception:
+                        pass
+                    self._run_state["pause_info"] = {
+                        "permission": perm,
+                        "settings_url": str(last.get("settings_url") or ""),
+                        "message": str(last.get("error") or "Permission required"),
+                    }
+                    break
             elif a.tool == "run_shortcut":
                 results.append(
                     executor.run_shortcut(
@@ -355,6 +398,7 @@ class AutopilotRuntime:
             "observation": "",
             "verify_hint": "",
             "verify_interval": 3,
+            "pause_info": None,
         }
 
         graph = build_goal_graph(
@@ -381,6 +425,7 @@ class AutopilotRuntime:
                             "goal": goal,
                             "thought": getattr(plan, "thought", "") if plan else "",
                             "result_message": getattr(plan, "result_message", "") if plan else "",
+                            "preflight": getattr(plan, "preflight", []) if plan else [],
                             "actions": [a.__dict__ for a in getattr(plan, "actions", [])] if plan else [],
                             "tool_results": action_results,
                             "observation": observation,
