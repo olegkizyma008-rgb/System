@@ -147,7 +147,7 @@ def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell:
         from core.trinity import TrinityRuntime
         from langchain_core.messages import AIMessage
         
-        log("[TRINITY] Initializing Multi-Agent System (Atlas/Tetyana/Grisha)...", "info")
+        log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")
         runtime = TrinityRuntime(verbose=False)
         
         step_count = 0
@@ -160,7 +160,7 @@ def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell:
                 last_msg = messages[-1] if messages else None
                 content = getattr(last_msg, "content", "") if last_msg else ""
                 
-                log(f"[TRINITY] {agent_name}: {content}", "info")
+                log(f"[ATLAS] {agent_name}: {content}", "info")
                 
                 # Check for completion (if node leads to END or specific status)
                 # In our graph, 'end' is a virtual node, but the router handles it. 

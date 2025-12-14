@@ -1,10 +1,104 @@
-Передмова:
-Це комплексне Технічне Завдання (ТЗ) на реалізацію Універсальної Мульти-Агентної Системи. Документ визначає архітектуру взаємодії агентів, рольову модель та інтеграцію з підсистемою розробки.
+# Технічне Завдання: Project Atlas (NeuroMac Vision Agent)
+
+**Клас системи:** Vision-Augmented Agentic OS Controller
+**Платформа:** Mac Studio M1 Max
+**LLM-провайдер:** GitHub Copilot (GPT-4o для reasoning/tools + gpt-4o-vision для screen understanding)
+**Парадигма:** MCP-first + Agent Graph + Vision Feedback Loop
+**Форма:** Єдиний локальний «нейронний мозок» macOS
 
 ⸻
 
-ТЕХНІЧНЕ ЗАВДАННЯ
-Мульти-Агентна Система "Trinity" з Інтегрованим Контуром Розробки
+## 1. Сутність та Мета
+Це не чат-бот і не макроси. Це **локальний нейронний оператор macOS "Atlas"**, який:
+- Бачить екран.
+- Планує дії.
+- Виконує їх виключно через дозволені MCP-інструменти.
+- Перевіряє результат зором (Vision Feedback).
+- Самовиправляється та накопичує досвід (RAG).
+
+Vision — обов'язковий у кожному циклі. LLM керує ТІЛЬКИ через MCP-tools.
+
+⸻
+
+## 2. Ключові принципи
+*   ❌ **No Local Scale:** Без Ollama/MLX. Тільки GitHub Copilot (GPT-4o).
+*   ❌ **No Direct Access:** LLM не має прямого неконтрольованого доступу.
+*   ✅ **MCP-First:** Строгий контракт дій (детермінізм + безпека).
+*   ✅ **Vision Feedback:** Системний зворотний зв'язок (імітація «backpropagation» в UI).
+*   ✅ **RAG Memory:** Поведінкова пам'ять агента.
+
+⸻
+
+## 3. Архітектура Системи
+
+```mermaid
+graph TD
+    TUI[TUI CORE\nTextual: Chat/Logs] --> Orchestrator
+    Orchestrator[AGENT ORCHESTRATOR\nTrinity Graph: Atlas -> Tetyana -> Grisha] --> MCP
+    MCP[MCP TOOL LAYER\nStrict Tool Registry] --> Copilot
+    Copilot[Copilot Provider\nGPT-4o + Vision] --> MacOS
+    MacOS[macOS Reality\nScreen/Input] --> VisionLoop
+    VisionLoop[Vision Feedback Loop] --> Orchestrator
+```
+
+### 3.1 Agent Orchestrator ("Trinity" Implementation)
+Реалізовано на базі **LangGraph**.
+*   **Atlas (Planner):** Стратег. Приймає задачу, формує план, вставляє точки верифікації (Adaptive Verification).
+*   **Tetyana (Executor + Dev Subsystem):** "Універсальний Оператор". Виконує MCP-інструменти (Shell, Files, Windsurf Driver).
+*   **Grisha (Critic/Vision):** "Очі". Аналізує скріншоти, порівнює стан з очікуваним, дає дозвіл на наступний крок.
+
+### 3.2 Vision Feedback Loop (Adaptive Verification)
+Головна інновація.
+1.  **PLAN:** Atlas створює план.
+2.  **ACTION:** Tetyana виконує MCP tool.
+3.  **CAPTURE:** Grisha робить знімок.
+4.  **ANALYSIS:** GPT-4o-Vision аналізує стан.
+5.  **COMPARISON:** Очікування vs Реальність.
+6.  **DECISION:** OK -> Next Step | NO -> Replan (Dynamic Granularity).
+
+### 3.3 Dev Subsystem (Cascading Control)
+Для задач кодингу працює каскад:
+**Copilot (Meta) -> Continue CLI (Bus) -> Windsurf (Exec)**.
+
+⸻
+
+## 4. MCP Tool Registry (Ядро)
+Система взаємодіє зі світом ТІЛЬКИ через ці функції:
+
+*   `capture_screen(region?)`
+*   `analyze_screen(image_b64, goal)`
+*   `find_element(description)`
+*   `run_shell(command)` (з підтвердженням)
+*   `open_app(name)`
+*   `read_file/write_file`
+*   `send_to_windsurf(message)`
+*   `rag_query/save_memory`
+
+⸻
+
+## 5. RAG — Поведінкова Пам'ять
+Локальна ChromaDB.
+*   `ui_patterns`: Як виглядають кнопки/меню.
+*   `action_strategies`: Успішні послідовності дій.
+*   `user_habits`: Вподобання користувача.
+
+⸻
+
+## 6. Критерій Успіху
+**Atlas** — це OS-level cognitive agent, який:
+1.  Бачить інтерфейс як людина.
+2.  Діє через інструменти як інженер.
+3.  Розуміє помилки через Vision і виправляє їх сам.
+
+⸻
+
+## 7. Порядок Реалізації
+1.  **MCP Tool Registry + Basic Actions** (Click/Type/Exec) — *FOUNDATION*.
+2.  **Vision Capture + Analyze** (GPT-4o-Vision integration) — *HEART*.
+3.  **Feedback Loop** (Retry logic & Adaptive Verifier) — *BRAIN*.
+4.  **TUI Skeleton** — *INTERFACE*.
+5.  **RAG Schema** — *MEMORY*.
+
 
 ⸻
 
@@ -149,5 +243,23 @@
 
 ⸻
 
-7. Критерій Успіху
-Система, де агенти "живо" обговорюють задачу, знаходять помилки в планах один одного ДО виконання, а кодинг відбувається через надійний каскад Dev Subsystem. Інтеграція в поточний `cli.py` виконана прозоро для користувача.
+6.5 Протокол Адаптивної Верифікації (Adaptive Verification Protocol)
+
+Система реалізує інтелектуальну стратегію перевірки:
+
+1.  **Smart Plan Optimization (Post-Planning):**
+    *   Після того як Atlas/Tetyana сформували план дій (граф виконання), система аналізує його **перед** початком роботи.
+    *   У критичні вузли плану вставляються "Точки Верифікації" (Grisha Checkpoints).
+    *   **Принцип вставки:**
+        *   Математичні дії -> Перевірка після отримання результату (напр., після натискання "=").
+        *   Браузер -> Перевірка після завантаження сторінки та після зміни стану інтерфейсу (напр., Fullscreen).
+        *   Файли -> Перевірка наявності/вмісту після запису.
+    *   **Вибір методу:** Система сама вирішує, що ефективніше: візуальний контроль (Vision) чи інструментальний (Return Code/File Read).
+
+2.  **Dynamic Granularity (Recovery Mode):**
+    *   **Normal Mode:** Верифікація лише у ключових вузлах.
+    *   **Failure Mode:** Якщо Гріша дає негативну оцінку (Verification Failed):
+        *   Вмикається режим "Тотального Контролю".
+        *   План для проблемного сегменту перераховується з максимальною деталізацією.
+        *   Перевірка здійснюється після *кожного* мікро-кроку, щоб точно виявити і виправити збій.
+    *   **Optimization:** Для візуальних перевірок використовувати "Diffs" (порівняння станів), щоб мінімізувати навантаження на LLM.
