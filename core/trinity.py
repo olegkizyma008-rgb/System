@@ -191,20 +191,32 @@ class TrinityRuntime:
             content = f"Error invoking Grisha: {e}"
 
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
-        # Note: If Grisha just ran a tool (capture_screen), we probably want to LOOP back to Grisha 
-        # so he can analyze the result. For now, simple logic:
+        # ------------------------------------------------------------------
+        # FEEDBACK LOOP LOGIC (Phase 3)
+        # ------------------------------------------------------------------
         
-        if "Tool Results" in content or tool_calls:
-            # If tools were used, Grisha likely needs to see the result. 
-            # Ideally we'd loop back to Grisha, but our graph edges go to Router. 
-            # We'll set current_agent back to 'grisha' to allow a follow-up analysis step?
-            # Or reliance on Atlas to re-dispatch.
-            # USE CASE: Grisha (Capture) -> Grisha (Analyze) -> Grisha (Verdict).
-            # The current graph: Grisha -> Atlas. 
-            # Let's trust Atlas to see the screenshot result in history and ask Grisha for verdict.
+        lower_content = content.lower()
+        if "tools results" in lower_content or tool_calls:
+            # Case A: Grisha used a tool (e.g. took a screenshot). 
+            # We need to loop back to Atlas/Grisha to analyze it. 
+            # In this graph topology: Grisha -> Atlas. Atlas will see the screenshot result.
+            next_agent = "atlas"
+            
+        elif "failed" in lower_content or "error" in lower_content or "rejected" in lower_content:
+            # Case B: VERIFICATION FAILED.
+            # Trigger "Dynamic Granularity" (Replan).
+            next_agent = "atlas"
+            # We should inject a "replan" signal into the state, but for now 
+            # Atlas will simply see the negative feedback in history and react.
+            
+        elif "verified" in lower_content or "confirmed" in lower_content or "success" in lower_content:
+            # Case C: VERIFICATION PASSED.
+            # If there are more steps in the plan, Atlas continues.
+            # If this was the final step, we end.
             next_agent = "atlas" 
         else:
-             next_agent = "end" if "verified" in content.lower() or "confirmed" in content.lower() else "atlas"
+            # Default fallback
+            next_agent = "atlas"
 
         return {
             "current_agent": next_agent, 
