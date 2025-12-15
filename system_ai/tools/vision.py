@@ -120,3 +120,141 @@ def analyze_with_copilot(image_path: str, prompt: str = "Describe the user inter
         
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+
+def ocr_region(x: int, y: int, width: int, height: int) -> Dict[str, Any]:
+    """Best-effort OCR for a screen region.
+
+    Implementation: capture region -> send to Copilot Vision with an extraction prompt.
+    This avoids hardcoding and works across apps, but requires vision model + Screen Recording permission.
+    """
+    try:
+        from system_ai.tools.screenshot import capture_screen_region
+
+        snap = capture_screen_region(x=x, y=y, width=width, height=height)
+        if snap.get("status") != "success":
+            return {"status": "error", **snap}
+
+        image_path = str(snap.get("path") or "")
+        analysis = analyze_with_copilot(
+            image_path,
+            prompt=(
+                "Extract ALL visible text from this screenshot region. "
+                "Return ONLY the extracted text (no commentary), keep line breaks." 
+            ),
+        )
+        if analysis.get("status") != "success":
+            return {"status": "error", "error": analysis.get("error"), "image_path": image_path}
+        text = str(analysis.get("analysis") or "").strip()
+        return {"status": "success", "text": text, "image_path": image_path}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+def find_image_on_screen(template_path: str, tolerance: float = 0.9) -> Dict[str, Any]:
+    """Find an image template on the primary screen using OpenCV template matching."""
+    try:
+        template_path_s = str(template_path or "").strip()
+        if not template_path_s:
+            return {"tool": "find_image_on_screen", "status": "error", "error": "template_path is required"}
+        if not os.path.exists(template_path_s):
+            return {
+                "tool": "find_image_on_screen",
+                "status": "error",
+                "error": f"Template not found: {template_path_s}",
+            }
+
+        tol = float(tolerance)
+        if tol <= 0.0 or tol > 1.0:
+            return {
+                "tool": "find_image_on_screen",
+                "status": "error",
+                "error": "tolerance must be within (0.0, 1.0]",
+            }
+
+        try:
+            import cv2  # type: ignore
+            import numpy as np  # type: ignore
+            import mss  # type: ignore
+        except ImportError as e:
+            missing = str(e)
+            return {
+                "tool": "find_image_on_screen",
+                "status": "error",
+                "error_type": "missing_dependency",
+                "error": f"Missing dependency: {missing}",
+            }
+
+        with mss.mss() as sct:
+            monitor = sct.monitors[1]
+            sct_img = sct.grab(monitor)
+
+        screen = np.array(sct_img)
+        if screen is None or screen.size == 0:
+            return {"tool": "find_image_on_screen", "status": "error", "error": "Failed to capture screen"}
+
+        if len(screen.shape) == 3 and screen.shape[2] == 4:
+            screen_bgr = cv2.cvtColor(screen, cv2.COLOR_BGRA2BGR)
+        else:
+            screen_bgr = screen
+
+        template = cv2.imread(template_path_s, cv2.IMREAD_UNCHANGED)
+        if template is None or template.size == 0:
+            return {
+                "tool": "find_image_on_screen",
+                "status": "error",
+                "error": f"Failed to load template: {template_path_s}",
+            }
+
+        if len(template.shape) == 3 and template.shape[2] == 4:
+            template_bgr = cv2.cvtColor(template, cv2.COLOR_BGRA2BGR)
+        else:
+            template_bgr = template
+
+        th, tw = template_bgr.shape[:2]
+        sh, sw = screen_bgr.shape[:2]
+        if th <= 0 or tw <= 0:
+            return {"tool": "find_image_on_screen", "status": "error", "error": "Invalid template size"}
+        if th > sh or tw > sw:
+            return {
+                "tool": "find_image_on_screen",
+                "status": "success",
+                "found": False,
+                "confidence": 0.0,
+                "reason": "template_larger_than_screen",
+            }
+
+        result = cv2.matchTemplate(screen_bgr, template_bgr, cv2.TM_CCOEFF_NORMED)
+        _min_val, max_val, _min_loc, max_loc = cv2.minMaxLoc(result)
+        confidence = float(max_val)
+
+        if confidence >= tol:
+            x_center = int(max_loc[0] + (tw // 2))
+            y_center = int(max_loc[1] + (th // 2))
+            return {
+                "tool": "find_image_on_screen",
+                "status": "success",
+                "found": True,
+                "x": x_center,
+                "y": y_center,
+                "confidence": confidence,
+                "match": {"x": int(max_loc[0]), "y": int(max_loc[1]), "width": int(tw), "height": int(th)},
+            }
+
+        return {
+            "tool": "find_image_on_screen",
+            "status": "success",
+            "found": False,
+            "confidence": confidence,
+        }
+    except Exception as e:
+        err_str = str(e).lower()
+        if "screen recording" in err_str or "access" in err_str:
+            return {
+                "tool": "find_image_on_screen",
+                "status": "error",
+                "error_type": "permission_required",
+                "permission": "screen_recording",
+                "error": "Permission denied. Please allow Screen Recording in System Settings.",
+            }
+        return {"tool": "find_image_on_screen", "status": "error", "error": str(e)}
