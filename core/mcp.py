@@ -8,6 +8,7 @@ from system_ai.tools.filesystem import read_file, write_file, list_files
 from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
 from system_ai.tools.input import click, type_text, press_key
 from system_ai.tools.vision import analyze_with_copilot
+from core.memory import save_memory_tool, query_memory_tool
 
 class MCPToolRegistry:
     """
@@ -41,6 +42,10 @@ class MCPToolRegistry:
         self.register_tool("click", click, "Mouse click. Args: x (int), y (int)")
         self.register_tool("type_text", type_text, "Type text. Args: text (str)")
         self.register_tool("press_key", press_key, "Press key. Args: key (str), command(bool), shift(bool)...")
+
+        # RAG Memory
+        self.register_tool("save_memory", save_memory_tool, "Save info to memory. Args: category (ui_patterns/strategies), content (str)")
+        self.register_tool("rag_query", query_memory_tool, "Query memory. Args: category (str), query (str)")
 
     def register_tool(self, name: str, func: Callable, description: str):
         self._tools[name] = func
