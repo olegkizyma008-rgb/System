@@ -51,8 +51,6 @@ config.local.sh
 my_*.sh
 
 # Тести (якщо будуть)
-test/
-tests/
 *.test.sh
 
 # Кеш
