@@ -112,6 +112,7 @@ agent_chat_mode: bool = True
 
 _logs_lock = threading.RLock()
 _logs_need_trim: bool = False
+_thread_log_override = threading.local()
 
 
 def _trim_logs_if_needed() -> None:
@@ -2112,16 +2113,22 @@ def _tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
         cmd_to_run = cmd_to_run + " CONFIRM_APPLESCRIPT"
 
     captured: List[Tuple[str, str]] = []
-    original_log = globals().get("log")
 
     def _cap(text: str, category: str = "info") -> None:
         captured.append((category, str(text)))
 
     try:
-        globals()["log"] = _cap
+        prev = getattr(_thread_log_override, "handler", None)
+        _thread_log_override.handler = _cap
         _handle_command(cmd_to_run)
     finally:
-        globals()["log"] = original_log
+        try:
+            if prev is None:
+                delattr(_thread_log_override, "handler")
+            else:
+                _thread_log_override.handler = prev
+        except Exception:
+            pass
 
     return {"ok": True, "lines": captured[:200]}
 
@@ -2440,6 +2447,13 @@ cleanup_cfg = None
 
 
 def log(text: str, category: str = "info") -> None:
+    override = getattr(_thread_log_override, "handler", None)
+    if callable(override):
+        try:
+            override(text, category)
+        except Exception:
+            pass
+        return
     style_map = {
         "info": "class:log.info",
         "user": "class:log.user",
@@ -3061,16 +3075,22 @@ def _tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
         cmd_to_run = cmd_to_run + " CONFIRM_APPLESCRIPT"
 
     captured: List[Tuple[str, str]] = []
-    original_log = globals().get("log")
 
     def _cap(text: str, category: str = "info") -> None:
         captured.append((category, str(text)))
 
     try:
-        globals()["log"] = _cap
+        prev = getattr(_thread_log_override, "handler", None)
+        _thread_log_override.handler = _cap
         _handle_command(cmd_to_run)
     finally:
-        globals()["log"] = original_log
+        try:
+            if prev is None:
+                delattr(_thread_log_override, "handler")
+            else:
+                _thread_log_override.handler = prev
+        except Exception:
+            pass
 
     return {"ok": True, "lines": captured[:200]}
 
