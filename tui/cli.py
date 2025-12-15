@@ -111,6 +111,19 @@ agent_chat_mode: bool = True
 
 
 _logs_lock = threading.RLock()
+_logs_need_trim: bool = False
+
+
+def _trim_logs_if_needed() -> None:
+    global _logs_need_trim
+    with _logs_lock:
+        if not _logs_need_trim:
+            return
+        if getattr(state, "agent_processing", False):
+            return
+        if len(state.logs) > 500:
+            state.logs = state.logs[-400:]
+        _logs_need_trim = False
 
 
 def _is_complex_task(text: str) -> bool:
@@ -248,6 +261,7 @@ def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell:
         return
 
     log("[TRINITY] Task completed.", "action")
+    _trim_logs_if_needed()
 
 
 
@@ -275,7 +289,11 @@ def _log_reserve_line(category: str = "info") -> int:
     with _logs_lock:
         state.logs.append((style_map.get(category, "class:log.info"), "\n"))
         if len(state.logs) > 500:
-            state.logs = state.logs[-400:]
+            global _logs_need_trim
+            if getattr(state, "agent_processing", False):
+                _logs_need_trim = True
+            else:
+                state.logs = state.logs[-400:]
         return max(0, len(state.logs) - 1)
 
 
@@ -847,6 +865,9 @@ def _load_ui_settings() -> None:
         chat_lang = str(data.get("chat_lang") or "").strip().lower()
         if chat_lang:
             state.chat_lang = normalize_lang(chat_lang)
+        streaming = data.get("streaming")
+        if isinstance(streaming, bool):
+            state.ui_streaming = streaming
         unsafe_mode = data.get("unsafe_mode")
         if isinstance(unsafe_mode, bool):
             state.ui_unsafe_mode = unsafe_mode
@@ -867,6 +888,7 @@ def _save_ui_settings() -> bool:
             "theme": str(state.ui_theme or "monaco").strip().lower() or "monaco",
             "ui_lang": normalize_lang(state.ui_lang),
             "chat_lang": normalize_lang(state.chat_lang),
+            "streaming": bool(getattr(state, "ui_streaming", True)),
             "unsafe_mode": bool(state.ui_unsafe_mode),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
@@ -1514,7 +1536,6 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
     
     # Start streaming response
     try:
-        state.agent_processing = True
         try:
             from tui.layout import force_ui_update
             force_ui_update()
@@ -1613,7 +1634,6 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
 
                             _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
                             log(f"[PAUSED] {msg}", "error")
-                            state.agent_processing = False
                             return True, msg
                         results.append(out)
                         if ToolMessage:  # Check if ToolMessage is available
@@ -1652,7 +1672,6 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                         final_resp = llm.invoke(agent_session.messages)
                         final_content = str(getattr(final_resp, "content", "") or "")
                     log(f"[FINAL] {final_content}", "info")
-                    state.agent_processing = False
                     # Force UI update to show processing is done
                     try:
                         from tui.layout import force_ui_update
@@ -1662,10 +1681,8 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                     return True, final_content
                 except Exception as e:
                     log(f"[ERROR] Final response failed: {e}", "error")
-                    state.agent_processing = False
                     return True, accumulated_content
         
-        state.agent_processing = False
         # Force UI update to show processing is done
         try:
             from tui.layout import force_ui_update
@@ -1675,8 +1692,112 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         return True, accumulated_content
 
     except Exception as e:
-        state.agent_processing = False
         return False, f"Streaming error: {str(e)}"
+    finally:
+        state.agent_processing = False
+        _trim_logs_if_needed()
+
+
+def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
+    ok, msg = _ensure_agent_ready()
+    if not ok:
+        return False, msg
+
+    _init_agent_tools()
+    _load_ui_settings()
+
+    unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
+    allow_run = unsafe_mode or _is_confirmed_run(user_text)
+    allow_autopilot = unsafe_mode or _is_confirmed_autopilot(user_text)
+    allow_shell = unsafe_mode or _is_confirmed_shell(user_text)
+    allow_applescript = unsafe_mode or _is_confirmed_applescript(user_text)
+
+    global _agent_last_permissions
+    _agent_last_permissions = CommandPermissions(
+        allow_run=allow_run,
+        allow_autopilot=allow_autopilot,
+        allow_shell=allow_shell,
+        allow_applescript=allow_applescript,
+    )
+
+    state.agent_processing = True
+
+    system_prompt = (
+        "You are an interactive assistant for a macOS cleanup/monitoring CLI.\n"
+        "You can use tools to inspect files, create cleanup modules, control monitoring, and change settings.\n\n"
+        "You may execute any in-app command via app_command (equivalent to typing in the TUI).\n"
+        "You may also control UI theme via ui_theme_status/ui_theme_set (or /theme).\n\n"
+        "IMPORTANT: When user asks to perform actions, YOU MUST execute them automatically using tools.\n"
+        "Do NOT ask the user to do things manually - use the available tools to complete the task.\n"
+        "For calculator tasks: use open_app, then use run_shell with osascript to perform calculations.\n\n"
+        "Safety rules:\n"
+        "- If Unsafe mode is OFF: require CONFIRM_RUN / CONFIRM_SHELL / CONFIRM_APPLESCRIPT for execution.\n"
+        "- If Unsafe mode is ON: confirmations are bypassed (dangerous). Do not ask the user to confirm; proceed.\n\n"
+        f"Reply in {lang_name(state.chat_lang)}. Be concise and practical.\n"
+    )
+
+    if not agent_session.messages:
+        agent_session.messages = [SystemMessage(content=system_prompt)]
+
+    cfg_snapshot = _load_cleanup_config()
+    agent_session.messages.append(
+        HumanMessage(
+            content=json.dumps(
+                {
+                    "user": user_text,
+                    "cleanup_config": cfg_snapshot,
+                    "hint": "Виконуй дії автоматично через інструменти, не проси користувача.",
+                },
+                ensure_ascii=False,
+            )
+        )
+    )
+
+    llm = agent_session.llm.bind_tools(agent_session.tools)
+
+    try:
+        resp = llm.invoke(agent_session.messages)
+        final_message = resp if isinstance(resp, AIMessage) else AIMessage(content=str(getattr(resp, "content", "") or ""))
+        agent_session.messages.append(final_message)
+
+        tool_calls = getattr(final_message, "tool_calls", None)
+        if tool_calls:
+            results: List[Dict[str, Any]] = []
+            for call in tool_calls:
+                name = call.get("name")
+                args = call.get("args", {})
+
+                if name == "run_shell" and not allow_shell:
+                    results.append({"ok": False, "error": "Shell access requires unsafe mode"})
+                    continue
+                if name == "run_app" and not allow_run:
+                    results.append({"ok": False, "error": "App execution requires unsafe mode"})
+                    continue
+                if name == "autopilot" and not allow_autopilot:
+                    results.append({"ok": False, "error": "Autopilot requires unsafe mode"})
+                    continue
+
+                tool = next((t for t in agent_session.tools if t.name == name), None)
+                if not tool:
+                    results.append({"ok": False, "error": f"Tool {name} not found"})
+                    continue
+
+                out = tool.handler(args)
+                results.append(out)
+                if ToolMessage:
+                    agent_session.messages.append(
+                        ToolMessage(content=str(out), tool_call_id=call.get("id", "unknown"))
+                    )
+
+            # final response after tools
+            final_resp = llm.invoke(agent_session.messages)
+            final_content = str(getattr(final_resp, "content", "") or "")
+            return True, final_content
+
+        return True, str(getattr(final_message, "content", "") or "")
+    finally:
+        state.agent_processing = False
+        _trim_logs_if_needed()
 
 
 def _tool_ui_streaming_status() -> Dict[str, Any]:
@@ -1702,9 +1823,7 @@ def _agent_send(user_text: str) -> Tuple[bool, str]:
     if use_stream:
         return _agent_send_with_stream(user_text)
 
-    # Non-stream mode: still reuse the same engine; the caller is responsible for printing/logging the returned text.
-    ok, msg = _agent_send_with_stream(user_text)
-    return ok, msg
+    return _agent_send_no_stream(user_text)
 
 
 
@@ -2330,7 +2449,11 @@ def log(text: str, category: str = "info") -> None:
     with _logs_lock:
         state.logs.append((style_map.get(category, "class:log.info"), f"{text}\n"))
         if len(state.logs) > 500:
-            state.logs = state.logs[-400:]
+            global _logs_need_trim
+            if getattr(state, "agent_processing", False):
+                _logs_need_trim = True
+            else:
+                state.logs = state.logs[-400:]
 
 
 def get_header():
@@ -2374,6 +2497,7 @@ def get_context():
     result.append(("class:context.label", " /llm status|set provider <copilot>|set main <model>|set vision <model>\n"))
     result.append(("class:context.label", " /theme status|set <monaco|dracula|nord|gruvbox>\n"))
     result.append(("class:context.label", " /lang status|set ui <code>|set chat <code>\n"))
+    result.append(("class:context.label", " /streaming status|on|off\n"))
 
     return result
 
@@ -2427,6 +2551,7 @@ def _resume_paused_agent() -> None:
                 log(answer, "action" if ok else "error")
         finally:
             state.agent_processing = False
+            _trim_logs_if_needed()
             try:
                 from tui.layout import force_ui_update
 
@@ -2455,6 +2580,7 @@ def _handle_command(cmd: str) -> None:
         log("/llm status|set provider <copilot>|set main <model>|set vision <model>", "info")
         log("/theme status|set <monaco|dracula|nord|gruvbox>", "info")
         log("/lang status|set ui <code>|set chat <code>", "info")
+        log("/streaming status|on|off", "info")
         log("/agent-reset | /agent-on | /agent-off | /agent-mode [on|off|toggle]", "info")
         return
 
@@ -2587,6 +2713,33 @@ def _handle_command(cmd: str) -> None:
             log(str(out.get("theme") or out.get("error") or ""), "action" if out.get("ok") else "error")
             return
         log("Usage: /theme status|set <...>", "error")
+        return
+
+    if command in {"/streaming", "/stream"}:
+        sub = (args[0].lower() if args else "status").strip()
+        if sub in {"status", ""}:
+            log(f"Streaming: {'ON' if bool(getattr(state, 'ui_streaming', True)) else 'OFF'}", "info")
+            return
+        if sub in {"on", "enable", "enabled", "true", "1"}:
+            state.ui_streaming = True
+            _save_ui_settings()
+            log("Streaming: ON", "action")
+            return
+        if sub in {"off", "disable", "disabled", "false", "0"}:
+            state.ui_streaming = False
+            _save_ui_settings()
+            log("Streaming: OFF", "action")
+            return
+        if sub == "set":
+            if len(args) < 2:
+                log("Usage: /streaming set <on|off>", "error")
+                return
+            raw = str(args[1]).strip().lower()
+            state.ui_streaming = raw in {"on", "true", "1", "yes"}
+            _save_ui_settings()
+            log(f"Streaming: {'ON' if state.ui_streaming else 'OFF'}", "action")
+            return
+        log("Usage: /streaming status|on|off", "error")
         return
 
     if command == "/lang":
@@ -2830,6 +2983,7 @@ def _handle_input(buff: Buffer) -> None:
                     log(answer, "action" if ok else "error")
             finally:
                 state.agent_processing = False
+                _trim_logs_if_needed()
                 try:
                     from tui.layout import force_ui_update
                     force_ui_update()
@@ -3103,7 +3257,30 @@ def cli_main(argv: List[str]) -> None:
         return
 
     if args.command == "agent-chat":
-        ok, answer = _agent_send(args.message)
+        msg = str(args.message or "").strip()
+
+        # Deterministic CLI behavior for in-app slash commands.
+        parts = msg.split()
+        cmd_idx = next((i for i, p in enumerate(parts) if p.startswith("/")), None)
+        if cmd_idx is not None:
+            cmd = " ".join(parts[cmd_idx:]).strip()
+            _load_ui_settings()
+            out = _tool_app_command({"command": cmd})
+            if not out.get("ok"):
+                print(str(out.get("error") or "Unknown error"))
+                raise SystemExit(1)
+            for category, line in (out.get("lines") or []):
+                _ = category
+                if line:
+                    print(line)
+            raise SystemExit(0)
+
+        # Keep a stable, friendly greeting.
+        if _is_greeting(msg):
+            print("Привіт! Чим можу допомогти?")
+            raise SystemExit(0)
+
+        ok, answer = _agent_send_no_stream(msg)
         print(answer)
         raise SystemExit(0 if ok else 1)
 
