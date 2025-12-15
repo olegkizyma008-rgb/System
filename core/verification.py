@@ -11,45 +11,59 @@ class AdaptiveVerifier:
 
     def optimize_plan(self, raw_plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Analyzes a raw execution plan (list of steps) and inserts 'VERIFY' steps
-        at critical junctions ("Critical Path Analysis").
+        Analyzes a raw execution plan using LLM to insert 'VERIFY' steps dynamically.
         """
-        optimized_plan = []
+        from langchain_core.prompts import ChatPromptTemplate
+        from langchain_core.messages import SystemMessage, HumanMessage
+        import json
+        import re
+
+        VERIFIER_PROMPT = """Ти — Grisha, агент безпеки та верифікації.
+Твоє завдання: Проаналізувати план дій та вставити кроки перевірки (VERIFY) там, де це критично необхідно.
+
+Критерії для вставки VERIFY:
+1. Зміна стану системи (створення файлу, відкриття додатку, зміна налаштувань).
+2. Критичні дії (видалення, відправка повідомлення).
+3. Дії, результат яких не очевидний (клік по кнопці, пошук на сторінці).
+4. НЕ потрібна перевірка для пасивних дій (прочитати, подумати).
+
+Формат виводу: JSON список, де між кроками можуть бути вставлені об'єкти:
+{"type": "verify", "agent": "grisha", "description": "Перевірити, чи файл створено"}
+
+Вхідний план:
+{plan_json}
+
+Поверни ТІЛЬКИ JSON.
+"""
         
-        for i, step in enumerate(raw_plan):
-            optimized_plan.append(step)
+        try:
+            plan_json = json.dumps(raw_plan, ensure_ascii=False)
+            prompt = ChatPromptTemplate.from_messages([
+                SystemMessage(content=VERIFIER_PROMPT.format(plan_json=plan_json)),
+                HumanMessage(content="Оптимізуй план, додавши перевірки.")
+            ])
             
-            # Simple heuristic for now - real logic would use LLM to analyze context
-            action_type = step.get("type", "").lower()
-            description = step.get("description", "").lower()
+            response = self.llm.invoke(prompt.format_messages())
+            content = response.content
             
-            needs_verification = False
-            verify_type = "instrumental" # default
+            # Simple JSON cleanup
+            content = content.replace("```json", "").replace("```", "").strip()
             
-            # Heuristic Rules based on TZ 6.5
-            if "browser" in action_type or "open url" in description:
-                needs_verification = True
-                verify_type = "visual" # Browser usually needs vision
-            elif "click" in description or "select" in description:
-                 # Interaction often needs check
-                 needs_verification = True
-                 verify_type = "visual"
-            elif "write" in action_type or "save" in description:
-                needs_verification = True
-                verify_type = "instrumental" # File check
-            elif "calc" in description or "math" in description:
-                needs_verification = True
-                verify_type = "visual_diff" # Check result change
+            # Extract JSON list [ ... ]
+            import re
+            match = re.search(r"\[.*\]", content, re.DOTALL)
+            if match:
+                content = match.group(0)
                 
-            if needs_verification:
-                optimized_plan.append({
-                    "type": "verify",
-                    "method": verify_type,
-                    "target_step_id": step.get("id"),
-                    "description": f"Verify success of: {description}"
-                })
+            optimized = json.loads(content)
+            if isinstance(optimized, list):
+                return optimized
                 
-        return optimized_plan
+        except Exception as e:
+            print(f"[Verifier] LLM JSON parsing error: {e}")
+            print(f"[Verifier] Raw response: {content[:200]}...") # Debug log
+            
+        return raw_plan
 
     def get_diff_strategy(self, current_image_path: str, previous_image_path: str) -> float:
         """
