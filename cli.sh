@@ -42,6 +42,8 @@ if [ ! -f "$SCRIPT_DIR/cli.py" ]; then
   exit 1
 fi
 
+export TOKENIZERS_PARALLELISM=false
+
 # Якщо потрібні sudo-права (наприклад для fs_usage/dtrace), перевіряємо наявність пароля
 if [ -n "$SUDO_PASSWORD" ]; then
   # Тихо перевіряємо, чи пароль працює (без інтерактивного запиту)

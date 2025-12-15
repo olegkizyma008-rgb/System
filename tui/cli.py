@@ -110,6 +110,9 @@ agent_session = AgentSession()
 agent_chat_mode: bool = True
 
 
+_logs_lock = threading.RLock()
+
+
 def _is_complex_task(text: str) -> bool:
     t = str(text or "").strip()
     if not t:
@@ -140,6 +143,28 @@ def _is_complex_task(text: str) -> bool:
     return sum(1 for k in keywords if k in lower) >= 2
 
 
+def _is_greeting(text: str) -> bool:
+    t = str(text or "").strip().lower()
+    if not t:
+        return False
+    t = re.sub(r"[\s\t\n\r\.,!\?;:]+", " ", t).strip()
+    greetings = {
+        "привіт",
+        "привiт",
+        "вітаю",
+        "доброго дня",
+        "добрий день",
+        "добрий вечір",
+        "доброго вечора",
+        "добрий ранок",
+        "доброго ранку",
+        "hello",
+        "hi",
+        "hey",
+    }
+    return t in greetings
+
+
 def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell: bool, allow_applescript: bool) -> None:
     # TRINITY INTEGRATION START
     try:
@@ -155,7 +180,35 @@ def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell:
         )
         
         log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")
-        runtime = TrinityRuntime(verbose=False, permissions=permissions)
+        
+        # Determine if streaming is enabled
+        use_stream = bool(getattr(state, "ui_streaming", True))
+
+        # Create streaming callback if enabled. TrinityRuntime will call this as
+        # on_stream(agent_name, delta_text).
+        accumulated_by_agent: Dict[str, str] = {}
+        stream_line_by_agent: Dict[str, int] = {}
+
+        def _on_stream_delta(agent_name: str, piece: str) -> None:
+            nonlocal accumulated_by_agent
+            prev = accumulated_by_agent.get(agent_name, "")
+            curr = prev + (piece or "")
+            accumulated_by_agent[agent_name] = curr
+
+            idx = stream_line_by_agent.get(agent_name)
+            if idx is None:
+                idx = _log_reserve_line("action")
+                stream_line_by_agent[agent_name] = idx
+            _log_replace_at(idx, f"[ATLAS] {agent_name}: {curr}", "action")
+            try:
+                from tui.layout import force_ui_update
+                force_ui_update()
+            except Exception:
+                pass
+
+        # Pass streaming callback only if enabled
+        on_stream_callback = _on_stream_delta if use_stream else None
+        runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback)
         
         step_count = 0
         for event in runtime.run(user_text):
@@ -166,7 +219,17 @@ def _run_graph_agent_task(user_text: str, *, allow_autopilot: bool, allow_shell:
                 last_msg = messages[-1] if messages else None
                 content = getattr(last_msg, "content", "") if last_msg else ""
                 
-                log(f"[ATLAS] {agent_name}: {content}", "info")
+                # Log the content (streaming will have already updated via callback,
+                # so this is primarily for non-streaming mode and to ensure final
+                # content is present in the logs).
+                if not use_stream:
+                    log(f"[ATLAS] {agent_name}: {content}", "info")
+                else:
+                    idx = stream_line_by_agent.get(agent_name)
+                    if idx is None:
+                        idx = _log_reserve_line("action")
+                        stream_line_by_agent[agent_name] = idx
+                    _log_replace_at(idx, f"[ATLAS] {agent_name}: {content}", "action")
                 
                 # Check for pause_info (permission required)
                 pause_info = state_update.get("pause_info")
@@ -195,10 +258,40 @@ def _log_replace_last(text: str, category: str = "info") -> None:
         "action": "class:log.action",
         "error": "class:log.error",
     }
-    if not state.logs:
-        state.logs.append((style_map.get(category, "class:log.info"), f"{text}\n"))
-        return
-    state.logs[-1] = (style_map.get(category, "class:log.info"), f"{text}\n")
+    with _logs_lock:
+        if not state.logs:
+            state.logs.append((style_map.get(category, "class:log.info"), f"{text}\n"))
+            return
+        state.logs[-1] = (style_map.get(category, "class:log.info"), f"{text}\n")
+
+
+def _log_reserve_line(category: str = "info") -> int:
+    style_map = {
+        "info": "class:log.info",
+        "user": "class:log.user",
+        "action": "class:log.action",
+        "error": "class:log.error",
+    }
+    with _logs_lock:
+        state.logs.append((style_map.get(category, "class:log.info"), "\n"))
+        if len(state.logs) > 500:
+            state.logs = state.logs[-400:]
+        return max(0, len(state.logs) - 1)
+
+
+def _log_replace_at(index: int, text: str, category: str = "info") -> None:
+    style_map = {
+        "info": "class:log.info",
+        "user": "class:log.user",
+        "action": "class:log.action",
+        "error": "class:log.error",
+    }
+    with _logs_lock:
+        if index < 0 or index >= len(state.logs):
+            state.logs.append((style_map.get(category, "class:log.info"), f"{text}\n"))
+        else:
+            state.logs[index] = (style_map.get(category, "class:log.info"), f"{text}\n")
+
 
 
 def _env_bool(value: Any) -> Optional[bool]:
@@ -1431,12 +1524,12 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         accumulated_content = ""
 
         # Reserve a line for assistant streaming output
-        log("", "action")
+        stream_idx = _log_reserve_line("action")
 
         def _on_delta(piece: str) -> None:
             nonlocal accumulated_content
             accumulated_content += piece
-            _log_replace_last(accumulated_content, "action")
+            _log_replace_at(stream_idx, accumulated_content, "action")
             try:
                 from tui.layout import force_ui_update
                 force_ui_update()
@@ -1448,12 +1541,12 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         else:
             resp = llm.invoke(agent_session.messages)
             accumulated_content = str(getattr(resp, "content", "") or "")
-            _log_replace_last(accumulated_content, "action")
+            _log_replace_at(stream_idx, accumulated_content, "action")
 
         final_message = resp if isinstance(resp, AIMessage) else AIMessage(content=str(getattr(resp, "content", "") or ""))
         if not accumulated_content:
             accumulated_content = str(getattr(final_message, "content", "") or "")
-            _log_replace_last(accumulated_content, "action")
+            _log_replace_at(stream_idx, accumulated_content, "action")
 
         agent_session.messages.append(final_message)
 
@@ -1541,12 +1634,12 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                 try:
                     if hasattr(llm, "invoke_with_stream"):
                         final_acc = ""
-                        log("", "action")
+                        final_stream_idx = _log_reserve_line("action")
 
                         def _on_final_delta(piece: str) -> None:
                             nonlocal final_acc
                             final_acc += piece
-                            _log_replace_last(final_acc, "action")
+                            _log_replace_at(final_stream_idx, final_acc, "action")
                             try:
                                 from tui.layout import force_ui_update
                                 force_ui_update()
@@ -1599,23 +1692,19 @@ def _tool_ui_streaming_set(args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _agent_send(user_text: str) -> Tuple[bool, str]:
-    """
-    Unified Entry Point: All user input now goes through Trinity (Smart Agent).
-    """
     _load_ui_settings()
-    unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
-    
-    # Auto-detect permissions based on request context or unsafe mode
-    # For now, we are generous if unsafe_mode is on.
-    # If off, permissions will be requested dynamically via pause mechanism.
-    
-    _run_graph_agent_task(
-        user_text, 
-        allow_autopilot=unsafe_mode,
-        allow_shell=unsafe_mode,
-        allow_applescript=unsafe_mode
-    )
-    return True, ""
+    if _is_greeting(user_text):
+        greeting = "Привіт! Чим можу допомогти?"
+        if bool(getattr(state, "ui_streaming", True)):
+            log(greeting, "action")
+        return True, greeting
+    use_stream = bool(getattr(state, "ui_streaming", True))
+    if use_stream:
+        return _agent_send_with_stream(user_text)
+
+    # Non-stream mode: still reuse the same engine; the caller is responsible for printing/logging the returned text.
+    ok, msg = _agent_send_with_stream(user_text)
+    return ok, msg
 
 
 
@@ -2238,9 +2327,10 @@ def log(text: str, category: str = "info") -> None:
         "action": "class:log.action",
         "error": "class:log.error",
     }
-    state.logs.append((style_map.get(category, "class:log.info"), f"{text}\n"))
-    if len(state.logs) > 500:
-        state.logs = state.logs[-400:]
+    with _logs_lock:
+        state.logs.append((style_map.get(category, "class:log.info"), f"{text}\n"))
+        if len(state.logs) > 500:
+            state.logs = state.logs[-400:]
 
 
 def get_header():

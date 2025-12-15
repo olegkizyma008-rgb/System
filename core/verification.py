@@ -28,13 +28,15 @@ class AdaptiveVerifier:
 4. НЕ потрібна перевірка для пасивних дій (прочитати, подумати).
 
 Формат виводу: JSON список, де між кроками можуть бути вставлені об'єкти:
-{"type": "verify", "agent": "grisha", "description": "Перевірити, чи файл створено"}
+{{"type": "verify", "agent": "grisha", "description": "Перевірити, чи файл створено"}}
 
 Вхідний план:
 {plan_json}
 
 Поверни ТІЛЬКИ JSON.
 """
+
+        content = ""
         
         try:
             plan_json = json.dumps(raw_plan, ensure_ascii=False)

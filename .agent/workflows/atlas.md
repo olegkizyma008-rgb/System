@@ -2,119 +2,183 @@
 description: The Core Architecture and Workflow of Project Atlas (Trinity Runtime).
 ---
 
-# Project Atlas: Trinity Runtime Specification
+# Project Atlas: Runtime & Workflow (Actual)
 
-This document defines the architecture, logic, and workflow of the **Trinity Runtime** — the core orchestrator of the Atlas system.
+This document describes the **current, real** runtime of the project.
 
-## 1. Core Architecture (The Trinity)
+Important: there are *two* execution engines in the repo:
 
-The system is built on a **LangGraph StateMachine** with three primary nodes (agents):
+1. **Chat Agent Engine (default in TUI/CLI)**
+   - Implemented in `tui/cli.py`.
+   - Streams assistant output into the TUI log and can execute tool calls.
 
-### 🌐 **Atlas (The Brain)**
-*   **Role:** Strategist, Planner, Orchestrator.
-*   **Responsibility:** 
-    *   Receives user input via TUI.
-    *   **Decomposition (Smart Planning):** Uses `ATLAS_PLANNING_PROMPT` to break down requests into atomic JSON actions.
-    *   **Context Management:** Maintains `Summary Memory` (rolling summary every 3 steps) and queries `RAG Memory`.
-    *   **Plan Management:** Consumes the plan step-by-step.
-*   **Logic:** `_atlas_node` in `core/trinity.py`.
-
-### 💻 **Tetyana (The Hands)**
-*   **Role:** Universal Executor.
-*   **Responsibility:** 
-    *   Executes specific actions defined by Atlas (e.g., `open_app`, `click`, `run_shell`).
-    *   Interacts with the OS via **MCP Tools**.
-    *   **Safety:** Checks `TrinityPermissions` (Shell, AppleScript) before execution. Pauses if permission is missing.
-*   **Logic:** `_tetyana_node` in `core/trinity.py`.
-
-### 👁️ **Grisha (The Eyes)**
-*   **Role:** Verifier, Security, QA.
-*   **Responsibility:** 
-    *   **Visual Verification:** Takes screenshots (`capture_screen`) to verify UI state.
-    *   **Data Verification:** Checks file contents (`read_file`) or command outputs.
-    *   **Feedback:** Returns `success` or `failure`. If failure, triggers a loop back to Atlas for replanning.
-*   **Logic:** `_grisha_node` in `core/trinity.py`.
+2. **Trinity Graph Runtime (LangGraph)**
+   - Implemented in `core/trinity.py`.
+   - Provides a multi-agent loop (Atlas/Tetyana/Grisha) with plan->act->verify behaviour.
+   - Intended for complex tasks / autopilot-like runs.
 
 ---
 
-## 2. The Planning Pipeline
+## 1. Entry Points
 
-The system uses a sophisticated **Decomposition -> Optimization -> Execution** pipeline:
+### 1.1 Shell entry
 
-1.  **Input:** User Request (e.g., "Create a file and write hello").
-2.  **RAG Lookup:** Atlas searches ChromaDB for similar past strategies.
-3.  **Decomposition (Atlas):** 
-    *   LLM converts request into a JSON List of Actions.
-    *   Example: `["Create file", "Write text"]`.
-4.  **Optimization (Verifier):**
-    *   **AdaptiveVerifier** (LLM-based) analyzes the plan.
-    *   Inserts `VERIFY` steps at critical junctions (e.g., after "Create file").
-    *   Result: `["Create file", "VERIFY (Grisha)", "Write text", "VERIFY (Grisha)"]`.
-5.  **Execution Loop:**
-    *   Atlas dispatches the first step to Tetyana.
-    *   Tetyana executes -> Grisha verifies.
-    *   Atlas removes the completed step and proceeds to the next.
+- `./cli.sh`
+  - Activates `.venv` if present.
+  - Loads `.env` (if present).
+  - Runs `cli.py`.
+
+### 1.2 Python entry
+
+- `cli.py` is a compatibility wrapper and delegates to `tui.cli.main()`.
+- Main CLI/TUI implementation lives in `tui/cli.py`.
 
 ---
 
-## 4. Safety & Permissions
+## 2. TUI Layer (UI, state, logging)
 
-The system operates under a strict permission model (`TrinityPermissions`):
+### 2.1 UI state
 
-*   **Restricted Actions:** `run_shell`, `run_applescript` require explicit flags (`allow_shell`, `allow_applescript`).
-*   **Pause Protocol:** 
-    *   If Tetyana attempts a restricted action without permission, `pause_info` is set in the state.
-    *   Atlas halts execution and returns `[PAUSED]`.
-    *   TUI displays the warning and waits for user command (`/allow shell` -> `/resume`).
-*   **Execution Limits:**
-    *   `MAX_STEPS = 30`: Prevents infinite execution.
-    *   `MAX_REPLANS = 5`: Prevents infinite retry loops on failure.
+- State lives in `system_cli/state.py` (`AppState`).
+- Key flags used by runtime:
+  - `ui_streaming`
+  - `ui_unsafe_mode`
+  - `agent_processing`
+  - `agent_paused` + pause metadata
 
----
+### 2.2 Log rendering & streaming rules
 
-## 5. Tool Capabilities (MCP)
-
-Tetyana has access to a registry of tools defined in `core/mcp.py`:
-
-*   **System Control:** `run_shell`, `run_applescript`, `get_system_info`.
-*   **File System:** `read_file`, `write_file`, `list_files`, `find_by_name`.
-*   **Vision:** `take_screenshot` (used by Grisha).
-*   **UI Interaction:** `click`, `type`, `scroll`, `hover` (via AppleScript/Python).
-*   **Applications:** `open_app`, `close_app`.
+- Logs are stored in `state.logs`.
+- The UI supports streaming by reserving a line and updating it.
+- Invariants:
+  - **Never** update logs by “replace last line” in streaming mode.
+  - Always reserve a specific line and update it by index.
+  - All mutations of `state.logs` must be guarded by a lock.
 
 ---
 
-## 6. Memory Systems
+## 3. Chat Agent Engine (default)
 
-1.  **RAG Memory (ChromaDB):**
-    *   Stores successful strategies (`strategies` collection).
-    *   Atlas retrieves relevant context before planning.
-    *   Successful Tetyana actions are ingested back into memory.
-2.  **Summary Memory (Short-term):**
-    *   A rolling text summary maintained by Atlas in the state.
-    *   Updated every 3 steps to prevent context loss in long-running tasks.
+### 3.1 Where it runs
 
----
+- TUI input handler (`_handle_input`) routes plain text into agent chat.
+- CLI subcommand `agent-chat --message "..."` also uses the same agent entry.
 
-## 7. Configuration
+### 3.2 Behaviour
 
-*   **Environment:** Requires `.env` file with `COPILOT_API_KEY` or `GITHUB_TOKEN`.
-*   **Entry Point:** `./cli.sh` (handles venv and env vars).
+- `_agent_send()` is the unified entry.
+  - **Greeting fast-path:** for `Привіт/Hello/Hi/...` returns a stable short response.
+  - Otherwise routes to `_agent_send_with_stream()` when `ui_streaming` is ON.
 
----
-
-## 8. File Structure
-
-*   `core/trinity.py` - Main Runtime, Graph definition, Node logic.
-*   `core/agents/` - Prompt definitions for Atlas, Tetyana, Grisha.
-*   `core/verification.py` - AdaptiveVerifier (Plan Optimization logic).
-*   `core/mcp.py` - Tool Registry.
-*   `tui/cli.py` - User Interface, Runtime integration.
+- `_agent_send_with_stream()`:
+  - Streams assistant output into a reserved log line.
+  - If the LLM returns tool calls, it executes them sequentially.
+  - After tool execution, it requests a final response and streams it into a new reserved line.
 
 ---
 
-## 9. Development Guidelines
+## 4. Trinity Graph Runtime (LangGraph)
 
-*   **Changes to Logic:** Always update `core/trinity.py` and ensure the Graph topology remains consistent.
-*   **New Tools:** Register in `core/mcp.py`.
-*   **Verification:** If adding new critical actions, ensure `VERIFIER_PROMPT` in `core/verification.py` covers them.
+### 4.1 Agents
+
+Trinity runtime (`core/trinity.py`) is a LangGraph state machine with nodes:
+
+- **Atlas** (`_atlas_node`)
+  - Decomposes tasks into steps.
+  - Maintains a rolling summary (optional).
+  - Queries memory for similar “strategies”.
+
+- **Tetyana** (`_tetyana_node`)
+  - Executes steps via tool registry (`core/mcp.py`).
+  - Uses permissions (`TrinityPermissions`) to block dangerous tools.
+
+- **Grisha** (`_grisha_node`)
+  - Verifies results and decides whether to end or return control to Atlas.
+  - Can use visual tools like `capture_screen`.
+
+### 4.2 Streaming integration into TUI
+
+- `tui/cli.py:_run_graph_agent_task()` wires `TrinityRuntime(on_stream=...)`.
+- Each agent can stream deltas; the TUI reserves **separate** lines per agent name and updates them by index.
+
+### 4.3 Current state
+
+- Trinity is present and runnable, but the **default user experience** is the Chat Agent Engine.
+- The long-term direction is to make runtime selection explicit and consistent (see Roadmap).
+
+---
+
+## 5. Safety & Permissions
+
+There are two permission layers:
+
+### 5.1 TUI “Unsafe mode”
+
+- `ui_unsafe_mode=OFF`:
+  - Dangerous tools require explicit confirmation markers (e.g. CONFIRM_*).
+  - Permission-related errors can pause the agent.
+
+- `ui_unsafe_mode=ON`:
+  - Confirmations are bypassed (dangerous).
+
+### 5.2 TrinityPermissions (Graph runtime)
+
+- Blocks `run_shell` and `run_applescript` unless explicitly allowed.
+- Supports a pause mechanism via `pause_info`.
+
+---
+
+## 6. Memory & storage
+
+- Trinity uses a memory subsystem (Chroma/strategies) under `.atlas_memory/`.
+- Treat `.atlas_memory/` as **runtime state** (usually not committed unless you intentionally want to version it).
+
+---
+
+## 7. Roadmap ("заходячи наперед")
+
+### 7.1 Unify runtimes
+
+- Define a single “routing policy”:
+  - greeting -> fast-path
+  - simple chat -> chat engine
+  - multi-step/system actions -> Trinity graph
+
+### 7.2 Make Trinity user-facing
+
+- Add an explicit `final_response` field in Trinity state and ensure it is rendered to the user.
+- Ensure the UI shows a clear final assistant message, not only internal plan/status lines.
+
+### 7.3 Add regression protection
+
+- Add smoke tests for:
+  - streaming output stability (no log erasures)
+  - greeting response
+  - permission pause/resume
+
+---
+
+## 8. Test Plan (manual smoke)
+
+- `./cli.sh agent-chat --message "Привіт"`
+  - Expected: human greeting response.
+
+- TUI:
+  - Send a long message and verify that streaming does not erase previous logs.
+  - Toggle streaming (`ui_streaming`) and verify output is still correct.
+
+- Permissions:
+  - With Unsafe mode OFF, attempt a request that would call `run_shell` and verify it is blocked/paused with a clear message.
+
+---
+
+## 9. File Structure (authoritative)
+
+- `cli.sh` - shell entry wrapper
+- `cli.py` - Python compatibility wrapper into `tui.cli`
+- `tui/cli.py` - main CLI + TUI + chat agent engine + Trinity integration
+- `system_cli/state.py` - AppState
+- `core/trinity.py` - Trinity graph runtime
+- `core/agents/*` - prompts
+- `core/verification.py` - AdaptiveVerifier
+- `core/mcp.py` - tool registry

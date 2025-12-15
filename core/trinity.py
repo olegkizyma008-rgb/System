@@ -1,4 +1,4 @@
-from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional
+from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
 import json
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
@@ -36,13 +36,20 @@ class TrinityRuntime:
     MAX_REPLANS = 5
     MAX_STEPS = 30
     
-    def __init__(self, verbose: bool = True, permissions: TrinityPermissions = None):
+    def __init__(
+        self,
+        verbose: bool = True,
+        permissions: TrinityPermissions = None,
+        on_stream: Optional[Callable[[str, str], None]] = None,
+    ):
         self.llm = CopilotLLM()
         self.verbose = verbose
         self.registry = MCPToolRegistry()
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
         self.permissions = permissions or TrinityPermissions()
+        # Callback for streaming deltas: (agent_name, text_delta)
+        self.on_stream = on_stream
         self.workflow = self._build_graph()
 
     def _build_graph(self):
@@ -184,7 +191,18 @@ class TrinityRuntime:
         prompt = get_atlas_prompt(f"The plan is: {current_step['description']}. Announce it.{rag_hint}")
         content = ""  # Initialize content variable
         try:
-            response = self.llm.invoke(prompt.format_messages())
+            if self.on_stream and hasattr(self.llm, "invoke_with_stream"):
+                # Wrap on_stream so the consumer knows which agent is speaking
+                def _delta(piece: str) -> None:
+                    try:
+                        self.on_stream("Atlas", piece)
+                    except Exception:
+                        # Streaming callback failures should not break the agent
+                        pass
+
+                response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=_delta)
+            else:
+                response = self.llm.invoke(prompt.format_messages())
             content = response.content
         except Exception as e:
             content = f"Error invoking Atlas: {e}"
@@ -229,6 +247,7 @@ class TrinityRuntime:
         content = ""  # Initialize content variable
         
         try:
+            # For tool-bound calls, don't stream (JSON protocol needs complete response)
             response = bound_llm.invoke(prompt.format_messages())
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
@@ -315,6 +334,7 @@ class TrinityRuntime:
         
         content = ""  # Initialize content variable
         try:
+            # For tool-bound calls, don't stream (JSON protocol needs complete response)
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []

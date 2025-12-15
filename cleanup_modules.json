@@ -33,14 +33,14 @@
           "id": "deep_vscode_for_windsurf",
           "name": "Deep VS Code Cleanup (Side Effects)",
           "script": "./cleanup_scripts/deep_vscode_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Очищення VS Code, якщо він використовувався разом із Windsurf"
         },
         {
           "id": "stealth_cleanup",
           "name": "Stealth System Traces Cleanup",
           "script": "./cleanup_scripts/stealth_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Агресивне видалення системних слідів (ризиковий модуль)"
         },
         {
@@ -137,7 +137,7 @@
           "id": "antigravity_deep_vscode",
           "name": "Deep VS Code Cleanup (Side Effects)",
           "script": "./cleanup_scripts/deep_vscode_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "VS Code cleanup якщо Antigravity працював поверх VS Code"
         }
       ]
