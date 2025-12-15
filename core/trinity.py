@@ -206,26 +206,32 @@ class TrinityRuntime:
         # ------------------------------------------------------------------
         
         lower_content = content.lower()
-        if "tools results" in lower_content or tool_calls:
+        
+        # Check for positive verification keywords first
+        positive_keywords = ["успішно", "verified", "confirmed", "success", "завершено", "готово", "працює", "відкрито"]
+        has_positive = any(kw in lower_content for kw in positive_keywords)
+        
+        # Check for negative keywords
+        negative_keywords = ["failed", "error", "rejected", "помилка", "не вдалося"]
+        has_negative = any(kw in lower_content for kw in negative_keywords)
+        
+        if "tools results" in lower_content and tool_calls:
             # Case A: Grisha used a tool (e.g. took a screenshot). 
-            # We need to loop back to Atlas/Grisha to analyze it. 
-            # In this graph topology: Grisha -> Atlas. Atlas will see the screenshot result.
+            # Loop back to Atlas to analyze the screenshot.
             next_agent = "atlas"
             
-        elif "failed" in lower_content or "error" in lower_content or "rejected" in lower_content:
+        elif has_negative:
             # Case B: VERIFICATION FAILED.
             # Trigger "Dynamic Granularity" (Replan).
             next_agent = "atlas"
-            # We should inject a "replan" signal into the state, but for now 
-            # Atlas will simply see the negative feedback in history and react.
             
-        elif "verified" in lower_content or "confirmed" in lower_content or "success" in lower_content:
-            # Case C: VERIFICATION PASSED.
-            # If there are more steps in the plan, Atlas continues.
-            # If this was the final step, we end.
-            next_agent = "atlas" 
+        elif has_positive and not tool_calls:
+            # Case C: VERIFICATION PASSED and no new tools called.
+            # TASK IS COMPLETE!
+            next_agent = "end"
+            
         else:
-            # Default fallback
+            # Default fallback - continue to atlas for more instructions
             next_agent = "atlas"
 
         return {
