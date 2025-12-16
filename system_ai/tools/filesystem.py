@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import Any, Dict, Optional, List
 
 def read_file(path: str) -> Dict[str, Any]:
@@ -70,3 +71,38 @@ def list_files(path: str) -> Dict[str, Any]:
         }
     except Exception as e:
         return {"tool": "list_files", "status": "error", "path": path, "error": str(e)}
+
+
+def copy_file(src: str, dst: str, overwrite: bool = True) -> Dict[str, Any]:
+    """Copy a file from src to dst (binary-safe)."""
+    try:
+        src_p = os.path.abspath(os.path.expanduser(str(src or "").strip()))
+        dst_p = os.path.abspath(os.path.expanduser(str(dst or "").strip()))
+        if not src_p or not dst_p:
+            return {"tool": "copy_file", "status": "error", "error": "Missing src or dst"}
+        if not os.path.exists(src_p):
+            return {"tool": "copy_file", "status": "error", "error": f"Source not found: {src_p}", "src": src_p, "dst": dst_p}
+        if os.path.isdir(src_p):
+            return {"tool": "copy_file", "status": "error", "error": "Source is a directory", "src": src_p, "dst": dst_p}
+        if (not overwrite) and os.path.exists(dst_p):
+            return {"tool": "copy_file", "status": "error", "error": f"Destination exists: {dst_p}", "src": src_p, "dst": dst_p}
+
+        dst_dir = os.path.dirname(dst_p)
+        if dst_dir and not os.path.exists(dst_dir):
+            os.makedirs(dst_dir, exist_ok=True)
+
+        shutil.copy2(src_p, dst_p)
+        try:
+            size = os.path.getsize(dst_p)
+        except Exception:
+            size = None
+
+        return {
+            "tool": "copy_file",
+            "status": "success",
+            "src": src_p,
+            "dst": dst_p,
+            "bytes_copied": size,
+        }
+    except Exception as e:
+        return {"tool": "copy_file", "status": "error", "src": str(src or ""), "dst": str(dst or ""), "error": str(e)}

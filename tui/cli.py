@@ -1978,6 +1978,7 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         "IMPORTANT: When user asks to perform actions, YOU MUST execute them automatically using tools.\n"
         "Do NOT ask the user to do things manually - use the available tools to complete the task.\n"
         "For Desktop cleanup/organization requests, prefer the organize_desktop tool (no run_shell; requires unsafe mode/CONFIRM_SHELL).\n"
+        "For screenshots: use take_screenshot/capture_screen to produce an image file path, then use copy_file to save it to the target folder. Use write_file ONLY for text files.\n"
         "For calculator tasks: use open_app, then use run_shell with osascript to perform calculations.\n\n"
         "IMPORTANT: Do not claim that a browser task succeeded (e.g. a video/movie is playing or fullscreen) unless you verified it using tools.\n"
         "- For Google Chrome, verify the current page using chrome_active_tab and/or take_screenshot.\n"
@@ -2235,6 +2236,7 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
         "IMPORTANT: When user asks to perform actions, YOU MUST execute them automatically using tools.\n"
         "Do NOT ask the user to do things manually - use the available tools to complete the task.\n"
         "For Desktop cleanup/organization requests, prefer the organize_desktop tool (no run_shell; requires unsafe mode/CONFIRM_SHELL).\n"
+        "For screenshots: use take_screenshot/capture_screen to produce an image file path, then use copy_file to save it to the target folder. Use write_file ONLY for text files.\n"
         "For calculator tasks: use open_app, then use run_shell with osascript to perform calculations.\n\n"
 
         "IMPORTANT: Do not claim that a browser task succeeded (e.g. a video/movie is playing or fullscreen) unless you verified it using tools.\n"
@@ -3826,6 +3828,7 @@ def get_context():
     result.append(("class:context.label", " /lang status|set ui <code>|set chat <code>\n"))
     result.append(("class:context.label", " /streaming status|on|off\n"))
     result.append(("class:context.label", " /gui_mode status|on|off|auto\n"))
+    result.append(("class:context.label", " /trinity <task>\n"))
 
     return result
 
@@ -3904,6 +3907,7 @@ def _handle_command(cmd: str) -> None:
         log("/lang status|set ui <code>|set chat <code>", "info")
         log("/streaming status|on|off", "info")
         log("/gui_mode status|on|off|auto", "info")
+        log("/trinity <task> | /autopilot <task>", "info")
         log("/agent-reset | /agent-on | /agent-off | /agent-mode [on|off|toggle]", "info")
         return
 
@@ -3933,6 +3937,54 @@ def _handle_command(cmd: str) -> None:
 
     if command == "/resume":
         _resume_paused_agent()
+        return
+
+    if command in {"/trinity", "/autopilot"}:
+        task = " ".join(args).strip()
+        if not task:
+            log("Usage: /trinity <task>", "error")
+            return
+
+        log(f"{command} {task}", "user")
+
+        def _run_trinity() -> None:
+            prev_status = str(getattr(state, "status", "READY") or "READY")
+            state.status = "TRINITY ACTIVE"
+            state.agent_processing = True
+            try:
+                unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
+                if not unsafe_mode:
+                    log("[HINT] Для виконання системних дій у Trinity увімкни Unsafe mode (F2 -> Settings -> Unsafe mode).", "info")
+
+                _run_graph_agent_task(
+                    task,
+                    allow_file_write=unsafe_mode,
+                    allow_shell=unsafe_mode,
+                    allow_applescript=unsafe_mode,
+                    allow_gui=unsafe_mode,
+                    allow_shortcuts=bool(getattr(state, "automation_allow_shortcuts", False))
+                    or _is_confirmed_shortcuts(task),
+                    gui_mode=getattr(state, "ui_gui_mode", "auto"),
+                )
+            finally:
+                state.status = prev_status
+                state.agent_processing = False
+                _trim_logs_if_needed()
+                try:
+                    from tui.layout import force_ui_update
+
+                    force_ui_update()
+                except Exception:
+                    pass
+
+        try:
+            from tui.layout import force_ui_update
+
+            force_ui_update()
+        except Exception:
+            pass
+
+        threading.Thread(target=_run_trinity, daemon=True).start()
         return
 
     if command == "/agent-reset":

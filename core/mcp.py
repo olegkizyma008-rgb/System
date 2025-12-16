@@ -6,7 +6,7 @@ import time
 from system_ai.tools.executor import run_shell, open_app, run_applescript, run_shortcut
 from system_ai.tools.executor import open_system_settings_privacy
 from system_ai.tools.screenshot import take_screenshot
-from system_ai.tools.filesystem import read_file, write_file, list_files
+from system_ai.tools.filesystem import read_file, write_file, list_files, copy_file
 from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
 from system_ai.tools.input import click, type_text, press_key, move_mouse, click_mouse
 from system_ai.tools.screenshot import capture_screen_region
@@ -161,6 +161,7 @@ class MCPToolRegistry:
         # Filesystem
         self.register_tool("read_file", read_file, "Read file content. Args: path (str)")
         self.register_tool("write_file", write_file, "Write file content. Args: path (str), content (str)")
+        self.register_tool("copy_file", copy_file, "Copy file (binary-safe). Args: src (str), dst (str), overwrite (bool)")
         self.register_tool("list_files", list_files, "List directory. Args: path (str)")
         
         # Dev Subsystem

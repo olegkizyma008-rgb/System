@@ -42,8 +42,6 @@ class MessageFilter:
         "bytes_written:",
         "error_type:",
         "permission_required",
-        "{",  # JSON start
-        "\"",  # JSON quotes
     ]
     
     @staticmethod
