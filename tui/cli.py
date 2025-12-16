@@ -464,7 +464,14 @@ def _run_graph_agent_task(
             if idx is None:
                 idx = _log_reserve_line("action")
                 stream_line_by_agent[agent_name] = idx
-            _log_replace_at(idx, f"[ATLAS] {agent_name}: {curr}", "action")
+            # Guard against out-of-range index after log trimming
+            if 0 <= idx < len(state.logs):
+                _log_replace_at(idx, f"[ATLAS] {agent_name}: {curr}", "action")
+            else:
+                # Index became invalid after trimming, reserve new line
+                idx = _log_reserve_line("action")
+                stream_line_by_agent[agent_name] = idx
+                _log_replace_at(idx, f"[ATLAS] {agent_name}: {curr}", "action")
             
             # Also log to agent messages panel
             try:
@@ -520,7 +527,14 @@ def _run_graph_agent_task(
                     if idx is None:
                         idx = _log_reserve_line("action")
                         stream_line_by_agent[agent_name] = idx
-                    _log_replace_at(idx, f"[ATLAS] {agent_name}: {content}", "action")
+                    # Guard against out-of-range index after log trimming
+                    if 0 <= idx < len(state.logs):
+                        _log_replace_at(idx, f"[ATLAS] {agent_name}: {content}", "action")
+                    else:
+                        # Index became invalid after trimming, reserve new line
+                        idx = _log_reserve_line("action")
+                        stream_line_by_agent[agent_name] = idx
+                        _log_replace_at(idx, f"[ATLAS] {agent_name}: {content}", "action")
                 
                 # Check for pause_info (permission required)
                 pause_info = state_update.get("pause_info")
@@ -2028,9 +2042,15 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         stream_idx = _log_reserve_line("action")
 
         def _on_delta(piece: str) -> None:
-            nonlocal accumulated_content
+            nonlocal accumulated_content, stream_idx
             accumulated_content += piece
-            _log_replace_at(stream_idx, accumulated_content, "action")
+            # Guard against out-of-range index after log trimming
+            if 0 <= stream_idx < len(state.logs):
+                _log_replace_at(stream_idx, accumulated_content, "action")
+            else:
+                # Index became invalid after trimming, reserve new line
+                stream_idx = _log_reserve_line("action")
+                _log_replace_at(stream_idx, accumulated_content, "action")
             try:
                 from tui.layout import force_ui_update
                 force_ui_update()
@@ -2042,12 +2062,24 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
         else:
             resp = llm.invoke(agent_session.messages)
             accumulated_content = str(getattr(resp, "content", "") or "")
-            _log_replace_at(stream_idx, accumulated_content, "action")
+            # Guard against out-of-range index after log trimming
+            if 0 <= stream_idx < len(state.logs):
+                _log_replace_at(stream_idx, accumulated_content, "action")
+            else:
+                # Index became invalid after trimming, reserve new line
+                stream_idx = _log_reserve_line("action")
+                _log_replace_at(stream_idx, accumulated_content, "action")
 
         final_message = resp if isinstance(resp, AIMessage) else AIMessage(content=str(getattr(resp, "content", "") or ""))
         if not accumulated_content:
             accumulated_content = str(getattr(final_message, "content", "") or "")
-            _log_replace_at(stream_idx, accumulated_content, "action")
+            # Guard against out-of-range index after log trimming
+            if 0 <= stream_idx < len(state.logs):
+                _log_replace_at(stream_idx, accumulated_content, "action")
+            else:
+                # Index became invalid after trimming, reserve new line
+                stream_idx = _log_reserve_line("action")
+                _log_replace_at(stream_idx, accumulated_content, "action")
 
         agent_session.messages.append(final_message)
 
@@ -2161,9 +2193,15 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                         final_stream_idx = _log_reserve_line("action")
 
                         def _on_final_delta(piece: str) -> None:
-                            nonlocal final_acc
+                            nonlocal final_acc, final_stream_idx
                             final_acc += piece
-                            _log_replace_at(final_stream_idx, final_acc, "action")
+                            # Guard against out-of-range index after log trimming
+                            if 0 <= final_stream_idx < len(state.logs):
+                                _log_replace_at(final_stream_idx, final_acc, "action")
+                            else:
+                                # Index became invalid after trimming, reserve new line
+                                final_stream_idx = _log_reserve_line("action")
+                                _log_replace_at(final_stream_idx, final_acc, "action")
                             try:
                                 from tui.layout import force_ui_update
                                 force_ui_update()
