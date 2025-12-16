@@ -204,6 +204,55 @@ class MCPToolRegistry:
         self.register_tool("save_memory", save_memory_tool, "Save info to memory. Args: category (ui_patterns/strategies), content (str)")
         self.register_tool("rag_query", query_memory_tool, "Query memory. Args: category (str), query (str)")
 
+        # Project Structure
+        def _save_last_response_and_regenerate(text: str) -> Dict[str, Any]:
+            """Save response to .last_response.txt (preserving Trinity reports) and regenerate project_structure_final.txt"""
+            try:
+                # Read existing content (Trinity reports)
+                existing_content = ""
+                try:
+                    with open(".last_response.txt", "r", encoding="utf-8") as f:
+                        existing_content = f.read().strip()
+                except FileNotFoundError:
+                    pass
+                
+                # Build new content: my response first, then existing Trinity reports
+                new_content = ""
+                if existing_content:
+                    # Prepend my response, keep Trinity reports below
+                    new_content = f"## My Last Response\n\n{text}\n\n---\n\n{existing_content}"
+                else:
+                    # First time: just my response
+                    new_content = f"## My Last Response\n\n{text}"
+                
+                with open(".last_response.txt", "w", encoding="utf-8") as f:
+                    f.write(new_content)
+                
+                # Regenerate project structure
+                import subprocess
+                result = subprocess.run(
+                    ["python3", "generate_structure.py"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                return {
+                    "status": "success",
+                    "message": "Response saved (Trinity reports preserved) and project structure regenerated",
+                    "output": result.stdout[:500] if result.stdout else ""
+                }
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "message": f"Failed to save response: {str(e)}"
+                }
+
+        self.register_tool(
+            "save_last_response",
+            _save_last_response_and_regenerate,
+            "Save last response to .last_response.txt and regenerate project_structure_final.txt. Args: text (str)"
+        )
+
     def register_tool(self, name: str, func: Callable, description: str):
         self._tools[name] = func
         self._descriptions[name] = description

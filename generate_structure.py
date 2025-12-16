@@ -264,3 +264,12 @@ if __name__ == "__main__":
         last_response = None
     
     main(project_root=".", output_file="project_structure_final.txt", last_response=last_response)
+    
+    # After generating structure, ensure .last_response.txt is staged for git
+    # This helps keep the repository in sync
+    try:
+        import subprocess
+        if os.path.exists(".last_response.txt"):
+            subprocess.run(["git", "add", ".last_response.txt"], capture_output=True, timeout=5)
+    except Exception:
+        pass  # Silently fail if git operations don't work

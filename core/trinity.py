@@ -1061,5 +1061,29 @@ class TrinityRuntime:
             commit_hash=commit_hash,
         )
 
+        # Save report to .last_response.txt for generate_structure.py to pick up
+        # Preserve previous response (my analysis) and append new Trinity report
+        try:
+            existing_content = ""
+            try:
+                with open(".last_response.txt", "r", encoding="utf-8") as f:
+                    existing_content = f.read().strip()
+            except FileNotFoundError:
+                pass
+            
+            # Build new content: keep my analysis, add new Trinity report
+            new_content = ""
+            if existing_content:
+                # If file exists, preserve it and add separator + new report
+                new_content = existing_content + "\n\n---\n\n## Trinity Report\n\n" + report
+            else:
+                # First time: just the report
+                new_content = report
+            
+            with open(".last_response.txt", "w", encoding="utf-8") as f:
+                f.write(new_content)
+        except Exception:
+            pass
+
         final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
