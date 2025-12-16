@@ -82,6 +82,18 @@ git add .
 git commit -m "Initial commit: Bootstrap Trinity continual development project" 2>/dev/null || true
 echo "✓ Created initial commit"
 
+OPENED_IN_WINDSURF=0
+if command -v windsurf >/dev/null 2>&1; then
+    windsurf --new-window "$PROJECT_DIR" >/dev/null 2>&1 && OPENED_IN_WINDSURF=1 || true
+else
+    open -a Windsurf "$PROJECT_DIR" >/dev/null 2>&1 && OPENED_IN_WINDSURF=1 || true
+fi
+if [ "$OPENED_IN_WINDSURF" -eq 1 ]; then
+    echo "🪟 Opened in Windsurf: $PROJECT_DIR"
+else
+    echo "⚠️ Could not auto-open Windsurf. You can run: windsurf \"$PROJECT_DIR\""
+fi
+
 # Summary
 echo ""
 echo "✅ Bootstrap complete!"

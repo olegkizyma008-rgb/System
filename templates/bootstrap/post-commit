@@ -19,7 +19,7 @@ if [ -f ".last_response.txt" ] && [ -s ".last_response.txt" ]; then
     ./regenerate_structure.sh "$(cat .last_response.txt)" > /dev/null 2>&1
     
     # Stage the updated project_structure_final.txt
-    git add project_structure_final.txt 2>/dev/null
+    git add -f project_structure_final.txt 2>/dev/null
     
     # Check if there are changes to commit
     if ! git diff-index --quiet --cached HEAD --; then

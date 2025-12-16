@@ -7,7 +7,13 @@ from system_ai.tools.executor import run_shell, open_app, run_applescript, run_s
 from system_ai.tools.executor import open_system_settings_privacy
 from system_ai.tools.screenshot import take_screenshot
 from system_ai.tools.filesystem import read_file, write_file, list_files, copy_file
-from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
+from system_ai.tools.windsurf import (
+    send_to_windsurf,
+    open_file_in_windsurf,
+    is_windsurf_running,
+    get_windsurf_current_project_path,
+    open_project_in_windsurf,
+)
 from system_ai.tools.input import click, type_text, press_key, move_mouse, click_mouse
 from system_ai.tools.screenshot import capture_screen_region
 from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen, compare_images
@@ -167,6 +173,17 @@ class MCPToolRegistry:
         # Dev Subsystem
         self.register_tool("send_to_windsurf", send_to_windsurf, "Send message to Windsurf Chat. Args: message (str)")
         self.register_tool("open_file_in_windsurf", open_file_in_windsurf, "Open file in Windsurf. Args: path (str), line (int)")
+        self.register_tool("is_windsurf_running", is_windsurf_running, "Check if Windsurf is running. Args: none")
+        self.register_tool(
+            "get_windsurf_current_project_path",
+            get_windsurf_current_project_path,
+            "Get current/open project folder path from Windsurf state. Args: none",
+        )
+        self.register_tool(
+            "open_project_in_windsurf",
+            open_project_in_windsurf,
+            "Open a project folder in Windsurf. Args: path (str), new_window (bool)",
+        )
         
         # Vision/Input
         self.register_tool("capture_screen", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")

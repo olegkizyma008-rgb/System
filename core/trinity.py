@@ -287,13 +287,28 @@ class TrinityRuntime:
                 "press_key",
                 "find_image_on_screen",
             }
+            applescript_tools = {
+                "run_applescript",
+                "native_applescript",
+                "native_click_ui",
+                "native_type_text",
+                "native_wait",
+                "native_open_app",
+                "native_activate_app",
+                "send_to_windsurf",
+            }
+            shell_tools = {
+                "run_shell",
+                "open_file_in_windsurf",
+                "open_project_in_windsurf",
+            }
             if tool_calls:
                 for tool in tool_calls:
                     name = tool.get("name")
                     args = tool.get("args") or {}
                     
                     # Permission check for dangerous tools
-                    if name == "run_shell" and not self.permissions.allow_shell:
+                    if name in shell_tools and not self.permissions.allow_shell:
                         pause_info = {
                             "permission": "shell",
                             "message": "Потрібен дозвіл на виконання shell команд. Введіть /allow shell",
@@ -313,7 +328,7 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
                         
-                    if name == "run_applescript" and not self.permissions.allow_applescript:
+                    if name in applescript_tools and not self.permissions.allow_applescript:
                         pause_info = {
                             "permission": "applescript",
                             "message": "Потрібен дозвіл на виконання AppleScript. Введіть /allow applescript",
