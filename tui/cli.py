@@ -52,6 +52,7 @@ from tui.constants import MAIN_MENU_ITEMS
 from tui.cli_defaults import DEFAULT_CLEANUP_CONFIG
 from tui.cli_localization import AVAILABLE_LOCALES, LocalizationConfig
 from tui.themes import THEME_NAMES, THEMES
+from tui.messages import MessageBuffer, AgentType
 from tui.cli_paths import (
     CLEANUP_CONFIG_PATH,
     LLM_SETTINGS_PATH,
@@ -312,6 +313,10 @@ agent_session = AgentSession()
 agent_chat_mode: bool = True
 
 
+# Agent messages buffer for clean display
+_agent_messages_buffer = MessageBuffer(max_messages=200)
+_agent_messages_lock = threading.RLock()
+
 _logs_lock = threading.RLock()
 _logs_need_trim: bool = False
 _thread_log_override = threading.local()
@@ -460,6 +465,19 @@ def _run_graph_agent_task(
                 idx = _log_reserve_line("action")
                 stream_line_by_agent[agent_name] = idx
             _log_replace_at(idx, f"[ATLAS] {agent_name}: {curr}", "action")
+            
+            # Also log to agent messages panel
+            try:
+                agent_type_map = {
+                    "atlas": AgentType.ATLAS,
+                    "tetyana": AgentType.TETYANA,
+                    "grisha": AgentType.GRISHA,
+                }
+                agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
+                log_agent_message(agent_type, curr)
+            except Exception:
+                pass
+            
             try:
                 from tui.layout import force_ui_update
                 force_ui_update()
@@ -486,6 +504,17 @@ def _run_graph_agent_task(
                 # content is present in the logs).
                 if not use_stream:
                     log(f"[ATLAS] {agent_name}: {content}", "info")
+                    # Also log to agent messages panel
+                    try:
+                        agent_type_map = {
+                            "atlas": AgentType.ATLAS,
+                            "tetyana": AgentType.TETYANA,
+                            "grisha": AgentType.GRISHA,
+                        }
+                        agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
+                        log_agent_message(agent_type, content)
+                    except Exception:
+                        pass
                 else:
                     idx = stream_line_by_agent.get(agent_name)
                     if idx is None:
@@ -626,6 +655,12 @@ def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
 def get_logs() -> List[Tuple[str, str]]:
     logs_snapshot, _ = _get_render_log_snapshot()
     return logs_snapshot
+
+
+def get_agent_messages() -> List[Tuple[str, str]]:
+    """Get formatted agent messages for clean display panel."""
+    with _agent_messages_lock:
+        return _agent_messages_buffer.get_formatted()
 
 
 def _find_module(cfg: Dict[str, Any], editor: str, module_id: str) -> Optional[ModuleRef]:
@@ -3195,6 +3230,7 @@ def run_tui() -> None:
         get_context=get_context,
         get_logs=get_logs,
         get_log_cursor_position=get_log_cursor_position,
+        get_agent_messages=get_agent_messages,
         get_menu_content=get_menu_content,
         get_input_prompt=get_input_prompt,
         get_prompt_width=get_prompt_width,
@@ -3558,6 +3594,12 @@ def _apply_default_monitor_targets() -> None:
 
 localization = LocalizationConfig.load()
 cleanup_cfg = None
+
+
+def log_agent_message(agent: AgentType, text: str) -> None:
+    """Log agent message to clean display panel."""
+    with _agent_messages_lock:
+        _agent_messages_buffer.add(agent, text, is_technical=False)
 
 
 def log(text: str, category: str = "info") -> None:
