@@ -10,7 +10,7 @@ from system_ai.tools.filesystem import read_file, write_file, list_files, copy_f
 from system_ai.tools.windsurf import send_to_windsurf, open_file_in_windsurf
 from system_ai.tools.input import click, type_text, press_key, move_mouse, click_mouse
 from system_ai.tools.screenshot import capture_screen_region
-from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen
+from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen, compare_images
 from core.memory import save_memory_tool, query_memory_tool
 
 from system_ai.tools.permissions_manager import create_permissions_manager
@@ -175,6 +175,7 @@ class MCPToolRegistry:
         self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen image with AI. Args: image_path (str), prompt (str)")
         self.register_tool("ocr_region", ocr_region, "OCR a screen region using vision. Args: x,y,width,height")
         self.register_tool("find_image_on_screen", find_image_on_screen, "Find an image template on screen (may be unimplemented). Args: template_path (str), tolerance (float)")
+        self.register_tool("compare_images", compare_images, "Compare two images (before/after) using vision. Args: path1 (str), path2 (str), prompt (str optional)")
 
         self.register_tool("move_mouse", move_mouse, "Move mouse to absolute coordinates. Args: x (int), y (int)")
         self.register_tool("click_mouse", click_mouse, "Click mouse (left/right/double) optionally at x,y. Args: button(str), x?(int), y?(int)")

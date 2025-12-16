@@ -258,3 +258,70 @@ def find_image_on_screen(template_path: str, tolerance: float = 0.9) -> Dict[str
                 "error": "Permission denied. Please allow Screen Recording in System Settings.",
             }
         return {"tool": "find_image_on_screen", "status": "error", "error": str(e)}
+
+
+def compare_images(path1: str, path2: str, prompt: str = None) -> Dict[str, Any]:
+    """
+    Compare two images (before/after) using GPT-4o-vision.
+    
+    Args:
+        path1: Path to first image (before)
+        path2: Path to second image (after)
+        prompt: Custom comparison prompt (optional)
+    
+    Returns:
+        Dict with comparison analysis
+    """
+    if not path1 or not os.path.exists(path1):
+        return {"status": "error", "error": f"Image not found: {path1}"}
+    if not path2 or not os.path.exists(path2):
+        return {"status": "error", "error": f"Image not found: {path2}"}
+    
+    try:
+        from providers.copilot import CopilotLLM
+        from langchain_core.messages import HumanMessage
+        
+        # Initialize Vision LLM
+        llm = CopilotLLM(vision_model_name="gpt-4.1")
+        
+        # Encode both images
+        b64_1 = load_image_png_b64(path1)
+        b64_2 = load_image_png_b64(path2)
+        
+        if not b64_1:
+            return {"status": "error", "error": f"Failed to encode image: {path1}"}
+        if not b64_2:
+            return {"status": "error", "error": f"Failed to encode image: {path2}"}
+        
+        # Default prompt if not provided
+        if not prompt:
+            prompt = "Compare these two images (before and after). Describe all differences in detail. Are they as expected? List specific changes."
+        
+        # Construct message with both images
+        message = HumanMessage(
+            content=[
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{b64_1}"},
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{b64_2}"},
+                },
+            ]
+        )
+        
+        # Invoke vision model
+        response = llm.invoke([message])
+        analysis = response.content
+        
+        return {
+            "status": "success",
+            "analysis": analysis,
+            "image1": path1,
+            "image2": path2,
+        }
+        
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
