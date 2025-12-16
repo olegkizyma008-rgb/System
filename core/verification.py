@@ -12,6 +12,7 @@ class AdaptiveVerifier:
     def optimize_plan(self, raw_plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Analyzes a raw execution plan using LLM to insert 'VERIFY' steps dynamically.
+        Ensures mandatory verification after critical steps.
         """
         from langchain_core.prompts import ChatPromptTemplate
         from langchain_core.messages import SystemMessage, HumanMessage
@@ -19,21 +20,21 @@ class AdaptiveVerifier:
         import re
 
         VERIFIER_PROMPT = """Ти — Grisha, агент безпеки та верифікації.
-Твоє завдання: Проаналізувати план дій та вставити кроки перевірки (VERIFY) там, де це критично необхідно.
+Твоє завдання: Проаналізувати план дій та ОБОВ'ЯЗКОВО вставити кроки перевірки (VERIFY) після кожного критичного кроку.
 
-Критерії для вставки VERIFY:
-1. Зміна стану системи (створення файлу, відкриття додатку, зміна налаштувань).
-2. Критичні дії (видалення, відправка повідомлення).
-3. Дії, результат яких не очевидний (клік по кнопці, пошук на сторінці).
-4. НЕ потрібна перевірка для пасивних дій (прочитати, подумати).
+ОБОВ'ЯЗКОВІ VERIFY після:
+1. Файлових операцій (create, modify, delete) — перевіри, що файл існує/змінено
+2. Shell-команд (особливо rm, git, sudo) — перевіри return code та результат
+3. GUI-дій (натискання кнопок, введення) — перевіри скріншот або результат
+4. Код-змін (git commits, рефакторинг) — перевіри git diff та статус
 
-Формат виводу: JSON список, де між кроками можуть бути вставлені об'єкти:
-{{"type": "verify", "agent": "grisha", "description": "Перевірити, чи файл створено"}}
+Формат VERIFY кроку:
+{{"type": "verify", "description": "Перевірити, що [результат дії]"}}
 
 Вхідний план:
 {plan_json}
 
-Поверни ТІЛЬКИ JSON.
+Поверни ТІЛЬКИ JSON список з обов'язковими VERIFY кроками після критичних дій.
 """
 
         content = ""
@@ -42,7 +43,7 @@ class AdaptiveVerifier:
             plan_json = json.dumps(raw_plan, ensure_ascii=False)
             prompt = ChatPromptTemplate.from_messages([
                 SystemMessage(content=VERIFIER_PROMPT.format(plan_json=plan_json)),
-                HumanMessage(content="Оптимізуй план, додавши перевірки.")
+                HumanMessage(content="Оптимізуй план, додавши ОБОВ'ЯЗКОВІ перевірки після критичних кроків.")
             ])
             
             response = self.llm.invoke(prompt.format_messages())
@@ -59,13 +60,51 @@ class AdaptiveVerifier:
                 
             optimized = json.loads(content)
             if isinstance(optimized, list):
-                return optimized
+                # Fallback: if LLM didn't add verify steps, add them manually for critical steps
+                enhanced = self._ensure_verify_steps(optimized)
+                print(f"[Verifier] Plan optimized: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)")
+                return enhanced
                 
         except Exception as e:
             print(f"[Verifier] LLM JSON parsing error: {e}")
             print(f"[Verifier] Raw response: {content[:200]}...") # Debug log
+            # Fallback: ensure verify steps manually
+            enhanced = self._ensure_verify_steps(raw_plan)
+            print(f"[Verifier] Plan fallback: {len(raw_plan)} → {len(enhanced)} steps (added {len(enhanced) - len(raw_plan)} verify steps)")
+            return enhanced
+    
+    def _ensure_verify_steps(self, plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Fallback: manually ensure verify steps after critical actions.
+        """
+        critical_keywords = [
+            "create", "write", "delete", "remove", "modify", "change",
+            "shell", "run", "execute", "git", "commit", "push", "pull",
+            "click", "press", "type", "open", "close", "navigate"
+        ]
+        
+        enhanced_plan = []
+        for step in plan:
+            enhanced_plan.append(step)
             
-        return raw_plan
+            # Check if this is a critical step that needs verification
+            step_type = step.get("type", "execute").lower()
+            description = step.get("description", "").lower()
+            
+            is_critical = (
+                step_type == "execute" and
+                any(kw in description for kw in critical_keywords)
+            )
+            
+            # Add verify step after critical actions
+            if is_critical:
+                verify_step = {
+                    "type": "verify",
+                    "description": f"Перевірити результат: {step.get('description', 'дії')}"
+                }
+                enhanced_plan.append(verify_step)
+        
+        return enhanced_plan
 
     def get_diff_strategy(self, current_image_path: str, previous_image_path: str) -> float:
         """
