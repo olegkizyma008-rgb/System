@@ -58,6 +58,7 @@ my_*.sh
 cache/
 .atlas_memory/
 .last_response.txt
+project_structure_final.txt
 .pytest_cache/
 
 # Unused folder
