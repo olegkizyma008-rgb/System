@@ -417,7 +417,7 @@ def _is_greeting(text: str) -> bool:
 def _run_graph_agent_task(
     user_text: str,
     *,
-    allow_autopilot: bool,
+    allow_file_write: bool,
     allow_shell: bool,
     allow_applescript: bool,
     allow_gui: bool,
@@ -434,7 +434,7 @@ def _run_graph_agent_task(
         permissions = TrinityPermissions(
             allow_shell=allow_shell,
             allow_applescript=allow_applescript,
-            allow_file_write=allow_autopilot,
+            allow_file_write=allow_file_write,
             allow_gui=allow_gui,
             allow_shortcuts=allow_shortcuts,
         )
@@ -503,7 +503,7 @@ def _run_graph_agent_task(
                     return
                 
     except ImportError:
-        log("[TRINITY] Core module not found. Falling back to legacy Autopilot.", "error")
+        log("[TRINITY] Core module not found.", "error")
         return
     except Exception as e:
         log(f"[TRINITY] Runtime error: {e}", "error")
@@ -1295,10 +1295,6 @@ def _is_confirmed_run(text: str) -> bool:
     return "confirm_run" in text.lower()
 
 
-def _is_confirmed_autopilot(text: str) -> bool:
-    return "confirm_autopilot" in text.lower()
-
-
 def _is_confirmed_shell(text: str) -> bool:
     return "confirm_shell" in text.lower()
 
@@ -1318,7 +1314,6 @@ def _is_confirmed_shortcuts(text: str) -> bool:
 @dataclass
 class CommandPermissions:
     allow_run: bool = False
-    allow_autopilot: bool = False
     allow_shell: bool = False
     allow_applescript: bool = False
     allow_gui: bool = False
@@ -1327,7 +1322,6 @@ class CommandPermissions:
 def _permissions_from_text(text: str) -> CommandPermissions:
     return CommandPermissions(
         allow_run=_is_confirmed_run(text),
-        allow_autopilot=_is_confirmed_autopilot(text),
         allow_shell=_is_confirmed_shell(text),
         allow_applescript=_is_confirmed_applescript(text),
         allow_gui=_is_confirmed_gui(text),
@@ -1819,7 +1813,6 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
     
     unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
     allow_run = unsafe_mode or _is_confirmed_run(user_text)
-    allow_autopilot = unsafe_mode or _is_confirmed_autopilot(user_text)
     allow_shell = unsafe_mode or _is_confirmed_shell(user_text)
     allow_applescript = unsafe_mode or _is_confirmed_applescript(user_text)
     allow_gui = unsafe_mode or _is_confirmed_gui(user_text)
@@ -1827,7 +1820,6 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
     global _agent_last_permissions
     _agent_last_permissions = CommandPermissions(
         allow_run=allow_run,
-        allow_autopilot=allow_autopilot,
         allow_shell=allow_shell,
         allow_applescript=allow_applescript,
         allow_gui=allow_gui,
@@ -1939,10 +1931,6 @@ def _agent_send_with_stream(user_text: str) -> Tuple[bool, str]:
                     log(f"[PERMISSION] App execution denied. Use /unsafe_mode to enable.", "error")
                     results.append({"ok": False, "error": "App execution requires unsafe mode"})
                     continue
-                elif name == "autopilot" and not allow_autopilot:
-                    log(f"[PERMISSION] Autopilot denied. Use /unsafe_mode to enable.", "error")
-                    results.append({"ok": False, "error": "Autopilot requires unsafe mode"})
-                    continue
                 
                 tool = next((t for t in agent_session.tools if t.name == name), None)
                 if tool:
@@ -2052,7 +2040,6 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
 
     unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
     allow_run = unsafe_mode or _is_confirmed_run(user_text)
-    allow_autopilot = unsafe_mode or _is_confirmed_autopilot(user_text)
     allow_shell = unsafe_mode or _is_confirmed_shell(user_text)
     allow_applescript = unsafe_mode or _is_confirmed_applescript(user_text)
     allow_gui = unsafe_mode or _is_confirmed_gui(user_text)
@@ -2060,7 +2047,6 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
     global _agent_last_permissions
     _agent_last_permissions = CommandPermissions(
         allow_run=allow_run,
-        allow_autopilot=allow_autopilot,
         allow_shell=allow_shell,
         allow_applescript=allow_applescript,
         allow_gui=allow_gui,
@@ -2132,9 +2118,6 @@ def _agent_send_no_stream(user_text: str) -> Tuple[bool, str]:
                     continue
                 if name == "run_app" and not allow_run:
                     results.append({"ok": False, "error": "App execution requires unsafe mode"})
-                    continue
-                if name == "autopilot" and not allow_autopilot:
-                    results.append({"ok": False, "error": "Autopilot requires unsafe mode"})
                     continue
 
                 tool = next((t for t in agent_session.tools if t.name == name), None)
@@ -2831,7 +2814,7 @@ def _custom_task_automation_run_dir(rec_dir: str) -> Tuple[bool, str]:
             allow_shortcuts = bool(getattr(state, "automation_allow_shortcuts", False))
             _run_graph_agent_task(
                 prompt,
-                allow_autopilot=True,
+                allow_file_write=True,
                 allow_shell=allow_shell,
                 allow_applescript=allow_applescript,
                 allow_gui=allow_gui,
@@ -3242,14 +3225,6 @@ def _tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
 
     perms = _agent_last_permissions
     cmd_to_run = cmd
-    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_autopilot and "confirm_autopilot" not in cmd_to_run.lower():
-        cmd_to_run = cmd_to_run + " CONFIRM_AUTOPILOT"
-    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_shell and "confirm_shell" not in cmd_to_run.lower():
-        cmd_to_run = cmd_to_run + " CONFIRM_SHELL"
-    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_applescript and "confirm_applescript" not in cmd_to_run.lower():
-        cmd_to_run = cmd_to_run + " CONFIRM_APPLESCRIPT"
-    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_gui and "confirm_gui" not in cmd_to_run.lower():
-        cmd_to_run = cmd_to_run + " CONFIRM_GUI"
 
     captured: List[Tuple[str, str]] = []
 
@@ -3644,7 +3619,6 @@ def get_context():
     result.append(("class:context.label", " /smart <editor> <query...>\n"))
     result.append(("class:context.label", " /ask <question...>\n"))
     result.append(("class:context.label", " /locales ua us eu\n"))
-    result.append(("class:context.label", " /autopilot <task...>\n"))
     result.append(("class:context.label", " /monitor status|start|stop|source <watchdog|fs_usage|opensnoop>|sudo <on|off>\n"))
     result.append(("class:context.label", " /monitor-targets list|add <key>|remove <key>|clear|save\n"))
     result.append(("class:context.label", " /llm status|set provider <copilot>|set main <model>|set vision <model>\n"))
@@ -3723,7 +3697,6 @@ def _handle_command(cmd: str) -> None:
         log("/help | /resume", "info")
         log("/run <editor> [--dry] | /modules <editor> | /enable <editor> <id> | /disable <editor> <id>", "info")
         log("/install <editor> | /locales <codes...>", "info")
-        log("/autopilot <task...> (CONFIRM_AUTOPILOT, optional CONFIRM_SHELL/CONFIRM_APPLESCRIPT)", "info")
         log("/monitor status|start|stop|source <watchdog|fs_usage|opensnoop>|sudo <on|off>", "info")
         log("/monitor-targets list|add <key>|remove <key>|clear|save", "info")
         log("/llm status|set provider <copilot>|set main <model>|set vision <model>", "info")
@@ -4047,44 +4020,6 @@ def _handle_command(cmd: str) -> None:
         log("Usage: /monitor-targets list|add|remove|clear|save", "error")
         return
 
-    if command == "/autopilot":
-        task = " ".join(args).strip()
-        if not task:
-            log("Usage: /autopilot <task...> [CONFIRM_AUTOPILOT]", "error")
-            return
-
-        allow_autopilot = "confirm_autopilot" in cmd.lower()
-        unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
-        allow_shell = unsafe_mode
-        allow_applescript = unsafe_mode
-        allow_gui = unsafe_mode
-        allow_shortcuts = bool(getattr(state, "automation_allow_shortcuts", False))
-        if not allow_autopilot and not bool(getattr(state, "ui_unsafe_mode", False)):
-            log("Autopilot confirmation required. Add CONFIRM_AUTOPILOT to the same line.", "error")
-            return
-
-        def _runner() -> None:
-            try:
-                log(
-                    f"Autopilot started. shell={'ON' if allow_shell else 'OFF'} applescript={'ON' if allow_applescript else 'OFF'} gui={'ON' if allow_gui else 'OFF'} shortcuts={'ON' if allow_shortcuts else 'OFF'}",
-                    "action",
-                )
-                _run_graph_agent_task(
-                    task,
-                    allow_autopilot=True,
-                    allow_shell=bool(allow_shell),
-                    allow_applescript=bool(allow_applescript),
-                    allow_gui=bool(allow_gui),
-                    allow_shortcuts=bool(allow_shortcuts),
-                    gui_mode=str(getattr(state, "ui_gui_mode", "auto") or "auto"),
-                )
-                log("Autopilot done.", "action")
-            except Exception as e:
-                log(f"Autopilot error: {e}", "error")
-
-        threading.Thread(target=_runner, daemon=True).start()
-        return
-
     log("Невідома команда. Використай /help.", "error")
 
 
@@ -4147,12 +4082,12 @@ def _handle_input(buff: Buffer) -> None:
             state.agent_processing = True
             try:
                 # Auto-switch to graph runtime for complex tasks when permitted.
-                allow_graph = bool(getattr(state, "ui_unsafe_mode", False)) or _is_confirmed_autopilot(text)
+                allow_graph = bool(getattr(state, "ui_unsafe_mode", False))
                 if _is_complex_task(text) and allow_graph:
                     unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
                     _run_graph_agent_task(
                         text,
-                        allow_autopilot=True,
+                        allow_file_write=True,
                         allow_shell=unsafe_mode,
                         allow_applescript=unsafe_mode,
                         allow_gui=unsafe_mode,
@@ -4162,7 +4097,7 @@ def _handle_input(buff: Buffer) -> None:
                     ok, answer = True, ""
                 else:
                     if _is_complex_task(text) and not allow_graph:
-                        log("[HINT] Для складних задач доступний Graph mode: додай CONFIRM_AUTOPILOT або увімкни Unsafe mode.", "info")
+                        log("[HINT] Для складних задач доступний Graph mode: увімкни Unsafe mode.", "info")
                     ok, answer = _agent_send(text)
 
                 # When streaming is enabled, `_agent_send_with_stream` already renders the assistant output.
@@ -4244,14 +4179,7 @@ def _tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
     if not cmd.startswith("/"):
         return {"ok": False, "error": "command must start with '/'"}
 
-    perms = _agent_last_permissions
     cmd_to_run = cmd
-    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_autopilot and "confirm_autopilot" not in cmd_to_run.lower():
-        cmd_to_run = cmd_to_run + " CONFIRM_AUTOPILOT"
-    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_shell and "confirm_shell" not in cmd_to_run.lower():
-        cmd_to_run = cmd_to_run + " CONFIRM_SHELL"
-    if cmd_to_run.lower().startswith("/autopilot") and perms.allow_applescript and "confirm_applescript" not in cmd_to_run.lower():
-        cmd_to_run = cmd_to_run + " CONFIRM_APPLESCRIPT"
 
     captured: List[Tuple[str, str]] = []
 
@@ -4378,13 +4306,6 @@ def cli_main(argv: List[str]) -> None:
     sub.add_parser("agent-on", help="Enable agent chat")
     sub.add_parser("agent-off", help="Disable agent chat")
 
-    p_autopilot = sub.add_parser("autopilot", help="Autopilot: plan->act->observe loop (dangerous)")
-    p_autopilot.add_argument("--task", required=True)
-    p_autopilot.add_argument("--max-steps", type=int, default=30)
-    p_autopilot.add_argument("--confirm-autopilot", action="store_true")
-    p_autopilot.add_argument("--confirm-shell", action="store_true")
-    p_autopilot.add_argument("--confirm-applescript", action="store_true")
-
     args = parser.parse_args(argv)
 
     if not args.command or args.command == "tui":
@@ -4482,55 +4403,6 @@ def cli_main(argv: List[str]) -> None:
         ok, answer = _agent_send_no_stream(msg)
         print(answer)
         raise SystemExit(0 if ok else 1)
-
-    if args.command == "autopilot":
-        _load_ui_settings()
-        unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
-
-        if not unsafe_mode and not args.confirm_autopilot:
-            print("Confirmation required: pass --confirm-autopilot (or enable Unsafe mode in TUI Settings)")
-            raise SystemExit(1)
-        try:
-            from core.trinity import TrinityRuntime, TrinityPermissions
-            
-            allow_shell = unsafe_mode
-            allow_applescript = unsafe_mode
-            allow_gui = unsafe_mode
-            allow_shortcuts = bool(getattr(state, "automation_allow_shortcuts", False))
-            
-            permissions = TrinityPermissions(
-                allow_shell=allow_shell,
-                allow_applescript=allow_applescript,
-                allow_file_write=True,
-                allow_gui=allow_gui,
-                allow_shortcuts=allow_shortcuts,
-            )
-            
-            runtime = TrinityRuntime(verbose=True, permissions=permissions)
-            step_count = 0
-            for event in runtime.run(args.task):
-                step_count += 1
-                for node_name, state_update in event.items():
-                    messages = state_update.get("messages", [])
-                    last_msg = messages[-1] if messages else None
-                    content = getattr(last_msg, "content", "") if last_msg else ""
-                    if content:
-                        print(f"[{node_name.upper()}] {content}")
-                    
-                    pause_info = state_update.get("pause_info")
-                    if pause_info:
-                        perm = pause_info.get("permission", "unknown")
-                        msg = pause_info.get("message", "Permission required")
-                        print(f"[PAUSED] {perm}: {msg}")
-                        raise SystemExit(1)
-            
-            print("[AUTOPILOT] Task completed successfully.")
-            raise SystemExit(0)
-        except SystemExit:
-            raise
-        except Exception as e:
-            print(f"Autopilot error: {e}")
-            raise SystemExit(1)
 
 
 def main() -> None:
