@@ -442,7 +442,10 @@ class TrinityRuntime:
         test_results = ""
         critical_dirs = ["core/", "system_ai/", "tui/", "providers/"]
         try:
-            changed_files = self._get_repo_changes()
+            repo_changes = self._get_repo_changes()
+            changed_files = []
+            if isinstance(repo_changes, dict) and repo_changes.get("ok") is True:
+                changed_files = list(repo_changes.get("changed_files") or [])
             has_critical_changes = any(
                 any(f.startswith(d) for d in critical_dirs) 
                 for f in changed_files
@@ -522,6 +525,30 @@ class TrinityRuntime:
         # ------------------------------------------------------------------
         
         lower_content = content.lower()
+
+        has_question = ("?" in content) or lower_content.strip().startswith("чи ") or (" чи " in lower_content)
+        uncertainty_keywords = [
+            "уточн",
+            "потрібно уточн",
+            "маю уточн",
+            "перед початком",
+            "якщо ",
+            "не впевнен",
+            "потрібна допомога",
+            "питання",
+        ]
+        has_uncertainty = any(k in lower_content for k in uncertainty_keywords)
+
+        explicit_complete_markers = [
+            "[verified]",
+            "[confirmed]",
+            "verification passed",
+            "qa passed",
+            "verdict: pass",
+            "верифікація пройдена",
+            "перевірку пройдено",
+        ]
+        has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
         
         # Check for test failures first (highest priority)
         has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
@@ -550,7 +577,7 @@ class TrinityRuntime:
             # Trigger "Dynamic Granularity" (Replan).
             next_agent = "atlas"
             
-        elif has_positive and not tool_calls:
+        elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
             # Case D: VERIFICATION PASSED and no new tools called.
             # TASK IS COMPLETE!
             next_agent = "end"
