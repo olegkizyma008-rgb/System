@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Post-commit hook to regenerate project structure
+# This runs automatically after each commit
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+# Prevent infinite loop: check if we're already in a post-commit regeneration
+if [ "$TRINITY_POST_COMMIT_RUNNING" = "1" ]; then
+    exit 0
+fi
+
+export TRINITY_POST_COMMIT_RUNNING=1
+
+# Check if .last_response.txt exists and has content
+if [ -f ".last_response.txt" ] && [ -s ".last_response.txt" ]; then
+    echo "🔄 Regenerating project structure..."
+    ./regenerate_structure.sh "$(cat .last_response.txt)" > /dev/null 2>&1
+    
+    # Stage the updated project_structure_final.txt
+    git add project_structure_final.txt 2>/dev/null
+    
+    # Check if there are changes to commit
+    if ! git diff-index --quiet --cached HEAD --; then
+        echo "✓ Updated project_structure_final.txt"
+        # Amend the previous commit to include the updated structure
+        git commit --amend --no-edit 2>/dev/null || true
+    fi
+else
+    echo "⚠ No last response found, skipping structure regeneration"
+fi
+
+unset TRINITY_POST_COMMIT_RUNNING

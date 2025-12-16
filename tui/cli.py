@@ -3946,6 +3946,7 @@ def _handle_command(cmd: str) -> None:
         log("/streaming status|on|off", "info")
         log("/gui_mode status|on|off|auto", "info")
         log("/trinity <task> | /autopilot <task>", "info")
+        log("/bootstrap <project_name> [parent_dir]", "info")
         log("/agent-reset | /agent-on | /agent-off | /agent-mode [on|off|toggle]", "info")
         return
 
@@ -4023,6 +4024,54 @@ def _handle_command(cmd: str) -> None:
             pass
 
         threading.Thread(target=_run_trinity, daemon=True).start()
+        return
+
+    if command == "/bootstrap":
+        project_name = (args[0] if args else "").strip()
+        parent_dir = (args[1] if len(args) > 1 else ".").strip()
+        
+        if not project_name:
+            log("Usage: /bootstrap <project_name> [parent_dir]", "error")
+            return
+        
+        log(f"/bootstrap {project_name} {parent_dir}", "user")
+        
+        def _run_bootstrap() -> None:
+            try:
+                # Find bootstrap script
+                import os
+                system_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                bootstrap_script = os.path.join(system_root, "templates", "bootstrap_new_project.sh")
+                
+                if not os.path.exists(bootstrap_script):
+                    log(f"❌ Bootstrap script not found: {bootstrap_script}", "error")
+                    return
+                
+                # Run bootstrap script
+                import subprocess
+                result = subprocess.run(
+                    ["bash", bootstrap_script, project_name, parent_dir],
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+                
+                # Log output
+                if result.stdout:
+                    for line in result.stdout.strip().split('\n'):
+                        log(line, "action")
+                
+                if result.returncode != 0:
+                    if result.stderr:
+                        log(f"❌ Error: {result.stderr}", "error")
+                    return
+                
+                log(f"✅ Project '{project_name}' bootstrapped successfully!", "action")
+                
+            except Exception as e:
+                log(f"❌ Bootstrap error: {e}", "error")
+        
+        threading.Thread(target=_run_bootstrap, daemon=True).start()
         return
 
     if command == "/agent-reset":
