@@ -1190,4 +1190,44 @@ class TrinityRuntime:
             pass
 
         final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
+        
+        # Auto-save final report to .last_response.txt for next cycle
+        try:
+            # Append final report as Trinity Report
+            existing_content = ""
+            try:
+                with open(".last_response.txt", "r", encoding="utf-8") as f:
+                    existing_content = f.read().strip()
+            except FileNotFoundError:
+                pass
+            
+            # Parse to separate my response from Trinity reports
+            my_response_section = ""
+            trinity_reports_section = ""
+            
+            if existing_content:
+                if "## My Last Response" in existing_content:
+                    parts = existing_content.split("## Trinity Report")
+                    my_response_section = parts[0].strip()
+                    if len(parts) > 1:
+                        trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
+                else:
+                    trinity_reports_section = existing_content
+            
+            # Build new content: preserve my response, add new Trinity report
+            new_content = ""
+            if my_response_section:
+                new_content = my_response_section
+            
+            if trinity_reports_section:
+                new_content += "\n\n---\n\n" + trinity_reports_section
+            
+            # Add final Trinity report
+            new_content += "\n\n---\n\n## Trinity Report (Final)\n\n" + report
+            
+            with open(".last_response.txt", "w", encoding="utf-8") as f:
+                f.write(new_content)
+        except Exception:
+            pass
+        
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
