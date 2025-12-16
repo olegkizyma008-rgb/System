@@ -413,6 +413,32 @@ class TrinityRuntime:
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
         execution_mode = str(state.get("execution_mode") or "native").strip().lower()
         
+        # Check for code changes in critical directories and run tests
+        test_results = ""
+        critical_dirs = ["core/", "system_ai/", "tui/", "providers/"]
+        try:
+            changed_files = self._get_repo_changes()
+            has_critical_changes = any(
+                any(f.startswith(d) for d in critical_dirs) 
+                for f in changed_files
+            )
+            
+            if has_critical_changes and self.verbose:
+                print("👁️ [Grisha] Detected changes in critical directories. Running pytest...")
+            
+            if has_critical_changes:
+                # Run pytest
+                test_cmd = "pytest -q --tb=short 2>&1"
+                test_proc = subprocess.run(test_cmd, shell=True, capture_output=True, text=True, cwd=self._get_git_root() or ".")
+                test_output = test_proc.stdout + test_proc.stderr
+                test_results = f"\n\n[TEST_VERIFICATION] pytest output:\n{test_output}"
+                
+                if self.verbose:
+                    print(f"👁️ [Grisha] Test results:\n{test_output[:200]}...")
+        except Exception as e:
+            if self.verbose:
+                print(f"👁️ [Grisha] Test execution error: {e}")
+        
         # Inject available tools (Vision priority)
         tools_list = self.registry.list_tools()
         prompt = get_grisha_prompt(last_msg, tools_desc=tools_list)
@@ -441,6 +467,10 @@ class TrinityRuntime:
             
             if results:
                 content += "\n\nVerification Tools Results:\n" + "\n".join(results)
+            
+            # Append test results if any
+            if test_results:
+                content += test_results
 
             # Deterministic verification hook for GUI mode: always capture + analyze.
             if gui_mode in {"auto", "on"} and execution_mode == "gui":
@@ -468,7 +498,10 @@ class TrinityRuntime:
         
         lower_content = content.lower()
         
-        # Check for positive verification keywords first
+        # Check for test failures first (highest priority)
+        has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
+        
+        # Check for positive verification keywords
         positive_keywords = ["успішно", "verified", "confirmed", "success", "завершено", "готово", "працює", "відкрито"]
         has_positive = any(kw in lower_content for kw in positive_keywords)
         
@@ -476,18 +509,24 @@ class TrinityRuntime:
         negative_keywords = ["failed", "error", "rejected", "помилка", "не вдалося"]
         has_negative = any(kw in lower_content for kw in negative_keywords)
         
-        if "tools results" in lower_content and tool_calls:
-            # Case A: Grisha used a tool (e.g. took a screenshot). 
+        if has_test_failure:
+            # Case A: TESTS FAILED - block task and return to Atlas for replan
+            if self.verbose:
+                print("👁️ [Grisha] Tests failed - blocking task and requesting replan")
+            next_agent = "atlas"
+            
+        elif "tools results" in lower_content and tool_calls:
+            # Case B: Grisha used a tool (e.g. took a screenshot). 
             # Loop back to Atlas to analyze the screenshot.
             next_agent = "atlas"
             
         elif has_negative:
-            # Case B: VERIFICATION FAILED.
+            # Case C: VERIFICATION FAILED.
             # Trigger "Dynamic Granularity" (Replan).
             next_agent = "atlas"
             
         elif has_positive and not tool_calls:
-            # Case C: VERIFICATION PASSED and no new tools called.
+            # Case D: VERIFICATION PASSED and no new tools called.
             # TASK IS COMPLETE!
             next_agent = "end"
             
