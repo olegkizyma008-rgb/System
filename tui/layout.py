@@ -8,12 +8,13 @@ from prompt_toolkit.data_structures import Point
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import ConditionalContainer, HSplit, VSplit, Window
-from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
+from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl, UIControl
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.layout.dimension import Dimension
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.widgets import Frame
+from prompt_toolkit.layout.scrollbars import VerticalScroll
 
 _app_state = {"instance": None}
 
@@ -47,12 +48,14 @@ def build_app(
     context_window = Window(
         FormattedTextControl(get_context), 
         style="class:context", 
-        wrap_lines=True
+        wrap_lines=True,
+        right_margins=[VerticalScroll(display_arrows=True)],
     )
 
     log_window = Window(
         FormattedTextControl(get_logs, get_cursor_position=get_log_cursor_position),
         wrap_lines=True,
+        right_margins=[VerticalScroll(display_arrows=True)],
     )
 
     # Agent messages panel (clean communication display)
@@ -60,12 +63,14 @@ def build_app(
         FormattedTextControl(get_agent_messages or (lambda: [])),
         wrap_lines=True,
         style="class:agent.panel",
+        right_margins=[VerticalScroll(display_arrows=True)],
     ) if get_agent_messages else None
 
     menu_window = Window(
         FormattedTextControl(get_menu_content), 
         style="class:menu", 
-        wrap_lines=True
+        wrap_lines=True,
+        right_margins=[VerticalScroll(display_arrows=True)],
     )
 
     input_area = VSplit(

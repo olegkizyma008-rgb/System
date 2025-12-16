@@ -3600,6 +3600,13 @@ def log_agent_message(agent: AgentType, text: str) -> None:
     """Log agent message to clean display panel."""
     with _agent_messages_lock:
         _agent_messages_buffer.add(agent, text, is_technical=False)
+    
+    # Update UI
+    try:
+        from tui.layout import force_ui_update
+        force_ui_update()
+    except Exception:
+        pass
 
 
 def log(text: str, category: str = "info") -> None:
