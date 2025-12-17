@@ -569,12 +569,14 @@ def _run_graph_agent_task(
         from langchain_core.messages import AIMessage
         
         # Create permissions from TUI flags
+        is_unsafe = bool(getattr(state, "unsafe_mode", False))
         permissions = TrinityPermissions(
-            allow_shell=allow_shell,
-            allow_applescript=allow_applescript,
-            allow_file_write=allow_file_write,
-            allow_gui=allow_gui,
-            allow_shortcuts=allow_shortcuts,
+            allow_shell=allow_shell or is_unsafe,
+            allow_applescript=allow_applescript or is_unsafe,
+            allow_file_write=allow_file_write or is_unsafe,
+            allow_gui=allow_gui or is_unsafe,
+            allow_shortcuts=allow_shortcuts or is_unsafe,
+            hyper_mode=is_unsafe,
         )
         
         log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")

@@ -24,6 +24,7 @@ class TrinityPermissions:
     allow_file_write: bool = False
     allow_gui: bool = False
     allow_shortcuts: bool = False
+    hyper_mode: bool = False # Automation without confirmation
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -522,7 +523,7 @@ class TrinityRuntime:
                         continue
 
                     # Permission check for file writes
-                    if name in file_write_tools and not self.permissions.allow_file_write:
+                    if name in file_write_tools and not (self.permissions.allow_file_write or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "file_write",
                             "message": "Потрібен дозвіл на запис у файли. Увімкніть Unsafe mode в TUI або перезапустіть задачу з allow_file_write.",
@@ -533,7 +534,7 @@ class TrinityRuntime:
                         continue
                     
                     # Permission check for dangerous tools
-                    if name in shell_tools and not self.permissions.allow_shell:
+                    if name in shell_tools and not (self.permissions.allow_shell or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "shell",
                             "message": "Потрібен дозвіл на виконання shell команд. Увімкніть Unsafe mode або додайте CONFIRM_SHELL у запит.",
@@ -543,7 +544,7 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
 
-                    if name == "run_shortcut" and not self.permissions.allow_shortcuts:
+                    if name == "run_shortcut" and not (self.permissions.allow_shortcuts or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "shortcuts",
                             "message": "Потрібен дозвіл на запуск Shortcuts. Увімкніть Unsafe mode (або дозвольте shortcuts у налаштуваннях).",
@@ -553,7 +554,7 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
                         
-                    if name in applescript_tools and not self.permissions.allow_applescript:
+                    if name in applescript_tools and not (self.permissions.allow_applescript or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "applescript",
                             "message": "Потрібен дозвіл на виконання AppleScript. Увімкніть Unsafe mode або додайте CONFIRM_APPLESCRIPT у запит.",
@@ -562,7 +563,7 @@ class TrinityRuntime:
                         }
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
-                    if name in gui_tools and not self.permissions.allow_gui:
+                    if name in gui_tools and not (self.permissions.allow_gui or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "gui",
                             "message": "Потрібен дозвіл на GUI automation (mouse/keyboard). Увімкніть Unsafe mode або додайте CONFIRM_GUI у запит.",
@@ -571,8 +572,7 @@ class TrinityRuntime:
                         }
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
-
-                    
+                        
                     # Execute via MCP Registry
                     res_str = self.registry.execute(name, args)
                     results.append(f"Result for {name}: {res_str}")

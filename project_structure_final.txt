@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 108
-- **Files Skipped**: 23200
+- **Files Skipped**: 12175
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 08:26:50
+- **Generated**: 2025-12-17 08:29:40
 
 ---
 
@@ -326,18 +326,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 34812 +-----------------------------------------
- 1 file changed, 2 insertions(+), 34810 deletions(-)
+ project_structure_final.txt | 34808 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 34806 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-3b6b2e8 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
+e394518 feat: upgrade to Hyper System (autonomy, cleanup, hyper_mode)
+5d53027 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
 d92cd9c fix: Add 90-second timeout to Copilot API requests and reconfigure stdin to UTF-8 encoding.
 d6ea328 docs: Add documentation for logging and auto-commit workflow.
 df1fe99 feat: add logging and auto-commit workflow rules, updating response and project structure files.
-e4562f9 feat: System updates (Logging, Auto-commit, Trinity Tasks) - squashed to remove secrets
 ```
 
 ---
@@ -7987,7 +7987,7 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (9.3 KB)
+### `core/agents/atlas.py` (9.5 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -8037,9 +8037,11 @@ ATLAS_SYSTEM_PROMPT = """Ти - Atlas, Архітектор та Стратег 
   * Downloads => ~/Downloads
   * Якщо просять створити папку/файл — створюй у вказаній цільовій папці задачі без додаткових питань.
 - Питай користувача лише коли:
-  * потрібні macOS permissions (Automation/Accessibility/Screen Recording/Shortcuts тощо), або
-  * ціль неоднозначна і неправильний вибір може призвести до помилкових/незворотних дій.
+  * потрібні macOS permissions, І режим Hyper Mode вимкнено.
+  * ціль неоднозначна і неправильний вибір може призвести до критичної втрати даних.
+- Якщо ти в Hyper System (або Unsafe Mode) — дій сміливо. Не питай про shell/applescript.
 - Якщо крок не вдався — перебудовуй план локально (лише для проблемного кроку) і продовжуй вперед.
+- Пріоритет: РЕЗУЛЬТАТ. Якщо треба видалити garbage-файли, щоб звільнити місце — роби це.
 
 Фінальний вердикт (КРИТИЧНО):
 - У кінці завжди дай чіткий висновок: виконано / частково виконано / неможливо виконати.
@@ -8658,7 +8660,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (62.9 KB)
+### `core/trinity.py` (63.1 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8687,6 +8689,7 @@ class TrinityPermissions:
     allow_file_write: bool = False
     allow_gui: bool = False
     allow_shortcuts: bool = False
+    hyper_mode: bool = False # Automation without confirmation
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -9185,7 +9188,7 @@ class TrinityRuntime:
                         continue
 
                     # Permission check for file writes
-                    if name in file_write_tools and not self.permissions.allow_file_write:
+                    if name in file_write_tools and not (self.permissions.allow_file_write or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "file_write",
                             "message": "Потрібен дозвіл на запис у файли. Увімкніть Unsafe mode в TUI або перезапустіть задачу з allow_file_write.",
@@ -9196,7 +9199,7 @@ class TrinityRuntime:
                         continue
                     
                     # Permission check for dangerous tools
-                    if name in shell_tools and not self.permissions.allow_shell:
+                    if name in shell_tools and not (self.permissions.allow_shell or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "shell",
                             "message": "Потрібен дозвіл на виконання shell команд. Увімкніть Unsafe mode або додайте CONFIRM_SHELL у запит.",
@@ -9206,7 +9209,7 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
 
-                    if name == "run_shortcut" and not self.permissions.allow_shortcuts:
+                    if name == "run_shortcut" and not (self.permissions.allow_shortcuts or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "shortcuts",
                             "message": "Потрібен дозвіл на запуск Shortcuts. Увімкніть Unsafe mode (або дозвольте shortcuts у налаштуваннях).",
@@ -9216,7 +9219,7 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
                         
-                    if name in applescript_tools and not self.permissions.allow_applescript:
+                    if name in applescript_tools and not (self.permissions.allow_applescript or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "applescript",
                             "message": "Потрібен дозвіл на виконання AppleScript. Увімкніть Unsafe mode або додайте CONFIRM_APPLESCRIPT у запит.",
@@ -9225,7 +9228,7 @@ class TrinityRuntime:
                         }
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
-                    if name in gui_tools and not self.permissions.allow_gui:
+                    if name in gui_tools and not (self.permissions.allow_gui or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "gui",
                             "message": "Потрібен дозвіл на GUI automation (mouse/keyboard). Увімкніть Unsafe mode або додайте CONFIRM_GUI у запит.",
@@ -9234,8 +9237,7 @@ class TrinityRuntime:
                         }
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
-
-                    
+                        
                     # Execute via MCP Registry
                     res_str = self.registry.execute(name, args)
                     results.append(f"Result for {name}: {res_str}")
@@ -11330,7 +11332,7 @@ from tui.i18n import (  # noqa: F401
 test content
 ```
 
-### `project_structure_final.txt` (504.5 KB)
+### `project_structure_final.txt` (505.0 KB)
 
 ```text
 # System — Project Structure
@@ -11339,9 +11341,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 108
-- **Files Skipped**: 23200
+- **Files Skipped**: 12175
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 08:26:50
+- **Generated**: 2025-12-17 08:29:40
 
 ---
 
@@ -11661,18 +11663,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 34812 +-----------------------------------------
- 1 file changed, 2 insertions(+), 34810 deletions(-)
+ project_structure_final.txt | 34808 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 34806 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-3b6b2e8 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
+e394518 feat: upgrade to Hyper System (autonomy, cleanup, hyper_mode)
+5d53027 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
 d92cd9c fix: Add 90-second timeout to Copilot API requests and reconfigure stdin to UTF-8 encoding.
 d6ea328 docs: Add documentation for logging and auto-commit workflow.
 df1fe99 feat: add logging and auto-commit workflow rules, updating response and project structure files.
-e4562f9 feat: System updates (Logging, Auto-commit, Trinity Tasks) - squashed to remove secrets
 ```
 
 ---
@@ -19322,7 +19324,7 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (9.3 KB)
+### `core/agents/atlas.py` (9.5 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -19372,9 +19374,11 @@ ATLAS_SYSTEM_PROMPT = """Ти - Atlas, Архітектор та Стратег 
   * Downloads => ~/Downloads
   * Якщо просять створити папку/файл — створюй у вказаній цільовій папці задачі без додаткових питань.
 - Питай користувача лише коли:
-  * потрібні macOS permissions (Automation/Accessibility/Screen Recording/Shortcuts тощо), або
-  * ціль неоднозначна і неправильний вибір може призвести до помилкових/незворотних дій.
+  * потрібні macOS permissions, І режим Hyper Mode вимкнено.
+  * ціль неоднозначна і неправильний вибір може призвести до критичної втрати даних.
+- Якщо ти в Hyper System (або Unsafe Mode) — дій сміливо. Не питай про shell/applescript.
 - Якщо крок не вдався — перебудовуй план локально (лише для проблемного кроку) і продовжуй вперед.
+- Пріоритет: РЕЗУЛЬТАТ. Якщо треба видалити garbage-файли, щоб звільнити місце — роби це.
 
 Фінальний вердикт (КРИТИЧНО):
 - У кінці завжди дай чіткий висновок: виконано / частково виконано / неможливо виконати.
@@ -19993,7 +19997,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (62.9 KB)
+### `core/trinity.py` (63.1 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20022,6 +20026,7 @@ class TrinityPermissions:
     allow_file_write: bool = False
     allow_gui: bool = False
     allow_shortcuts: bool = False
+    hyper_mode: bool = False # Automation without confirmation
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -20520,7 +20525,7 @@ class TrinityRuntime:
                         continue
 
                     # Permission check for file writes
-                    if name in file_write_tools and not self.permissions.allow_file_write:
+                    if name in file_write_tools and not (self.permissions.allow_file_write or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "file_write",
                             "message": "Потрібен дозвіл на запис у файли. Увімкніть Unsafe mode в TUI або перезапустіть задачу з allow_file_write.",
@@ -20531,7 +20536,7 @@ class TrinityRuntime:
                         continue
                     
                     # Permission check for dangerous tools
-                    if name in shell_tools and not self.permissions.allow_shell:
+                    if name in shell_tools and not (self.permissions.allow_shell or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "shell",
                             "message": "Потрібен дозвіл на виконання shell команд. Увімкніть Unsafe mode або додайте CONFIRM_SHELL у запит.",
@@ -20541,7 +20546,7 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
 
-                    if name == "run_shortcut" and not self.permissions.allow_shortcuts:
+                    if name == "run_shortcut" and not (self.permissions.allow_shortcuts or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "shortcuts",
                             "message": "Потрібен дозвіл на запуск Shortcuts. Увімкніть Unsafe mode (або дозвольте shortcuts у налаштуваннях).",
@@ -20551,7 +20556,7 @@ class TrinityRuntime:
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
                         
-                    if name in applescript_tools and not self.permissions.allow_applescript:
+                    if name in applescript_tools and not (self.permissions.allow_applescript or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "applescript",
                             "message": "Потрібен дозвіл на виконання AppleScript. Увімкніть Unsafe mode або додайте CONFIRM_APPLESCRIPT у запит.",
@@ -20560,7 +20565,7 @@ class TrinityRuntime:
                         }
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
-                    if name in gui_tools and not self.permissions.allow_gui:
+                    if name in gui_tools and not (self.permissions.allow_gui or self.permissions.hyper_mode):
                         pause_info = {
                             "permission": "gui",
                             "message": "Потрібен дозвіл на GUI automation (mouse/keyboard). Увімкніть Unsafe mode або додайте CONFIRM_GUI у запит.",
@@ -20569,8 +20574,7 @@ class TrinityRuntime:
                         }
                         results.append(f"[BLOCKED] {name}: permission required")
                         continue
-
-                    
+                        
                     # Execute via MCP Registry
                     res_str = self.registry.execute(name, args)
                     results.append(f"Result for {name}: {res_str}")
@@ -27985,7 +27989,7 @@ def run_tui(runtime: TuiRuntime) -> None:
     runtime.app.run()
 ```
 
-### `tui/cli.py` (189.2 KB)
+### `tui/cli.py` (189.3 KB)
 
 ```python
 #!/usr/bin/env python3
@@ -28559,12 +28563,14 @@ def _run_graph_agent_task(
         from langchain_core.messages import AIMessage
         
         # Create permissions from TUI flags
+        is_unsafe = bool(getattr(state, "unsafe_mode", False))
         permissions = TrinityPermissions(
-            allow_shell=allow_shell,
-            allow_applescript=allow_applescript,
-            allow_file_write=allow_file_write,
-            allow_gui=allow_gui,
-            allow_shortcuts=allow_shortcuts,
+            allow_shell=allow_shell or is_unsafe,
+            allow_applescript=allow_applescript or is_unsafe,
+            allow_file_write=allow_file_write or is_unsafe,
+            allow_gui=allow_gui or is_unsafe,
+            allow_shortcuts=allow_shortcuts or is_unsafe,
+            hyper_mode=is_unsafe,
         )
         
         log("[ATLAS] Initializing NeuroMac System (Atlas/Tetyana/Grisha)...", "info")
@@ -35122,4 +35128,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 108
-- **Skipped**: 23200
+- **Skipped**: 12175
