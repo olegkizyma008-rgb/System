@@ -4,18 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 115
-- **Files Skipped**: 12329
+- **Files Skipped**: 12334
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 23:15:17
+- **Generated**: 2025-12-17 23:19:48
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 543, in _redraw
-    self.context.copy().run(run_in_context)
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 526, in run_in_context
     self.renderer.render(self, self.layout)
   File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/renderer.py", line 682, in render
     layout.container.write_to_screen(
@@ -113,6 +110,9 @@ NameError: name 'state' is not defined
 2025-12-17 23:14:27 | INFO     | MainThread | system_cli.cli | cli_main:2442 | Starting TUI mode
 2025-12-17 23:14:42 | INFO     | MainThread | system_cli.cli | cli_main:2445 | TUI mode exited successfully
 2025-12-17 23:14:57 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['--help']
+2025-12-17 23:18:27 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: []
+2025-12-17 23:18:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2439 | Parsed command: None
+2025-12-17 23:18:27 | INFO     | MainThread | system_cli.cli | cli_main:2442 | Starting TUI mode
 ```
 
 ---
@@ -539,19 +539,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- .sudo_askpass               |     2 -
- project_structure_final.txt | 37175 +-----------------------------------------
- 2 files changed, 99 insertions(+), 37078 deletions(-)
+ project_structure_final.txt | 36991 +-----------------------------------------
+ 1 file changed, 5 insertions(+), 36986 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-8358777 fix: resolve TUI startup crashes (TypeError and NameError in layout.py)
+4fdc3c5 chore: remove .sudo_askpass helper script
+125cd16 fix: resolve TUI startup crashes (TypeError and NameError in layout.py)
 0d9ab82 feat: implement Phase 2 UI improvements (persistence, themes, enhanced menus)
 bf47338 refactor: organize root scripts and cleanup entry points
 03f86a0 refactor: complete TUI modularization and implementation of dynamic panel resizing
-d0536b3 feat: add TUI file monitoring service with event aggregation and target management.
 ```
 
 ---
@@ -11802,7 +11801,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (538.1 KB)
+### `project_structure_final.txt` (538.0 KB)
 
 ```text
 # System — Project Structure
@@ -11811,18 +11810,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 115
-- **Files Skipped**: 12329
+- **Files Skipped**: 12334
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 23:15:17
+- **Generated**: 2025-12-17 23:19:48
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 543, in _redraw
-    self.context.copy().run(run_in_context)
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 526, in run_in_context
     self.renderer.render(self, self.layout)
   File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/renderer.py", line 682, in render
     layout.container.write_to_screen(
@@ -11920,6 +11916,9 @@ NameError: name 'state' is not defined
 2025-12-17 23:14:27 | INFO     | MainThread | system_cli.cli | cli_main:2442 | Starting TUI mode
 2025-12-17 23:14:42 | INFO     | MainThread | system_cli.cli | cli_main:2445 | TUI mode exited successfully
 2025-12-17 23:14:57 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['--help']
+2025-12-17 23:18:27 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: []
+2025-12-17 23:18:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2439 | Parsed command: None
+2025-12-17 23:18:27 | INFO     | MainThread | system_cli.cli | cli_main:2442 | Starting TUI mode
 ```
 
 ---
@@ -12346,19 +12345,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- .sudo_askpass               |     2 -
- project_structure_final.txt | 37175 +-----------------------------------------
- 2 files changed, 99 insertions(+), 37078 deletions(-)
+ project_structure_final.txt | 36991 +-----------------------------------------
+ 1 file changed, 5 insertions(+), 36986 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-8358777 fix: resolve TUI startup crashes (TypeError and NameError in layout.py)
+4fdc3c5 chore: remove .sudo_askpass helper script
+125cd16 fix: resolve TUI startup crashes (TypeError and NameError in layout.py)
 0d9ab82 feat: implement Phase 2 UI improvements (persistence, themes, enhanced menus)
 bf47338 refactor: organize root scripts and cleanup entry points
 03f86a0 refactor: complete TUI modularization and implementation of dynamic panel resizing
-d0536b3 feat: add TUI file monitoring service with event aggregation and target management.
 ```
 
 ---
@@ -37512,4 +37510,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 115
-- **Skipped**: 12329
+- **Skipped**: 12334
