@@ -24,6 +24,7 @@ class MenuLevel(Enum):
     APPEARANCE = "appearance"
     LANGUAGE = "language"
     AUTOMATION_PERMISSIONS = "automation_permissions"
+    LAYOUT = "layout"
 
 
 @dataclass

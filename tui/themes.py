@@ -1,15 +1,8 @@
-from __future__ import annotations
+import os
+import json
+from typing import Dict, List, Tuple
 
-from typing import Dict
-
-
-THEME_NAMES = (
-    "monaco", "dracula", "nord", "gruvbox",
-    "solarized-dark", "one-dark", "catppuccin", "tokyo-night", "rose-pine"
-)
-
-
-
+# Base themes
 THEMES: Dict[str, Dict[str, str]] = {
     "monaco": {
         "frame.border": "#005f5f",
@@ -363,4 +356,35 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.text": "#e0def4",
     },
 }
+
+def load_custom_themes() -> None:
+    """Load user themes from ~/.system_cli/themes/*.json"""
+    try:
+        custom_dir = os.path.expanduser("~/.system_cli/themes")
+        if not os.path.exists(custom_dir):
+            return
+        
+        for filename in os.listdir(custom_dir):
+            if filename.endswith(".json"):
+                path = os.path.join(custom_dir, filename)
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        theme_data = json.load(f)
+                        name = filename[:-5]
+                        if isinstance(theme_data, dict):
+                            THEMES[name] = theme_data
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
+# Initial load
+load_custom_themes()
+
+def get_theme_names() -> Tuple[str, ...]:
+    """Return sorted list of all available theme names."""
+    return tuple(sorted(THEMES.keys()))
+
+# Support old global variable for compatibility where possible
+THEME_NAMES = get_theme_names()
 

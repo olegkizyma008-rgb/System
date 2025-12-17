@@ -4,70 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 115
-- **Files Skipped**: 12309
+- **Files Skipped**: 12322
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 22:49:57
+- **Generated**: 2025-12-17 22:57:11
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: []
-2025-12-17 20:49:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
-2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
-2025-12-17 21:34:52 | INFO     | MainThread | system_cli.cli | cli_main:4598 | TUI mode exited successfully
-2025-12-17 22:45:22 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:46:16 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
-2025-12-17 22:46:16 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
-2025-12-17 22:46:16 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
-2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
 TypeError: Window.__init__() got an unexpected keyword argument 'name'
 2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
 Traceback (most recent call last):
@@ -113,6 +58,61 @@ TypeError: Window.__init__() got an unexpected keyword argument 'name'
 2025-12-17 22:49:12 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
 2025-12-17 22:49:13 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
 2025-12-17 22:49:14 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:50:36 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
+2025-12-17 22:50:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
+2025-12-17 22:50:36 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
+2025-12-17 22:50:36 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:50:36 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:50:47 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
+2025-12-17 22:50:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
+2025-12-17 22:50:47 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
+2025-12-17 22:50:47 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:50:47 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:56:47 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -541,17 +541,17 @@ Tests:
 ```
  .sudo_askpass               |     2 -
  project_structure_final.txt | 36960 +-----------------------------------------
- 2 files changed, 61 insertions(+), 36901 deletions(-)
+ 2 files changed, 57 insertions(+), 36905 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-435e94d refactor: organize root scripts and cleanup entry points
+bc25351 feat: implement Phase 2 UI improvements (persistence, themes, enhanced menus)
+bf47338 refactor: organize root scripts and cleanup entry points
 03f86a0 refactor: complete TUI modularization and implementation of dynamic panel resizing
 d0536b3 feat: add TUI file monitoring service with event aggregation and target management.
 b2e1248 feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
-b2c3bdd Update: Add latest response
 ```
 
 ---
@@ -11802,7 +11802,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (539.5 KB)
+### `project_structure_final.txt` (536.6 KB)
 
 ```text
 # System — Project Structure
@@ -11811,70 +11811,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 115
-- **Files Skipped**: 12309
+- **Files Skipped**: 12322
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 22:49:57
+- **Generated**: 2025-12-17 22:57:11
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: []
-2025-12-17 20:49:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
-2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
-2025-12-17 21:34:52 | INFO     | MainThread | system_cli.cli | cli_main:4598 | TUI mode exited successfully
-2025-12-17 22:45:22 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:46:16 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
-2025-12-17 22:46:16 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
-2025-12-17 22:46:16 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
-2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
 TypeError: Window.__init__() got an unexpected keyword argument 'name'
 2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
 Traceback (most recent call last):
@@ -11920,6 +11865,61 @@ TypeError: Window.__init__() got an unexpected keyword argument 'name'
 2025-12-17 22:49:12 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
 2025-12-17 22:49:13 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
 2025-12-17 22:49:14 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
+2025-12-17 22:50:36 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
+2025-12-17 22:50:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
+2025-12-17 22:50:36 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
+2025-12-17 22:50:36 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:50:36 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:50:47 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
+2025-12-17 22:50:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
+2025-12-17 22:50:47 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
+2025-12-17 22:50:47 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:50:47 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'name'
+2025-12-17 22:56:47 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -12348,17 +12348,17 @@ Tests:
 ```
  .sudo_askpass               |     2 -
  project_structure_final.txt | 36960 +-----------------------------------------
- 2 files changed, 61 insertions(+), 36901 deletions(-)
+ 2 files changed, 57 insertions(+), 36905 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-435e94d refactor: organize root scripts and cleanup entry points
+bc25351 feat: implement Phase 2 UI improvements (persistence, themes, enhanced menus)
+bf47338 refactor: organize root scripts and cleanup entry points
 03f86a0 refactor: complete TUI modularization and implementation of dynamic panel resizing
 d0536b3 feat: add TUI file monitoring service with event aggregation and target management.
 b2e1248 feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
-b2c3bdd Update: Add latest response
 ```
 
 ---
@@ -27586,6 +27586,7 @@ class MenuLevel(Enum):
     APPEARANCE = "appearance"
     LANGUAGE = "language"
     AUTOMATION_PERMISSIONS = "automation_permissions"
+    LAYOUT = "layout"
 
 
 @dataclass
@@ -29759,7 +29760,7 @@ _scan_traces = scan_traces
 _get_editors_list = get_editors_list
 ```
 
-### `tui/cli.py` (87.0 KB)
+### `tui/cli.py` (88.1 KB)
 
 ```python
 #!/usr/bin/env python3
@@ -30371,6 +30372,22 @@ def _load_ui_settings() -> None:
         if isinstance(automation_allow_shortcuts, bool):
             state.automation_allow_shortcuts = automation_allow_shortcuts
 
+        left_ratio = data.get("left_panel_ratio")
+        if isinstance(left_ratio, (int, float)):
+            state.ui_left_panel_ratio = max(0.2, min(0.8, float(left_ratio)))
+        
+        scroll_target = data.get("scroll_target")
+        if scroll_target in {"log", "agents"}:
+            state.ui_scroll_target = scroll_target
+        
+        log_follow = data.get("log_follow")
+        if isinstance(log_follow, bool):
+            state.ui_log_follow = log_follow
+            
+        agents_follow = data.get("agents_follow")
+        if isinstance(agents_follow, bool):
+            state.ui_agents_follow = agents_follow
+
         env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_UNSAFE_MODE"))
         if env_unsafe is None:
             env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_AUTO_CONFIRM"))
@@ -30392,6 +30409,10 @@ def _save_ui_settings() -> bool:
             "execution_mode": str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native",
             "unsafe_mode": bool(state.ui_unsafe_mode),
             "automation_allow_shortcuts": bool(getattr(state, "automation_allow_shortcuts", False)),
+            "left_panel_ratio": float(getattr(state, "ui_left_panel_ratio", 0.6)),
+            "scroll_target": str(getattr(state, "ui_scroll_target", "log")),
+            "log_follow": bool(getattr(state, "ui_log_follow", True)),
+            "agents_follow": bool(getattr(state, "ui_agents_follow", True)),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -31306,6 +31327,7 @@ def _get_settings_menu_items() -> List[Tuple[str, Any]]:
     return [
         ("menu.settings.section.appearance", None, "section"),
         ("menu.settings.appearance", MenuLevel.APPEARANCE),
+        ("menu.settings.layout", MenuLevel.LAYOUT),
         ("menu.settings.language", MenuLevel.LANGUAGE),
         ("menu.settings.locales", MenuLevel.LOCALES),
         ("menu.settings.section.agent", None, "section"),
@@ -31313,6 +31335,7 @@ def _get_settings_menu_items() -> List[Tuple[str, Any]]:
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS),
         ("menu.settings.section.automation", None, "section"),
         ("menu.settings.automation_permissions", MenuLevel.AUTOMATION_PERMISSIONS),
+        ("menu.settings.section.experimental", None, "section"),
         ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE),
     ]
 
@@ -32763,7 +32786,7 @@ MAIN_MENU_ITEMS: List[Tuple[str, MenuLevel]] = [
 ]
 ```
 
-### `tui/i18n.py` (8.1 KB)
+### `tui/i18n.py` (9.0 KB)
 
 ```python
 from __future__ import annotations
@@ -32806,6 +32829,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.settings.title": "SETTINGS (Enter: Open, Q/Esc: Back)",
         "menu.settings.section.appearance": "Appearance & Behavior",
         "menu.settings.appearance": "Theme",
+        "menu.settings.layout": "Layout & Panels",
         "menu.settings.language": "Language",
         "menu.settings.locales": "Locales (Region)",
         "menu.settings.section.agent": "Agent & LLM",
@@ -32813,6 +32837,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.settings.agent": "Agent Settings",
         "menu.settings.section.automation": "Automation & Permissions",
         "menu.settings.automation_permissions": "Automation Permissions",
+        "menu.settings.section.experimental": "Experimental",
         "menu.settings.unsafe_mode": "Unsafe Mode",
         "menu.automation_permissions.title": "AUTOMATION PERMISSIONS (Enter: Toggle, Q/Esc: Back)",
         "menu.monitoring.targets": "Targets",
@@ -32823,6 +32848,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.agent.title": "AGENT SETTINGS (Enter: Toggle/Run, Q/Esc: Back)",
         "menu.locales.title": "LOCALES (Space: ON/OFF, Enter: Primary, Q/Esc: Back)",
         "menu.unsafe_mode.title": "UNSAFE MODE (Enter: Toggle, Q/Esc: Back)",
+        "menu.unsafe_mode.label": "Unsafe Mode",
+        "menu.layout.title": "LAYOUT (Enter: Select, Left/Right: Adjust, Q/Esc: Back)",
+        "menu.layout.left_panel_ratio": "Left Panel Width",
+        "menu.layout.hint": "Use Left/Right arrow keys to adjust the ratio.",
         "menu.cleanup.title": "RUN CLEANUP (Enter: Run, D: Dry-run, Q/Esc: Back)",
         "menu.modules.title": "MODULES: CHOOSE EDITOR (Enter: Select, Q/Esc: Back)",
         "menu.install.title": "INSTALL (Enter: Open installer, Q/Esc: Back)",
@@ -32857,6 +32886,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.settings.title": "НАЛАШТУВАННЯ (Enter: Відкрити, Q/Esc: Назад)",
         "menu.settings.section.appearance": "Зовнішній вигляд & Поведінка",
         "menu.settings.appearance": "Тема",
+        "menu.settings.layout": "Розмітка & Панелі",
         "menu.settings.language": "Мова",
         "menu.settings.locales": "Локалі (Регіон)",
         "menu.settings.section.agent": "Агент & LLM",
@@ -32864,6 +32894,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.settings.agent": "Налаштування агента",
         "menu.settings.section.automation": "Автоматизація & Дозволи",
         "menu.settings.automation_permissions": "Дозволи автоматизації",
+        "menu.settings.section.experimental": "Експериментальні",
         "menu.settings.unsafe_mode": "Unsafe Mode",
         "menu.automation_permissions.title": "ДОЗВОЛИ АВТОМАТИЗАЦІЇ (Enter: Перемкнути, Q/Esc: Назад)",
         "menu.monitoring.targets": "Цілі",
@@ -32874,6 +32905,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.agent.title": "НАЛАШТУВАННЯ АГЕНТА (Enter: Перемкнути/Виконати, Q/Esc: Назад)",
         "menu.locales.title": "ЛОКАЛІ (Space: ON/OFF, Enter: Primary, Q/Esc: Назад)",
         "menu.unsafe_mode.title": "UNSAFE MODE (Enter: Перемкнути, Q/Esc: Назад)",
+        "menu.unsafe_mode.label": "Небезпечний режим",
+        "menu.layout.title": "РОЗМІТКА (Enter: Вибір, Стрілки: Регулювання, Q/Esc: Назад)",
+        "menu.layout.left_panel_ratio": "Ширина лівої панелі",
+        "menu.layout.hint": "Використовуйте стрілки Вліво/Вправо для налаштування.",
         "menu.cleanup.title": "ОЧИСТКА (Enter: Запуск, D: Dry-run, Q/Esc: Назад)",
         "menu.modules.title": "МОДУЛІ: ВИБІР РЕДАКТОРА (Enter: Вибір, Q/Esc: Назад)",
         "menu.install.title": "ВСТАНОВЛЕННЯ (Enter: Відкрити, Q/Esc: Назад)",
@@ -32921,7 +32956,7 @@ def normalize_lang(code: Optional[str]) -> str:
     return c
 ```
 
-### `tui/keybindings.py` (21.4 KB)
+### `tui/keybindings.py` (22.1 KB)
 
 ```python
 from __future__ import annotations
@@ -33138,6 +33173,7 @@ def build_keybindings(
             MenuLevel.AGENT_SETTINGS,
             MenuLevel.APPEARANCE,
             MenuLevel.LANGUAGE,
+            MenuLevel.LAYOUT,
         }:
             state.menu_level = MenuLevel.MAIN
             state.menu_index = 0
@@ -33197,6 +33233,22 @@ def build_keybindings(
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
             items = get_monitor_menu_items()
             normalize_menu_index(items)
+
+    @kb.add("left", filter=show_menu)
+    def _(event):
+        if state.menu_level == MenuLevel.LAYOUT:
+            if state.menu_index == 0:  # Ratio slider
+                p = float(getattr(state, "ui_left_panel_ratio", 0.6))
+                state.ui_left_panel_ratio = max(0.2, p - 0.05)
+                save_ui_settings()
+
+    @kb.add("right", filter=show_menu)
+    def _(event):
+        if state.menu_level == MenuLevel.LAYOUT:
+            if state.menu_index == 0:  # Ratio slider
+                p = float(getattr(state, "ui_left_panel_ratio", 0.6))
+                state.ui_left_panel_ratio = min(0.8, p + 0.05)
+                save_ui_settings()
 
     @kb.add("d", filter=show_menu)
     def _(event):
@@ -33923,7 +33975,7 @@ def get_log_files_info() -> dict:
 _default_logger = setup_logging(verbose=False)
 ```
 
-### `tui/menu.py` (14.2 KB)
+### `tui/menu.py` (16.7 KB)
 
 ```python
 from __future__ import annotations
@@ -33932,7 +33984,7 @@ from typing import Any, Callable, List, Sequence, Tuple
 
 from prompt_toolkit.filters import Condition
 
-from tui.themes import THEME_NAMES
+from tui.themes import THEMES, get_theme_names
 
 
 def build_menu(
@@ -33962,6 +34014,31 @@ def build_menu(
     @Condition
     def show_menu() -> bool:
         return state.menu_level != MenuLevel.NONE
+
+    def get_toggle_text(val: bool) -> List[Tuple[str, str]]:
+        style = "class:toggle.on" if val else "class:toggle.off"
+        label = " ON  " if val else " OFF "
+        return [("class:menu.item", "["), (style, label), ("class:menu.item", "]")]
+
+    def get_slider_text(val: float, width: int = 10) -> List[Tuple[str, str]]:
+        filled = int(val * width)
+        bar = "=" * filled + "|" + "-" * (width - filled - 1) if filled < width else "=" * (width - 1) + "|"
+        return [("class:menu.item", f"[{bar}] {val:.2f}")]
+
+    def get_theme_preview(tname: str) -> List[Tuple[str, str]]:
+        t = THEMES.get(tname, {})
+        border = t.get("frame.border", "#ffffff")
+        title = t.get("header.title", "#ffffff")
+        accent = t.get("log.action", "#ffffff")
+        # Visual block representation
+        return [
+            ("class:menu.item", "  "),
+            (f"bg:{border}", "  "),
+            ("class:menu.item", " "),
+            (f"bg:{title}", "  "),
+            ("class:menu.item", " "),
+            (f"bg:{accent}", "  "),
+        ]
 
     def get_menu_content() -> List[Tuple[str, str]]:
         result: List[Tuple[str, str]] = []
@@ -34036,20 +34113,23 @@ def build_menu(
 
         if state.menu_level == MenuLevel.APPEARANCE:
             result.append(("class:menu.title", f" {tr('menu.appearance.title', state.ui_lang)}\n\n"))
-            themes = list(THEME_NAMES)
+            themes = list(get_theme_names())
             state.menu_index = max(0, min(state.menu_index, len(themes) - 1))
             for i, t in enumerate(themes):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 mark = "[*]" if state.ui_theme == t else "[ ]"
-                result.append((style_cls, f"{prefix}{mark} {t}\n"))
+                result.append((style_cls, f"{prefix}{mark} {t}"))
+                result.extend(get_theme_preview(t))
+                result.append(("", "\n"))
             return result
 
         if state.menu_level == MenuLevel.LANGUAGE:
             result.append(("class:menu.title", f" {tr('menu.language.title', state.ui_lang)}\n\n"))
-            ui = f"UI: {state.ui_lang} - {lang_name(state.ui_lang)}"
-            chat = f"Chat: {state.chat_lang} - {lang_name(state.chat_lang)}"
-            items = [(ui, "ui"), (chat, "chat")]
+            items = [
+                (f"UI: {state.ui_lang} - {lang_name(state.ui_lang)}", "ui"),
+                (f"Chat: {state.chat_lang} - {lang_name(state.chat_lang)}", "chat")
+            ]
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
             for i, (label, _k) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
@@ -34061,21 +34141,48 @@ def build_menu(
         if state.menu_level == MenuLevel.UNSAFE_MODE:
             result.append(("class:menu.title", f" {tr('menu.unsafe_mode.title', state.ui_lang)}\n\n"))
             on = bool(getattr(state, "ui_unsafe_mode", False))
-            toggle_style = "class:toggle.on" if on else "class:toggle.off"
-            mark = "ON" if on else "OFF"
-            result.append(("class:menu.selected", " > Unsafe mode ["))
-            result.append((toggle_style, f"{mark}"))
-            result.append(("class:menu.selected", "]\n"))
+            prefix = " > "
+            result.append(("class:menu.selected", f"{prefix}{tr('menu.unsafe_mode.label', state.ui_lang)} "))
+            result.extend(get_toggle_text(on))
+            result.append(("", "\n"))
             return result
 
         if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
             result.append(("class:menu.title", f" {tr('menu.automation_permissions.title', state.ui_lang)}\n\n"))
             items = get_automation_permissions_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, _) in enumerate(items):
+            for i, (label, key) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label}\n"))
+                result.append((style_cls, f"{prefix}{label} "))
+                
+                if key == "ui_execution_mode":
+                    mode = str(getattr(state, "ui_execution_mode", "native")).upper()
+                    result.append(("class:menu.item", f"[{mode}]"))
+                elif key == "automation_allow_shortcuts":
+                    on = bool(getattr(state, "automation_allow_shortcuts", False))
+                    result.extend(get_toggle_text(on))
+                
+                result.append(("", "\n"))
+            return result
+
+        if state.menu_level == MenuLevel.LAYOUT:
+            result.append(("class:menu.title", f" {tr('menu.layout.title', state.ui_lang)}\n\n"))
+            items = [
+                (tr("menu.layout.left_panel_ratio", state.ui_lang), "ratio"),
+            ]
+            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+            for i, (label, key) in enumerate(items):
+                prefix = " > " if i == state.menu_index else "   "
+                style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
+                result.append((style_cls, f"{prefix}{label} "))
+                
+                if key == "ratio":
+                    val = float(getattr(state, "ui_left_panel_ratio", 0.6))
+                    result.extend(get_slider_text(val))
+                
+                result.append(("", "\n"))
+            result.append(("class:menu.item", f"\n {tr('menu.layout.hint', state.ui_lang)}\n"))
             return result
 
         if state.menu_level == MenuLevel.MONITOR_CONTROL:
@@ -36192,21 +36299,14 @@ _get_context = get_context
 _get_status = get_status
 ```
 
-### `tui/themes.py` (12.0 KB)
+### `tui/themes.py` (12.9 KB)
 
 ```python
-from __future__ import annotations
+import os
+import json
+from typing import Dict, List, Tuple
 
-from typing import Dict
-
-
-THEME_NAMES = (
-    "monaco", "dracula", "nord", "gruvbox",
-    "solarized-dark", "one-dark", "catppuccin", "tokyo-night", "rose-pine"
-)
-
-
-
+# Base themes
 THEMES: Dict[str, Dict[str, str]] = {
     "monaco": {
         "frame.border": "#005f5f",
@@ -36560,6 +36660,37 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.text": "#e0def4",
     },
 }
+
+def load_custom_themes() -> None:
+    """Load user themes from ~/.system_cli/themes/*.json"""
+    try:
+        custom_dir = os.path.expanduser("~/.system_cli/themes")
+        if not os.path.exists(custom_dir):
+            return
+        
+        for filename in os.listdir(custom_dir):
+            if filename.endswith(".json"):
+                path = os.path.join(custom_dir, filename)
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        theme_data = json.load(f)
+                        name = filename[:-5]
+                        if isinstance(theme_data, dict):
+                            THEMES[name] = theme_data
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
+# Initial load
+load_custom_themes()
+
+def get_theme_names() -> Tuple[str, ...]:
+    """Return sorted list of all available theme names."""
+    return tuple(sorted(THEMES.keys()))
+
+# Support old global variable for compatibility where possible
+THEME_NAMES = get_theme_names()
 ```
 
 ### `tui/tools.py` (19.8 KB)
@@ -37377,4 +37508,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 115
-- **Skipped**: 12309
+- **Skipped**: 12322

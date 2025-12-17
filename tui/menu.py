@@ -4,7 +4,7 @@ from typing import Any, Callable, List, Sequence, Tuple
 
 from prompt_toolkit.filters import Condition
 
-from tui.themes import THEME_NAMES
+from tui.themes import THEMES, get_theme_names
 
 
 def build_menu(
@@ -34,6 +34,31 @@ def build_menu(
     @Condition
     def show_menu() -> bool:
         return state.menu_level != MenuLevel.NONE
+
+    def get_toggle_text(val: bool) -> List[Tuple[str, str]]:
+        style = "class:toggle.on" if val else "class:toggle.off"
+        label = " ON  " if val else " OFF "
+        return [("class:menu.item", "["), (style, label), ("class:menu.item", "]")]
+
+    def get_slider_text(val: float, width: int = 10) -> List[Tuple[str, str]]:
+        filled = int(val * width)
+        bar = "=" * filled + "|" + "-" * (width - filled - 1) if filled < width else "=" * (width - 1) + "|"
+        return [("class:menu.item", f"[{bar}] {val:.2f}")]
+
+    def get_theme_preview(tname: str) -> List[Tuple[str, str]]:
+        t = THEMES.get(tname, {})
+        border = t.get("frame.border", "#ffffff")
+        title = t.get("header.title", "#ffffff")
+        accent = t.get("log.action", "#ffffff")
+        # Visual block representation
+        return [
+            ("class:menu.item", "  "),
+            (f"bg:{border}", "  "),
+            ("class:menu.item", " "),
+            (f"bg:{title}", "  "),
+            ("class:menu.item", " "),
+            (f"bg:{accent}", "  "),
+        ]
 
     def get_menu_content() -> List[Tuple[str, str]]:
         result: List[Tuple[str, str]] = []
@@ -108,20 +133,23 @@ def build_menu(
 
         if state.menu_level == MenuLevel.APPEARANCE:
             result.append(("class:menu.title", f" {tr('menu.appearance.title', state.ui_lang)}\n\n"))
-            themes = list(THEME_NAMES)
+            themes = list(get_theme_names())
             state.menu_index = max(0, min(state.menu_index, len(themes) - 1))
             for i, t in enumerate(themes):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 mark = "[*]" if state.ui_theme == t else "[ ]"
-                result.append((style_cls, f"{prefix}{mark} {t}\n"))
+                result.append((style_cls, f"{prefix}{mark} {t}"))
+                result.extend(get_theme_preview(t))
+                result.append(("", "\n"))
             return result
 
         if state.menu_level == MenuLevel.LANGUAGE:
             result.append(("class:menu.title", f" {tr('menu.language.title', state.ui_lang)}\n\n"))
-            ui = f"UI: {state.ui_lang} - {lang_name(state.ui_lang)}"
-            chat = f"Chat: {state.chat_lang} - {lang_name(state.chat_lang)}"
-            items = [(ui, "ui"), (chat, "chat")]
+            items = [
+                (f"UI: {state.ui_lang} - {lang_name(state.ui_lang)}", "ui"),
+                (f"Chat: {state.chat_lang} - {lang_name(state.chat_lang)}", "chat")
+            ]
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
             for i, (label, _k) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
@@ -133,21 +161,48 @@ def build_menu(
         if state.menu_level == MenuLevel.UNSAFE_MODE:
             result.append(("class:menu.title", f" {tr('menu.unsafe_mode.title', state.ui_lang)}\n\n"))
             on = bool(getattr(state, "ui_unsafe_mode", False))
-            toggle_style = "class:toggle.on" if on else "class:toggle.off"
-            mark = "ON" if on else "OFF"
-            result.append(("class:menu.selected", " > Unsafe mode ["))
-            result.append((toggle_style, f"{mark}"))
-            result.append(("class:menu.selected", "]\n"))
+            prefix = " > "
+            result.append(("class:menu.selected", f"{prefix}{tr('menu.unsafe_mode.label', state.ui_lang)} "))
+            result.extend(get_toggle_text(on))
+            result.append(("", "\n"))
             return result
 
         if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
             result.append(("class:menu.title", f" {tr('menu.automation_permissions.title', state.ui_lang)}\n\n"))
             items = get_automation_permissions_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, _) in enumerate(items):
+            for i, (label, key) in enumerate(items):
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
-                result.append((style_cls, f"{prefix}{label}\n"))
+                result.append((style_cls, f"{prefix}{label} "))
+                
+                if key == "ui_execution_mode":
+                    mode = str(getattr(state, "ui_execution_mode", "native")).upper()
+                    result.append(("class:menu.item", f"[{mode}]"))
+                elif key == "automation_allow_shortcuts":
+                    on = bool(getattr(state, "automation_allow_shortcuts", False))
+                    result.extend(get_toggle_text(on))
+                
+                result.append(("", "\n"))
+            return result
+
+        if state.menu_level == MenuLevel.LAYOUT:
+            result.append(("class:menu.title", f" {tr('menu.layout.title', state.ui_lang)}\n\n"))
+            items = [
+                (tr("menu.layout.left_panel_ratio", state.ui_lang), "ratio"),
+            ]
+            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+            for i, (label, key) in enumerate(items):
+                prefix = " > " if i == state.menu_index else "   "
+                style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
+                result.append((style_cls, f"{prefix}{label} "))
+                
+                if key == "ratio":
+                    val = float(getattr(state, "ui_left_panel_ratio", 0.6))
+                    result.extend(get_slider_text(val))
+                
+                result.append(("", "\n"))
+            result.append(("class:menu.item", f"\n {tr('menu.layout.hint', state.ui_lang)}\n"))
             return result
 
         if state.menu_level == MenuLevel.MONITOR_CONTROL:

@@ -212,6 +212,7 @@ def build_keybindings(
             MenuLevel.AGENT_SETTINGS,
             MenuLevel.APPEARANCE,
             MenuLevel.LANGUAGE,
+            MenuLevel.LAYOUT,
         }:
             state.menu_level = MenuLevel.MAIN
             state.menu_index = 0
@@ -271,6 +272,22 @@ def build_keybindings(
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
             items = get_monitor_menu_items()
             normalize_menu_index(items)
+
+    @kb.add("left", filter=show_menu)
+    def _(event):
+        if state.menu_level == MenuLevel.LAYOUT:
+            if state.menu_index == 0:  # Ratio slider
+                p = float(getattr(state, "ui_left_panel_ratio", 0.6))
+                state.ui_left_panel_ratio = max(0.2, p - 0.05)
+                save_ui_settings()
+
+    @kb.add("right", filter=show_menu)
+    def _(event):
+        if state.menu_level == MenuLevel.LAYOUT:
+            if state.menu_index == 0:  # Ratio slider
+                p = float(getattr(state, "ui_left_panel_ratio", 0.6))
+                state.ui_left_panel_ratio = min(0.8, p + 0.05)
+                save_ui_settings()
 
     @kb.add("d", filter=show_menu)
     def _(event):

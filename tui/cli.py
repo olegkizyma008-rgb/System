@@ -607,6 +607,22 @@ def _load_ui_settings() -> None:
         if isinstance(automation_allow_shortcuts, bool):
             state.automation_allow_shortcuts = automation_allow_shortcuts
 
+        left_ratio = data.get("left_panel_ratio")
+        if isinstance(left_ratio, (int, float)):
+            state.ui_left_panel_ratio = max(0.2, min(0.8, float(left_ratio)))
+        
+        scroll_target = data.get("scroll_target")
+        if scroll_target in {"log", "agents"}:
+            state.ui_scroll_target = scroll_target
+        
+        log_follow = data.get("log_follow")
+        if isinstance(log_follow, bool):
+            state.ui_log_follow = log_follow
+            
+        agents_follow = data.get("agents_follow")
+        if isinstance(agents_follow, bool):
+            state.ui_agents_follow = agents_follow
+
         env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_UNSAFE_MODE"))
         if env_unsafe is None:
             env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_AUTO_CONFIRM"))
@@ -628,6 +644,10 @@ def _save_ui_settings() -> bool:
             "execution_mode": str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native",
             "unsafe_mode": bool(state.ui_unsafe_mode),
             "automation_allow_shortcuts": bool(getattr(state, "automation_allow_shortcuts", False)),
+            "left_panel_ratio": float(getattr(state, "ui_left_panel_ratio", 0.6)),
+            "scroll_target": str(getattr(state, "ui_scroll_target", "log")),
+            "log_follow": bool(getattr(state, "ui_log_follow", True)),
+            "agents_follow": bool(getattr(state, "ui_agents_follow", True)),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -1542,6 +1562,7 @@ def _get_settings_menu_items() -> List[Tuple[str, Any]]:
     return [
         ("menu.settings.section.appearance", None, "section"),
         ("menu.settings.appearance", MenuLevel.APPEARANCE),
+        ("menu.settings.layout", MenuLevel.LAYOUT),
         ("menu.settings.language", MenuLevel.LANGUAGE),
         ("menu.settings.locales", MenuLevel.LOCALES),
         ("menu.settings.section.agent", None, "section"),
@@ -1549,6 +1570,7 @@ def _get_settings_menu_items() -> List[Tuple[str, Any]]:
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS),
         ("menu.settings.section.automation", None, "section"),
         ("menu.settings.automation_permissions", MenuLevel.AUTOMATION_PERMISSIONS),
+        ("menu.settings.section.experimental", None, "section"),
         ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE),
     ]
 
