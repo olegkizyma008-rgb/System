@@ -3,116 +3,116 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 107
-- **Files Skipped**: 12257
+- **Files Included**: 113
+- **Files Skipped**: 12263
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 19:23:59
+- **Generated**: 2025-12-17 21:26:06
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 19:16:12 | INFO     | MainThread | system_cli.cli | cli_main:4907 | TUI mode exited successfully
-2025-12-17 19:16:15 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: []
-2025-12-17 19:16:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
-2025-12-17 19:16:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:43 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:43 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: []
+2025-12-17 20:49:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
+2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
 ```
 
 ---
@@ -122,6 +122,8 @@
 ## My Last Response
 
 Fix Trinity crash: initialize step_status in Grisha; add regression test
+
+---
 
 ---
 
@@ -501,6 +503,36 @@ Verification:
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
 
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему 1. Створи папку для звіту на робочому столі з назвою "System_Report_2025" 2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png" 3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png" 4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png" * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією: * Дата і час створення звіту * Ім'я користувача системи * Версія macOS * Кількість RAM (пам'яті) * Інформація про процесор 5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png" 6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut" 7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами 8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip" 9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено" 10. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: failed_artifacts_missing
+Last agent: atlas
+
+Last message:
+System_Report_2025 artifacts missing. Expected files were not found on Desktop. Missing (first 6): /Users/dev/Desktop/System_Report_2025/desktop_screenshot.png, /Users/dev/Desktop/System_Report_2025/safari_apple.png, /Users/dev/Desktop/System_Report_2025/finder_downloads.png, /Users/dev/Desktop/System_Report_2025/chrome_search.png, /Users/dev/Desktop/System_Report_2025/system_info.txt, /Users/dev/Desktop/System_Report_2025/report_summary.md
+
+Changed files:
+- core/trinity.py
+- tests/test_grisha_routing.py
+- tui/cli.py
+
+Diff stat:
+core/trinity.py              |   7 +-
+ tests/test_grisha_routing.py |  27 +++
+ tui/cli.py                   | 426 ++++++++-----------------------------------
+ 3 files changed, 104 insertions(+), 356 deletions(-)
+
+Verification:
+- status: unknown (no explicit signal)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
 
 ---
 
@@ -508,20 +540,22 @@ Tests:
 
 ```
  core/trinity.py              |     7 +-
- project_structure_final.txt  | 35222 +----------------------------------------
+ project_structure_final.txt  | 35333 +----------------------------------------
  tests/test_grisha_routing.py |    27 +
  tui/cli.py                   |   426 +-
- 4 files changed, 167 insertions(+), 35515 deletions(-)
+ tui/messages.py              |    91 +-
+ tui/themes.py                |   202 +-
+ 6 files changed, 497 insertions(+), 35589 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-6986473 Update: Add latest response
+1cc1a8f feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
+b2c3bdd Update: Add latest response
 987b109 Update: Add latest response
 4421360 Update: Add latest response
 0025b55 Update: Add latest response
-db1d8e5 Fix CLI editor fallback and direct execution
 ```
 
 ---
@@ -625,7 +659,9 @@ System/
 │   └── test_vision_find_image.py
 ├── tui/
 │   ├── __init__.py
+│   ├── agents.py
 │   ├── app.py
+│   ├── cleanup.py
 │   ├── cli.py
 │   ├── cli_defaults.py
 │   ├── cli_localization.py
@@ -637,7 +673,11 @@ System/
 │   ├── logger.py
 │   ├── menu.py
 │   ├── messages.py
-│   └── themes.py
+│   ├── monitoring.py
+│   ├── permissions.py
+│   ├── render.py
+│   ├── themes.py
+│   └── tools.py
 ├── .DS_Store
 ├── .env.example
 ├── .gitignore
@@ -930,12 +970,14 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (24.2 KB)
+### `.last_response.txt` (27.2 KB)
 
 ```text
 ## My Last Response
 
 Fix Trinity crash: initialize step_status in Grisha; add regression test
+
+---
 
 ---
 
@@ -1308,6 +1350,36 @@ Changed files:
 Diff stat:
 tui/cli.py | 55 ++++++++++++++++++++++++++++++++++++++++---------------
  1 file changed, 40 insertions(+), 15 deletions(-)
+
+Verification:
+- status: unknown (no explicit signal)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему 1. Створи папку для звіту на робочому столі з назвою "System_Report_2025" 2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png" 3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png" 4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png" * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією: * Дата і час створення звіту * Ім'я користувача системи * Версія macOS * Кількість RAM (пам'яті) * Інформація про процесор 5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png" 6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut" 7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами 8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip" 9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено" 10. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: failed_artifacts_missing
+Last agent: atlas
+
+Last message:
+System_Report_2025 artifacts missing. Expected files were not found on Desktop. Missing (first 6): /Users/dev/Desktop/System_Report_2025/desktop_screenshot.png, /Users/dev/Desktop/System_Report_2025/safari_apple.png, /Users/dev/Desktop/System_Report_2025/finder_downloads.png, /Users/dev/Desktop/System_Report_2025/chrome_search.png, /Users/dev/Desktop/System_Report_2025/system_info.txt, /Users/dev/Desktop/System_Report_2025/report_summary.md
+
+Changed files:
+- core/trinity.py
+- tests/test_grisha_routing.py
+- tui/cli.py
+
+Diff stat:
+core/trinity.py              |   7 +-
+ tests/test_grisha_routing.py |  27 +++
+ tui/cli.py                   | 426 ++++++++-----------------------------------
+ 3 files changed, 104 insertions(+), 356 deletions(-)
 
 Verification:
 - status: unknown (no explicit signal)
@@ -11718,7 +11790,7 @@ from tui.i18n import (  # noqa: F401
 test content
 ```
 
-### `project_structure_final.txt` (536.8 KB)
+### `project_structure_final.txt` (543.3 KB)
 
 ```text
 # System — Project Structure
@@ -11726,116 +11798,116 @@ test content
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 107
-- **Files Skipped**: 12257
+- **Files Included**: 113
+- **Files Skipped**: 12263
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 19:23:59
+- **Generated**: 2025-12-17 21:26:06
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 18:59:31 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 18:59:31 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 19:16:12 | INFO     | MainThread | system_cli.cli | cli_main:4907 | TUI mode exited successfully
-2025-12-17 19:16:15 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: []
-2025-12-17 19:16:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
-2025-12-17 19:16:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
-2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
-2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:43 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:46:43 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:43 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:46:43 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:46:56 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:46:56 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:46:56 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:47:06 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:06 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:47:06 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 20:47:16 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 20:47:16 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 20:47:16 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: []
+2025-12-17 20:49:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
+2025-12-17 20:49:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
 ```
 
 ---
@@ -11845,6 +11917,8 @@ test content
 ## My Last Response
 
 Fix Trinity crash: initialize step_status in Grisha; add regression test
+
+---
 
 ---
 
@@ -12224,6 +12298,36 @@ Verification:
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
 
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему 1. Створи папку для звіту на робочому столі з назвою "System_Report_2025" 2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png" 3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png" 4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png" * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією: * Дата і час створення звіту * Ім'я користувача системи * Версія macOS * Кількість RAM (пам'яті) * Інформація про процесор 5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png" 6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut" 7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами 8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip" 9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено" 10. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: failed_artifacts_missing
+Last agent: atlas
+
+Last message:
+System_Report_2025 artifacts missing. Expected files were not found on Desktop. Missing (first 6): /Users/dev/Desktop/System_Report_2025/desktop_screenshot.png, /Users/dev/Desktop/System_Report_2025/safari_apple.png, /Users/dev/Desktop/System_Report_2025/finder_downloads.png, /Users/dev/Desktop/System_Report_2025/chrome_search.png, /Users/dev/Desktop/System_Report_2025/system_info.txt, /Users/dev/Desktop/System_Report_2025/report_summary.md
+
+Changed files:
+- core/trinity.py
+- tests/test_grisha_routing.py
+- tui/cli.py
+
+Diff stat:
+core/trinity.py              |   7 +-
+ tests/test_grisha_routing.py |  27 +++
+ tui/cli.py                   | 426 ++++++++-----------------------------------
+ 3 files changed, 104 insertions(+), 356 deletions(-)
+
+Verification:
+- status: unknown (no explicit signal)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
 
 ---
 
@@ -12231,20 +12335,22 @@ Tests:
 
 ```
  core/trinity.py              |     7 +-
- project_structure_final.txt  | 35222 +----------------------------------------
+ project_structure_final.txt  | 35333 +----------------------------------------
  tests/test_grisha_routing.py |    27 +
  tui/cli.py                   |   426 +-
- 4 files changed, 167 insertions(+), 35515 deletions(-)
+ tui/messages.py              |    91 +-
+ tui/themes.py                |   202 +-
+ 6 files changed, 497 insertions(+), 35589 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-6986473 Update: Add latest response
+1cc1a8f feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
+b2c3bdd Update: Add latest response
 987b109 Update: Add latest response
 4421360 Update: Add latest response
 0025b55 Update: Add latest response
-db1d8e5 Fix CLI editor fallback and direct execution
 ```
 
 ---
@@ -12348,7 +12454,9 @@ System/
 │   └── test_vision_find_image.py
 ├── tui/
 │   ├── __init__.py
+│   ├── agents.py
 │   ├── app.py
+│   ├── cleanup.py
 │   ├── cli.py
 │   ├── cli_defaults.py
 │   ├── cli_localization.py
@@ -12360,7 +12468,11 @@ System/
 │   ├── logger.py
 │   ├── menu.py
 │   ├── messages.py
-│   └── themes.py
+│   ├── monitoring.py
+│   ├── permissions.py
+│   ├── render.py
+│   ├── themes.py
+│   └── tools.py
 ├── .DS_Store
 ├── .env.example
 ├── .gitignore
@@ -12653,12 +12765,14 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (24.2 KB)
+### `.last_response.txt` (27.2 KB)
 
 ```text
 ## My Last Response
 
 Fix Trinity crash: initialize step_status in Grisha; add regression test
+
+---
 
 ---
 
@@ -13031,6 +13145,36 @@ Changed files:
 Diff stat:
 tui/cli.py | 55 ++++++++++++++++++++++++++++++++++++++++---------------
  1 file changed, 40 insertions(+), 15 deletions(-)
+
+Verification:
+- status: unknown (no explicit signal)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему 1. Створи папку для звіту на робочому столі з назвою "System_Report_2025" 2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png" 3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png" 4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png" * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією: * Дата і час створення звіту * Ім'я користувача системи * Версія macOS * Кількість RAM (пам'яті) * Інформація про процесор 5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png" 6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut" 7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами 8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip" 9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено" 10. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: failed_artifacts_missing
+Last agent: atlas
+
+Last message:
+System_Report_2025 artifacts missing. Expected files were not found on Desktop. Missing (first 6): /Users/dev/Desktop/System_Report_2025/desktop_screenshot.png, /Users/dev/Desktop/System_Report_2025/safari_apple.png, /Users/dev/Desktop/System_Report_2025/finder_downloads.png, /Users/dev/Desktop/System_Report_2025/chrome_search.png, /Users/dev/Desktop/System_Report_2025/system_info.txt, /Users/dev/Desktop/System_Report_2025/report_summary.md
+
+Changed files:
+- core/trinity.py
+- tests/test_grisha_routing.py
+- tui/cli.py
+
+Diff stat:
+core/trinity.py              |   7 +-
+ tests/test_grisha_routing.py |  27 +++
+ tui/cli.py                   | 426 ++++++++-----------------------------------
+ 3 files changed, 104 insertions(+), 356 deletions(-)
 
 Verification:
 - status: unknown (no explicit signal)
@@ -28693,6 +28837,203 @@ def test_find_image_on_screen_missing_cv2_dependency(tmp_path, monkeypatch):
 
 ```
 
+### `tui/agents.py` (5.3 KB)
+
+```python
+"""Agent session and LLM interaction for TUI.
+
+Provides:
+- AgentTool and AgentSession dataclasses
+- Agent initialization and LLM setup
+- Streaming and non-streaming agent responses
+- Task complexity detection
+- Greeting detection
+"""
+
+from __future__ import annotations
+
+import os
+import re
+import threading
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+from system_cli.state import state
+from i18n import lang_name
+
+# Optional imports
+try:
+    from dotenv import load_dotenv
+except Exception:
+    load_dotenv = None
+
+try:
+    from langchain_core.messages import HumanMessage, SystemMessage, AIMessage, ToolMessage
+    from providers.copilot import CopilotLLM
+except Exception:
+    CopilotLLM = None
+    HumanMessage = SystemMessage = AIMessage = ToolMessage = None
+
+
+@dataclass
+class AgentTool:
+    """A tool available to the agent."""
+    name: str
+    description: str
+    handler: Any
+
+
+@dataclass
+class AgentSession:
+    """Session state for the agent."""
+    enabled: bool = True
+    messages: List[Any] = field(default_factory=list)
+    tools: List[AgentTool] = field(default_factory=list)
+    llm: Any = None
+    llm_signature: str = ""
+
+    def reset(self) -> None:
+        """Reset the message history."""
+        self.messages = []
+
+
+# Global agent session instance
+agent_session = AgentSession()
+
+# Chat mode flag
+agent_chat_mode: bool = True
+
+
+def load_env() -> None:
+    """Load environment variables from .env file."""
+    from tui.cli_paths import SCRIPT_DIR
+    
+    if load_dotenv is not None:
+        load_dotenv(os.path.join(SCRIPT_DIR, ".env"))
+    else:
+        # Fallback: load .env file manually
+        env_path = os.path.join(SCRIPT_DIR, ".env")
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#') and '=' in line:
+                            key, value = line.split('=', 1)
+                            key = key.strip()
+                            value = value.strip().strip('"\'')
+                            os.environ[key] = value
+            except Exception:
+                pass
+    os.environ["SYSTEM_RAG_ENABLED"] = "1"
+
+
+def get_llm_signature() -> str:
+    """Get a signature string for current LLM settings."""
+    provider = str(os.getenv("LLM_PROVIDER") or "copilot").strip().lower()
+    model = str(os.getenv("COPILOT_MODEL") or "").strip()
+    vision = str(os.getenv("COPILOT_VISION_MODEL") or "").strip()
+    return f"{provider}:{model}:{vision}"
+
+
+def ensure_agent_ready() -> Tuple[bool, str]:
+    """Ensure the agent LLM is initialized and ready."""
+    if CopilotLLM is None or SystemMessage is None or HumanMessage is None:
+        return False, "LLM недоступний (нема langchain_core або providers/copilot.py)"
+
+    load_env()
+    
+    # Import and load LLM settings
+    try:
+        from tui.cli import _load_llm_settings
+        _load_llm_settings()
+    except Exception:
+        pass
+    
+    sig = get_llm_signature()
+
+    provider = str(os.getenv("LLM_PROVIDER") or "copilot").strip().lower() or "copilot"
+    if provider != "copilot":
+        return False, f"Unsupported LLM provider: {provider}"
+
+    if agent_session.llm is None or agent_session.llm_signature != sig:
+        agent_session.llm = CopilotLLM(
+            model_name=os.getenv("COPILOT_MODEL"), 
+            vision_model_name=os.getenv("COPILOT_VISION_MODEL")
+        )
+        agent_session.llm_signature = sig
+    return True, "OK"
+
+
+def is_complex_task(text: str) -> bool:
+    """Detect if text represents a complex multi-step task."""
+    t = str(text or "").strip()
+    if not t:
+        return False
+    if t.startswith("/"):
+        return False
+    # Heuristics: long, multi-sentence, multi-line, or multi-step language.
+    if "\n" in t:
+        return True
+    if len(t) >= 240:
+        return True
+    if t.count(".") + t.count("!") + t.count("?") >= 3:
+        return True
+    lower = t.lower()
+    keywords = [
+        "потім",
+        "далі",
+        "крок",
+        "steps",
+        "step",
+        "і потім",
+        "спочатку",
+        "зроби",
+        "налаштуй",
+        "автоматиз",
+        "перевір",
+    ]
+    return sum(1 for k in keywords if k in lower) >= 2
+
+
+def is_greeting(text: str) -> bool:
+    """Detect if text is a simple greeting."""
+    t = str(text or "").strip().lower()
+    if not t:
+        return False
+    t = re.sub(r"[\s\t\n\r\.,!\?;:]+", " ", t).strip()
+    greetings = {
+        "привіт",
+        "привiт",
+        "вітаю",
+        "доброго дня",
+        "добрий день",
+        "добрий вечір",
+        "доброго вечора",
+        "добрий ранок",
+        "доброго ранку",
+        "hello",
+        "hi",
+        "hey",
+    }
+    return t in greetings
+
+
+def reset_agent_llm() -> None:
+    """Reset the agent LLM (forces re-initialization on next use)."""
+    agent_session.llm = None
+    agent_session.llm_signature = ""
+
+
+# Backward compatibility aliases
+_load_env = load_env
+_get_llm_signature = get_llm_signature
+_ensure_agent_ready = ensure_agent_ready
+_is_complex_task = is_complex_task
+_is_greeting = is_greeting
+_reset_agent_llm = reset_agent_llm
+```
+
 ### `tui/app.py` (0.8 KB)
 
 ```python
@@ -28723,6 +29064,324 @@ def run_tui(runtime: TuiRuntime) -> None:
     runtime.load_llm_settings()
     runtime.apply_default_monitor_targets()
     runtime.app.run()
+```
+
+### `tui/cleanup.py` (10.5 KB)
+
+```python
+"""Cleanup and editor module management for TUI.
+
+Provides functions for:
+- Loading/saving cleanup configuration
+- Running cleanup scripts
+- Module enable/disable
+- Editor installation (DMG/ZIP/URL)
+- Scanning editor traces
+"""
+
+from __future__ import annotations
+
+import fnmatch
+import glob
+import json
+import os
+import subprocess
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
+
+from tui.cli_paths import CLEANUP_CONFIG_PATH, SCRIPT_DIR
+from tui.cli_defaults import DEFAULT_CLEANUP_CONFIG
+
+
+@dataclass
+class ModuleRef:
+    """Reference to a cleanup module."""
+    editor: str
+    module_id: str
+
+
+def load_cleanup_config() -> Dict[str, Any]:
+    """Load cleanup configuration from file."""
+    if not os.path.exists(CLEANUP_CONFIG_PATH):
+        return json.loads(json.dumps(DEFAULT_CLEANUP_CONFIG))
+
+    try:
+        with open(CLEANUP_CONFIG_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        data = {}
+
+    if not isinstance(data, dict):
+        data = {}
+    data.setdefault("editors", {})
+
+    for key, val in (DEFAULT_CLEANUP_CONFIG.get("editors", {}) or {}).items():
+        if key not in data["editors"]:
+            data["editors"][key] = val
+            continue
+
+        for field_name in ["label", "install", "modules"]:
+            if field_name not in data["editors"][key]:
+                data["editors"][key][field_name] = val.get(field_name)
+
+        if not data["editors"][key].get("modules") and val.get("modules"):
+            data["editors"][key]["modules"] = val["modules"]
+
+    return data
+
+
+def save_cleanup_config(cfg: Dict[str, Any]) -> None:
+    """Save cleanup configuration to file."""
+    with open(CLEANUP_CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2, ensure_ascii=False)
+
+
+def list_editors(cfg: Dict[str, Any]) -> List[str]:
+    """List available editor keys from config."""
+    editors = cfg.get("editors", {}) or {}
+    result = []
+    for key, val in editors.items():
+        if isinstance(val, dict):
+            result.append(key)
+    return result
+
+
+def resolve_editor_arg(cfg: Dict[str, Any], editor: Optional[str]) -> Tuple[str, Optional[str]]:
+    """Resolve editor argument to a valid editor key."""
+    editors = cfg.get("editors", {}) or {}
+    if not editor:
+        if len(editors) == 1:
+            return list(editors.keys())[0], None
+        return "", f"Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+
+    low = editor.strip().lower()
+    aliases = {
+        "ws": "windsurf",
+        "windsurfs": "windsurf",
+        "wind": "windsurf",
+        "code": "vscode",
+        "vs": "vscode",
+        "vscodium": "vscode",
+        "anti": "antigravity",
+        "ag": "antigravity",
+        "google": "antigravity",
+        "gemini": "antigravity",
+        "curs": "cursor",
+        "cur": "cursor",
+    }
+    return aliases.get(low, low), None
+
+
+def find_module(cfg: Dict[str, Any], editor: str, module_id: str) -> Optional[ModuleRef]:
+    """Find a module in configuration."""
+    editors = cfg.get("editors", {}) or {}
+    if editor not in editors:
+        return None
+    for m in editors[editor].get("modules", []) or []:
+        if isinstance(m, dict) and m.get("id") == module_id:
+            return ModuleRef(editor=editor, module_id=module_id)
+    return None
+
+
+def set_module_enabled(cfg: Dict[str, Any], ref: ModuleRef, enabled: bool) -> bool:
+    """Enable or disable a cleanup module."""
+    editor_cfg = (cfg.get("editors", {}) or {}).get(ref.editor)
+    if not isinstance(editor_cfg, dict):
+        return False
+
+    for m in editor_cfg.get("modules", []) or []:
+        if not isinstance(m, dict):
+            continue
+        if m.get("id") == ref.module_id:
+            m["enabled"] = bool(enabled)
+            save_cleanup_config(cfg)
+            return True
+
+    return False
+
+
+def script_env() -> Dict[str, str]:
+    """Prepare environment variables for script execution."""
+    env = os.environ.copy()
+    
+    # Ensure required environment variables are set
+    env["AUTO_YES"] = os.getenv("AUTO_YES", "1")
+    env["UNSAFE_MODE"] = os.getenv("UNSAFE_MODE", "1")
+    
+    # Pass SUDO_PASSWORD if available
+    if "SUDO_PASSWORD" in os.environ:
+        env["SUDO_PASSWORD"] = os.environ["SUDO_PASSWORD"]
+    
+    return env
+
+
+def run_script(script_path: str) -> int:
+    """Run a cleanup script and return exit code."""
+    full = script_path
+    if not os.path.isabs(full):
+        full = os.path.join(SCRIPT_DIR, script_path)
+
+    if not os.path.exists(full):
+        return 1
+
+    try:
+        subprocess.run(["chmod", "+x", full], check=False)
+        proc = subprocess.run([full], cwd=SCRIPT_DIR, env=script_env())
+        return int(proc.returncode)
+    except Exception:
+        return 1
+
+
+def run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False) -> Tuple[bool, str]:
+    """Run cleanup for specified editor."""
+    editors = cfg.get("editors", {}) or {}
+    if editor not in editors:
+        return False, f"Невідомий редактор: {editor}"
+
+    meta = editors[editor] or {}
+    label = meta.get("label", editor)
+    modules: List[Dict[str, Any]] = meta.get("modules", []) or []
+    active = [m for m in modules if isinstance(m, dict) and m.get("enabled")]
+
+    if not active:
+        return False, f"Для {label} немає увімкнених модулів. Налаштуйте їх у Modules або через smart-plan."
+
+    if dry_run:
+        names = ", ".join([str(m.get("id")) for m in active])
+        return True, f"[DRY-RUN] {label}: {names}"
+
+    for m in active:
+        script = m.get("script")
+        if not script:
+            continue
+        code = run_script(str(script))
+        if code != 0:
+            return False, f"Модуль {m.get('id')} завершився з кодом {code}"
+
+    return True, f"Очищення завершено: {label}"
+
+
+def perform_install(cfg: Dict[str, Any], editor: str) -> Tuple[bool, str]:
+    """Perform installation for specified editor."""
+    editors = cfg.get("editors", {}) or {}
+    if editor not in editors:
+        return False, f"Невідомий редактор: {editor}"
+
+    install = (editors[editor] or {}).get("install", {}) or {}
+    label = (editors[editor] or {}).get("label", editor)
+    itype = install.get("type")
+
+    if itype == "dmg":
+        pattern = install.get("pattern", "*.dmg")
+        candidates = [f for f in os.listdir(SCRIPT_DIR) if f.endswith(".dmg") and fnmatch.fnmatch(f, pattern)]
+        if not candidates:
+            return False, f"DMG-файлів за шаблоном '{pattern}' не знайдено в {SCRIPT_DIR}"
+        dmg = sorted(candidates)[-1]
+        subprocess.run(["open", os.path.join(SCRIPT_DIR, dmg)])
+        return True, f"Відкрито DMG для {label}: {dmg}"
+
+    if itype == "zip":
+        pattern = install.get("pattern", "*.zip")
+        candidates = [f for f in os.listdir(SCRIPT_DIR) if f.endswith(".zip") and fnmatch.fnmatch(f, pattern)]
+        if not candidates:
+            return False, f"ZIP-файлів за шаблоном '{pattern}' не знайдено в {SCRIPT_DIR}"
+        z = sorted(candidates)[-1]
+        subprocess.run(["open", os.path.join(SCRIPT_DIR, z)])
+        return True, f"Відкрито ZIP для {label}: {z}"
+
+    if itype == "url":
+        url = install.get("url")
+        if not url:
+            return False, f"URL для {label} не налаштовано"
+        subprocess.run(["open", str(url)])
+        return True, f"Відкрито URL для {label}: {url}"
+
+    return False, f"Install не налаштовано для {label}"
+
+
+def scan_traces(editor: str) -> Dict[str, Any]:
+    """Scan for editor traces in system directories."""
+    editor_key = editor.strip().lower()
+
+    patterns_map: Dict[str, List[str]] = {
+        "windsurf": ["*Windsurf*", "*windsurf*"],
+        "vscode": ["*Code*", "*VSCodium*", "*vscode*", "*VSCode*"],
+        "antigravity": ["*Antigravity*", "*antigravity*", "*Google/Antigravity*"],
+        "cursor": ["*Cursor*", "*cursor*"],
+    }
+
+    base_dirs = [
+        "~/Library/Application Support",
+        "~/Library/Caches",
+        "~/Library/Preferences",
+        "~/Library/Logs",
+        "~/Library/Saved Application State",
+    ]
+
+    patterns = patterns_map.get(editor_key) or [f"*{editor_key}*"]
+    found: List[Dict[str, Any]] = []
+
+    for b in base_dirs:
+        base = os.path.expanduser(b)
+        for pat in patterns:
+            for p in sorted(glob.glob(os.path.join(base, pat))):
+                entry: Dict[str, Any] = {"path": p, "type": "file" if os.path.isfile(p) else "dir"}
+                if os.path.isdir(p):
+                    try:
+                        items = os.listdir(p)
+                        entry["items"] = len(items)
+                        entry["sample"] = items[:20]
+                    except Exception as e:
+                        entry["error"] = str(e)
+                found.append(entry)
+
+    # Applications bundles
+    for pat in patterns:
+        for p in sorted(glob.glob(os.path.join("/Applications", pat))):
+            found.append({"path": p, "type": "app" if p.endswith(".app") else "file"})
+
+    # Dot-directories
+    dot_candidates = [
+        os.path.expanduser("~/.vscode"),
+        os.path.expanduser("~/.vscode-oss"),
+        os.path.expanduser("~/.cursor"),
+        os.path.expanduser("~/.windsurf"),
+    ]
+    for p in dot_candidates:
+        if os.path.exists(p) and editor_key in os.path.basename(p).lower():
+            found.append({"path": p, "type": "dir" if os.path.isdir(p) else "file"})
+
+    return {
+        "editor": editor_key,
+        "count": len(found),
+        "found": found[:120],
+        "note": "Це швидкий скан типових директорій. Якщо потрібно глибше — скажи, які саме шляхи/патерни шукати.",
+    }
+
+
+def get_editors_list(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
+    """Get list of (key, label) tuples for editors."""
+    editors = cfg.get("editors", {}) or {}
+    result = []
+    for key, val in editors.items():
+        if isinstance(val, dict):
+            result.append((key, val.get("label", key)))
+    return result
+
+
+# Backward compatibility aliases
+_load_cleanup_config = load_cleanup_config
+_save_cleanup_config = save_cleanup_config
+_list_editors = list_editors
+_resolve_editor_arg = resolve_editor_arg
+_find_module = find_module
+_set_module_enabled = set_module_enabled
+_script_env = script_env
+_run_script = run_script
+_run_cleanup = run_cleanup
+_perform_install = perform_install
+_scan_traces = scan_traces
+_get_editors_list = get_editors_list
 ```
 
 ### `tui/cli.py` (174.5 KB)
@@ -35006,7 +35665,7 @@ def build_menu(
     return show_menu, get_menu_content
 ```
 
-### `tui/messages.py` (5.7 KB)
+### `tui/messages.py` (8.2 KB)
 
 ```python
 """Clean agent messages display component.
@@ -35092,7 +35751,7 @@ class MessageFilter:
 
 
 class MessageFormatter:
-    """Format agent messages with colors and styling."""
+    """Format agent messages with colors and styling for direct communication."""
     
     AGENT_COLORS = {
         AgentType.ATLAS: "class:agent.atlas",
@@ -35103,20 +35762,78 @@ class MessageFormatter:
     }
     
     AGENT_NAMES = {
-        AgentType.ATLAS: "Atlas",
-        AgentType.TETYANA: "Tetyana",
-        AgentType.GRISHA: "Grisha",
-        AgentType.USER: "You",
-        AgentType.SYSTEM: "System",
+        AgentType.ATLAS: "ATLAS",
+        AgentType.TETYANA: "TETYANA",
+        AgentType.GRISHA: "GRISHA",
+        AgentType.USER: "USER",
+        AgentType.SYSTEM: "SYSTEM",
+    }
+    
+    AGENT_EMOJIS = {
+        AgentType.ATLAS: "🌐",
+        AgentType.TETYANA: "💻",
+        AgentType.GRISHA: "👁️",
+        AgentType.USER: "👤",
+        AgentType.SYSTEM: "⚙️",
+    }
+    
+    # Patterns for highlighting @mentions
+    MENTION_PATTERNS = {
+        "tetyana": AgentType.TETYANA,
+        "тетяна": AgentType.TETYANA,
+        "тетяно": AgentType.TETYANA,
+        "тетяну": AgentType.TETYANA,
+        "grisha": AgentType.GRISHA,
+        "гріша": AgentType.GRISHA,
+        "грішо": AgentType.GRISHA,
+        "atlas": AgentType.ATLAS,
+        "атлас": AgentType.ATLAS,
+        "атласе": AgentType.ATLAS,
     }
     
     @staticmethod
+    def highlight_mentions(text: str) -> List[Tuple[str, str]]:
+        """Parse text and highlight agent @mentions with their colors."""
+        import re
+        
+        result: List[Tuple[str, str]] = []
+        
+        # Build pattern for all mentions (case insensitive)
+        mention_words = list(MessageFormatter.MENTION_PATTERNS.keys())
+        pattern = r'(@?)(' + '|'.join(re.escape(w) for w in mention_words) + r')'
+        
+        last_end = 0
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            # Add text before the match
+            if match.start() > last_end:
+                result.append(("class:agent.text", text[last_end:match.start()]))
+            
+            # Find the agent type for this mention
+            mention_key = match.group(2).lower()
+            agent_type = MessageFormatter.MENTION_PATTERNS.get(mention_key)
+            if agent_type:
+                color = MessageFormatter.AGENT_COLORS.get(agent_type, "class:agent.text")
+                result.append((color, match.group(0)))
+            else:
+                result.append(("class:agent.text", match.group(0)))
+            
+            last_end = match.end()
+        
+        # Add remaining text
+        if last_end < len(text):
+            result.append(("class:agent.text", text[last_end:]))
+        
+        return result if result else [("class:agent.text", text)]
+    
+    @staticmethod
     def format_message(msg: AgentMessage) -> List[Tuple[str, str]]:
-        """Format agent message with color and styling.
+        """Format agent message with direct communication style.
+        
+        Format: (ATLAS) 🌐 Тетяно, виконай...
         
         Returns list of (style, text) tuples for prompt_toolkit.
         """
-        result = []
+        result: List[Tuple[str, str]] = []
         
         # Skip technical messages
         if msg.is_technical or MessageFilter.is_technical(msg.text):
@@ -35130,22 +35847,29 @@ class MessageFormatter:
         if not clean_text:
             return result
         
-        # Agent header with name
-        name = MessageFormatter.AGENT_NAMES.get(msg.agent, "Unknown")
+        # Format: (AGENT_NAME) emoji
+        name = MessageFormatter.AGENT_NAMES.get(msg.agent, "UNKNOWN")
+        emoji = MessageFormatter.AGENT_EMOJIS.get(msg.agent, "")
         color = MessageFormatter.AGENT_COLORS.get(msg.agent, "class:agent.system")
 
-        result.append((color, f"{name}: "))
-        result.append(("class:agent.text", f"{clean_text}\n\n"))
+        # Agent header in parentheses with emoji
+        result.append((color, f"({name}) {emoji} "))
+        
+        # Message text with @mentions highlighted
+        highlighted = MessageFormatter.highlight_mentions(clean_text)
+        result.extend(highlighted)
+        result.append(("class:agent.text", "\n\n"))
         
         return result
     
     @staticmethod
     def format_messages(messages: List[AgentMessage]) -> List[Tuple[str, str]]:
         """Format multiple messages."""
-        result = []
+        result: List[Tuple[str, str]] = []
         for msg in messages:
             result.extend(MessageFormatter.format_message(msg))
         return result
+
 
 
 class MessageBuffer:
@@ -35190,7 +35914,1104 @@ class MessageBuffer:
         return self.messages[-n:] if n > 0 else []
 ```
 
-### `tui/themes.py` (5.4 KB)
+### `tui/monitoring.py` (15.8 KB)
+
+```python
+"""File monitoring service for TUI.
+
+Provides:
+- MonitorSummaryService for aggregating file events
+- Database operations for monitor events
+- Settings persistence
+- Target resolution for editors and browsers
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sqlite3
+import threading
+import time
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from system_cli.state import state
+from tui.cli_paths import (
+    SYSTEM_CLI_DIR,
+    MONITOR_SETTINGS_PATH,
+    MONITOR_TARGETS_PATH,
+    MONITOR_EVENTS_DB_PATH,
+)
+
+
+def load_monitor_settings() -> None:
+    """Load monitor settings from file."""
+    try:
+        from tui.agents import load_env
+        load_env()
+        
+        if not os.path.exists(MONITOR_SETTINGS_PATH):
+            if str(os.getenv("SUDO_PASSWORD") or "").strip():
+                state.monitor_use_sudo = True
+            return
+
+        with open(MONITOR_SETTINGS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        src = str(data.get("source") or "").strip().lower()
+        if src in {"watchdog", "fs_usage", "opensnoop"}:
+            state.monitor_source = src
+        use_sudo = data.get("use_sudo")
+        if isinstance(use_sudo, bool):
+            state.monitor_use_sudo = use_sudo
+    except Exception:
+        return
+
+
+def save_monitor_settings() -> bool:
+    """Save monitor settings to file."""
+    try:
+        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
+        payload = {
+            "source": state.monitor_source,
+            "use_sudo": bool(state.monitor_use_sudo),
+        }
+        with open(MONITOR_SETTINGS_PATH, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+
+def load_monitor_targets() -> None:
+    """Load monitor targets from file."""
+    try:
+        if not os.path.exists(MONITOR_TARGETS_PATH):
+            return
+        with open(MONITOR_TARGETS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        selected = data.get("selected") or []
+        if isinstance(selected, list):
+            state.monitor_targets = {str(x) for x in selected if x}
+    except Exception:
+        return
+
+
+def save_monitor_targets() -> bool:
+    """Save monitor targets to file."""
+    try:
+        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
+        payload = {"selected": sorted(state.monitor_targets)}
+        with open(MONITOR_TARGETS_PATH, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+
+def monitor_get_sudo_password() -> str:
+    """Get SUDO_PASSWORD from environment."""
+    from tui.agents import load_env
+    load_env()
+    return str(os.getenv("SUDO_PASSWORD") or "").strip()
+
+
+def monitor_db_read_since_id(db_path: str, last_id: int, limit: int = 5000) -> List[Dict[str, Any]]:
+    """Read monitor events from database since given ID."""
+    rows: List[Dict[str, Any]] = []
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            cur = conn.execute(
+                "SELECT id, ts, source, event_type, src_path, dest_path, is_directory, target_key, pid, process, raw_line "
+                "FROM events WHERE id > ? ORDER BY id ASC LIMIT ?",
+                (int(last_id or 0), int(limit)),
+            )
+            for r in cur.fetchall():
+                rows.append(
+                    {
+                        "id": int(r[0] or 0),
+                        "ts": int(r[1] or 0),
+                        "source": str(r[2] or ""),
+                        "event_type": str(r[3] or ""),
+                        "src_path": str(r[4] or ""),
+                        "dest_path": str(r[5] or ""),
+                        "is_directory": bool(int(r[6] or 0)),
+                        "target_key": str(r[7] or ""),
+                        "pid": int(r[8] or 0),
+                        "process": str(r[9] or ""),
+                        "raw_line": str(r[10] or ""),
+                    }
+                )
+        finally:
+            conn.close()
+    except Exception:
+        return []
+    return rows
+
+
+def monitor_db_get_max_id(db_path: str) -> int:
+    """Get maximum event ID from database."""
+    try:
+        conn = sqlite3.connect(db_path)
+        try:
+            cur = conn.execute("SELECT MAX(id) FROM events")
+            row = cur.fetchone()
+            if not row:
+                return 0
+            return int(row[0] or 0)
+        finally:
+            conn.close()
+    except Exception:
+        return 0
+
+
+def format_monitor_summary(
+    *,
+    title: str,
+    source: str,
+    targets: List[str],
+    ts_from: int,
+    ts_to: int,
+    total_events: int,
+    by_target: Dict[str, int],
+    by_type: Dict[str, int],
+    top_paths: Dict[str, List[Tuple[str, int]]],
+    include_processes: bool,
+    top_processes: List[Tuple[str, int]],
+) -> str:
+    """Format monitor summary as human-readable string."""
+    lines: List[str] = []
+    lines.append(title)
+    lines.append(f"source={source} targets={len(targets)} events={total_events}")
+    lines.append(f"ts_range={ts_from}..{ts_to}")
+    if targets:
+        lines.append("targets: " + ", ".join(targets[:20]) + ("" if len(targets) <= 20 else " ..."))
+    if by_target:
+        top_t = sorted(by_target.items(), key=lambda x: x[1], reverse=True)[:10]
+        lines.append("top_targets: " + ", ".join([f"{k}={v}" for k, v in top_t]))
+    if by_type:
+        top_e = sorted(by_type.items(), key=lambda x: x[1], reverse=True)[:10]
+        lines.append("top_event_types: " + ", ".join([f"{k}={v}" for k, v in top_e]))
+    if include_processes and top_processes:
+        lines.append("top_processes: " + ", ".join([f"{k}={v}" for k, v in top_processes[:10]]))
+    if top_paths:
+        for tk, paths in list(top_paths.items())[:10]:
+            if not paths:
+                continue
+            p = ", ".join([f"{path}({cnt})" for path, cnt in paths[:5]])
+            lines.append(f"paths[{tk}]: {p}")
+    return "\n".join(lines)
+
+
+def monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
+    """Resolve monitor targets to (path, target_key) tuples."""
+    home = os.path.expanduser("~")
+    items: List[Tuple[str, str]] = []
+
+    def add_if_dir(path: str, target_key: str) -> None:
+        if os.path.isdir(path):
+            items.append((path, target_key))
+
+    for t in sorted(targets):
+        if t.startswith("browser:"):
+            name = t.split(":", 1)[1]
+            low = name.lower()
+            if low == "safari":
+                add_if_dir(os.path.join(home, "Library", "Safari"), t)
+                add_if_dir(os.path.join(home, "Library", "Containers", "com.apple.Safari"), t)
+            elif "chrome" in low:
+                add_if_dir(os.path.join(home, "Library", "Application Support", "Google", "Chrome"), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", "Google", "Chrome"), t)
+            elif "chromium" in low:
+                add_if_dir(os.path.join(home, "Library", "Application Support", "Chromium"), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", "Chromium"), t)
+            elif "firefox" in low:
+                add_if_dir(os.path.join(home, "Library", "Application Support", "Firefox"), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", "Firefox"), t)
+            else:
+                add_if_dir(os.path.join(home, "Library", "Application Support", name), t)
+                add_if_dir(os.path.join(home, "Library", "Caches", name), t)
+
+        if t.startswith("editor:"):
+            editor_key = t.split(":", 1)[1]
+            add_if_dir(os.path.join(home, "Library", "Application Support", editor_key), t)
+            add_if_dir(os.path.join(home, "Library", "Caches", editor_key), t)
+
+    # unique by (path,target)
+    seen: Set[Tuple[str, str]] = set()
+    uniq: List[Tuple[str, str]] = []
+    for p, k in items:
+        key = (p, k)
+        if key in seen:
+            continue
+        seen.add(key)
+        uniq.append((p, k))
+    return uniq
+
+
+@dataclass
+class MonitorMenuItem:
+    """Menu item for monitor targets selection."""
+    key: str
+    label: str
+    selectable: bool
+    category: str
+    origin: str = ""
+
+
+@dataclass
+class MonitorSummaryService:
+    """Service for aggregating and ingesting monitor summaries."""
+    db_path: str
+    interval_sec: int = 30
+    flush_threshold: int = 250
+    thread: Optional[threading.Thread] = None
+    running: bool = False
+    stop_event: threading.Event = field(default_factory=threading.Event)
+    last_id: int = 0
+    session_start_ts: int = 0
+    session_end_ts: int = 0
+    total_events: int = 0
+    totals_by_target: Counter = field(default_factory=Counter)
+    totals_by_type: Counter = field(default_factory=Counter)
+    totals_by_process: Counter = field(default_factory=Counter)
+    totals_paths_by_target: Dict[str, Counter] = field(default_factory=lambda: defaultdict(Counter))
+    last_flush_ts: int = 0
+
+    def _ingest(self, text: str, metadata: Dict[str, Any]) -> bool:
+        """Ingest summary into RAG pipeline."""
+        try:
+            from tui.agents import load_env
+            load_env()
+            from system_ai.rag.rag_pipeline import RagPipeline
+
+            rp = RagPipeline(persist_dir="~/.system_cli/chroma")
+            return bool(rp.ingest_text(text, metadata=metadata))
+        except Exception:
+            return False
+
+    def _flush(self, *, kind: str, targets: List[str], source: str) -> None:
+        """Flush pending events to summary."""
+        batch = monitor_db_read_since_id(self.db_path, self.last_id, limit=5000)
+        if not batch:
+            return
+
+        self.last_id = max(self.last_id, max(int(x.get("id") or 0) for x in batch))
+        ts_values = [int(x.get("ts") or 0) for x in batch if int(x.get("ts") or 0) > 0]
+        ts_from = min(ts_values) if ts_values else int(time.time())
+        ts_to = max(ts_values) if ts_values else int(time.time())
+
+        by_target = Counter()
+        by_type = Counter()
+        by_process = Counter()
+        paths_by_target: Dict[str, Counter] = defaultdict(Counter)
+
+        for e in batch:
+            tk = str(e.get("target_key") or "")
+            et = str(e.get("event_type") or "")
+            by_target[tk] += 1
+            by_type[et] += 1
+            src = str(e.get("src_path") or "")
+            if src:
+                paths_by_target[tk][src] += 1
+            proc = str(e.get("process") or "").strip()
+            if proc:
+                by_process[proc] += 1
+
+        self.total_events += len(batch)
+        self.totals_by_target.update(by_target)
+        self.totals_by_type.update(by_type)
+        self.totals_by_process.update(by_process)
+        for tk, c in paths_by_target.items():
+            self.totals_paths_by_target[tk].update(c)
+        self.session_end_ts = max(self.session_end_ts, ts_to)
+
+        top_paths: Dict[str, List[Tuple[str, int]]] = {}
+        for tk, c in paths_by_target.items():
+            top_paths[tk] = c.most_common(10)
+
+        include_processes = bool(by_process)
+        summary_text = format_monitor_summary(
+            title=f"MONITOR SUMMARY ({kind})",
+            source=str(source or ""),
+            targets=targets,
+            ts_from=ts_from,
+            ts_to=ts_to,
+            total_events=len(batch),
+            by_target=dict(by_target),
+            by_type=dict(by_type),
+            top_paths=top_paths,
+            include_processes=include_processes,
+            top_processes=by_process.most_common(10),
+        )
+
+        meta = {
+            "type": "monitor_summary",
+            "kind": kind,
+            "source": str(source or ""),
+            "targets": targets,
+            "events": int(len(batch)),
+            "ts_from": int(ts_from),
+            "ts_to": int(ts_to),
+        }
+        ok = self._ingest(summary_text, meta)
+        if ok:
+            self.last_flush_ts = int(time.time())
+
+    def _run(self) -> None:
+        """Background thread for periodic flushing."""
+        while not self.stop_event.wait(timeout=max(5, int(self.interval_sec))):
+            if not self.running:
+                break
+            try:
+                targets = sorted(getattr(state, "monitor_targets", set()) or set())
+                source = str(getattr(state, "monitor_source", "") or "")
+                self._flush(kind="periodic", targets=targets, source=source)
+            except Exception:
+                continue
+
+        # Final flush on stop
+        try:
+            targets = sorted(getattr(state, "monitor_targets", set()) or set())
+            source = str(getattr(state, "monitor_source", "") or "")
+            self._flush(kind="final", targets=targets, source=source)
+        except Exception:
+            pass
+
+        # Session summary
+        if self.total_events > 0:
+            try:
+                targets = sorted(getattr(state, "monitor_targets", set()) or set())
+                source = str(getattr(state, "monitor_source", "") or "")
+
+                top_paths_total: Dict[str, List[Tuple[str, int]]] = {}
+                for tk, c in self.totals_paths_by_target.items():
+                    top_paths_total[tk] = c.most_common(10)
+
+                session_text = format_monitor_summary(
+                    title="MONITOR SESSION SUMMARY",
+                    source=str(source or ""),
+                    targets=targets,
+                    ts_from=int(self.session_start_ts or 0),
+                    ts_to=int(self.session_end_ts or 0),
+                    total_events=int(self.total_events),
+                    by_target=dict(self.totals_by_target),
+                    by_type=dict(self.totals_by_type),
+                    top_paths=top_paths_total,
+                    include_processes=bool(self.totals_by_process),
+                    top_processes=self.totals_by_process.most_common(10),
+                )
+
+                meta = {
+                    "type": "monitor_summary",
+                    "kind": "session",
+                    "source": str(source or ""),
+                    "targets": targets,
+                    "events": int(self.total_events),
+                    "ts_from": int(self.session_start_ts or 0),
+                    "ts_to": int(self.session_end_ts or 0),
+                }
+                self._ingest(session_text, meta)
+            except Exception:
+                pass
+
+        self.running = False
+
+    def start(self) -> None:
+        """Start the summary service."""
+        if self.running:
+            return
+        self.stop_event.clear()
+        self.running = True
+        self.session_start_ts = int(time.time())
+        self.session_end_ts = int(self.session_start_ts)
+        self.last_flush_ts = 0
+        self.total_events = 0
+        self.totals_by_target = Counter()
+        self.totals_by_type = Counter()
+        self.totals_by_process = Counter()
+        self.totals_paths_by_target = defaultdict(Counter)
+        self.last_id = monitor_db_get_max_id(self.db_path)
+        self.thread = threading.Thread(target=self._run, daemon=True)
+        self.thread.start()
+
+    def stop(self) -> None:
+        """Stop the summary service."""
+        if not self.running:
+            return
+        self.stop_event.set()
+        try:
+            if self.thread:
+                self.thread.join(timeout=8)
+        except Exception:
+            pass
+        self.thread = None
+        self.running = False
+
+
+# Global service instance
+monitor_summary_service = MonitorSummaryService(db_path=MONITOR_EVENTS_DB_PATH)
+
+
+# Backward compatibility aliases
+_load_monitor_settings = load_monitor_settings
+_save_monitor_settings = save_monitor_settings
+_load_monitor_targets = load_monitor_targets
+_save_monitor_targets = save_monitor_targets
+_monitor_get_sudo_password = monitor_get_sudo_password
+_monitor_db_read_since_id = monitor_db_read_since_id
+_monitor_db_get_max_id = monitor_db_get_max_id
+_format_monitor_summary = format_monitor_summary
+_monitor_resolve_watch_items = monitor_resolve_watch_items
+_MonitorSummaryService = MonitorSummaryService
+```
+
+### `tui/permissions.py` (8.8 KB)
+
+```python
+"""macOS permissions management for TUI.
+
+Provides functions to check and request macOS privacy permissions:
+- Accessibility
+- Screen Recording
+- Automation (System Events)
+"""
+
+from __future__ import annotations
+
+import ctypes
+import subprocess
+import sys
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
+
+def macos_open_privacy_pane(pane: str) -> None:
+    """Open macOS System Preferences to a specific privacy pane."""
+    if sys.platform != "darwin":
+        return
+    p = str(pane or "").strip().lower()
+    url_map = {
+        "accessibility": "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+        "screen_recording": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+        "automation": "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
+    }
+    url = url_map.get(p)
+    if not url:
+        return
+    try:
+        subprocess.run(["/usr/bin/open", url], capture_output=True, text=True)
+    except Exception:
+        return
+
+
+def macos_screen_recording_preflight() -> Optional[bool]:
+    """Check if screen recording permission is granted (preflight check)."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        cg = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics"
+        )
+        fn = getattr(cg, "CGPreflightScreenCaptureAccess", None)
+        if fn is None:
+            return None
+        fn.restype = ctypes.c_bool
+        fn.argtypes = []
+        return bool(fn())
+    except Exception:
+        return None
+
+
+def macos_screen_recording_request_prompt() -> Optional[bool]:
+    """Request screen recording permission with system prompt."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        cg = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics"
+        )
+        fn = getattr(cg, "CGRequestScreenCaptureAccess", None)
+        if fn is None:
+            return None
+        fn.restype = ctypes.c_bool
+        fn.argtypes = []
+        return bool(fn())
+    except Exception:
+        return None
+
+
+def macos_accessibility_is_trusted() -> Optional[bool]:
+    """Check if accessibility permission is granted."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        app = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices"
+        )
+        fn = getattr(app, "AXIsProcessTrusted", None)
+        if fn is None:
+            return None
+        fn.restype = ctypes.c_bool
+        fn.argtypes = []
+        return bool(fn())
+    except Exception:
+        return None
+
+
+def macos_accessibility_request_prompt() -> Optional[bool]:
+    """Request accessibility permission with system prompt."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        app = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices"
+        )
+        cf = ctypes.cdll.LoadLibrary(
+            "/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation"
+        )
+
+        fn = getattr(app, "AXIsProcessTrustedWithOptions", None)
+        if fn is None:
+            return None
+
+        key = ctypes.c_void_p.in_dll(app, "kAXTrustedCheckOptionPrompt")
+        val = ctypes.c_void_p.in_dll(cf, "kCFBooleanTrue")
+
+        cf.CFDictionaryCreate.restype = ctypes.c_void_p
+        cf.CFDictionaryCreate.argtypes = [
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_void_p),
+            ctypes.POINTER(ctypes.c_void_p),
+            ctypes.c_long,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
+        cf.CFRelease.restype = None
+        cf.CFRelease.argtypes = [ctypes.c_void_p]
+
+        keys = (ctypes.c_void_p * 1)(key)
+        vals = (ctypes.c_void_p * 1)(val)
+        d = cf.CFDictionaryCreate(None, keys, vals, 1, None, None)
+        try:
+            fn.restype = ctypes.c_bool
+            fn.argtypes = [ctypes.c_void_p]
+            ok = bool(fn(ctypes.c_void_p(d)))
+        finally:
+            try:
+                if d:
+                    cf.CFRelease(ctypes.c_void_p(d))
+            except Exception:
+                pass
+        return ok
+    except Exception:
+        return None
+
+
+def macos_automation_check_system_events(*, prompt: bool) -> Optional[bool]:
+    """Check if automation permission for System Events is granted."""
+    if sys.platform != "darwin":
+        return None
+    script = 'tell application "System Events" to count of processes'
+    try:
+        proc = subprocess.run(
+            ["/usr/bin/osascript", "-e", script],
+            capture_output=True,
+            text=True,
+            timeout=2.5,
+        )
+        if proc.returncode == 0:
+            return True
+        err = (proc.stderr or "") + "\n" + (proc.stdout or "")
+        low = err.lower()
+        if "not authorised" in low or "not authorized" in low or "not allowed" in low or "permission" in low:
+            if prompt:
+                try:
+                    subprocess.run(
+                        ["/usr/bin/osascript", "-e", script],
+                        capture_output=True,
+                        text=True,
+                        timeout=2.5,
+                    )
+                except Exception:
+                    pass
+            proc2 = subprocess.run(
+                ["/usr/bin/osascript", "-e", script],
+                capture_output=True,
+                text=True,
+                timeout=2.5,
+            )
+            return bool(proc2.returncode == 0)
+        return False
+    except Exception:
+        return None
+
+
+def permissions_wizard(
+    *,
+    require_accessibility: bool,
+    require_screen_recording: bool,
+    require_automation: bool,
+    prompt: bool,
+    open_settings: bool,
+) -> Dict[str, Any]:
+    """Run permissions wizard checking all required permissions."""
+    missing: List[str] = []
+    out: Dict[str, Any] = {"missing": missing}
+    if sys.platform != "darwin":
+        return out
+
+    if require_accessibility:
+        ok = macos_accessibility_is_trusted()
+        if ok is False and prompt:
+            macos_accessibility_request_prompt()
+            ok = macos_accessibility_is_trusted()
+        if ok is False:
+            missing.append("accessibility")
+
+    if require_screen_recording:
+        ok = macos_screen_recording_preflight()
+        if ok is False and prompt:
+            macos_screen_recording_request_prompt()
+            ok = macos_screen_recording_preflight()
+        if ok is False:
+            missing.append("screen_recording")
+
+    if require_automation:
+        ok = macos_automation_check_system_events(prompt=prompt)
+        if ok is False:
+            missing.append("automation")
+
+    if open_settings and missing:
+        for p in list(dict.fromkeys(missing)):
+            macos_open_privacy_pane(p)
+
+    return out
+
+
+@dataclass
+class CommandPermissions:
+    """Permissions for command execution."""
+    allow_run: bool = False
+    allow_shell: bool = False
+    allow_applescript: bool = False
+    allow_gui: bool = False
+
+
+def is_confirmed_run(text: str) -> bool:
+    """Check if text confirms run permission."""
+    return "confirm_run" in str(text or "").lower()
+
+
+def is_confirmed_shell(text: str) -> bool:
+    """Check if text confirms shell permission."""
+    return "confirm_shell" in str(text or "").lower()
+
+
+def is_confirmed_applescript(text: str) -> bool:
+    """Check if text confirms applescript permission."""
+    return "confirm_applescript" in str(text or "").lower()
+
+
+def is_confirmed_gui(text: str) -> bool:
+    """Check if text confirms GUI permission."""
+    return "confirm_gui" in str(text or "").lower()
+
+
+def is_confirmed_shortcuts(text: str) -> bool:
+    """Check if text confirms shortcuts permission."""
+    return "confirm_shortcuts" in str(text or "").lower()
+
+
+
+def permissions_from_text(text: str) -> CommandPermissions:
+    """Parse permissions from text input."""
+    return CommandPermissions(
+        allow_run=is_confirmed_run(text),
+        allow_shell=is_confirmed_shell(text),
+        allow_applescript=is_confirmed_applescript(text),
+        allow_gui=is_confirmed_gui(text),
+    )
+
+
+# Backward compatibility aliases (prefixed with underscore for internal use)
+_macos_open_privacy_pane = macos_open_privacy_pane
+_macos_screen_recording_preflight = macos_screen_recording_preflight
+_macos_screen_recording_request_prompt = macos_screen_recording_request_prompt
+_macos_accessibility_is_trusted = macos_accessibility_is_trusted
+_macos_accessibility_request_prompt = macos_accessibility_request_prompt
+_macos_automation_check_system_events = macos_automation_check_system_events
+_permissions_wizard = permissions_wizard
+_is_confirmed_run = is_confirmed_run
+_is_confirmed_shell = is_confirmed_shell
+_is_confirmed_applescript = is_confirmed_applescript
+_is_confirmed_gui = is_confirmed_gui
+_is_confirmed_shortcuts = is_confirmed_shortcuts
+_permissions_from_text = permissions_from_text
+```
+
+### `tui/render.py` (11.6 KB)
+
+```python
+"""Rendering and log management for TUI.
+
+Provides functions for:
+- Log snapshot rendering with caching
+- Agent messages snapshot rendering
+- Log manipulation (reserve, replace, trim)
+- Header, context, and status bar rendering
+"""
+
+from __future__ import annotations
+
+import threading
+import time
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+from prompt_toolkit.data_structures import Point
+
+from system_cli.state import state
+from tui.messages import MessageBuffer, AgentType
+
+
+# Locks and buffers
+_logs_lock = threading.RLock()
+_logs_need_trim: bool = False
+_thread_log_override = threading.local()
+
+_agent_messages_buffer = MessageBuffer(max_messages=200)
+_agent_messages_lock = threading.RLock()
+
+# Render caches
+_render_log_cache: Dict[str, Any] = {"ts": 0.0, "logs": [], "cursor": Point(x=0, y=0)}
+_render_log_cache_ttl_s: float = 0.2
+
+_render_agents_cache: Dict[str, Any] = {"ts": 0.0, "messages": [], "cursor": Point(x=0, y=0)}
+_render_agents_cache_ttl_s: float = 0.2
+
+# Style mapping
+STYLE_MAP = {
+    "info": "class:log.info",
+    "user": "class:log.user",
+    "action": "class:log.action",
+    "error": "class:log.error",
+}
+
+
+def get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
+    """Get cached log snapshot with cursor position."""
+    global _logs_need_trim
+    
+    with _logs_lock:
+        now = time.monotonic()
+        try:
+            ts = float(_render_log_cache.get("ts", 0.0))
+            if (now - ts) < _render_log_cache_ttl_s:
+                cached = _render_log_cache.get("logs") or []
+                cached_cursor = _render_log_cache.get("cursor") or Point(x=0, y=0)
+                try:
+                    combined = "".join(str(text or "") for _, text in cached)
+                    if combined:
+                        parts = combined.split("\n")
+                        actual_line_count = max(1, len(parts))
+                        if combined.endswith("\n"):
+                            actual_line_count = max(1, actual_line_count - 1)
+                        valid_cursor_y = max(0, min(cached_cursor.y, actual_line_count - 1))
+                        return (
+                            list(cached),
+                            Point(x=0, y=valid_cursor_y),
+                        )
+                    else:
+                        return (list(cached), Point(x=0, y=0))
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        try:
+            logs_snapshot: List[Tuple[str, str]] = list(state.logs)
+        except Exception:
+            logs_snapshot = []
+
+    try:
+        combined = "".join(str(text or "") for _, text in logs_snapshot)
+    except Exception:
+        combined = ""
+
+    if not combined:
+        line_count = 1
+        last_line_y = 0
+    else:
+        parts = combined.split("\n")
+        line_count = max(1, len(parts))
+        last_line_y = max(0, line_count - 1)
+        if combined.endswith("\n"):
+            last_line_y = max(0, last_line_y - 1)
+
+    try:
+        state.ui_log_line_count = int(line_count)
+    except Exception:
+        state.ui_log_line_count = 1
+
+    try:
+        if getattr(state, "ui_log_follow", True):
+            state.ui_log_cursor_y = int(last_line_y)
+        else:
+            state.ui_log_cursor_y = max(
+                0,
+                min(
+                    int(getattr(state, "ui_log_cursor_y", 0)),
+                    max(0, int(getattr(state, "ui_log_line_count", 1)) - 1),
+                ),
+            )
+            if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
+                state.ui_log_follow = True
+    except Exception:
+        state.ui_log_follow = True
+        state.ui_log_cursor_y = int(last_line_y)
+
+    cursor = Point(x=0, y=max(0, min(int(getattr(state, "ui_log_cursor_y", 0)), max(0, int(getattr(state, "ui_log_line_count", 1)) - 1))))
+
+    with _logs_lock:
+        _render_log_cache["ts"] = now
+        _render_log_cache["logs"] = logs_snapshot
+        _render_log_cache["cursor"] = cursor
+        return logs_snapshot, cursor
+
+
+def get_render_agents_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
+    """Get cached agent messages snapshot with cursor position."""
+    with _agent_messages_lock:
+        now = time.monotonic()
+        try:
+            ts = float(_render_agents_cache.get("ts", 0.0))
+            if (now - ts) < _render_agents_cache_ttl_s:
+                cached = _render_agents_cache.get("messages") or []
+                cached_cursor = _render_agents_cache.get("cursor") or Point(x=0, y=0)
+                try:
+                    combined = "".join(str(text or "") for _, text in cached)
+                    if combined:
+                        parts = combined.split("\n")
+                        actual_line_count = max(1, len(parts))
+                        if combined.endswith("\n"):
+                            actual_line_count = max(1, actual_line_count - 1)
+                        valid_cursor_y = max(0, min(cached_cursor.y, actual_line_count - 1))
+                        return (
+                            list(cached),
+                            Point(x=0, y=valid_cursor_y),
+                        )
+                    else:
+                        return (list(cached), Point(x=0, y=0))
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        try:
+            formatted: List[Tuple[str, str]] = list(_agent_messages_buffer.get_formatted() or [])
+        except Exception:
+            formatted = []
+
+        try:
+            combined = "".join(str(text or "") for _, text in formatted)
+        except Exception:
+            combined = ""
+
+        if not combined:
+            line_count = 1
+            last_line_y = 0
+        else:
+            parts = combined.split("\n")
+            line_count = max(1, len(parts))
+            last_line_y = max(0, line_count - 1)
+            if combined.endswith("\n"):
+                last_line_y = max(0, last_line_y - 1)
+
+        try:
+            state.ui_agents_line_count = int(line_count)
+        except Exception:
+            state.ui_agents_line_count = 1
+
+        try:
+            if getattr(state, "ui_agents_follow", True):
+                state.ui_agents_cursor_y = int(last_line_y)
+            else:
+                state.ui_agents_cursor_y = max(
+                    0,
+                    min(
+                        int(getattr(state, "ui_agents_cursor_y", 0)),
+                        max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1),
+                    ),
+                )
+                if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
+                    state.ui_agents_follow = True
+        except Exception:
+            state.ui_agents_follow = True
+            state.ui_agents_cursor_y = int(last_line_y)
+
+        cursor = Point(
+            x=0,
+            y=max(0, min(int(getattr(state, "ui_agents_cursor_y", 0)), max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1))),
+        )
+
+        _render_agents_cache["ts"] = now
+        _render_agents_cache["messages"] = formatted
+        _render_agents_cache["cursor"] = cursor
+        return formatted, cursor
+
+
+def trim_logs_if_needed() -> None:
+    """Trim logs if buffer exceeds limit and agent is not processing."""
+    global _logs_need_trim
+    with _logs_lock:
+        if not _logs_need_trim:
+            return
+        if getattr(state, "agent_processing", False):
+            return
+        if len(state.logs) > 500:
+            state.logs = state.logs[-400:]
+        _logs_need_trim = False
+
+
+def log_replace_last(text: str, category: str = "info") -> None:
+    """Replace last log entry."""
+    with _logs_lock:
+        if not state.logs:
+            state.logs.append((STYLE_MAP.get(category, "class:log.info"), f"{text}\n"))
+            return
+        state.logs[-1] = (STYLE_MAP.get(category, "class:log.info"), f"{text}\n")
+
+
+def log_reserve_line(category: str = "info") -> int:
+    """Reserve a new log line and return its index."""
+    global _logs_need_trim
+    with _logs_lock:
+        state.logs.append((STYLE_MAP.get(category, "class:log.info"), "\n"))
+        if len(state.logs) > 500:
+            if getattr(state, "agent_processing", False):
+                _logs_need_trim = True
+            else:
+                state.logs = state.logs[-400:]
+        return max(0, len(state.logs) - 1)
+
+
+def log_replace_at(index: int, text: str, category: str = "info") -> None:
+    """Replace log entry at specific index."""
+    with _logs_lock:
+        if index < 0 or index >= len(state.logs):
+            state.logs.append((STYLE_MAP.get(category, "class:log.info"), f"{text}\n"))
+        else:
+            state.logs[index] = (STYLE_MAP.get(category, "class:log.info"), f"{text}\n")
+
+
+def log(text: str, category: str = "info") -> None:
+    """Main log function - appends to log buffer."""
+    global _logs_need_trim
+    override = getattr(_thread_log_override, "handler", None)
+    if callable(override):
+        try:
+            override(text, category)
+        except Exception:
+            pass
+        return
+    with _logs_lock:
+        state.logs.append((STYLE_MAP.get(category, "class:log.info"), f"{text}\n"))
+        if len(state.logs) > 500:
+            if getattr(state, "agent_processing", False):
+                _logs_need_trim = True
+            else:
+                state.logs = state.logs[-400:]
+
+
+def log_agent_message(agent: AgentType, text: str) -> None:
+    """Log agent message to clean display panel."""
+    with _agent_messages_lock:
+        try:
+            _agent_messages_buffer.upsert_stream(agent, text, is_technical=False)
+        except Exception:
+            _agent_messages_buffer.add(agent, text, is_technical=False)
+    
+    # Update UI
+    try:
+        from tui.layout import force_ui_update
+        force_ui_update()
+    except Exception:
+        pass
+
+
+def get_logs() -> List[Tuple[str, str]]:
+    """Get formatted logs for display."""
+    try:
+        logs_snapshot, _ = get_render_log_snapshot()
+        return logs_snapshot if logs_snapshot else []
+    except Exception:
+        return []
+
+
+def get_agent_messages() -> List[Tuple[str, str]]:
+    """Get formatted agent messages for clean display panel."""
+    try:
+        formatted, _ = get_render_agents_snapshot()
+        return formatted if formatted else []
+    except Exception:
+        return []
+
+
+def get_agent_cursor_position() -> Point:
+    """Get cursor position for agent messages panel."""
+    try:
+        _, cursor = get_render_agents_snapshot()
+        return cursor
+    except Exception:
+        return Point(x=0, y=0)
+
+
+def get_log_cursor_position() -> Point:
+    """Get cursor position for log panel."""
+    try:
+        _, cursor = get_render_log_snapshot()
+        return cursor
+    except Exception:
+        return Point(x=0, y=0)
+
+
+def set_thread_log_override(handler: Optional[Callable[[str, str], None]]) -> None:
+    """Set thread-local log override handler."""
+    _thread_log_override.handler = handler
+
+
+def clear_thread_log_override() -> None:
+    """Clear thread-local log override handler."""
+    _thread_log_override.handler = None
+
+
+def get_agent_messages_buffer() -> MessageBuffer:
+    """Get agent messages buffer (for external access)."""
+    return _agent_messages_buffer
+
+
+def get_agent_messages_lock() -> threading.RLock:
+    """Get agent messages lock (for external access)."""
+    return _agent_messages_lock
+
+
+def get_logs_lock() -> threading.RLock:
+    """Get logs lock (for external access)."""
+    return _logs_lock
+
+
+# Backward compatibility aliases
+_get_render_log_snapshot = get_render_log_snapshot
+_get_render_agents_snapshot = get_render_agents_snapshot
+_trim_logs_if_needed = trim_logs_if_needed
+_log_replace_last = log_replace_last
+_log_reserve_line = log_reserve_line
+_log_replace_at = log_replace_at
+```
+
+### `tui/themes.py` (12.0 KB)
 
 ```python
 from __future__ import annotations
@@ -35198,7 +37019,11 @@ from __future__ import annotations
 from typing import Dict
 
 
-THEME_NAMES = ("monaco", "dracula", "nord", "gruvbox")
+THEME_NAMES = (
+    "monaco", "dracula", "nord", "gruvbox",
+    "solarized-dark", "one-dark", "catppuccin", "tokyo-night", "rose-pine"
+)
+
 
 
 THEMES: Dict[str, Dict[str, str]] = {
@@ -35358,7 +37183,679 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.system": "#a89984",
         "agent.text": "#fbf1c7",
     },
+    "solarized-dark": {
+        "frame.border": "#586e75",
+        "frame.label": "#268bd2",
+        "header": "bg:#002b36 #839496",
+        "header.title": "#268bd2",
+        "header.sep": "#073642",
+        "header.label": "#586e75",
+        "header.value": "#93a1a1",
+        "status": "bg:#002b36",
+        "status.ready": "#859900",
+        "status.key": "#586e75",
+        "log.info": "#839496",
+        "log.user": "#b58900",
+        "log.action": "#268bd2",
+        "log.error": "#dc322f",
+        "context": "bg:#002b36",
+        "context.title": "#268bd2",
+        "context.label": "#586e75",
+        "context.value": "#93a1a1",
+        "input": "bg:#073642",
+        "input.prompt": "#859900",
+        "menu": "bg:#002b36",
+        "menu.title": "#268bd2",
+        "menu.item": "#839496",
+        "menu.selected": "bg:#586e75 #fdf6e3",
+        "toggle.on": "#859900",
+        "toggle.off": "#dc322f",
+        "status.menu": "bg:#268bd2 #002b36",
+        "status.chat": "bg:#586e75 #fdf6e3",
+        "status.processing": "bg:#b58900 #002b36",
+        "input.menu": "bg:#268bd2 #002b36",
+        "input.hint": "#586e75",
+        "agent.atlas": "#2aa198",
+        "agent.tetyana": "#859900",
+        "agent.grisha": "#b58900",
+        "agent.user": "#268bd2",
+        "agent.system": "#586e75",
+        "agent.text": "#93a1a1",
+    },
+    "one-dark": {
+        "frame.border": "#5c6370",
+        "frame.label": "#61afef",
+        "header": "bg:#21252b #abb2bf",
+        "header.title": "#61afef",
+        "header.sep": "#3e4451",
+        "header.label": "#5c6370",
+        "header.value": "#abb2bf",
+        "status": "bg:#21252b",
+        "status.ready": "#98c379",
+        "status.key": "#5c6370",
+        "log.info": "#abb2bf",
+        "log.user": "#e5c07b",
+        "log.action": "#61afef",
+        "log.error": "#e06c75",
+        "context": "bg:#282c34",
+        "context.title": "#61afef",
+        "context.label": "#5c6370",
+        "context.value": "#abb2bf",
+        "input": "bg:#21252b",
+        "input.prompt": "#98c379",
+        "menu": "bg:#282c34",
+        "menu.title": "#61afef",
+        "menu.item": "#abb2bf",
+        "menu.selected": "bg:#3e4451 #ffffff",
+        "toggle.on": "#98c379",
+        "toggle.off": "#e06c75",
+        "status.menu": "bg:#61afef #21252b",
+        "status.chat": "bg:#3e4451 #ffffff",
+        "status.processing": "bg:#e5c07b #21252b",
+        "input.menu": "bg:#61afef #21252b",
+        "input.hint": "#5c6370",
+        "agent.atlas": "#56b6c2",
+        "agent.tetyana": "#98c379",
+        "agent.grisha": "#e5c07b",
+        "agent.user": "#c678dd",
+        "agent.system": "#5c6370",
+        "agent.text": "#abb2bf",
+    },
+    "catppuccin": {
+        "frame.border": "#6c7086",
+        "frame.label": "#89b4fa",
+        "header": "bg:#1e1e2e #cdd6f4",
+        "header.title": "#89b4fa",
+        "header.sep": "#313244",
+        "header.label": "#6c7086",
+        "header.value": "#cdd6f4",
+        "status": "bg:#1e1e2e",
+        "status.ready": "#a6e3a1",
+        "status.key": "#6c7086",
+        "log.info": "#cdd6f4",
+        "log.user": "#f9e2af",
+        "log.action": "#89b4fa",
+        "log.error": "#f38ba8",
+        "context": "bg:#1e1e2e",
+        "context.title": "#89b4fa",
+        "context.label": "#6c7086",
+        "context.value": "#cdd6f4",
+        "input": "bg:#181825",
+        "input.prompt": "#a6e3a1",
+        "menu": "bg:#1e1e2e",
+        "menu.title": "#89b4fa",
+        "menu.item": "#cdd6f4",
+        "menu.selected": "bg:#45475a #cdd6f4",
+        "toggle.on": "#a6e3a1",
+        "toggle.off": "#f38ba8",
+        "status.menu": "bg:#cba6f7 #1e1e2e",
+        "status.chat": "bg:#45475a #cdd6f4",
+        "status.processing": "bg:#fab387 #1e1e2e",
+        "input.menu": "bg:#cba6f7 #1e1e2e",
+        "input.hint": "#6c7086",
+        "agent.atlas": "#89dceb",
+        "agent.tetyana": "#a6e3a1",
+        "agent.grisha": "#f9e2af",
+        "agent.user": "#cba6f7",
+        "agent.system": "#6c7086",
+        "agent.text": "#cdd6f4",
+    },
+    "tokyo-night": {
+        "frame.border": "#565f89",
+        "frame.label": "#7aa2f7",
+        "header": "bg:#1a1b26 #a9b1d6",
+        "header.title": "#7aa2f7",
+        "header.sep": "#24283b",
+        "header.label": "#565f89",
+        "header.value": "#a9b1d6",
+        "status": "bg:#1a1b26",
+        "status.ready": "#9ece6a",
+        "status.key": "#565f89",
+        "log.info": "#a9b1d6",
+        "log.user": "#e0af68",
+        "log.action": "#7aa2f7",
+        "log.error": "#f7768e",
+        "context": "bg:#1a1b26",
+        "context.title": "#7aa2f7",
+        "context.label": "#565f89",
+        "context.value": "#a9b1d6",
+        "input": "bg:#16161e",
+        "input.prompt": "#9ece6a",
+        "menu": "bg:#1a1b26",
+        "menu.title": "#7aa2f7",
+        "menu.item": "#a9b1d6",
+        "menu.selected": "bg:#33467c #c0caf5",
+        "toggle.on": "#9ece6a",
+        "toggle.off": "#f7768e",
+        "status.menu": "bg:#bb9af7 #1a1b26",
+        "status.chat": "bg:#33467c #c0caf5",
+        "status.processing": "bg:#ff9e64 #1a1b26",
+        "input.menu": "bg:#bb9af7 #1a1b26",
+        "input.hint": "#565f89",
+        "agent.atlas": "#7dcfff",
+        "agent.tetyana": "#9ece6a",
+        "agent.grisha": "#e0af68",
+        "agent.user": "#bb9af7",
+        "agent.system": "#565f89",
+        "agent.text": "#c0caf5",
+    },
+    "rose-pine": {
+        "frame.border": "#6e6a86",
+        "frame.label": "#9ccfd8",
+        "header": "bg:#191724 #e0def4",
+        "header.title": "#9ccfd8",
+        "header.sep": "#26233a",
+        "header.label": "#6e6a86",
+        "header.value": "#e0def4",
+        "status": "bg:#191724",
+        "status.ready": "#31748f",
+        "status.key": "#6e6a86",
+        "log.info": "#e0def4",
+        "log.user": "#f6c177",
+        "log.action": "#9ccfd8",
+        "log.error": "#eb6f92",
+        "context": "bg:#191724",
+        "context.title": "#9ccfd8",
+        "context.label": "#6e6a86",
+        "context.value": "#e0def4",
+        "input": "bg:#1f1d2e",
+        "input.prompt": "#31748f",
+        "menu": "bg:#191724",
+        "menu.title": "#9ccfd8",
+        "menu.item": "#e0def4",
+        "menu.selected": "bg:#403d52 #e0def4",
+        "toggle.on": "#31748f",
+        "toggle.off": "#eb6f92",
+        "status.menu": "bg:#c4a7e7 #191724",
+        "status.chat": "bg:#403d52 #e0def4",
+        "status.processing": "bg:#f6c177 #191724",
+        "input.menu": "bg:#c4a7e7 #191724",
+        "input.hint": "#6e6a86",
+        "agent.atlas": "#9ccfd8",
+        "agent.tetyana": "#31748f",
+        "agent.grisha": "#f6c177",
+        "agent.user": "#c4a7e7",
+        "agent.system": "#6e6a86",
+        "agent.text": "#e0def4",
+    },
 }
+```
+
+### `tui/tools.py` (17.2 KB)
+
+```python
+"""Agent tool handlers for TUI.
+
+Provides all _tool_* handler functions for agent tools:
+- File operations (list_dir, read_file, grep)
+- Desktop organization
+- Browser/app control (chrome_open_url, open_app, open_url)
+- Shell execution (run_shell, run_shortcut, run_automator, run_applescript)
+- Screenshots
+- Module creation
+"""
+
+from __future__ import annotations
+
+import glob
+import json
+import os
+import shutil
+import subprocess
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+from system_cli.state import state
+from tui.cli_paths import SCRIPT_DIR
+
+
+def _safe_abspath(path: str) -> str:
+    """Safely expand and resolve absolute path."""
+    expanded = os.path.expanduser(str(path or "")).strip()
+    if not expanded:
+        return ""
+    if os.path.isabs(expanded):
+        return expanded
+    try:
+        return os.path.abspath(expanded)
+    except Exception:
+        return ""
+
+
+# Permission tracking
+class _ToolPermissions:
+    """Track granted permissions for tool execution."""
+    allow_run: bool = False
+    allow_shell: bool = False
+    allow_applescript: bool = False
+    allow_gui: bool = False
+
+
+_agent_last_permissions = _ToolPermissions()
+
+
+def tool_scan_traces(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Scan for editor traces in typical macOS paths."""
+    from tui.cleanup import scan_traces
+    
+    editor = str(args.get("editor", "")).strip()
+    if not editor:
+        return {"ok": False, "error": "Missing editor"}
+    return {"ok": True, "result": scan_traces(editor)}
+
+
+def tool_list_dir(args: Dict[str, Any]) -> Dict[str, Any]:
+    """List directory contents."""
+    path = _safe_abspath(str(args.get("path", "")))
+    if not path or not os.path.exists(path):
+        return {"ok": False, "error": f"Path not found: {path}"}
+    if not os.path.isdir(path):
+        return {"ok": False, "error": f"Not a directory: {path}"}
+    try:
+        items = sorted(os.listdir(path))
+        return {"ok": True, "path": path, "count": len(items), "items": items[:200]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_organize_desktop(args: Dict[str, Any], allow_shell: bool) -> Dict[str, Any]:
+    """Organize desktop by moving files into categorized folders."""
+    if not allow_shell:
+        return {"ok": False, "error": "File operations require unsafe mode or CONFIRM_SHELL"}
+
+    desktop_path = str(args.get("desktop_path") or "~/Desktop")
+    target_folder_name = str(args.get("target_folder_name") or "Organized_Files")
+
+    desktop = _safe_abspath(desktop_path)
+    if not desktop or not os.path.exists(desktop):
+        return {"ok": False, "error": f"Path not found: {desktop}"}
+    if not os.path.isdir(desktop):
+        return {"ok": False, "error": f"Not a directory: {desktop}"}
+
+    target_dir = os.path.join(desktop, target_folder_name)
+    try:
+        os.makedirs(target_dir, exist_ok=True)
+    except Exception as e:
+        return {"ok": False, "error": f"Failed to create target dir: {target_dir}. {e}"}
+
+    screenshot_prefixes = (
+        "screenshot",
+        "screen shot",
+        "знімок екрана",
+        "знімок екрану",
+        "снимок экрана",
+    )
+    screenshot_exts = {".png", ".jpg", ".jpeg", ".heic", ".tif", ".tiff", ".bmp", ".gif"}
+
+    def _is_screenshot_file(filename: str) -> bool:
+        name = str(filename or "").strip()
+        if not name:
+            return False
+        base, ext = os.path.splitext(name)
+        if ext.lower() not in screenshot_exts:
+            return False
+        low = base.strip().lower()
+        return any(low.startswith(p) for p in screenshot_prefixes)
+
+    def _unique_dest_path(dest: str) -> str:
+        if not os.path.exists(dest):
+            return dest
+        root, ext = os.path.splitext(dest)
+        i = 2
+        while True:
+            cand = f"{root} ({i}){ext}"
+            if not os.path.exists(cand):
+                return cand
+            i += 1
+
+    deleted = 0
+    moved = 0
+    skipped_dirs = 0
+    errors: List[str] = []
+
+    try:
+        items = sorted(os.listdir(desktop))
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+    for name in items:
+        if name in {".", "..", target_folder_name, ".DS_Store"}:
+            continue
+        src = os.path.join(desktop, name)
+        try:
+            if os.path.isdir(src):
+                skipped_dirs += 1
+                continue
+            if not os.path.isfile(src):
+                continue
+
+            if _is_screenshot_file(name):
+                os.remove(src)
+                deleted += 1
+                continue
+
+            _base, ext = os.path.splitext(name)
+            ext_key = (ext.lower().lstrip(".") or "no_extension")
+            dest_dir = os.path.join(target_dir, ext_key)
+            os.makedirs(dest_dir, exist_ok=True)
+            dest = _unique_dest_path(os.path.join(dest_dir, name))
+            shutil.move(src, dest)
+            moved += 1
+        except Exception as e:
+            errors.append(f"{name}: {e}")
+
+    ok = len(errors) == 0
+    return {
+        "ok": ok,
+        "desktop": desktop,
+        "target_dir": target_dir,
+        "deleted_screenshots": deleted,
+        "moved_files": moved,
+        "skipped_directories": skipped_dirs,
+        "errors": errors[:50],
+    }
+
+
+def tool_organize_desktop_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Wrapper for organize_desktop that checks permissions."""
+    allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+        getattr(_agent_last_permissions, "allow_shell", False)
+    )
+    return tool_organize_desktop(args, allow_shell)
+
+
+def tool_chrome_open_url(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Open URL specifically in Google Chrome."""
+    url = str(args.get("url", "")).strip()
+    if not url:
+        return {"ok": False, "error": "Missing url"}
+    allow_applescript = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+        getattr(_agent_last_permissions, "allow_applescript", False)
+    )
+    if not allow_applescript:
+        return {"ok": False, "error": "AppleScript requires unsafe mode or CONFIRM_APPLESCRIPT"}
+    try:
+        script = f'tell application "Google Chrome" to open location "{url}"'
+        subprocess.run(["osascript", "-e", script], check=True, capture_output=True, timeout=10)
+        return {"ok": True, "url": url}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_chrome_active_tab(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Get Google Chrome active tab information."""
+    allow_applescript = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+        getattr(_agent_last_permissions, "allow_applescript", False)
+    )
+    if not allow_applescript:
+        return {"ok": False, "error": "AppleScript requires unsafe mode or CONFIRM_APPLESCRIPT"}
+    try:
+        script = '''
+        tell application "Google Chrome"
+            set tabTitle to title of active tab of front window
+            set tabURL to URL of active tab of front window
+            return tabTitle & "|||" & tabURL
+        end tell
+        '''
+        result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            output = result.stdout.strip()
+            parts = output.split("|||")
+            if len(parts) >= 2:
+                return {"ok": True, "title": parts[0], "url": parts[1]}
+            return {"ok": True, "raw": output}
+        return {"ok": False, "error": result.stderr.strip()}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_open_url(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Open URL using macOS open command."""
+    url = str(args.get("url", "")).strip()
+    if not url:
+        return {"ok": False, "error": "Missing url"}
+    try:
+        subprocess.run(["open", url], check=True, capture_output=True, timeout=10)
+        return {"ok": True, "url": url}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_open_app(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Open a macOS application by name."""
+    name = str(args.get("name", "")).strip()
+    if not name:
+        return {"ok": False, "error": "Missing name"}
+    try:
+        subprocess.run(["open", "-a", name], check=True, capture_output=True, timeout=10)
+        return {"ok": True, "app": name}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_run_shell(args: Dict[str, Any], allow_shell: bool) -> Dict[str, Any]:
+    """Run a shell command."""
+    command = str(args.get("command", "")).strip()
+    if not command:
+        return {"ok": False, "error": "Missing command"}
+    if not allow_shell:
+        return {"ok": False, "error": "Shell commands require unsafe mode or CONFIRM_SHELL"}
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+        return {
+            "ok": result.returncode == 0,
+            "command": command,
+            "returncode": result.returncode,
+            "stdout": result.stdout[:5000],
+            "stderr": result.stderr[:2000],
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_run_shell_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Wrapper for run_shell that checks permissions."""
+    allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+        getattr(_agent_last_permissions, "allow_shell", False)
+    )
+    return tool_run_shell(args, allow_shell)
+
+
+def tool_run_shortcut(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Run a macOS Shortcut by name."""
+    name = str(args.get("name", "")).strip()
+    if not name:
+        return {"ok": False, "error": "Missing name"}
+    allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+        getattr(_agent_last_permissions, "allow_shell", False)
+    )
+    if not allow_shell:
+        return {"ok": False, "error": "Shortcuts require unsafe mode or CONFIRM_SHELL"}
+    try:
+        result = subprocess.run(["shortcuts", "run", name], capture_output=True, text=True, timeout=60)
+        return {"ok": result.returncode == 0, "name": name, "output": result.stdout[:2000]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_run_automator(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Run an Automator workflow."""
+    workflow_path = str(args.get("workflow_path", "")).strip()
+    if not workflow_path:
+        return {"ok": False, "error": "Missing workflow_path"}
+    allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+        getattr(_agent_last_permissions, "allow_shell", False)
+    )
+    if not allow_shell:
+        return {"ok": False, "error": "Automator requires unsafe mode or CONFIRM_SHELL"}
+    try:
+        result = subprocess.run(["automator", workflow_path], capture_output=True, text=True, timeout=120)
+        return {"ok": result.returncode == 0, "workflow": workflow_path}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_run_applescript(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Run an AppleScript."""
+    script = str(args.get("script", "")).strip()
+    if not script:
+        return {"ok": False, "error": "Missing script"}
+    allow_applescript = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
+        getattr(_agent_last_permissions, "allow_applescript", False)
+    )
+    if not allow_applescript:
+        return {"ok": False, "error": "AppleScript requires unsafe mode or CONFIRM_APPLESCRIPT"}
+    try:
+        result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=30)
+        return {
+            "ok": result.returncode == 0,
+            "output": result.stdout[:2000],
+            "error": result.stderr[:1000] if result.returncode != 0 else "",
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_read_file(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Read file contents."""
+    path = _safe_abspath(str(args.get("path", "")))
+    limit = args.get("limit")
+    if not path or not os.path.exists(path):
+        return {"ok": False, "error": f"Path not found: {path}"}
+    if not os.path.isfile(path):
+        return {"ok": False, "error": f"Not a file: {path}"}
+    try:
+        with open(path, 'r', encoding='utf-8', errors='replace') as f:
+            if limit is not None:
+                lines = []
+                for i, line in enumerate(f):
+                    if i >= limit:
+                        break
+                    lines.append(line.rstrip('\n'))
+                content = '\n'.join(lines)
+            else:
+                content = f.read()
+        return {"ok": True, "path": path, "content": content}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_grep(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Search for pattern in files under root directory."""
+    import re
+    
+    root = _safe_abspath(str(args.get("root", "")))
+    query = str(args.get("query", "")).strip()
+    max_files = args.get("max_files", 50)
+    max_hits = args.get("max_hits", 100)
+    
+    if not root or not os.path.exists(root):
+        return {"ok": False, "error": f"Root path not found: {root}"}
+    if not query:
+        return {"ok": False, "error": "Missing query"}
+    
+    try:
+        pattern = re.compile(query, re.IGNORECASE)
+        matches = []
+        files_searched = 0
+        
+        for dirpath, dirnames, filenames in os.walk(root):
+            if files_searched >= max_files:
+                break
+            for filename in filenames:
+                if files_searched >= max_files:
+                    break
+                filepath = os.path.join(dirpath, filename)
+                files_searched += 1
+                
+                try:
+                    with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
+                        for line_num, line in enumerate(f, 1):
+                            if pattern.search(line):
+                                matches.append({
+                                    "file": filepath,
+                                    "line": line_num,
+                                    "content": line.rstrip('\n')
+                                })
+                                if len(matches) >= max_hits:
+                                    break
+                except Exception:
+                    continue  # Skip unreadable files
+                    
+                if len(matches) >= max_hits:
+                    break
+                    
+        return {"ok": True, "root": root, "query": query, "matches": matches, "files_searched": files_searched}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_take_screenshot(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Take a screenshot of focused window or target app."""
+    app_name = args.get("app_name")
+    try:
+        # Create temporary file for screenshot
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"screenshot_{timestamp}.png"
+        
+        if app_name:
+            # Try to focus app first, then take screenshot
+            try:
+                subprocess.run(["osascript", "-e", f'tell application "{app_name}" to activate'], 
+                             capture_output=True, timeout=5)
+            except Exception:
+                pass  # Continue even if app activation fails
+        
+        # Take screenshot of focused window
+        result = subprocess.run(["screencapture", "-w", filename], 
+                              capture_output=True, text=True, timeout=10)
+        
+        if result.returncode == 0 and os.path.exists(filename):
+            return {"ok": True, "file": os.path.abspath(filename)}
+        err = str(result.stderr or "").strip()
+        low = err.lower()
+        if "screen recording" in low or "not permitted" in low:
+            return {
+                "ok": False,
+                "error": f"Screenshot failed: {err}",
+                "error_type": "permission_required",
+                "permission": "screen_recording",
+                "settings_url": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+            }
+        return {"ok": False, "error": f"Screenshot failed: {err}"}
+            
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_create_module(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a cleanup module."""
+    try:
+        # This would create a cleanup module based on the args
+        # For now, return a placeholder response
+        return {"ok": True, "result": "Module creation not yet implemented"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+# Backward compatibility aliases
+_tool_scan_traces = tool_scan_traces
+_tool_list_dir = tool_list_dir
+_tool_organize_desktop = tool_organize_desktop
+_tool_organize_desktop_wrapper = tool_organize_desktop_wrapper
+_tool_chrome_open_url = tool_chrome_open_url
+_tool_chrome_active_tab = tool_chrome_active_tab
+_tool_open_url = tool_open_url
+_tool_open_app = tool_open_app
+_tool_run_shell = tool_run_shell
+_tool_run_shell_wrapper = tool_run_shell_wrapper
+_tool_run_shortcut = tool_run_shortcut
+_tool_run_automator = tool_run_automator
+_tool_run_applescript = tool_run_applescript
+_tool_read_file = tool_read_file
+_tool_grep = tool_grep
+_tool_take_screenshot = tool_take_screenshot
+_tool_create_module = tool_create_module
 ```
 
 ### `tz.md` (16.8 KB)
@@ -35635,5 +38132,5 @@ graph TD
 
 ## Summary
 
-- **Total Files**: 107
-- **Skipped**: 12257
+- **Total Files**: 113
+- **Skipped**: 12263
