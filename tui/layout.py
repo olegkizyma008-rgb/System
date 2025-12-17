@@ -7,6 +7,14 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.data_structures import Point
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
+# Added import for MenuLevel
+# Assuming MenuLevel is in system_cli.state or tui.state. 
+# Based on existing imports 'from system_cli.state import state', let's guess MenuLevel is there or locally defined?
+# Wait, in tui/cli.py: line 1637: MenuLevel=MenuLevel passed to build_menu.
+# MenuLevel is often an IntEnum. It seems to be missing in layout.py
+# I will add 'from tui.state import MenuLevel' if it exists, or check where it is.
+# Actually, let's fix the missing _safe_formatted_text first.
+
 from prompt_toolkit.layout.containers import ConditionalContainer, HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.formatted_text import AnyFormattedText
@@ -15,7 +23,7 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.widgets import Frame
 from prompt_toolkit.layout.margins import ScrollbarMargin
-from system_cli.state import state
+from system_cli.state import state, MenuLevel
 
 _app_state = {"instance": None}
 
@@ -74,6 +82,19 @@ def _safe_cursor_position(get_text: Callable[[], Any], get_cursor: Callable[[], 
             return Point(x=0, y=0)
     return _inner
 
+# Restored missing helper
+def _safe_formatted_text(getter: Callable[[], Any], *, fallback_style: str = "") -> Callable[[], Any]:
+    def _inner() -> Any:
+        try:
+            value = getter()
+        except Exception:
+            return [(fallback_style, " \n")]
+        if not value:
+            return [(fallback_style, " \n")]
+        return value
+
+    return _inner
+
 def force_ui_update():
     app = _app_state.get("instance")
     if app:
@@ -100,19 +121,50 @@ def build_app(
     kb: KeyBindings,
     style: BaseStyle,
 ) -> Application:
-    def _safe_formatted_text(getter: Callable[[], Any], *, fallback_style: str = "") -> Callable[[], Any]:
-        def _inner() -> Any:
-            try:
-                value = getter()
-            except Exception:
-                return [(fallback_style, " \n")]
-            if not value:
-                return [(fallback_style, " \n")]
-            return value
 
-        return _inner
+    # --- Interactive Header Helpers ---
+    def header_callback_menu():
+        state.menu_level = MenuLevel.MAIN if state.menu_level == MenuLevel.NONE else MenuLevel.NONE
+        state.menu_index = 0
+        force_ui_update()
 
-    header_window = Window(FormattedTextControl(_safe_formatted_text(get_header, fallback_style="class:header")), height=1, style="class:header")
+    def header_callback_logs():
+        state.ui_scroll_target = "log"
+        force_ui_update()
+
+    def header_callback_agents():
+        state.ui_scroll_target = "agents"
+        force_ui_update()
+
+    def get_interactive_header() -> AnyFormattedText:
+        base = _safe_formatted_text(get_header, fallback_style="class:header")()
+        # Ensure base is list
+        if not isinstance(base, list):
+            base = [("", str(base))]
+            
+        # Add clickable buttons styled
+        # We append them to the header text
+        # Format: [ MENU ] [ LOGS ] [ AGENTS ]
+        
+        btn_style = "class:button"
+        
+        buttons = [
+             ("class:header", "  "),
+             (btn_style, "[ F2: MENU ]", header_callback_menu),
+             ("class:header", " "),
+             (btn_style, "[ PgUp: LOGS ]", header_callback_logs),
+             ("class:header", " "),
+             (btn_style, "[ PgDn: AGENTS ]", header_callback_agents),
+             ("class:header", "  "),
+        ]
+        
+        return base + buttons
+
+    header_window = Window(
+        FormattedTextControl(get_interactive_header), 
+        height=1, 
+        style="class:header"
+    )
 
     context_window = Window(
         FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")), 
@@ -126,6 +178,7 @@ def build_app(
         FormattedTextControl(safe_get_logs, get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position)),
         wrap_lines=False,
         right_margins=[ScrollbarMargin(display_arrows=True)],
+        style="class:log.window" # ensure background
     )
     setattr(log_window, "name", "log")
 
@@ -168,8 +221,20 @@ def build_app(
 
     def get_status_text() -> AnyFormattedText:
         return get_status()
+    
+    # Interactive status bar
+    def status_callback_menu():
+         state.menu_level = MenuLevel.MAIN if state.menu_level == MenuLevel.NONE else MenuLevel.NONE
 
-    status_window = Window(FormattedTextControl(_safe_formatted_text(get_status_text, fallback_style="class:status")), height=1, style="class:status")
+    def get_interactive_status() -> AnyFormattedText:
+         base = _safe_formatted_text(get_status_text, fallback_style="class:status")()
+         if not isinstance(base, list):
+             base = [("", str(base))]
+         
+         # Add help hint
+         return base + [("class:status", "  "), ("class:button", "[ Click/F2 For Menu ]", status_callback_menu)]
+
+    status_window = Window(FormattedTextControl(get_interactive_status), height=1, style="class:status")
 
     # Build right panel: either agent messages or context/menu
     right_panel_items = [
@@ -236,7 +301,7 @@ def build_app(
                     ] if w is not None
                 ]
             ),
-            Frame(input_area, style="class:frame.border", height=3),
+            Frame(input_area, style="class:frame.border", height=4), # Increased height for multiline Paste
             status_window,
         ]
     )

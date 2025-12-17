@@ -445,7 +445,7 @@ def get_agent_cursor_position() -> Point:
 
 
 def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
-    return _list_editors_new(cfg)
+    return _get_editors_list_new(cfg)
 
 
 def _resolve_editor_arg(cfg: Dict[str, Any], editor: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
@@ -2336,7 +2336,7 @@ def _handle_input(buff: Buffer) -> None:
     _handle_input_new(buff)
 
 
-input_buffer = Buffer(multiline=False, accept_handler=_handle_input)
+input_buffer = Buffer(multiline=True, accept_handler=_handle_input)
 
 
 def get_input_prompt():
