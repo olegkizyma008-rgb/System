@@ -4,75 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 107
-- **Files Skipped**: 12251
+- **Files Skipped**: 12257
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 18:59:39
+- **Generated**: 2025-12-17 19:23:59
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules']
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:35 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:35 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-editors']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-editors
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4929 | Listing editors
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4932 | Editors listed successfully
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-editors']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-editors
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4929 | Listing editors
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4932 | Editors listed successfully
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
 2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules']
 2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
 2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
@@ -113,6 +53,66 @@
 2025-12-17 18:59:31 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
 2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
 2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 19:16:12 | INFO     | MainThread | system_cli.cli | cli_main:4907 | TUI mode exited successfully
+2025-12-17 19:16:15 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: []
+2025-12-17 19:16:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
+2025-12-17 19:16:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
 ```
 
 ---
@@ -121,7 +121,7 @@
 
 ## My Last Response
 
-Unify execution under Trinity (/task); make chat discussion-only
+Fix Trinity crash: initialize step_status in Grisha; add regression test
 
 ---
 
@@ -507,19 +507,21 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 35449 +-----------------------------------------
- tui/cli.py                  |   426 +-
- 2 files changed, 177 insertions(+), 35698 deletions(-)
+ core/trinity.py              |     7 +-
+ project_structure_final.txt  | 35222 +----------------------------------------
+ tests/test_grisha_routing.py |    27 +
+ tui/cli.py                   |   426 +-
+ 4 files changed, 167 insertions(+), 35515 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-ee9ade6 Update: Add latest response
+6986473 Update: Add latest response
+987b109 Update: Add latest response
 4421360 Update: Add latest response
 0025b55 Update: Add latest response
 db1d8e5 Fix CLI editor fallback and direct execution
-12a28f0 chore: remove refactor markdown file
 ```
 
 ---
@@ -933,7 +935,7 @@ kinotavr.md
 ```text
 ## My Last Response
 
-Unify execution under Trinity (/task); make chat discussion-only
+Fix Trinity crash: initialize step_status in Grisha; add regression test
 
 ---
 
@@ -9022,7 +9024,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (64.3 KB)
+### `core/trinity.py` (64.4 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -9810,8 +9812,10 @@ class TrinityRuntime:
         # ------------------------------------------------------------------
         # FEEDBACK LOOP LOGIC (Phase 3)
         # ------------------------------------------------------------------
-        
+
         lower_content = content.lower()
+
+        step_status = "uncertain"
 
         has_question = ("?" in content) or lower_content.strip().startswith("чи ") or (" чи " in lower_content)
         uncertainty_keywords = [
@@ -9853,16 +9857,19 @@ class TrinityRuntime:
             if self.verbose:
                 print("👁️ [Grisha] Tests failed - blocking task and requesting replan")
             next_agent = "atlas"
+            step_status = "failed"
             
         elif "tools results" in lower_content and tool_calls:
             # Case B: Grisha used a tool (e.g. took a screenshot). 
             # Loop back to Atlas to analyze the screenshot.
             next_agent = "atlas"
+            step_status = "uncertain"
             
         elif has_negative:
             # Case C: VERIFICATION FAILED.
             # Trigger "Dynamic Granularity" (Replan).
             next_agent = "atlas"
+            step_status = "failed"
             
         elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
             # Case D: VERIFICATION PASSED and no new tools called.
@@ -11720,75 +11727,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 107
-- **Files Skipped**: 12251
+- **Files Skipped**: 12257
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 18:59:39
+- **Generated**: 2025-12-17 19:23:59
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules']
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:35 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:20:35 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:35 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:20:35 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-editors']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-editors
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4929 | Listing editors
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4932 | Editors listed successfully
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--dry-run']
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:20:50 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:20:50 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:20:50 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-editors']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-editors
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4929 | Listing editors
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4932 | Editors listed successfully
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | WARNING  | MainThread | system_cli.cli | cli_main:4922 | Editor not specified; using default editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4937 | Listing modules for editor: windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4946 | Modules listed for windsurf
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: run
-2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4951 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4954 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
 2025-12-17 18:21:04 | INFO     | MainThread | system_cli.cli | cli_main:4859 | CLI started with arguments: ['list-modules']
 2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4901 | Parsed command: list-modules
 2025-12-17 18:21:04 | DEBUG    | MainThread | system_cli.cli | cli_main:4915 | Cleanup config loaded successfully
@@ -11829,6 +11776,66 @@ test content
 2025-12-17 18:59:31 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
 2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
 2025-12-17 18:59:31 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 19:16:12 | INFO     | MainThread | system_cli.cli | cli_main:4907 | TUI mode exited successfully
+2025-12-17 19:16:15 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: []
+2025-12-17 19:16:15 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: None
+2025-12-17 19:16:15 | INFO     | MainThread | system_cli.cli | cli_main:4595 | Starting TUI mode
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 19:17:37 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:17:37 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 19:17:37 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-editors']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-editors
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4620 | Listing editors
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4623 | Editors listed successfully
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['list-modules']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: list-modules
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4628 | Listing modules for editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4637 | Modules listed for windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4550 | CLI started with arguments: ['run', '--dry-run']
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4592 | Parsed command: run
+2025-12-17 19:23:52 | DEBUG    | MainThread | system_cli.cli | cli_main:4606 | Cleanup config loaded successfully
+2025-12-17 19:23:52 | WARNING  | MainThread | system_cli.cli | cli_main:4613 | Editor not specified; using default editor: windsurf
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4642 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-17 19:23:52 | INFO     | MainThread | system_cli.cli | cli_main:4645 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
 ```
 
 ---
@@ -11837,7 +11844,7 @@ test content
 
 ## My Last Response
 
-Unify execution under Trinity (/task); make chat discussion-only
+Fix Trinity crash: initialize step_status in Grisha; add regression test
 
 ---
 
@@ -12223,19 +12230,21 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 35449 +-----------------------------------------
- tui/cli.py                  |   426 +-
- 2 files changed, 177 insertions(+), 35698 deletions(-)
+ core/trinity.py              |     7 +-
+ project_structure_final.txt  | 35222 +----------------------------------------
+ tests/test_grisha_routing.py |    27 +
+ tui/cli.py                   |   426 +-
+ 4 files changed, 167 insertions(+), 35515 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-ee9ade6 Update: Add latest response
+6986473 Update: Add latest response
+987b109 Update: Add latest response
 4421360 Update: Add latest response
 0025b55 Update: Add latest response
 db1d8e5 Fix CLI editor fallback and direct execution
-12a28f0 chore: remove refactor markdown file
 ```
 
 ---
@@ -12649,7 +12658,7 @@ kinotavr.md
 ```text
 ## My Last Response
 
-Unify execution under Trinity (/task); make chat discussion-only
+Fix Trinity crash: initialize step_status in Grisha; add regression test
 
 ---
 
@@ -20738,7 +20747,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (64.3 KB)
+### `core/trinity.py` (64.4 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -21526,8 +21535,10 @@ class TrinityRuntime:
         # ------------------------------------------------------------------
         # FEEDBACK LOOP LOGIC (Phase 3)
         # ------------------------------------------------------------------
-        
+
         lower_content = content.lower()
+
+        step_status = "uncertain"
 
         has_question = ("?" in content) or lower_content.strip().startswith("чи ") or (" чи " in lower_content)
         uncertainty_keywords = [
@@ -21569,16 +21580,19 @@ class TrinityRuntime:
             if self.verbose:
                 print("👁️ [Grisha] Tests failed - blocking task and requesting replan")
             next_agent = "atlas"
+            step_status = "failed"
             
         elif "tools results" in lower_content and tool_calls:
             # Case B: Grisha used a tool (e.g. took a screenshot). 
             # Loop back to Atlas to analyze the screenshot.
             next_agent = "atlas"
+            step_status = "uncertain"
             
         elif has_negative:
             # Case C: VERIFICATION FAILED.
             # Trigger "Dynamic Granularity" (Replan).
             next_agent = "atlas"
+            step_status = "failed"
             
         elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
             # Case D: VERIFICATION PASSED and no new tools called.
@@ -28319,7 +28333,7 @@ def test_cli_run_without_editor_dry_run_falls_back(capsys):
     assert "[DRY-RUN]" in captured.out
 ```
 
-### `tests/test_grisha_routing.py` (2.0 KB)
+### `tests/test_grisha_routing.py` (2.9 KB)
 
 ```python
 import pytest
@@ -28334,6 +28348,16 @@ class _DummyLLM:
 
     def invoke(self, _messages):
         return AIMessage(content=self._content)
+
+
+class _DummyLLMWithToolCalls:
+    class _Resp:
+        def __init__(self):
+            self.content = "I'll verify using tools."
+            self.tool_calls = [{"name": "capture_screen", "args": {}}]
+
+    def invoke(self, _messages):
+        return self._Resp()
 
 
 @pytest.mark.parametrize(
@@ -28375,6 +28399,23 @@ def test_grisha_explicit_verified_marker_ends(monkeypatch: pytest.MonkeyPatch, g
     out = rt._grisha_node(state)
 
     assert out["current_agent"] == "end"
+
+
+def test_grisha_tool_calls_branch_does_not_crash(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("COPILOT_API_KEY", "dummy")
+
+    rt = TrinityRuntime(verbose=False)
+    rt.llm = _DummyLLMWithToolCalls()
+    monkeypatch.setattr(rt, "_get_repo_changes", lambda: {"ok": True, "changed_files": []})
+
+    # Avoid calling real MCP tools.
+    rt.registry.execute = lambda _name, _args: "{}"
+
+    state = {"messages": [AIMessage(content="previous")], "gui_mode": "off", "execution_mode": "native"}
+    out = rt._grisha_node(state)
+
+    assert out["current_agent"] == "atlas"
+    assert out["last_step_status"] in {"uncertain", "failed", "success"}
 ```
 
 ### `tests/test_intent_routing.py` (3.1 KB)
@@ -35595,4 +35636,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 107
-- **Skipped**: 12251
+- **Skipped**: 12257

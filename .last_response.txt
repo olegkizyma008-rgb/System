@@ -1,6 +1,6 @@
 ## My Last Response
 
-Unify execution under Trinity (/task); make chat discussion-only
+Fix Trinity crash: initialize step_status in Grisha; add regression test
 
 ---
 
