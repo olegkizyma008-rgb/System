@@ -42,6 +42,13 @@ THEMES: Dict[str, Dict[str, str]] = {
         "agent.user": "#87d7d7",
         "agent.system": "#8b949e",
         "agent.text": "#d0d0d0",
+        "scrollbar.background": "#0d1117",
+        "scrollbar.button": "#00afaf",
+        "scrollbar.arrow": "#008787",
+        "button": "bg:#005f5f #afffff",
+        "button.focused": "bg:#008787 #ffffff",
+        "button.clicked": "bg:#5faf87 #ffffff",
+        "bar.background": "#002b2b",
     },
     "dracula": {
         "frame.border": "#6272a4",

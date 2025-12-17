@@ -22,6 +22,15 @@ from core.memory import save_memory_tool, query_memory_tool
 from system_ai.tools.permissions_manager import create_permissions_manager
 from system_ai.tools.macos_native_automation import create_automation_executor
 from system_ai.tools.macos_commands import create_command_executor
+from system_ai.tools.system import list_processes, kill_process, get_system_stats
+from system_ai.tools.desktop import get_monitors_info, get_open_windows, get_clipboard, set_clipboard
+from system_ai.tools.browser import (
+    browser_open_url,
+    browser_click_element,
+    browser_type_text,
+    browser_get_content,
+    browser_execute_script
+)
 
 class MCPToolRegistry:
     """
@@ -203,6 +212,24 @@ class MCPToolRegistry:
         # RAG Memory
         self.register_tool("save_memory", save_memory_tool, "Save info to memory. Args: category (ui_patterns/strategies), content (str)")
         self.register_tool("rag_query", query_memory_tool, "Query memory. Args: category (str), query (str)")
+
+        # System Tools
+        self.register_tool("list_processes", list_processes, "List running processes. Args: limit (int), sort_by (cpu|memory|name)")
+        self.register_tool("kill_process", kill_process, "Terminate a process. Args: pid (int)")
+        self.register_tool("get_system_stats", get_system_stats, "Get system stats (CPU/Mem). Args: none")
+
+        # Desktop Tools
+        self.register_tool("get_monitors_info", get_monitors_info, "Get info about connected displays. Args: none")
+        self.register_tool("get_open_windows", get_open_windows, "List open windows. Args: on_screen_only (bool)")
+        self.register_tool("get_clipboard", get_clipboard, "Read clipboard content. Args: none")
+        self.register_tool("set_clipboard", set_clipboard, "Write to clipboard. Args: text (str)")
+
+        # Browser Tools
+        self.register_tool("browser_open_url", browser_open_url, "Open URL in generic browser. Args: url (str), headless (bool)")
+        self.register_tool("browser_click_element", browser_click_element, "Click element in browser. Args: selector (str)")
+        self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str)")
+        self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: selector (optional str)")
+        self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
 
         # Project Structure
         def _save_last_response_and_regenerate(text: str) -> Dict[str, Any]:
