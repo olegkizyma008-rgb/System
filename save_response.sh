@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Script to save last chat response and regenerate project structure
+# Script to save last chat response
+# Post-commit hook will automatically regenerate structure and amend commit
 # Usage: ./save_response.sh "Your response text here"
 
 RESPONSE="${1:-}"
@@ -23,13 +24,10 @@ if [ -f ".last_response.txt" ]; then
 fi
 
 # Parse to separate my response from Trinity reports
-MY_RESPONSE=""
 TRINITY_REPORTS=""
 
 if [ -n "$EXISTING" ]; then
     if echo "$EXISTING" | grep -q "## My Last Response"; then
-        # Extract my response (everything before first Trinity Report)
-        MY_RESPONSE=$(echo "$EXISTING" | sed '/## Trinity Report/q' | sed '$ d')
         # Extract Trinity reports (everything from first Trinity Report onwards)
         TRINITY_REPORTS=$(echo "$EXISTING" | sed -n '/## Trinity Report/,$ p')
     else
@@ -55,20 +53,8 @@ fi
 echo "$NEW_CONTENT" > ".last_response.txt"
 echo "✅ Response saved to .last_response.txt"
 
-# Regenerate project structure
-echo "🔄 Regenerating project structure..."
-python3 generate_structure.py > /dev/null 2>&1
-
-if [ $? -eq 0 ]; then
-    echo "✅ Project structure regenerated"
-else
-    echo "⚠️  Warning: Failed to regenerate project structure"
-fi
-
-# Stage files for git
-echo "📝 Staging files for git..."
-git add .last_response.txt project_structure_final.txt 2>/dev/null
-
-echo "✅ Done! Files are ready to commit."
 echo ""
-echo "Next step: git commit -m \"Update: Add latest response to project structure\""
+echo "📝 Next steps:"
+echo "   1. git add .last_response.txt"
+echo "   2. git commit -m \"Update: Add latest response\""
+echo "   3. Post-commit hook will automatically regenerate structure and amend"

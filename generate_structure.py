@@ -3,6 +3,7 @@ from pathlib import Path
 import fnmatch
 import subprocess
 from datetime import datetime
+from typing import Optional
 
 class IgnoreParser:
     def __init__(self, root: Path):
@@ -52,7 +53,7 @@ class IgnoreParser:
         return matched
 
 # Додаткові жорсткі виключення (навіть якщо не в .gitignore)
-HARD_IGNORED_DIRS = {'node_modules', '__pycache__', '.git', '.venv', 'venv', 'dist', 'build', 'logs', 'cache', 'unused', '.cache', '.atlas_memory', '.pytest_cache'}
+HARD_IGNORED_DIRS = {'node_modules', '__pycache__', '.git', '.venv', 'venv', 'dist', 'build', 'logs', 'cache', 'unused', '.cache', '.atlas_memory', '.pytest_cache', '.env'}
 BINARY_EXTENSIONS = {'.log', '.db', '.sqlite', '.pyc', '.bin', '.pt', '.pth', '.h5', '.onnx', '.jpg', '.png', '.gif', '.mp4', '.zip', '.tar.gz', '.pdf', '.exe', '.DS_Store'}
 
 MAX_FILE_SIZE = 2 * 1024 * 1024  # 2 МБ — достатньо для будь-якого коду
@@ -156,6 +157,28 @@ def get_last_response(response_file: str = ".last_response.txt") -> str:
         return f"[Error reading last response: {e}]"
     return "[No last response available]"
 
+def get_program_logs(max_lines: int = 100) -> str:
+    """Get last program execution logs from ~/.system_cli/logs/cli.log"""
+    logs_dir = Path.home() / ".system_cli" / "logs"
+    cli_log_file = logs_dir / "cli.log"
+    
+    if not cli_log_file.exists():
+        return "[No program logs available]"
+    
+    try:
+        with open(cli_log_file, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+        
+        # Get last N lines
+        last_lines = lines[-max_lines:] if len(lines) > max_lines else lines
+        
+        if not last_lines:
+            return "[Program logs are empty]"
+        
+        return "".join(last_lines)
+    except Exception as e:
+        return f"[Error reading program logs: {e}]"
+
 def main(project_root: str = ".", output_file: str = "project_structure_final.txt", last_response: str = None):
     root = Path(project_root).resolve()
     print(f"Сканую проєкт: {root}")
@@ -199,6 +222,15 @@ def main(project_root: str = ".", output_file: str = "project_structure_final.tx
         f.write(f"- **Files Skipped**: {skipped}\n")
         f.write(f"- **Max File Size**: {MAX_FILE_SIZE / (1024*1024):.1f} MB\n")
         f.write(f"- **Generated**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+
+        f.write("---\n\n")
+
+        # Add program execution logs
+        f.write("## Program Execution Logs (Last 100 lines)\n\n")
+        f.write("```\n")
+        program_logs = get_program_logs(max_lines=100)
+        f.write(program_logs)
+        f.write("```\n\n")
 
         f.write("---\n\n")
 

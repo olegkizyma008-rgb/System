@@ -53,6 +53,13 @@ class AppState:
     recording_analysis_waiting: bool = False
     recording_analysis_dir: Optional[str] = None
     recording_analysis_name: Optional[str] = None
+    ui_scroll_target: str = "log"
+    ui_log_follow: bool = True
+    ui_log_cursor_y: int = 0
+    ui_log_line_count: int = 1
+    ui_agents_follow: bool = True
+    ui_agents_cursor_y: int = 0
+    ui_agents_line_count: int = 1
 
 
 state = AppState()

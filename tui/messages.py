@@ -91,14 +91,6 @@ class MessageFormatter:
         AgentType.SYSTEM: "class:agent.system",
     }
     
-    AGENT_ICONS = {
-        AgentType.ATLAS: "🌐",
-        AgentType.TETYANA: "💻",
-        AgentType.GRISHA: "👁️",
-        AgentType.USER: "👤",
-        AgentType.SYSTEM: "⚙️",
-    }
-    
     AGENT_NAMES = {
         AgentType.ATLAS: "Atlas",
         AgentType.TETYANA: "Tetyana",
@@ -118,18 +110,20 @@ class MessageFormatter:
         # Skip technical messages
         if msg.is_technical or MessageFilter.is_technical(msg.text):
             return result
+
+        if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
+            return result
         
         # Clean the message
         clean_text = MessageFilter.clean_message(msg.text)
         if not clean_text:
             return result
         
-        # Agent header with icon and name
-        icon = MessageFormatter.AGENT_ICONS.get(msg.agent, "•")
+        # Agent header with name
         name = MessageFormatter.AGENT_NAMES.get(msg.agent, "Unknown")
         color = MessageFormatter.AGENT_COLORS.get(msg.agent, "class:agent.system")
-        
-        result.append((color, f"{icon} {name}: "))
+
+        result.append((color, f"{name}: "))
         result.append(("class:agent.text", f"{clean_text}\n\n"))
         
         return result
@@ -158,6 +152,15 @@ class MessageBuffer:
         # Trim if too many
         if len(self.messages) > self.max_messages:
             self.messages = self.messages[-self.max_messages:]
+
+    def upsert_stream(self, agent: AgentType, text: str, is_technical: bool = False) -> None:
+        msg = AgentMessage(agent=agent, text=text, is_technical=is_technical)
+        if self.messages and self.messages[-1].agent == agent and not self.messages[-1].is_technical:
+            self.messages[-1] = msg
+        else:
+            self.messages.append(msg)
+            if len(self.messages) > self.max_messages:
+                self.messages = self.messages[-self.max_messages:]
     
     def get_formatted(self) -> List[Tuple[str, str]]:
         """Get all messages formatted for display."""

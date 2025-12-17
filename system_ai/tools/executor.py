@@ -106,15 +106,45 @@ def open_system_settings_privacy(permission: str) -> Dict[str, Any]:
 
 def open_app(name: str) -> Dict[str, Any]:
     try:
+        raw = str(name or "").strip()
+        n = raw
+        key = " ".join(raw.lower().replace("_", " ").split())
+        app_aliases = {
+            "chrome": "Google Chrome",
+            "google chrome": "Google Chrome",
+            "гугл хром": "Google Chrome",
+            "гуглхром": "Google Chrome",
+            "хром": "Google Chrome",
+            "chrom": "Google Chrome",
+            "сафари": "Safari",
+            "сафарі": "Safari",
+            "safari": "Safari",
+            "finder": "Finder",
+            "файндер": "Finder",
+            "фіндер": "Finder",
+            "термінал": "Terminal",
+            "терминал": "Terminal",
+            "terminal": "Terminal",
+            "shortcuts": "Shortcuts",
+            "ярлики": "Shortcuts",
+            "шорткати": "Shortcuts",
+            "команди": "Shortcuts",
+            "settings": "System Settings",
+            "system settings": "System Settings",
+            "налаштування": "System Settings",
+            "настройки": "System Settings",
+        }
+        n = app_aliases.get(key, n)
+
         proc = subprocess.run(
-            ["open", "-a", name],
+            ["open", "-a", n],
             capture_output=True,
             text=True,
         )
         if proc.returncode != 0:
-            return {"tool": "open_app", "status": "error", "error": (proc.stderr or "").strip()}
+            return {"tool": "open_app", "status": "error", "error": (proc.stderr or "").strip(), "app": n, "input": raw}
         time.sleep(1.5)
-        return {"tool": "open_app", "status": "success", "app": name}
+        return {"tool": "open_app", "status": "success", "app": n, "input": raw}
     except Exception as e:
         return {"tool": "open_app", "status": "error", "error": str(e)}
 

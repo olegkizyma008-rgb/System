@@ -52,6 +52,28 @@ def build_keybindings(
 ) -> KeyBindings:
     kb = KeyBindings()
 
+    def _find_window_by_name(event: Any, name: str) -> Any:
+        try:
+            for w in event.app.layout.find_all_windows():
+                if getattr(w, "name", None) == name:
+                    return w
+        except Exception:
+            return None
+        return None
+
+    def _scroll_named_window(event: Any, name: str, delta: int) -> None:
+        w = _find_window_by_name(event, name)
+        if w is None:
+            return
+        info = getattr(w, "render_info", None)
+        if info is None:
+            return
+        try:
+            max_scroll = max(0, int(info.content_height) - int(info.window_height))
+            w.vertical_scroll = max(0, min(max_scroll, int(getattr(w, "vertical_scroll", 0)) + int(delta)))
+        except Exception:
+            return
+
     def _is_section_item(item: Any) -> bool:
         return isinstance(item, tuple) and len(item) == 3 and item[2] == "section"
 
@@ -78,6 +100,73 @@ def build_keybindings(
     @kb.add("c-c")
     def _(event):
         event.app.exit()
+
+    @kb.add("f6")
+    def _(event):
+        if show_menu():
+            return
+        cur = str(getattr(state, "ui_scroll_target", "log") or "log")
+        state.ui_scroll_target = "agents" if cur == "log" else "log"
+
+    @kb.add("pageup")
+    def _(event):
+        if show_menu():
+            return
+        target = str(getattr(state, "ui_scroll_target", "log") or "log")
+        name = "agents" if target == "agents" else "log"
+        if name == "log":
+            state.ui_log_follow = False
+            state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) - 10)
+        elif name == "agents":
+            state.ui_agents_follow = False
+            state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) - 10)
+        _scroll_named_window(event, name, -10)
+
+    @kb.add("pagedown")
+    def _(event):
+        if show_menu():
+            return
+        target = str(getattr(state, "ui_scroll_target", "log") or "log")
+        name = "agents" if target == "agents" else "log"
+        if name == "log":
+            state.ui_log_cursor_y = int(getattr(state, "ui_log_cursor_y", 0)) + 10
+            if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
+                state.ui_log_follow = True
+        elif name == "agents":
+            state.ui_agents_cursor_y = int(getattr(state, "ui_agents_cursor_y", 0)) + 10
+            if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
+                state.ui_agents_follow = True
+        _scroll_named_window(event, name, 10)
+
+    @kb.add("c-up")
+    def _(event):
+        if show_menu():
+            return
+        target = str(getattr(state, "ui_scroll_target", "log") or "log")
+        name = "agents" if target == "agents" else "log"
+        if name == "log":
+            state.ui_log_follow = False
+            state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) - 1)
+        elif name == "agents":
+            state.ui_agents_follow = False
+            state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) - 1)
+        _scroll_named_window(event, name, -1)
+
+    @kb.add("c-down")
+    def _(event):
+        if show_menu():
+            return
+        target = str(getattr(state, "ui_scroll_target", "log") or "log")
+        name = "agents" if target == "agents" else "log"
+        if name == "log":
+            state.ui_log_cursor_y = int(getattr(state, "ui_log_cursor_y", 0)) + 1
+            if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
+                state.ui_log_follow = True
+        elif name == "agents":
+            state.ui_agents_cursor_y = int(getattr(state, "ui_agents_cursor_y", 0)) + 1
+            if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
+                state.ui_agents_follow = True
+        _scroll_named_window(event, name, 1)
 
     @kb.add("f2")
     def _(event):

@@ -18,6 +18,48 @@ from prompt_toolkit.layout.margins import ScrollbarMargin
 
 _app_state = {"instance": None}
 
+
+def _cached_getter(getter: Callable[[], Any], *, ttl_s: float = 0.05) -> Callable[[], Any]:
+    cache: dict[str, Any] = {"ts": 0.0, "value": None}
+
+    def _inner() -> Any:
+        try:
+            import time
+
+            now = time.monotonic()
+            ts = float(cache.get("ts", 0.0))
+            if (now - ts) < float(ttl_s):
+                return cache.get("value")
+            value = getter()
+            cache["ts"] = now
+            cache["value"] = value
+            return value
+        except Exception:
+            return cache.get("value")
+
+    return _inner
+
+def _safe_cursor_position(get_text: Callable[[], Any], get_cursor: Callable[[], Point]) -> Callable[[], Point]:
+    """Wrap cursor position getter to ensure it never exceeds actual line count."""
+    def _inner() -> Point:
+        try:
+            cursor = get_cursor()
+            text = get_text()
+            if not text:
+                return Point(x=0, y=0)
+            combined = "".join(str(t or "") for _, t in text) if isinstance(text, list) else str(text or "")
+            if not combined:
+                return Point(x=0, y=0)
+            parts = combined.split("\n")
+            line_count = max(1, len(parts))
+            if combined.endswith("\n"):
+                line_count = max(1, line_count - 1)
+            valid_y = max(0, min(int(getattr(cursor, "y", 0) or 0), line_count - 1))
+            return Point(x=0, y=valid_y)
+        except Exception:
+            return Point(x=0, y=0)
+    return _inner
+
 def force_ui_update():
     app = _app_state.get("instance")
     if app:
@@ -34,6 +76,7 @@ def build_app(
     get_logs: Callable[[], Any],
     get_log_cursor_position: Callable[[], Point],
     get_agent_messages: Callable[[], Any] = None,
+    get_agent_cursor_position: Callable[[], Point] | None = None,
     get_menu_content: Callable[[], Any],
     get_input_prompt: Callable[[], Any],
     get_prompt_width: Callable[[], int],
@@ -43,31 +86,50 @@ def build_app(
     kb: KeyBindings,
     style: BaseStyle,
 ) -> Application:
-    header_window = Window(FormattedTextControl(get_header), height=1, style="class:header")
+    def _safe_formatted_text(getter: Callable[[], Any], *, fallback_style: str = "") -> Callable[[], Any]:
+        def _inner() -> Any:
+            try:
+                value = getter()
+            except Exception:
+                return [(fallback_style, " \n")]
+            if not value:
+                return [(fallback_style, " \n")]
+            return value
+
+        return _inner
+
+    header_window = Window(FormattedTextControl(_safe_formatted_text(get_header, fallback_style="class:header")), height=1, style="class:header")
 
     context_window = Window(
-        FormattedTextControl(get_context), 
+        FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")), 
         style="class:context", 
         wrap_lines=True,
         right_margins=[ScrollbarMargin(display_arrows=True)],
     )
 
+    safe_get_logs = _cached_getter(_safe_formatted_text(get_logs, fallback_style="class:log.info"))
     log_window = Window(
-        FormattedTextControl(get_logs, get_cursor_position=get_log_cursor_position),
-        wrap_lines=True,
+        FormattedTextControl(safe_get_logs, get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position)),
+        wrap_lines=False,
         right_margins=[ScrollbarMargin(display_arrows=True)],
     )
 
     # Agent messages panel (clean communication display)
+    safe_get_agent_messages = _cached_getter(
+        _safe_formatted_text(get_agent_messages or (lambda: []), fallback_style="class:agent.text")
+    )
     agent_messages_window = Window(
-        FormattedTextControl(get_agent_messages or (lambda: [])),
-        wrap_lines=True,
+        FormattedTextControl(
+            safe_get_agent_messages,
+            get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
+        ),
+        wrap_lines=False,
         style="class:agent.panel",
         right_margins=[ScrollbarMargin(display_arrows=True)],
     ) if get_agent_messages else None
 
     menu_window = Window(
-        FormattedTextControl(get_menu_content), 
+        FormattedTextControl(_safe_formatted_text(get_menu_content, fallback_style="class:menu.item")), 
         style="class:menu", 
         wrap_lines=True,
         right_margins=[ScrollbarMargin(display_arrows=True)],
@@ -88,7 +150,7 @@ def build_app(
     def get_status_text() -> AnyFormattedText:
         return get_status()
 
-    status_window = Window(FormattedTextControl(get_status_text), height=1, style="class:status")
+    status_window = Window(FormattedTextControl(_safe_formatted_text(get_status_text, fallback_style="class:status")), height=1, style="class:status")
 
     # Build right panel: either agent messages or context/menu
     right_panel_items = [
@@ -134,7 +196,13 @@ def build_app(
         ]
     )
 
-    app = Application(layout=Layout(main_body), key_bindings=kb, full_screen=True, style=style)
+    app = Application(
+        layout=Layout(main_body),
+        key_bindings=kb,
+        full_screen=True,
+        style=style,
+        mouse_support=True,
+    )
     
     # Store global reference for UI updates
     _app_state["instance"] = app

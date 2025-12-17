@@ -2,9 +2,95 @@ import os
 import shutil
 from typing import Any, Dict, Optional, List
 
+
+def _normalize_special_paths(path: str) -> str:
+    p = str(path or "").strip()
+    if not p:
+        return p
+
+    # Remove surrounding quotes (common in user input).
+    if (p.startswith('"') and p.endswith('"')) or (p.startswith("'") and p.endswith("'")):
+        p = p[1:-1].strip()
+
+    # Normalize path separators in a tolerant way.
+    p = p.replace("\\", os.sep)
+
+    # If agent uses a relative folder name that is explicitly intended to live on Desktop,
+    # rewrite to an absolute Desktop path.
+    # This prevents accidental writes into the repo working directory.
+    def _norm_key(s: str) -> str:
+        return " ".join(str(s or "").strip().lower().replace("_", " ").split())
+
+    if not os.path.isabs(p) and not str(p).startswith("~"):
+        head, tail = (p.split(os.sep, 1) + [""])[:2]
+        head_k = _norm_key(head)
+
+        # Project-specific folder (kept for backward compatibility).
+        if head == "System_Report_2025":
+            p = os.path.join("~", "Desktop", p)
+            return p
+
+        home_aliases = {
+            "home",
+            "дом",
+            "дім",
+            "хоме",
+            "хом",
+            "додому",
+            "корінь",
+        }
+        desktop_aliases = {
+            "desktop",
+            "робочий стіл",
+            "робочийстіл",
+            "роб стіл",
+            "стіл",
+            "рабочий стол",
+            "рабочийстол",
+        }
+        documents_aliases = {
+            "documents",
+            "docs",
+            "документи",
+            "документы",
+            "доки",
+        }
+        downloads_aliases = {
+            "downloads",
+            "download",
+            "завантаження",
+            "загрузки",
+            "викачане",
+            "скачане",
+            "завантажене",
+        }
+        applications_aliases = {
+            "applications",
+            "apps",
+            "app",
+            "програми",
+            "программы",
+            "applications folder",
+        }
+
+        if head_k in home_aliases:
+            p = os.path.join("~", tail) if tail else "~"
+        elif head_k in desktop_aliases:
+            p = os.path.join("~", "Desktop", tail) if tail else os.path.join("~", "Desktop")
+        elif head_k in documents_aliases:
+            p = os.path.join("~", "Documents", tail) if tail else os.path.join("~", "Documents")
+        elif head_k in downloads_aliases:
+            p = os.path.join("~", "Downloads", tail) if tail else os.path.join("~", "Downloads")
+        elif head_k in applications_aliases:
+            # Applications is system-level path.
+            p = os.path.join(os.sep, "Applications", tail) if tail else os.path.join(os.sep, "Applications")
+
+    return p
+
 def read_file(path: str) -> Dict[str, Any]:
     """Reads the content of a file."""
     try:
+        path = _normalize_special_paths(path)
         if not os.path.isabs(path):
             path = os.path.abspath(path)
         
@@ -26,6 +112,7 @@ def read_file(path: str) -> Dict[str, Any]:
 def write_file(path: str, content: str, mode: str = "w") -> Dict[str, Any]:
     """Writes content to a file. Mode can be 'w' (overwrite) or 'a' (append)."""
     try:
+        path = _normalize_special_paths(path)
         if not os.path.isabs(path):
             path = os.path.abspath(path)
             
@@ -49,6 +136,7 @@ def write_file(path: str, content: str, mode: str = "w") -> Dict[str, Any]:
 def list_files(path: str) -> Dict[str, Any]:
     """Lists files in a directory."""
     try:
+        path = _normalize_special_paths(path)
         if not os.path.isabs(path):
             path = os.path.abspath(path)
             
@@ -77,7 +165,8 @@ def copy_file(src: str, dst: str, overwrite: bool = True) -> Dict[str, Any]:
     """Copy a file from src to dst (binary-safe)."""
     try:
         src_p = os.path.abspath(os.path.expanduser(str(src or "").strip()))
-        dst_p = os.path.abspath(os.path.expanduser(str(dst or "").strip()))
+        dst_norm = _normalize_special_paths(str(dst or "").strip())
+        dst_p = os.path.abspath(os.path.expanduser(dst_norm))
         if not src_p or not dst_p:
             return {"tool": "copy_file", "status": "error", "error": "Missing src or dst"}
         if not os.path.exists(src_p):

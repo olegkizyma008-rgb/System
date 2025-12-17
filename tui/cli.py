@@ -38,6 +38,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from i18n import TOP_LANGS, lang_name, normalize_lang, tr
 from system_cli.state import AppState, MenuLevel, state
+from tui.logger import setup_logging, get_logger, log_exception, log_command_execution
 
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.data_structures import Point
@@ -322,44 +323,169 @@ _logs_need_trim: bool = False
 _thread_log_override = threading.local()
 
 _render_log_cache: Dict[str, Any] = {"ts": 0.0, "logs": [], "cursor": Point(x=0, y=0)}
-_render_log_cache_ttl_s: float = 0.05
+_render_log_cache_ttl_s: float = 0.2
 
 
 def _get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
-    now = time.monotonic()
-    try:
-        ts = float(_render_log_cache.get("ts", 0.0))
-        if (now - ts) < _render_log_cache_ttl_s:
-            cached = _render_log_cache.get("logs") or []
-            try:
-                return (
-                    list(cached),
-                    _render_log_cache.get("cursor") or Point(x=0, y=0),
-                )
-            except Exception:
-                pass
-    except Exception:
-        pass
-
     with _logs_lock:
+        now = time.monotonic()
+        try:
+            ts = float(_render_log_cache.get("ts", 0.0))
+            if (now - ts) < _render_log_cache_ttl_s:
+                cached = _render_log_cache.get("logs") or []
+                cached_cursor = _render_log_cache.get("cursor") or Point(x=0, y=0)
+                try:
+                    combined = "".join(str(text or "") for _, text in cached)
+                    if combined:
+                        parts = combined.split("\n")
+                        actual_line_count = max(1, len(parts))
+                        if combined.endswith("\n"):
+                            actual_line_count = max(1, actual_line_count - 1)
+                        valid_cursor_y = max(0, min(cached_cursor.y, actual_line_count - 1))
+                        return (
+                            list(cached),
+                            Point(x=0, y=valid_cursor_y),
+                        )
+                    else:
+                        return (list(cached), Point(x=0, y=0))
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
         try:
             logs_snapshot: List[Tuple[str, str]] = list(state.logs)
         except Exception:
             logs_snapshot = []
 
-    line_count = 0
-    for _, text in logs_snapshot:
+    try:
+        combined = "".join(str(text or "") for _, text in logs_snapshot)
+    except Exception:
+        combined = ""
+
+    if not combined:
+        line_count = 1
+        last_line_y = 0
+    else:
+        parts = combined.split("\n")
+        line_count = max(1, len(parts))
+        last_line_y = max(0, line_count - 1)
+        if combined.endswith("\n"):
+            last_line_y = max(0, last_line_y - 1)
+
+    try:
+        state.ui_log_line_count = int(line_count)
+    except Exception:
+        state.ui_log_line_count = 1
+
+    try:
+        if getattr(state, "ui_log_follow", True):
+            state.ui_log_cursor_y = int(last_line_y)
+        else:
+            state.ui_log_cursor_y = max(
+                0,
+                min(
+                    int(getattr(state, "ui_log_cursor_y", 0)),
+                    max(0, int(getattr(state, "ui_log_line_count", 1)) - 1),
+                ),
+            )
+            if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
+                state.ui_log_follow = True
+    except Exception:
+        state.ui_log_follow = True
+        state.ui_log_cursor_y = int(last_line_y)
+
+    cursor = Point(x=0, y=max(0, min(int(getattr(state, "ui_log_cursor_y", 0)), max(0, int(getattr(state, "ui_log_line_count", 1)) - 1))))
+
+    with _logs_lock:
+        _render_log_cache["ts"] = now
+        _render_log_cache["logs"] = logs_snapshot
+        _render_log_cache["cursor"] = cursor
+        return logs_snapshot, cursor
+
+
+_render_agents_cache: Dict[str, Any] = {"ts": 0.0, "messages": [], "cursor": Point(x=0, y=0)}
+_render_agents_cache_ttl_s: float = 0.2
+
+
+def _get_render_agents_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
+    with _agent_messages_lock:
+        now = time.monotonic()
         try:
-            line_count += str(text).count("\n")
+            ts = float(_render_agents_cache.get("ts", 0.0))
+            if (now - ts) < _render_agents_cache_ttl_s:
+                cached = _render_agents_cache.get("messages") or []
+                cached_cursor = _render_agents_cache.get("cursor") or Point(x=0, y=0)
+                try:
+                    combined = "".join(str(text or "") for _, text in cached)
+                    if combined:
+                        parts = combined.split("\n")
+                        actual_line_count = max(1, len(parts))
+                        if combined.endswith("\n"):
+                            actual_line_count = max(1, actual_line_count - 1)
+                        valid_cursor_y = max(0, min(cached_cursor.y, actual_line_count - 1))
+                        return (
+                            list(cached),
+                            Point(x=0, y=valid_cursor_y),
+                        )
+                    else:
+                        return (list(cached), Point(x=0, y=0))
+                except Exception:
+                    pass
         except Exception:
-            continue
+            pass
 
-    cursor = Point(x=0, y=max(0, line_count - 1) if line_count > 0 else 0)
+        try:
+            formatted: List[Tuple[str, str]] = list(_agent_messages_buffer.get_formatted() or [])
+        except Exception:
+            formatted = []
 
-    _render_log_cache["ts"] = now
-    _render_log_cache["logs"] = logs_snapshot
-    _render_log_cache["cursor"] = cursor
-    return logs_snapshot, cursor
+        try:
+            combined = "".join(str(text or "") for _, text in formatted)
+        except Exception:
+            combined = ""
+
+        if not combined:
+            line_count = 1
+            last_line_y = 0
+        else:
+            parts = combined.split("\n")
+            line_count = max(1, len(parts))
+            last_line_y = max(0, line_count - 1)
+            if combined.endswith("\n"):
+                last_line_y = max(0, last_line_y - 1)
+
+        try:
+            state.ui_agents_line_count = int(line_count)
+        except Exception:
+            state.ui_agents_line_count = 1
+
+        try:
+            if getattr(state, "ui_agents_follow", True):
+                state.ui_agents_cursor_y = int(last_line_y)
+            else:
+                state.ui_agents_cursor_y = max(
+                    0,
+                    min(
+                        int(getattr(state, "ui_agents_cursor_y", 0)),
+                        max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1),
+                    ),
+                )
+                if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
+                    state.ui_agents_follow = True
+        except Exception:
+            state.ui_agents_follow = True
+            state.ui_agents_cursor_y = int(last_line_y)
+
+        cursor = Point(
+            x=0,
+            y=max(0, min(int(getattr(state, "ui_agents_cursor_y", 0)), max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1))),
+        )
+
+        _render_agents_cache["ts"] = now
+        _render_agents_cache["messages"] = formatted
+        _render_agents_cache["cursor"] = cursor
+        return formatted, cursor
 
 
 def _trim_logs_if_needed() -> None:
@@ -461,24 +587,27 @@ def _run_graph_agent_task(
         accumulated_by_agent: Dict[str, str] = {}
         stream_line_by_agent: Dict[str, int] = {}
 
-        def _on_stream_delta(agent_name: str, piece: str) -> None:
-            nonlocal accumulated_by_agent
+        def _on_stream_delta(agent_name: str, delta: str) -> None:
+            if not delta:
+                return
             prev = accumulated_by_agent.get(agent_name, "")
-            curr = prev + (piece or "")
+            curr = prev + delta
             accumulated_by_agent[agent_name] = curr
 
             idx = stream_line_by_agent.get(agent_name)
             if idx is None:
                 idx = _log_reserve_line("action")
                 stream_line_by_agent[agent_name] = idx
+
+            tag = str(agent_name or "TRINITY").strip().upper() or "TRINITY"
             # Guard against out-of-range index after log trimming
             if 0 <= idx < len(state.logs):
-                _log_replace_at(idx, f"[ATLAS] {agent_name}: {curr}", "action")
+                _log_replace_at(idx, f"[{tag}] {curr}", "action")
             else:
                 # Index became invalid after trimming, reserve new line
                 idx = _log_reserve_line("action")
                 stream_line_by_agent[agent_name] = idx
-                _log_replace_at(idx, f"[ATLAS] {agent_name}: {curr}", "action")
+                _log_replace_at(idx, f"[{tag}] {curr}", "action")
             
             # Also log to agent messages panel
             try:
@@ -488,7 +617,11 @@ def _run_graph_agent_task(
                     "grisha": AgentType.GRISHA,
                 }
                 agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
-                log_agent_message(agent_type, curr)
+                with _agent_messages_lock:
+                    try:
+                        _agent_messages_buffer.upsert_stream(agent_type, curr, is_technical=False)
+                    except Exception:
+                        _agent_messages_buffer.add(agent_type, curr, is_technical=False)
             except Exception:
                 pass
             
@@ -509,6 +642,7 @@ def _run_graph_agent_task(
             step_count += 1
             for node_name, state_update in event.items():
                 agent_name = node_name.capitalize()
+                tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
                 messages = state_update.get("messages", [])
                 last_msg = messages[-1] if messages else None
                 content = getattr(last_msg, "content", "") if last_msg else ""
@@ -517,7 +651,7 @@ def _run_graph_agent_task(
                 # so this is primarily for non-streaming mode and to ensure final
                 # content is present in the logs).
                 if not use_stream:
-                    log(f"[ATLAS] {agent_name}: {content}", "info")
+                    log(f"[{tag}] {content}", "info")
                     # Also log to agent messages panel
                     try:
                         agent_type_map = {
@@ -536,12 +670,12 @@ def _run_graph_agent_task(
                         stream_line_by_agent[agent_name] = idx
                     # Guard against out-of-range index after log trimming
                     if 0 <= idx < len(state.logs):
-                        _log_replace_at(idx, f"[ATLAS] {agent_name}: {content}", "action")
+                        _log_replace_at(idx, f"[{tag}] {content}", "action")
                     else:
                         # Index became invalid after trimming, reserve new line
                         idx = _log_reserve_line("action")
                         stream_line_by_agent[agent_name] = idx
-                        _log_replace_at(idx, f"[ATLAS] {agent_name}: {content}", "action")
+                        _log_replace_at(idx, f"[{tag}] {content}", "action")
                 
                 # Check for pause_info (permission required)
                 pause_info = state_update.get("pause_info")
@@ -549,7 +683,7 @@ def _run_graph_agent_task(
                     perm = pause_info.get("permission", "unknown")
                     msg = pause_info.get("message", "Permission required")
                     _set_agent_pause(pending_text=user_text, permission=perm, message=msg)
-                    log(f"[ATLAS] ⚠️ PAUSED: {msg}", "error")
+                    log(f"[{tag}] ⚠️ PAUSED: {msg}", "error")
                     return
                 
     except ImportError:
@@ -684,11 +818,18 @@ def get_logs() -> List[Tuple[str, str]]:
 def get_agent_messages() -> List[Tuple[str, str]]:
     """Get formatted agent messages for clean display panel."""
     try:
-        with _agent_messages_lock:
-            formatted = _agent_messages_buffer.get_formatted()
-            return formatted if formatted else []
+        formatted, _ = _get_render_agents_snapshot()
+        return formatted if formatted else []
     except Exception:
         return []
+
+
+def get_agent_cursor_position() -> Point:
+    try:
+        _, cursor = _get_render_agents_snapshot()
+        return cursor
+    except Exception:
+        return Point(x=0, y=0)
 
 
 def _find_module(cfg: Dict[str, Any], editor: str, module_id: str) -> Optional[ModuleRef]:
@@ -3436,6 +3577,7 @@ def run_tui() -> None:
         get_logs=get_logs,
         get_log_cursor_position=get_log_cursor_position,
         get_agent_messages=get_agent_messages,
+        get_agent_cursor_position=get_agent_cursor_position,
         get_menu_content=get_menu_content,
         get_input_prompt=get_input_prompt,
         get_prompt_width=get_prompt_width,
@@ -3804,7 +3946,10 @@ cleanup_cfg = None
 def log_agent_message(agent: AgentType, text: str) -> None:
     """Log agent message to clean display panel."""
     with _agent_messages_lock:
-        _agent_messages_buffer.add(agent, text, is_technical=False)
+        try:
+            _agent_messages_buffer.upsert_stream(agent, text, is_technical=False)
+        except Exception:
+            _agent_messages_buffer.add(agent, text, is_technical=False)
     
     # Update UI
     try:
@@ -3842,6 +3987,9 @@ def get_header():
     primary = localization.primary
     active_locales = " ".join(localization.selected)
     selected_editor = state.selected_editor or "-"
+    ui_lang = str(getattr(state, "ui_lang", "") or "").strip() or "-"
+    chat_lang = str(getattr(state, "chat_lang", "") or "").strip() or "-"
+    scroll_target = str(getattr(state, "ui_scroll_target", "log") or "log").strip().lower() or "log"
 
     return [
         ("class:header", " "),
@@ -3850,8 +3998,14 @@ def get_header():
         ("class:header.label", "Editor: "),
         ("class:header.value", selected_editor),
         ("class:header.sep", " | "),
-        ("class:header.label", "Locale: "),
+        ("class:header.label", "Region: "),
         ("class:header.value", f"{primary} ({active_locales or 'none'})"),
+        ("class:header.sep", " | "),
+        ("class:header.label", "Lang: "),
+        ("class:header.value", f"ui={ui_lang} chat={chat_lang}"),
+        ("class:header.sep", " | "),
+        ("class:header.label", "Scroll: "),
+        ("class:header.value", "АГЕНТИ" if scroll_target == "agents" else "LOG"),
         ("class:header", " "),
     ]
 
@@ -3886,8 +4040,12 @@ def get_context():
 
 
 def get_log_cursor_position():
-    _, cursor = _get_render_log_snapshot()
-    return cursor
+    try:
+        _, cursor = _get_render_log_snapshot()
+        y = int(getattr(cursor, "y", 0) or 0)
+    except Exception:
+        y = 0
+    return Point(x=0, y=y)
 
 
 # ================== MENU CONTENT ==================
@@ -4495,22 +4653,38 @@ def get_status():
     if state.menu_level != MenuLevel.NONE:
         mode_indicator = [("class:status.menu", " MENU "), ("class:status", " ")]
     else:
-        if state.agent_processing:
+        if getattr(state, "agent_paused", False):
+            mode_indicator = [("class:status.error", " PAUSED "), ("class:status", " ")]
+        elif state.agent_processing:
             mode_indicator = [("class:status.processing", " PROCESSING "), ("class:status", " ")]
         else:
             mode_indicator = [("class:status.chat", " INPUT "), ("class:status", " ")]
 
     monitor_tag = f"MON:{'ON' if state.monitor_active else 'OFF'}:{state.monitor_source}"
 
+    scroll_target = str(getattr(state, "ui_scroll_target", "log") or "log").strip().lower() or "log"
+    if scroll_target == "agents":
+        follow = bool(getattr(state, "ui_agents_follow", True))
+        follow_tag = f"AGENTS:{'FOLLOW' if follow else 'FREE'}"
+    else:
+        follow = bool(getattr(state, "ui_log_follow", True))
+        follow_tag = f"LOG:{'FOLLOW' if follow else 'FREE'}"
+
+    paused_hint: list[tuple[str, str]] = []
+    if getattr(state, "agent_paused", False):
+        paused_hint = [("class:status", " | "), ("class:status.key", "Type: /resume")]
+
     return mode_indicator + [
         ("class:status.ready", f" {state.status} "),
         ("class:status", " "),
         ("class:status.key", monitor_tag),
         ("class:status", " | "),
+        ("class:status.key", follow_tag),
+        ("class:status", " | "),
         ("class:status.key", "F2: Menu"),
         ("class:status", " | "),
         ("class:status.key", "Ctrl+C: Quit"),
-    ]
+    ] + paused_hint
 
 
 # ================== KEY BINDINGS ==================
@@ -4620,6 +4794,11 @@ def _tool_ui_theme_set(args: Dict[str, Any]) -> Dict[str, Any]:
 # ================== CLI SUBCOMMANDS ==================
 
 def cli_main(argv: List[str]) -> None:
+    # Setup logging
+    verbose = "--verbose" in argv or "-v" in argv
+    logger = setup_logging(verbose=verbose, name="system_cli.cli")
+    logger.info(f"CLI started with arguments: {argv}")
+    
     parser = argparse.ArgumentParser(prog="cli.py", description="System CLI")
     sub = parser.add_subparsers(dest="command")
 
@@ -4660,106 +4839,162 @@ def cli_main(argv: List[str]) -> None:
     sub.add_parser("agent-off", help="Disable agent chat")
 
     args = parser.parse_args(argv)
+    logger.debug(f"Parsed command: {args.command}")
 
     if not args.command or args.command == "tui":
-        run_tui()
+        logger.info("Starting TUI mode")
+        try:
+            run_tui()
+            logger.info("TUI mode exited successfully")
+        except Exception as e:
+            log_exception(logger, e, "TUI mode")
+            raise
         return
 
-    cfg = _load_cleanup_config()
+    try:
+        cfg = _load_cleanup_config()
+        logger.debug(f"Cleanup config loaded successfully")
 
-    if args.command == "list-editors":
-        for key, label in _list_editors(cfg):
-            print(f"{key}: {label}")
-        return
+        if args.command == "list-editors":
+            logger.info("Listing editors")
+            for key, label in _list_editors(cfg):
+                print(f"{key}: {label}")
+            logger.info("Editors listed successfully")
+            return
 
-    if args.command == "list-modules":
-        meta = cfg.get("editors", {}).get(args.editor)
-        if not meta:
-            print(f"Unknown editor: {args.editor}")
+        if args.command == "list-modules":
+            logger.info(f"Listing modules for editor: {args.editor}")
+            meta = cfg.get("editors", {}).get(args.editor)
+            if not meta:
+                logger.error(f"Unknown editor: {args.editor}")
+                print(f"Unknown editor: {args.editor}")
+                raise SystemExit(1)
+            for m in meta.get("modules", []):
+                mark = "ON" if m.get("enabled") else "OFF"
+                print(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})")
+            logger.info(f"Modules listed for {args.editor}")
+            return
+
+        if args.command == "run":
+            logger.info(f"Running cleanup for editor: {args.editor}, dry_run={args.dry_run}")
+            ok, msg = _run_cleanup(cfg, args.editor, dry_run=args.dry_run)
+            print(msg)
+            logger.info(f"Cleanup completed: {msg}")
+            raise SystemExit(0 if ok else 1)
+
+        if args.command in {"enable", "disable"}:
+            logger.info(f"{args.command.capitalize()} module {args.id} for editor {args.editor}")
+            ref = _find_module(cfg, args.editor, args.id)
+            if not ref:
+                logger.error(f"Module not found: {args.id}")
+                print("Module not found")
+                raise SystemExit(1)
+            enabled = args.command == "enable"
+            if _set_module_enabled(cfg, ref, enabled):
+                logger.info(f"Module {args.id} {args.command}d successfully")
+                print("OK")
+                raise SystemExit(0)
+            logger.error(f"Failed to {args.command} module {args.id}")
+            print("Failed")
             raise SystemExit(1)
-        for m in meta.get("modules", []):
-            mark = "ON" if m.get("enabled") else "OFF"
-            print(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})")
-        return
 
-    if args.command == "run":
-        ok, msg = _run_cleanup(cfg, args.editor, dry_run=args.dry_run)
-        print(msg)
-        raise SystemExit(0 if ok else 1)
+        if args.command == "install":
+            logger.info(f"Starting installation for editor: {args.editor}")
+            ok, msg = _perform_install(cfg, args.editor)
+            print(msg)
+            logger.info(f"Installation completed: {msg}")
+            raise SystemExit(0 if ok else 1)
 
-    if args.command in {"enable", "disable"}:
-        ref = _find_module(cfg, args.editor, args.id)
-        if not ref:
-            print("Module not found")
-            raise SystemExit(1)
-        enabled = args.command == "enable"
-        if _set_module_enabled(cfg, ref, enabled):
-            print("OK")
-            raise SystemExit(0)
-        print("Failed")
-        raise SystemExit(1)
+        if args.command == "smart-plan":
+            logger.info(f"Running smart-plan for editor {args.editor} with query: {args.query}")
+            ok, msg = _llm_smart_plan(cfg, args.editor, args.query)
+            print(msg)
+            logger.info(f"Smart-plan completed: {msg}")
+            raise SystemExit(0 if ok else 1)
 
-    if args.command == "install":
-        ok, msg = _perform_install(cfg, args.editor)
-        print(msg)
-        raise SystemExit(0 if ok else 1)
-
-    if args.command == "smart-plan":
-        ok, msg = _llm_smart_plan(cfg, args.editor, args.query)
-        print(msg)
-        raise SystemExit(0 if ok else 1)
-
-    if args.command == "ask":
-        ok, msg = _llm_ask(cfg, args.question)
-        print(msg)
-        raise SystemExit(0 if ok else 1)
+        if args.command == "ask":
+            logger.info(f"Running LLM ask with question: {args.question}")
+            ok, msg = _llm_ask(cfg, args.question)
+            print(msg)
+            logger.info(f"LLM ask completed: {msg}")
+            raise SystemExit(0 if ok else 1)
+    except SystemExit:
+        raise
+    except Exception as e:
+        log_exception(logger, e, f"Command execution: {args.command}")
+        raise
 
     if args.command == "agent-reset":
+        logger.info("Resetting agent session")
         agent_session.reset()
+        logger.info("Agent session reset successfully")
         print("OK")
         return
 
     if args.command == "agent-on":
+        logger.info("Enabling agent chat")
         agent_session.enabled = True
+        logger.info("Agent chat enabled")
         print("OK")
         return
 
     if args.command == "agent-off":
+        logger.info("Disabling agent chat")
         agent_session.enabled = False
+        logger.info("Agent chat disabled")
         print("OK")
         return
 
     if args.command == "agent-chat":
+        logger.info(f"Agent chat message: {args.message}")
         msg = str(args.message or "").strip()
 
-        # Deterministic CLI behavior for in-app slash commands.
-        parts = msg.split()
-        cmd_idx = next((i for i, p in enumerate(parts) if p.startswith("/")), None)
-        if cmd_idx is not None:
-            cmd = " ".join(parts[cmd_idx:]).strip()
-            _load_ui_settings()
-            out = _tool_app_command({"command": cmd})
-            if not out.get("ok"):
-                print(str(out.get("error") or "Unknown error"))
-                raise SystemExit(1)
-            for category, line in (out.get("lines") or []):
-                _ = category
-                if line:
-                    print(line)
-            raise SystemExit(0)
+        try:
+            # Deterministic CLI behavior for in-app slash commands.
+            parts = msg.split()
+            cmd_idx = next((i for i, p in enumerate(parts) if p.startswith("/")), None)
+            if cmd_idx is not None:
+                cmd = " ".join(parts[cmd_idx:]).strip()
+                logger.debug(f"Processing slash command: {cmd}")
+                _load_ui_settings()
+                out = _tool_app_command({"command": cmd})
+                if not out.get("ok"):
+                    error_msg = str(out.get("error") or "Unknown error")
+                    logger.error(f"Slash command failed: {error_msg}")
+                    print(error_msg)
+                    raise SystemExit(1)
+                for category, line in (out.get("lines") or []):
+                    _ = category
+                    if line:
+                        print(line)
+                logger.info("Slash command executed successfully")
+                raise SystemExit(0)
 
-        # Keep a stable, friendly greeting.
-        if _is_greeting(msg):
-            print("Привіт! Чим можу допомогти?")
-            raise SystemExit(0)
+            # Keep a stable, friendly greeting.
+            if _is_greeting(msg):
+                logger.debug("Greeting detected")
+                print("Привіт! Чим можу допомогти?")
+                raise SystemExit(0)
 
-        ok, answer = _agent_send_no_stream(msg)
-        print(answer)
-        raise SystemExit(0 if ok else 1)
+            logger.info("Sending message to agent")
+            ok, answer = _agent_send_no_stream(msg)
+            print(answer)
+            logger.info(f"Agent response sent, status: {ok}")
+            raise SystemExit(0 if ok else 1)
+        except SystemExit:
+            raise
+        except Exception as e:
+            log_exception(logger, e, "Agent chat")
+            raise
 
 
 def main() -> None:
-    cli_main(sys.argv[1:])
+    try:
+        cli_main(sys.argv[1:])
+    except Exception as e:
+        logger = get_logger("system_cli.cli")
+        log_exception(logger, e, "main()")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

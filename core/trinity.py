@@ -468,12 +468,47 @@ class TrinityRuntime:
                     name = tool.get("name")
                     args = tool.get("args") or {}
 
+                    def _general_allows_file_write(tool_name: str, tool_args: Dict[str, Any]) -> bool:
+                        try:
+                            from system_ai.tools.filesystem import _normalize_special_paths  # type: ignore
+
+                            git_root = self._get_git_root() or ""
+                            home = os.path.expanduser("~")
+                            allowed_roots = {
+                                home,
+                                os.path.join(os.sep, "tmp"),
+                            }
+
+                            def _is_allowed_path(p: str) -> bool:
+                                p2 = _normalize_special_paths(str(p or ""))
+                                ap = os.path.abspath(os.path.expanduser(str(p2 or "").strip()))
+                                if not ap:
+                                    return False
+                                # Block any writes inside repo for GENERAL tasks.
+                                if git_root and (ap == git_root or ap.startswith(git_root + os.sep)):
+                                    return False
+                                # Allow within home (or /tmp) only.
+                                if ap == home or ap.startswith(home + os.sep):
+                                    return True
+                                if ap == os.path.join(os.sep, "tmp") or ap.startswith(os.path.join(os.sep, "tmp") + os.sep):
+                                    return True
+                                return False
+
+                            if tool_name == "write_file":
+                                return _is_allowed_path(tool_args.get("path"))
+                            if tool_name == "copy_file":
+                                return _is_allowed_path(tool_args.get("dst"))
+                            return False
+                        except Exception:
+                            return False
+
                     if task_type == "GENERAL" and name in windsurf_tools:
                         results.append(f"[BLOCKED] {name}: GENERAL task must not use Windsurf dev subsystem")
                         continue
                     if task_type == "GENERAL" and name in file_write_tools:
-                        results.append(f"[BLOCKED] {name}: GENERAL task must not write project files")
-                        continue
+                        if not _general_allows_file_write(name, args):
+                            results.append(f"[BLOCKED] {name}: GENERAL write allowed only outside repo (home/tmp).")
+                            continue
 
                     if (
                         name in file_write_tools
@@ -1294,6 +1329,57 @@ class TrinityRuntime:
                 outcome = "limit_reached"
             if "paused" in (last_agent_message or "").lower() or "пауза" in (last_agent_message or "").lower():
                 outcome = "paused"
+            # If the run ended with clarification/confirmation questions, don't treat it as completed.
+            # This prevents misleading "Task completed" when agents are still waiting for input.
+            lower_msg = (last_agent_message or "").lower()
+            needs_input_markers = [
+                "уточни",
+                "уточнити",
+                "підтверди",
+                "підтвердження",
+                "confirm",
+                "confirmation",
+                "clarify",
+                "need уточ",
+                "чи ",
+            ]
+            if outcome not in {"paused", "blocked", "limit_reached"}:
+                if any(m in lower_msg for m in needs_input_markers) and ("[verified]" not in lower_msg and "[confirmed]" not in lower_msg):
+                    outcome = "needs_input"
+
+            # Task-specific artifact sanity check to avoid false "completed" outcomes.
+            # (Used for macOS automation tasks that should produce concrete files.)
+            task_l = str(input_text or "").lower()
+            if outcome in {"completed", "success"} and "system_report_2025" in task_l:
+                report_dir = os.path.expanduser("~/Desktop/System_Report_2025")
+                zip_path = os.path.expanduser("~/Desktop/System_Report_2025.zip")
+                required_files = [
+                    os.path.join(report_dir, "desktop_screenshot.png"),
+                    os.path.join(report_dir, "safari_apple.png"),
+                    os.path.join(report_dir, "finder_downloads.png"),
+                    os.path.join(report_dir, "chrome_search.png"),
+                    os.path.join(report_dir, "system_info.txt"),
+                    os.path.join(report_dir, "report_summary.md"),
+                ]
+                missing = []
+                try:
+                    if not os.path.isdir(report_dir):
+                        missing.append(report_dir)
+                    for p in required_files:
+                        if not os.path.exists(p):
+                            missing.append(p)
+                    if not os.path.exists(zip_path):
+                        missing.append(zip_path)
+                except Exception:
+                    missing = []
+
+                if missing:
+                    outcome = "failed_artifacts_missing"
+                    last_agent_message = (
+                        "System_Report_2025 artifacts missing. Expected files were not found on Desktop. "
+                        + "Missing (first 6): "
+                        + ", ".join(missing[:6])
+                    )
         except Exception:
             pass
 
