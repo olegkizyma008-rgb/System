@@ -36,6 +36,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+_repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+
 from i18n import TOP_LANGS, lang_name, normalize_lang, tr
 from system_cli.state import AppState, MenuLevel, state
 from tui.logger import setup_logging, get_logger, log_exception, log_command_execution
@@ -807,6 +811,34 @@ def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
             continue
         result.append((key, str(meta.get("label", key))))
     return result
+
+
+def _resolve_editor_arg(cfg: Dict[str, Any], editor: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    editors = cfg.get("editors", {}) or {}
+    raw = str(editor or "").strip()
+    low = raw.lower()
+
+    if not low or low in {"__unknown__", "unknown", "none", "null"}:
+        if not editors:
+            return None, "No editors configured"
+
+        preferred = str(os.getenv("SYSTEM_CLI_DEFAULT_EDITOR") or "").strip().lower()
+        if preferred and preferred in editors:
+            return preferred, f"Editor not specified; using SYSTEM_CLI_DEFAULT_EDITOR={preferred}"
+
+        if "windsurf" in editors:
+            return "windsurf", "Editor not specified; using default editor: windsurf"
+
+        chosen = sorted([str(k) for k in editors.keys()])[0]
+        return chosen, f"Editor not specified; using default editor: {chosen}"
+
+    aliases = {
+        "vs code": "vscode",
+        "visual studio code": "vscode",
+        "vscode-insiders": "vscode",
+        "windsurf.app": "windsurf",
+    }
+    return aliases.get(low, low), None
 
 
 def get_logs() -> List[Tuple[str, str]]:
@@ -4809,25 +4841,25 @@ def cli_main(argv: List[str]) -> None:
     p_list = sub.add_parser("list-editors", help="Список редакторів")
 
     p_list_mod = sub.add_parser("list-modules", help="Список модулів")
-    p_list_mod.add_argument("--editor", required=True)
+    p_list_mod.add_argument("--editor")
 
     p_run = sub.add_parser("run", help="Запустити очищення")
-    p_run.add_argument("--editor", required=True)
+    p_run.add_argument("--editor")
     p_run.add_argument("--dry-run", action="store_true")
 
     p_enable = sub.add_parser("enable", help="Увімкнути модуль")
-    p_enable.add_argument("--editor", required=True)
+    p_enable.add_argument("--editor")
     p_enable.add_argument("--id", required=True)
 
     p_disable = sub.add_parser("disable", help="Вимкнути модуль")
-    p_disable.add_argument("--editor", required=True)
+    p_disable.add_argument("--editor")
     p_disable.add_argument("--id", required=True)
 
     p_install = sub.add_parser("install", help="Нова установка")
-    p_install.add_argument("--editor", required=True)
+    p_install.add_argument("--editor")
 
     p_smart = sub.add_parser("smart-plan", help="LLM smart-plan")
-    p_smart.add_argument("--editor", required=True)
+    p_smart.add_argument("--editor")
     p_smart.add_argument("--query", required=True)
 
     p_ask = sub.add_parser("ask", help="LLM ask")
@@ -4857,6 +4889,17 @@ def cli_main(argv: List[str]) -> None:
         cfg = _load_cleanup_config()
         logger.debug(f"Cleanup config loaded successfully")
 
+        resolved_editor: Optional[str] = None
+        editor_note: Optional[str] = None
+        if hasattr(args, "editor"):
+            resolved_editor, editor_note = _resolve_editor_arg(cfg, getattr(args, "editor", None))
+            if editor_note:
+                logger.warning(editor_note)
+                try:
+                    print(editor_note, file=sys.stderr)
+                except Exception:
+                    pass
+
         if args.command == "list-editors":
             logger.info("Listing editors")
             for key, label in _list_editors(cfg):
@@ -4865,28 +4908,31 @@ def cli_main(argv: List[str]) -> None:
             return
 
         if args.command == "list-modules":
-            logger.info(f"Listing modules for editor: {args.editor}")
-            meta = cfg.get("editors", {}).get(args.editor)
+            editor = resolved_editor or getattr(args, "editor", None)
+            logger.info(f"Listing modules for editor: {editor}")
+            meta = cfg.get("editors", {}).get(editor)
             if not meta:
-                logger.error(f"Unknown editor: {args.editor}")
-                print(f"Unknown editor: {args.editor}")
+                logger.error(f"Unknown editor: {editor}")
+                print(f"Unknown editor: {editor}")
                 raise SystemExit(1)
             for m in meta.get("modules", []):
                 mark = "ON" if m.get("enabled") else "OFF"
                 print(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})")
-            logger.info(f"Modules listed for {args.editor}")
+            logger.info(f"Modules listed for {editor}")
             return
 
         if args.command == "run":
-            logger.info(f"Running cleanup for editor: {args.editor}, dry_run={args.dry_run}")
-            ok, msg = _run_cleanup(cfg, args.editor, dry_run=args.dry_run)
+            editor = resolved_editor or getattr(args, "editor", None)
+            logger.info(f"Running cleanup for editor: {editor}, dry_run={args.dry_run}")
+            ok, msg = _run_cleanup(cfg, editor, dry_run=args.dry_run)
             print(msg)
             logger.info(f"Cleanup completed: {msg}")
             raise SystemExit(0 if ok else 1)
 
         if args.command in {"enable", "disable"}:
-            logger.info(f"{args.command.capitalize()} module {args.id} for editor {args.editor}")
-            ref = _find_module(cfg, args.editor, args.id)
+            editor = resolved_editor or getattr(args, "editor", None)
+            logger.info(f"{args.command.capitalize()} module {args.id} for editor {editor}")
+            ref = _find_module(cfg, editor, args.id)
             if not ref:
                 logger.error(f"Module not found: {args.id}")
                 print("Module not found")
@@ -4901,15 +4947,17 @@ def cli_main(argv: List[str]) -> None:
             raise SystemExit(1)
 
         if args.command == "install":
-            logger.info(f"Starting installation for editor: {args.editor}")
-            ok, msg = _perform_install(cfg, args.editor)
+            editor = resolved_editor or getattr(args, "editor", None)
+            logger.info(f"Starting installation for editor: {editor}")
+            ok, msg = _perform_install(cfg, editor)
             print(msg)
             logger.info(f"Installation completed: {msg}")
             raise SystemExit(0 if ok else 1)
 
         if args.command == "smart-plan":
-            logger.info(f"Running smart-plan for editor {args.editor} with query: {args.query}")
-            ok, msg = _llm_smart_plan(cfg, args.editor, args.query)
+            editor = resolved_editor or getattr(args, "editor", None)
+            logger.info(f"Running smart-plan for editor {editor} with query: {args.query}")
+            ok, msg = _llm_smart_plan(cfg, editor, args.query)
             print(msg)
             logger.info(f"Smart-plan completed: {msg}")
             raise SystemExit(0 if ok else 1)
