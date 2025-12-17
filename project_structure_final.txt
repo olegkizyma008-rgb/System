@@ -4,115 +4,115 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 115
-- **Files Skipped**: 12322
+- **Files Skipped**: 12329
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 22:57:11
+- **Generated**: 2025-12-17 23:15:17
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 543, in _redraw
+    self.context.copy().run(run_in_context)
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 526, in run_in_context
+    self.renderer.render(self, self.layout)
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/renderer.py", line 682, in render
+    layout.container.write_to_screen(
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 376, in write_to_screen
+    sizes = self._divide_heights(write_position)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 430, in _divide_heights
+    dimensions = [c.preferred_height(width, height) for c in self._all_children]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 430, in <listcomp>
+    dimensions = [c.preferred_height(width, height) for c in self._all_children]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 563, in preferred_height
+    sizes = self._divide_widths(width)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 624, in _divide_widths
+    dimensions = [c.preferred_width(width) for c in children]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 624, in <listcomp>
+    dimensions = [c.preferred_width(width) for c in children]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 306, in preferred_width
+    return to_dimension(self.width)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/dimension.py", line 193, in to_dimension
+    return to_dimension(value())
+                        ^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 214, in <lambda>
+    weight=int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
+                       ^^^^^
+NameError: name 'state' is not defined
+2025-12-17 23:13:51 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
 Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2606, in main
     cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2444, in cli_main
     run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:46:21 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
-2025-12-17 22:46:21 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
-2025-12-17 22:46:21 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
-2025-12-17 22:46:21 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:46:21 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:47:56 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:49:12 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:49:13 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:49:14 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:50:36 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
-2025-12-17 22:50:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
-2025-12-17 22:50:36 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
-2025-12-17 22:50:36 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:50:36 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:50:47 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
-2025-12-17 22:50:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
-2025-12-17 22:50:47 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
-2025-12-17 22:50:47 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:50:47 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:56:47 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['--help']
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1703, in run_tui
+    tui_run_tui(runtime)
+  File "/Users/dev/Documents/GitHub/System/tui/app.py", line 27, in run_tui
+    runtime.app.run()
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 1002, in run
+    return asyncio.run(coro)
+           ^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 886, in run_async
+    return await _run_async(f)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 739, in _run_async
+    self._redraw()
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 543, in _redraw
+    self.context.copy().run(run_in_context)
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 526, in run_in_context
+    self.renderer.render(self, self.layout)
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/renderer.py", line 682, in render
+    layout.container.write_to_screen(
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 376, in write_to_screen
+    sizes = self._divide_heights(write_position)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 430, in _divide_heights
+    dimensions = [c.preferred_height(width, height) for c in self._all_children]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 430, in <listcomp>
+    dimensions = [c.preferred_height(width, height) for c in self._all_children]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 563, in preferred_height
+    sizes = self._divide_widths(width)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 624, in _divide_widths
+    dimensions = [c.preferred_width(width) for c in children]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 624, in <listcomp>
+    dimensions = [c.preferred_width(width) for c in children]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 306, in preferred_width
+    return to_dimension(self.width)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/dimension.py", line 193, in to_dimension
+    return to_dimension(value())
+                        ^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 214, in <lambda>
+    weight=int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
+                       ^^^^^
+NameError: name 'state' is not defined
+2025-12-17 23:14:27 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['tui']
+2025-12-17 23:14:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2439 | Parsed command: tui
+2025-12-17 23:14:27 | INFO     | MainThread | system_cli.cli | cli_main:2442 | Starting TUI mode
+2025-12-17 23:14:42 | INFO     | MainThread | system_cli.cli | cli_main:2445 | TUI mode exited successfully
+2025-12-17 23:14:57 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -540,18 +540,18 @@ Tests:
 
 ```
  .sudo_askpass               |     2 -
- project_structure_final.txt | 36960 +-----------------------------------------
- 2 files changed, 57 insertions(+), 36905 deletions(-)
+ project_structure_final.txt | 37175 +-----------------------------------------
+ 2 files changed, 99 insertions(+), 37078 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-bc25351 feat: implement Phase 2 UI improvements (persistence, themes, enhanced menus)
+8358777 fix: resolve TUI startup crashes (TypeError and NameError in layout.py)
+0d9ab82 feat: implement Phase 2 UI improvements (persistence, themes, enhanced menus)
 bf47338 refactor: organize root scripts and cleanup entry points
 03f86a0 refactor: complete TUI modularization and implementation of dynamic panel resizing
 d0536b3 feat: add TUI file monitoring service with event aggregation and target management.
-b2e1248 feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
 ```
 
 ---
@@ -11802,7 +11802,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (536.6 KB)
+### `project_structure_final.txt` (538.1 KB)
 
 ```text
 # System — Project Structure
@@ -11811,115 +11811,115 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 115
-- **Files Skipped**: 12322
+- **Files Skipped**: 12329
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 22:57:11
+- **Generated**: 2025-12-17 23:15:17
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:46:16 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 543, in _redraw
+    self.context.copy().run(run_in_context)
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 526, in run_in_context
+    self.renderer.render(self, self.layout)
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/renderer.py", line 682, in render
+    layout.container.write_to_screen(
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 376, in write_to_screen
+    sizes = self._divide_heights(write_position)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 430, in _divide_heights
+    dimensions = [c.preferred_height(width, height) for c in self._all_children]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 430, in <listcomp>
+    dimensions = [c.preferred_height(width, height) for c in self._all_children]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 563, in preferred_height
+    sizes = self._divide_widths(width)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 624, in _divide_widths
+    dimensions = [c.preferred_width(width) for c in children]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 624, in <listcomp>
+    dimensions = [c.preferred_width(width) for c in children]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 306, in preferred_width
+    return to_dimension(self.width)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/dimension.py", line 193, in to_dimension
+    return to_dimension(value())
+                        ^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 214, in <lambda>
+    weight=int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
+                       ^^^^^
+NameError: name 'state' is not defined
+2025-12-17 23:13:51 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
 Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2606, in main
     cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2444, in cli_main
     run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:46:21 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
-2025-12-17 22:46:21 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
-2025-12-17 22:46:21 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
-2025-12-17 22:46:21 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:46:21 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:47:56 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:49:12 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:49:13 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:49:14 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: ['--help']
-2025-12-17 22:50:36 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
-2025-12-17 22:50:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
-2025-12-17 22:50:36 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
-2025-12-17 22:50:36 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:50:36 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:50:47 | INFO     | MainThread | system_cli.cli | cli_main:2375 | CLI started with arguments: []
-2025-12-17 22:50:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2417 | Parsed command: None
-2025-12-17 22:50:47 | INFO     | MainThread | system_cli.cli | cli_main:2420 | Starting TUI mode
-2025-12-17 22:50:47 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:50:47 | ERROR    | MainThread | system_cli.cli | log_exception:159 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2584, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2422, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1654, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 124, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'name'
-2025-12-17 22:56:47 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['--help']
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1703, in run_tui
+    tui_run_tui(runtime)
+  File "/Users/dev/Documents/GitHub/System/tui/app.py", line 27, in run_tui
+    runtime.app.run()
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 1002, in run
+    return asyncio.run(coro)
+           ^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 886, in run_async
+    return await _run_async(f)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 739, in _run_async
+    self._redraw()
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 543, in _redraw
+    self.context.copy().run(run_in_context)
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/application/application.py", line 526, in run_in_context
+    self.renderer.render(self, self.layout)
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/renderer.py", line 682, in render
+    layout.container.write_to_screen(
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 376, in write_to_screen
+    sizes = self._divide_heights(write_position)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 430, in _divide_heights
+    dimensions = [c.preferred_height(width, height) for c in self._all_children]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 430, in <listcomp>
+    dimensions = [c.preferred_height(width, height) for c in self._all_children]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 563, in preferred_height
+    sizes = self._divide_widths(width)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 624, in _divide_widths
+    dimensions = [c.preferred_width(width) for c in children]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 624, in <listcomp>
+    dimensions = [c.preferred_width(width) for c in children]
+                  ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/containers.py", line 306, in preferred_width
+    return to_dimension(self.width)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/layout/dimension.py", line 193, in to_dimension
+    return to_dimension(value())
+                        ^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 214, in <lambda>
+    weight=int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
+                       ^^^^^
+NameError: name 'state' is not defined
+2025-12-17 23:14:27 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['tui']
+2025-12-17 23:14:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2439 | Parsed command: tui
+2025-12-17 23:14:27 | INFO     | MainThread | system_cli.cli | cli_main:2442 | Starting TUI mode
+2025-12-17 23:14:42 | INFO     | MainThread | system_cli.cli | cli_main:2445 | TUI mode exited successfully
+2025-12-17 23:14:57 | INFO     | MainThread | system_cli.cli | cli_main:2397 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -12347,18 +12347,18 @@ Tests:
 
 ```
  .sudo_askpass               |     2 -
- project_structure_final.txt | 36960 +-----------------------------------------
- 2 files changed, 57 insertions(+), 36905 deletions(-)
+ project_structure_final.txt | 37175 +-----------------------------------------
+ 2 files changed, 99 insertions(+), 37078 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-bc25351 feat: implement Phase 2 UI improvements (persistence, themes, enhanced menus)
+8358777 fix: resolve TUI startup crashes (TypeError and NameError in layout.py)
+0d9ab82 feat: implement Phase 2 UI improvements (persistence, themes, enhanced menus)
 bf47338 refactor: organize root scripts and cleanup entry points
 03f86a0 refactor: complete TUI modularization and implementation of dynamic panel resizing
 d0536b3 feat: add TUI file monitoring service with event aggregation and target management.
-b2e1248 feat: Introduce agent tool handling, new TUI modules for agents and monitoring, and expand theme options.
 ```
 
 ---
@@ -33512,7 +33512,7 @@ def build_keybindings(
     return kb
 ```
 
-### `tui/layout.py` (9.1 KB)
+### `tui/layout.py` (9.2 KB)
 
 ```python
 from __future__ import annotations
@@ -33532,6 +33532,7 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.widgets import Frame
 from prompt_toolkit.layout.margins import ScrollbarMargin
+from system_cli.state import state
 
 _app_state = {"instance": None}
 
@@ -33642,23 +33643,26 @@ def build_app(
         FormattedTextControl(safe_get_logs, get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position)),
         wrap_lines=False,
         right_margins=[ScrollbarMargin(display_arrows=True)],
-        name="log",
     )
+    setattr(log_window, "name", "log")
 
     # Agent messages panel (clean communication display)
     safe_get_agent_messages = _cached_getter(
         _safe_formatted_text(get_agent_messages or (lambda: []), fallback_style="class:agent.text")
     )
-    agent_messages_window = Window(
-        FormattedTextControl(
-            safe_get_agent_messages,
-            get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
-        ),
-        wrap_lines=False,
-        style="class:agent.panel",
-        right_margins=[ScrollbarMargin(display_arrows=True)],
-        name="agents",
-    ) if get_agent_messages else None
+    if get_agent_messages:
+        agent_messages_window = Window(
+            FormattedTextControl(
+                safe_get_agent_messages,
+                get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
+            ),
+            wrap_lines=False,
+            style="class:agent.panel",
+            right_margins=[ScrollbarMargin(display_arrows=True)],
+        )
+        setattr(agent_messages_window, "name", "agents")
+    else:
+        agent_messages_window = None
 
     menu_window = Window(
         FormattedTextControl(_safe_formatted_text(get_menu_content, fallback_style="class:menu.item")), 
@@ -33724,9 +33728,9 @@ def build_app(
                         log_window, 
                         title="LOG", 
                         style="class:frame.border",
-                        width=Dimension(
-                            weight=lambda: int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
-                            min=lambda: getattr(state, "ui_panel_min_width", 40),
+                        width=lambda: Dimension(
+                            weight=int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
+                            min=getattr(state, "ui_panel_min_width", 40),
                         )
                     ),
                 ] + [
@@ -33735,10 +33739,10 @@ def build_app(
                             w,
                             title=title,
                             style="class:frame.border",
-                            width=Dimension(
-                                weight=lambda: int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
-                                min=lambda: getattr(state, "ui_panel_min_width", 40),
-                                max=lambda: getattr(state, "ui_panel_max_width", 120),
+                            width=lambda: Dimension(
+                                weight=int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
+                                min=getattr(state, "ui_panel_min_width", 40),
+                                max=getattr(state, "ui_panel_max_width", 120),
                             )
                         ),
                         filter=filt
@@ -37508,4 +37512,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 115
-- **Skipped**: 12322
+- **Skipped**: 12329

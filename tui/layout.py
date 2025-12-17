@@ -15,6 +15,7 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.widgets import Frame
 from prompt_toolkit.layout.margins import ScrollbarMargin
+from system_cli.state import state
 
 _app_state = {"instance": None}
 
@@ -125,23 +126,26 @@ def build_app(
         FormattedTextControl(safe_get_logs, get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position)),
         wrap_lines=False,
         right_margins=[ScrollbarMargin(display_arrows=True)],
-        name="log",
     )
+    setattr(log_window, "name", "log")
 
     # Agent messages panel (clean communication display)
     safe_get_agent_messages = _cached_getter(
         _safe_formatted_text(get_agent_messages or (lambda: []), fallback_style="class:agent.text")
     )
-    agent_messages_window = Window(
-        FormattedTextControl(
-            safe_get_agent_messages,
-            get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
-        ),
-        wrap_lines=False,
-        style="class:agent.panel",
-        right_margins=[ScrollbarMargin(display_arrows=True)],
-        name="agents",
-    ) if get_agent_messages else None
+    if get_agent_messages:
+        agent_messages_window = Window(
+            FormattedTextControl(
+                safe_get_agent_messages,
+                get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
+            ),
+            wrap_lines=False,
+            style="class:agent.panel",
+            right_margins=[ScrollbarMargin(display_arrows=True)],
+        )
+        setattr(agent_messages_window, "name", "agents")
+    else:
+        agent_messages_window = None
 
     menu_window = Window(
         FormattedTextControl(_safe_formatted_text(get_menu_content, fallback_style="class:menu.item")), 
@@ -207,9 +211,9 @@ def build_app(
                         log_window, 
                         title="LOG", 
                         style="class:frame.border",
-                        width=Dimension(
-                            weight=lambda: int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
-                            min=lambda: getattr(state, "ui_panel_min_width", 40),
+                        width=lambda: Dimension(
+                            weight=int(getattr(state, "ui_left_panel_ratio", 0.6) * 100),
+                            min=getattr(state, "ui_panel_min_width", 40),
                         )
                     ),
                 ] + [
@@ -218,10 +222,10 @@ def build_app(
                             w,
                             title=title,
                             style="class:frame.border",
-                            width=Dimension(
-                                weight=lambda: int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
-                                min=lambda: getattr(state, "ui_panel_min_width", 40),
-                                max=lambda: getattr(state, "ui_panel_max_width", 120),
+                            width=lambda: Dimension(
+                                weight=int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
+                                min=getattr(state, "ui_panel_min_width", 40),
+                                max=getattr(state, "ui_panel_max_width", 120),
                             )
                         ),
                         filter=filt
