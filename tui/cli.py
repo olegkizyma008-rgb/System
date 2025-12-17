@@ -1372,6 +1372,7 @@ def _custom_task_automation_run_dir(rec_dir: str) -> Tuple[bool, str]:
         try:
             log(f"[AUTO] {title}", "action")
             unsafe_mode = bool(getattr(state, "ui_unsafe_mode", False))
+            allow_file_write = unsafe_mode
             allow_shell = unsafe_mode
             allow_applescript = unsafe_mode
             allow_gui = unsafe_mode
