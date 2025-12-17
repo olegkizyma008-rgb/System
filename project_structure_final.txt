@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 108
-- **Files Skipped**: 23192
+- **Files Skipped**: 23200
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 08:26:35
+- **Generated**: 2025-12-17 08:26:50
 
 ---
 
@@ -326,20 +326,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- cli.py                      |     6 +
- project_structure_final.txt | 34486 +-----------------------------------------
- providers/copilot.py        |     4 +-
- 3 files changed, 161 insertions(+), 34335 deletions(-)
+ project_structure_final.txt | 34812 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 34810 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-e9cccd5 fix: Add 90-second timeout to Copilot API requests and reconfigure stdin to UTF-8 encoding.
+3b6b2e8 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
+d92cd9c fix: Add 90-second timeout to Copilot API requests and reconfigure stdin to UTF-8 encoding.
 d6ea328 docs: Add documentation for logging and auto-commit workflow.
 df1fe99 feat: add logging and auto-commit workflow rules, updating response and project structure files.
 e4562f9 feat: System updates (Logging, Auto-commit, Trinity Tasks) - squashed to remove secrets
-48b198c +++
 ```
 
 ---
@@ -11341,9 +11339,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 108
-- **Files Skipped**: 23192
+- **Files Skipped**: 23200
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 08:26:35
+- **Generated**: 2025-12-17 08:26:50
 
 ---
 
@@ -11663,20 +11661,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- cli.py                      |     6 +
- project_structure_final.txt | 34486 +-----------------------------------------
- providers/copilot.py        |     4 +-
- 3 files changed, 161 insertions(+), 34335 deletions(-)
+ project_structure_final.txt | 34812 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 34810 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-e9cccd5 fix: Add 90-second timeout to Copilot API requests and reconfigure stdin to UTF-8 encoding.
+3b6b2e8 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
+d92cd9c fix: Add 90-second timeout to Copilot API requests and reconfigure stdin to UTF-8 encoding.
 d6ea328 docs: Add documentation for logging and auto-commit workflow.
 df1fe99 feat: add logging and auto-commit workflow rules, updating response and project structure files.
 e4562f9 feat: System updates (Logging, Auto-commit, Trinity Tasks) - squashed to remove secrets
-48b198c +++
 ```
 
 ---
@@ -35126,4 +35122,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 108
-- **Skipped**: 23192
+- **Skipped**: 23200

@@ -10,6 +10,12 @@ from __future__ import annotations
 import importlib
 import sys
 
+# Ensure stdin is utf-8 to prevent encoding errors
+try:
+    sys.stdin.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
 _impl = None
 
 

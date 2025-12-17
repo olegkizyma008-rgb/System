@@ -266,7 +266,8 @@ class CopilotLLM(BaseChatModel):
                 f"{api_endpoint}/chat/completions",
                 headers=headers,
                 data=json.dumps(payload),
-                stream=stream_mode
+                stream=stream_mode,
+                timeout=90
             )
             if stream_mode:
                 return self._stream_response(response, messages)
@@ -416,6 +417,7 @@ class CopilotLLM(BaseChatModel):
             headers=headers,
             data=json.dumps(payload),
             stream=True,
+            timeout=90
         )
         response.raise_for_status()
 
