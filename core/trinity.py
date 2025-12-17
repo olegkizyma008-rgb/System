@@ -45,6 +45,7 @@ class TrinityState(TypedDict):
     requires_windsurf: Optional[bool]
     dev_edit_mode: Optional[str]  # windsurf|cli
     intent_reason: Optional[str]
+    last_step_status: Optional[str] # success|failed|uncertain
 
 class TrinityRuntime:
     MAX_REPLANS = 5
@@ -277,14 +278,24 @@ class TrinityRuntime:
         
         # 2. Manage Plan State (Consumption)
         plan = state.get("plan")
+        last_step_status = state.get("last_step_status", "success") # Default to success for first run
+
         if plan and step_count > 1:
-            # We returned to Atlas inside the loop.
-            # Remove the step we just attempted/completed.
-            if len(plan) > 0:
-                plan.pop(0)
-                # If plan is now empty, we are done!
-                if not plan:
-                    return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+            if last_step_status == "success":
+                # Only pop if the previous agent explicitly succeeded
+                if len(plan) > 0:
+                    plan.pop(0)
+                    if self.verbose: print(f"🌐 [Atlas] Step completed successfully. Remaining steps: {len(plan)}")
+                    # If plan is now empty, we are done!
+                    if not plan:
+                        return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+            elif last_step_status == "failed":
+                 if self.verbose: print(f"🌐 [Atlas] Step failed. Retrying or Replanning...")
+                 # We keep the step. The logic below will likely trigger a replan if the plan is empty, 
+                 # but if the plan is NOT empty, we currently just retry the same step.
+                 # TODO: Trigger replan logic if needed. For now, Atlas just sees the same step at index 0.
+            else:
+                 if self.verbose: print(f"🌐 [Atlas] Step status uncertain ({last_step_status}). Continuing current step...")
 
         # 3. Generate New Plan if empty
         if not plan:
@@ -596,6 +607,7 @@ class TrinityRuntime:
                                 "execution_mode": execution_mode,
                                 "gui_mode": gui_mode,
                                 "gui_fallback_attempted": gui_fallback_attempted,
+                                "last_step_status": "failed",
                             }
 
                     # Track failures for fallback decision
@@ -647,6 +659,7 @@ class TrinityRuntime:
                     "execution_mode": "gui",
                     "gui_fallback_attempted": True,
                     "gui_mode": gui_mode,
+                    "last_step_status": "failed", # Retrying in GUI mode counts as a fail for the native step
                 }
                 
         except Exception as e:
@@ -671,7 +684,9 @@ class TrinityRuntime:
             "execution_mode": execution_mode,
             "gui_mode": gui_mode,
             "gui_fallback_attempted": gui_fallback_attempted,
+            "gui_fallback_attempted": gui_fallback_attempted,
             "dev_edit_mode": dev_edit_mode,
+            "last_step_status": "success",
         }
 
     def _grisha_node(self, state: TrinityState):
@@ -826,17 +841,24 @@ class TrinityRuntime:
         elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
             # Case D: VERIFICATION PASSED and no new tools called.
             # TASK IS COMPLETE!
+            # TASK IS COMPLETE!
+            # TASK IS COMPLETE!
             next_agent = "end"
+            step_status = "success"
+            step_status = "success"
             
         else:
             # Default fallback - continue to atlas for more instructions
+            next_agent = "atlas"
+            step_status = "uncertain"
             next_agent = "atlas"
 
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
         return {
             "current_agent": next_agent, 
-            "messages": updated_messages
+            "messages": updated_messages,
+            "last_step_status": step_status,
         }
 
     def _router(self, state: TrinityState):

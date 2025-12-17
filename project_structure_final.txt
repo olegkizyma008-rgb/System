@@ -4,16 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 108
-- **Files Skipped**: 12181
+- **Files Skipped**: 12188
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 08:35:43
+- **Generated**: 2025-12-17 08:38:36
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 08:21:07 | ERROR    | system_cli.cli | cli_main:4869 | Unknown editor: __unknown__
 2025-12-17 08:21:07 | INFO     | system_cli.cli | cli_main:4800 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
 2025-12-17 08:21:07 | DEBUG    | system_cli.cli | cli_main:4842 | Parsed command: run
 2025-12-17 08:21:07 | DEBUG    | system_cli.cli | cli_main:4856 | Cleanup config loaded successfully
@@ -113,6 +112,7 @@
 2025-12-17 08:30:47 | INFO     | system_cli.cli | cli_main:4802 | CLI started with arguments: []
 2025-12-17 08:30:47 | DEBUG    | system_cli.cli | cli_main:4844 | Parsed command: None
 2025-12-17 08:30:47 | INFO     | system_cli.cli | cli_main:4847 | Starting TUI mode
+2025-12-17 08:37:46 | INFO     | system_cli.cli | cli_main:4802 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -366,18 +366,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 34786 +-----------------------------------------
- 1 file changed, 8 insertions(+), 34778 deletions(-)
+ project_structure_final.txt | 34936 +-----------------------------------------
+ 1 file changed, 3 insertions(+), 34933 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-a829936 docs: Update project structure documentation and last response record.
+d237223 fix(core): implement strict step status tracking (last_step_status) to prevent premature task completion
+c5993b2 docs: Update project structure documentation and last response record.
 e01edf2 feat: upgrade to Hyper System (autonomy, cleanup, hyper_mode)
 5d53027 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
 d92cd9c fix: Add 90-second timeout to Copilot API requests and reconfigure stdin to UTF-8 encoding.
-d6ea328 docs: Add documentation for logging and auto-commit workflow.
 ```
 
 ---
@@ -8740,7 +8740,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (63.1 KB)
+### `core/trinity.py` (64.5 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8790,6 +8790,7 @@ class TrinityState(TypedDict):
     requires_windsurf: Optional[bool]
     dev_edit_mode: Optional[str]  # windsurf|cli
     intent_reason: Optional[str]
+    last_step_status: Optional[str] # success|failed|uncertain
 
 class TrinityRuntime:
     MAX_REPLANS = 5
@@ -9022,14 +9023,24 @@ class TrinityRuntime:
         
         # 2. Manage Plan State (Consumption)
         plan = state.get("plan")
+        last_step_status = state.get("last_step_status", "success") # Default to success for first run
+
         if plan and step_count > 1:
-            # We returned to Atlas inside the loop.
-            # Remove the step we just attempted/completed.
-            if len(plan) > 0:
-                plan.pop(0)
-                # If plan is now empty, we are done!
-                if not plan:
-                    return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+            if last_step_status == "success":
+                # Only pop if the previous agent explicitly succeeded
+                if len(plan) > 0:
+                    plan.pop(0)
+                    if self.verbose: print(f"🌐 [Atlas] Step completed successfully. Remaining steps: {len(plan)}")
+                    # If plan is now empty, we are done!
+                    if not plan:
+                        return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+            elif last_step_status == "failed":
+                 if self.verbose: print(f"🌐 [Atlas] Step failed. Retrying or Replanning...")
+                 # We keep the step. The logic below will likely trigger a replan if the plan is empty, 
+                 # but if the plan is NOT empty, we currently just retry the same step.
+                 # TODO: Trigger replan logic if needed. For now, Atlas just sees the same step at index 0.
+            else:
+                 if self.verbose: print(f"🌐 [Atlas] Step status uncertain ({last_step_status}). Continuing current step...")
 
         # 3. Generate New Plan if empty
         if not plan:
@@ -9341,6 +9352,7 @@ class TrinityRuntime:
                                 "execution_mode": execution_mode,
                                 "gui_mode": gui_mode,
                                 "gui_fallback_attempted": gui_fallback_attempted,
+                                "last_step_status": "failed",
                             }
 
                     # Track failures for fallback decision
@@ -9392,6 +9404,7 @@ class TrinityRuntime:
                     "execution_mode": "gui",
                     "gui_fallback_attempted": True,
                     "gui_mode": gui_mode,
+                    "last_step_status": "failed", # Retrying in GUI mode counts as a fail for the native step
                 }
                 
         except Exception as e:
@@ -9416,7 +9429,9 @@ class TrinityRuntime:
             "execution_mode": execution_mode,
             "gui_mode": gui_mode,
             "gui_fallback_attempted": gui_fallback_attempted,
+            "gui_fallback_attempted": gui_fallback_attempted,
             "dev_edit_mode": dev_edit_mode,
+            "last_step_status": "success",
         }
 
     def _grisha_node(self, state: TrinityState):
@@ -9571,17 +9586,24 @@ class TrinityRuntime:
         elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
             # Case D: VERIFICATION PASSED and no new tools called.
             # TASK IS COMPLETE!
+            # TASK IS COMPLETE!
+            # TASK IS COMPLETE!
             next_agent = "end"
+            step_status = "success"
+            step_status = "success"
             
         else:
             # Default fallback - continue to atlas for more instructions
+            next_agent = "atlas"
+            step_status = "uncertain"
             next_agent = "atlas"
 
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
         return {
             "current_agent": next_agent, 
-            "messages": updated_messages
+            "messages": updated_messages,
+            "last_step_status": step_status,
         }
 
     def _router(self, state: TrinityState):
@@ -11412,7 +11434,7 @@ from tui.i18n import (  # noqa: F401
 test content
 ```
 
-### `project_structure_final.txt` (510.5 KB)
+### `project_structure_final.txt` (511.9 KB)
 
 ```text
 # System — Project Structure
@@ -11421,16 +11443,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 108
-- **Files Skipped**: 12181
+- **Files Skipped**: 12188
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 08:35:43
+- **Generated**: 2025-12-17 08:38:36
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 08:21:07 | ERROR    | system_cli.cli | cli_main:4869 | Unknown editor: __unknown__
 2025-12-17 08:21:07 | INFO     | system_cli.cli | cli_main:4800 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
 2025-12-17 08:21:07 | DEBUG    | system_cli.cli | cli_main:4842 | Parsed command: run
 2025-12-17 08:21:07 | DEBUG    | system_cli.cli | cli_main:4856 | Cleanup config loaded successfully
@@ -11530,6 +11551,7 @@ test content
 2025-12-17 08:30:47 | INFO     | system_cli.cli | cli_main:4802 | CLI started with arguments: []
 2025-12-17 08:30:47 | DEBUG    | system_cli.cli | cli_main:4844 | Parsed command: None
 2025-12-17 08:30:47 | INFO     | system_cli.cli | cli_main:4847 | Starting TUI mode
+2025-12-17 08:37:46 | INFO     | system_cli.cli | cli_main:4802 | CLI started with arguments: ['--help']
 ```
 
 ---
@@ -11783,18 +11805,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 34786 +-----------------------------------------
- 1 file changed, 8 insertions(+), 34778 deletions(-)
+ project_structure_final.txt | 34936 +-----------------------------------------
+ 1 file changed, 3 insertions(+), 34933 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-a829936 docs: Update project structure documentation and last response record.
+d237223 fix(core): implement strict step status tracking (last_step_status) to prevent premature task completion
+c5993b2 docs: Update project structure documentation and last response record.
 e01edf2 feat: upgrade to Hyper System (autonomy, cleanup, hyper_mode)
 5d53027 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
 d92cd9c fix: Add 90-second timeout to Copilot API requests and reconfigure stdin to UTF-8 encoding.
-d6ea328 docs: Add documentation for logging and auto-commit workflow.
 ```
 
 ---
@@ -20157,7 +20179,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (63.1 KB)
+### `core/trinity.py` (64.5 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20207,6 +20229,7 @@ class TrinityState(TypedDict):
     requires_windsurf: Optional[bool]
     dev_edit_mode: Optional[str]  # windsurf|cli
     intent_reason: Optional[str]
+    last_step_status: Optional[str] # success|failed|uncertain
 
 class TrinityRuntime:
     MAX_REPLANS = 5
@@ -20439,14 +20462,24 @@ class TrinityRuntime:
         
         # 2. Manage Plan State (Consumption)
         plan = state.get("plan")
+        last_step_status = state.get("last_step_status", "success") # Default to success for first run
+
         if plan and step_count > 1:
-            # We returned to Atlas inside the loop.
-            # Remove the step we just attempted/completed.
-            if len(plan) > 0:
-                plan.pop(0)
-                # If plan is now empty, we are done!
-                if not plan:
-                    return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+            if last_step_status == "success":
+                # Only pop if the previous agent explicitly succeeded
+                if len(plan) > 0:
+                    plan.pop(0)
+                    if self.verbose: print(f"🌐 [Atlas] Step completed successfully. Remaining steps: {len(plan)}")
+                    # If plan is now empty, we are done!
+                    if not plan:
+                        return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
+            elif last_step_status == "failed":
+                 if self.verbose: print(f"🌐 [Atlas] Step failed. Retrying or Replanning...")
+                 # We keep the step. The logic below will likely trigger a replan if the plan is empty, 
+                 # but if the plan is NOT empty, we currently just retry the same step.
+                 # TODO: Trigger replan logic if needed. For now, Atlas just sees the same step at index 0.
+            else:
+                 if self.verbose: print(f"🌐 [Atlas] Step status uncertain ({last_step_status}). Continuing current step...")
 
         # 3. Generate New Plan if empty
         if not plan:
@@ -20758,6 +20791,7 @@ class TrinityRuntime:
                                 "execution_mode": execution_mode,
                                 "gui_mode": gui_mode,
                                 "gui_fallback_attempted": gui_fallback_attempted,
+                                "last_step_status": "failed",
                             }
 
                     # Track failures for fallback decision
@@ -20809,6 +20843,7 @@ class TrinityRuntime:
                     "execution_mode": "gui",
                     "gui_fallback_attempted": True,
                     "gui_mode": gui_mode,
+                    "last_step_status": "failed", # Retrying in GUI mode counts as a fail for the native step
                 }
                 
         except Exception as e:
@@ -20833,7 +20868,9 @@ class TrinityRuntime:
             "execution_mode": execution_mode,
             "gui_mode": gui_mode,
             "gui_fallback_attempted": gui_fallback_attempted,
+            "gui_fallback_attempted": gui_fallback_attempted,
             "dev_edit_mode": dev_edit_mode,
+            "last_step_status": "success",
         }
 
     def _grisha_node(self, state: TrinityState):
@@ -20988,17 +21025,24 @@ class TrinityRuntime:
         elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
             # Case D: VERIFICATION PASSED and no new tools called.
             # TASK IS COMPLETE!
+            # TASK IS COMPLETE!
+            # TASK IS COMPLETE!
             next_agent = "end"
+            step_status = "success"
+            step_status = "success"
             
         else:
             # Default fallback - continue to atlas for more instructions
+            next_agent = "atlas"
+            step_status = "uncertain"
             next_agent = "atlas"
 
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
         return {
             "current_agent": next_agent, 
-            "messages": updated_messages
+            "messages": updated_messages,
+            "last_step_status": step_status,
         }
 
     def _router(self, state: TrinityState):
@@ -35288,4 +35332,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 108
-- **Skipped**: 12181
+- **Skipped**: 12188
