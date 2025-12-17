@@ -36,6 +36,12 @@ def _cached_getter(getter: Callable[[], Any], *, ttl_s: float = 0.05) -> Callabl
             return value
         except Exception:
             return cache.get("value")
+    
+    # Expose the last cached value safely
+    def _get_last_value() -> Any:
+        return cache.get("value")
+    
+    setattr(_inner, "get_last_value", _get_last_value)
 
     return _inner
 
@@ -44,7 +50,14 @@ def _safe_cursor_position(get_text: Callable[[], Any], get_cursor: Callable[[], 
     def _inner() -> Point:
         try:
             cursor = get_cursor()
-            text = get_text()
+            
+            # Use cached text if available to ensure consistency with what was just rendered
+            # This prevents race conditions where text updates between render and cursor calc
+            if hasattr(get_text, "get_last_value"):
+                text = get_text.get_last_value()
+            else:
+                text = get_text()
+                
             if not text:
                 return Point(x=0, y=0)
             combined = "".join(str(t or "") for _, t in text) if isinstance(text, list) else str(text or "")

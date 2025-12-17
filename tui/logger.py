@@ -94,8 +94,10 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
             backupCount=5,
             encoding="utf-8"
         )
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
+        file_handler.setLevel(logging.DEBUG)  # Force DEBUG level
+        # Detailed format including thread name
+        detailed_fmt = "%(asctime)s | %(levelname)-8s | %(threadName)s | %(name)s | %(funcName)s:%(lineno)d | %(message)s"
+        file_handler.setFormatter(logging.Formatter(detailed_fmt, datefmt=DATE_FORMAT))
         logger.addHandler(file_handler)
     except Exception as e:
         print(f"Failed to setup main log file: {e}", file=sys.stderr)
@@ -109,12 +111,12 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
             encoding="utf-8"
         )
         error_handler.setLevel(logging.ERROR)
-        error_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
+        error_handler.setFormatter(logging.Formatter(detailed_fmt, datefmt=DATE_FORMAT))
         logger.addHandler(error_handler)
     except Exception as e:
         print(f"Failed to setup error log file: {e}", file=sys.stderr)
     
-    # 3. Debug log file (debug messages only, for detailed troubleshooting)
+    # 3. Debug log file (debug messages only) - same detailed format
     try:
         debug_handler = logging.handlers.RotatingFileHandler(
             DEBUG_LOG_FILE,
@@ -123,22 +125,15 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
             encoding="utf-8"
         )
         debug_handler.setLevel(logging.DEBUG)
-        debug_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
+        debug_handler.setFormatter(logging.Formatter(detailed_fmt, datefmt=DATE_FORMAT))
         logger.addHandler(debug_handler)
     except Exception as e:
         print(f"Failed to setup debug log file: {e}", file=sys.stderr)
-    
+
     # 4. Memory handler (for TUI display)
-    _memory_handler.setLevel(logging.DEBUG)
+    _memory_handler.setLevel(logging.INFO) # Keep TUI display cleaner (INFO+), or DEBUG if preferred? User asked for detailed logs "for me" (likely file), but TUI shouldn't be spammed.
     _memory_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
     logger.addHandler(_memory_handler)
-    
-    # 5. Console handler (if verbose)
-    if verbose:
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
-        logger.addHandler(console_handler)
     
     return logger
 

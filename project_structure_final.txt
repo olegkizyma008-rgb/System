@@ -3,21 +3,16 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 108
-- **Files Skipped**: 12195
+- **Files Included**: 107
+- **Files Skipped**: 12204
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 08:39:10
+- **Generated**: 2025-12-17 09:05:25
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 08:21:07 | INFO     | system_cli.cli | cli_main:4800 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 08:21:07 | DEBUG    | system_cli.cli | cli_main:4842 | Parsed command: run
-2025-12-17 08:21:07 | DEBUG    | system_cli.cli | cli_main:4856 | Cleanup config loaded successfully
-2025-12-17 08:21:07 | INFO     | system_cli.cli | cli_main:4879 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 08:21:07 | INFO     | system_cli.cli | cli_main:4882 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
 2025-12-17 08:21:19 | INFO     | system_cli.cli | cli_main:4800 | CLI started with arguments: ['list-editors']
 2025-12-17 08:21:19 | DEBUG    | system_cli.cli | cli_main:4842 | Parsed command: list-editors
 2025-12-17 08:21:19 | DEBUG    | system_cli.cli | cli_main:4856 | Cleanup config loaded successfully
@@ -113,6 +108,11 @@
 2025-12-17 08:30:47 | DEBUG    | system_cli.cli | cli_main:4844 | Parsed command: None
 2025-12-17 08:30:47 | INFO     | system_cli.cli | cli_main:4847 | Starting TUI mode
 2025-12-17 08:37:46 | INFO     | system_cli.cli | cli_main:4802 | CLI started with arguments: ['--help']
+2025-12-17 08:40:45 | INFO     | system_cli.cli | cli_main:4850 | TUI mode exited successfully
+2025-12-17 08:40:47 | INFO     | system_cli.cli | cli_main:4802 | CLI started with arguments: []
+2025-12-17 08:40:47 | DEBUG    | system_cli.cli | cli_main:4844 | Parsed command: None
+2025-12-17 08:40:47 | INFO     | system_cli.cli | cli_main:4847 | Starting TUI mode
+2025-12-17 09:01:04 | INFO     | system_cli.cli | cli_main:4850 | TUI mode exited successfully
 ```
 
 ---
@@ -175,6 +175,8 @@
 2025-12-17 07:49:22 | INFO | system_cli.cli | cli_main:4800 | CLI started with arguments
 
 Система готова до повноцінного використання! 🎉
+
+---
 
 ---
 
@@ -360,24 +362,63 @@ Verification:
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
 
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему
+1. Створи папку для звіту на робочому столі з назвою "System_Report_2025"
+2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png"
+3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png"
+4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png"
+    * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією:
+    * Дата і час створення звіту
+    * Ім'я користувача системи
+    * Версія macOS
+    * Кількість RAM (пам'яті)
+    * Інформація про процесор
+5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png"
+6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut"
+7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами
+8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip"
+9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+10.  Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: failed_artifacts_missing
+Last agent: atlas
+
+Last message:
+System_Report_2025 artifacts missing. Expected files were not found on Desktop. Missing (first 6): /Users/dev/Desktop/System_Report_2025, /Users/dev/Desktop/System_Report_2025/desktop_screenshot.png, /Users/dev/Desktop/System_Report_2025/safari_apple.png, /Users/dev/Desktop/System_Report_2025/finder_downloads.png, /Users/dev/Desktop/System_Report_2025/chrome_search.png, /Users/dev/Desktop/System_Report_2025/system_info.txt
+
+Changed files:
+- (no uncommitted changes detected)
+
+Verification:
+- status: unknown (no explicit signal)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
 
 ---
 
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 34978 +-----------------------------------------
- 1 file changed, 2 insertions(+), 34976 deletions(-)
+ project_structure_final.txt | 34944 +-----------------------------------------
+ refactor.md                 |    77 -
+ 2 files changed, 10 insertions(+), 35011 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-d93f344 fix(core): cleanup duplicate lines in trinity.py
+8714392 fix(tui): resolve IndexError in event loop and enhance logging verbosity
+6b0667b fix(core): cleanup duplicate lines in trinity.py
 17ebe8e fix(core): implement strict step status tracking (last_step_status) to prevent premature task completion
 c5993b2 docs: Update project structure documentation and last response record.
 e01edf2 feat: upgrade to Hyper System (autonomy, cleanup, hyper_mode)
-5d53027 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
 ```
 
 ---
@@ -510,7 +551,6 @@ System/
 ├── output.txt
 ├── project_structure_final.txt
 ├── pytest.ini
-├── refactor.md
 ├── requirements.txt
 ├── RESPONSE_SAVING_WORKFLOW.md
 ├── save_response.sh
@@ -787,7 +827,7 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (12.3 KB)
+### `.last_response.txt` (15.1 KB)
 
 ```text
 ## My Last Response
@@ -846,6 +886,8 @@ kinotavr.md
 2025-12-17 07:49:22 | INFO | system_cli.cli | cli_main:4800 | CLI started with arguments
 
 Система готова до повноцінного використання! 🎉
+
+---
 
 ---
 
@@ -986,6 +1028,44 @@ cli.py                      |   6 +
  project_structure_final.txt | 314 +++++++++++++++++++++++++++++++++++++++++---
  providers/copilot.py        |   4 +-
  3 files changed, 305 insertions(+), 19 deletions(-)
+
+Verification:
+- status: unknown (no explicit signal)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему
+1. Створи папку для звіту на робочому столі з назвою "System_Report_2025"
+2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png"
+3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png"
+4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png"
+    * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією:
+    * Дата і час створення звіту
+    * Ім'я користувача системи
+    * Версія macOS
+    * Кількість RAM (пам'яті)
+    * Інформація про процесор
+5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png"
+6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut"
+7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами
+8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip"
+9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+10.  Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: failed_artifacts_missing
+Last agent: atlas
+
+Last message:
+System_Report_2025 artifacts missing. Expected files were not found on Desktop. Missing (first 6): /Users/dev/Desktop/System_Report_2025, /Users/dev/Desktop/System_Report_2025/desktop_screenshot.png, /Users/dev/Desktop/System_Report_2025/safari_apple.png, /Users/dev/Desktop/System_Report_2025/finder_downloads.png, /Users/dev/Desktop/System_Report_2025/chrome_search.png, /Users/dev/Desktop/System_Report_2025/system_info.txt
+
+Changed files:
+- (no uncommitted changes detected)
 
 Verification:
 - status: unknown (no explicit signal)
@@ -11429,7 +11509,7 @@ from tui.i18n import (  # noqa: F401
 test content
 ```
 
-### `project_structure_final.txt` (511.7 KB)
+### `project_structure_final.txt` (517.0 KB)
 
 ```text
 # System — Project Structure
@@ -11437,21 +11517,16 @@ test content
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 108
-- **Files Skipped**: 12195
+- **Files Included**: 107
+- **Files Skipped**: 12204
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-17 08:39:10
+- **Generated**: 2025-12-17 09:05:25
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-17 08:21:07 | INFO     | system_cli.cli | cli_main:4800 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-17 08:21:07 | DEBUG    | system_cli.cli | cli_main:4842 | Parsed command: run
-2025-12-17 08:21:07 | DEBUG    | system_cli.cli | cli_main:4856 | Cleanup config loaded successfully
-2025-12-17 08:21:07 | INFO     | system_cli.cli | cli_main:4879 | Running cleanup for editor: windsurf, dry_run=True
-2025-12-17 08:21:07 | INFO     | system_cli.cli | cli_main:4882 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
 2025-12-17 08:21:19 | INFO     | system_cli.cli | cli_main:4800 | CLI started with arguments: ['list-editors']
 2025-12-17 08:21:19 | DEBUG    | system_cli.cli | cli_main:4842 | Parsed command: list-editors
 2025-12-17 08:21:19 | DEBUG    | system_cli.cli | cli_main:4856 | Cleanup config loaded successfully
@@ -11547,6 +11622,11 @@ test content
 2025-12-17 08:30:47 | DEBUG    | system_cli.cli | cli_main:4844 | Parsed command: None
 2025-12-17 08:30:47 | INFO     | system_cli.cli | cli_main:4847 | Starting TUI mode
 2025-12-17 08:37:46 | INFO     | system_cli.cli | cli_main:4802 | CLI started with arguments: ['--help']
+2025-12-17 08:40:45 | INFO     | system_cli.cli | cli_main:4850 | TUI mode exited successfully
+2025-12-17 08:40:47 | INFO     | system_cli.cli | cli_main:4802 | CLI started with arguments: []
+2025-12-17 08:40:47 | DEBUG    | system_cli.cli | cli_main:4844 | Parsed command: None
+2025-12-17 08:40:47 | INFO     | system_cli.cli | cli_main:4847 | Starting TUI mode
+2025-12-17 09:01:04 | INFO     | system_cli.cli | cli_main:4850 | TUI mode exited successfully
 ```
 
 ---
@@ -11609,6 +11689,8 @@ test content
 2025-12-17 07:49:22 | INFO | system_cli.cli | cli_main:4800 | CLI started with arguments
 
 Система готова до повноцінного використання! 🎉
+
+---
 
 ---
 
@@ -11794,24 +11876,63 @@ Verification:
 Tests:
 - not executed by Trinity (no deterministic test runner in pipeline)
 
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему
+1. Створи папку для звіту на робочому столі з назвою "System_Report_2025"
+2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png"
+3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png"
+4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png"
+    * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією:
+    * Дата і час створення звіту
+    * Ім'я користувача системи
+    * Версія macOS
+    * Кількість RAM (пам'яті)
+    * Інформація про процесор
+5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png"
+6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut"
+7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами
+8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip"
+9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+10.  Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: failed_artifacts_missing
+Last agent: atlas
+
+Last message:
+System_Report_2025 artifacts missing. Expected files were not found on Desktop. Missing (first 6): /Users/dev/Desktop/System_Report_2025, /Users/dev/Desktop/System_Report_2025/desktop_screenshot.png, /Users/dev/Desktop/System_Report_2025/safari_apple.png, /Users/dev/Desktop/System_Report_2025/finder_downloads.png, /Users/dev/Desktop/System_Report_2025/chrome_search.png, /Users/dev/Desktop/System_Report_2025/system_info.txt
+
+Changed files:
+- (no uncommitted changes detected)
+
+Verification:
+- status: unknown (no explicit signal)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
 
 ---
 
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 34978 +-----------------------------------------
- 1 file changed, 2 insertions(+), 34976 deletions(-)
+ project_structure_final.txt | 34944 +-----------------------------------------
+ refactor.md                 |    77 -
+ 2 files changed, 10 insertions(+), 35011 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-d93f344 fix(core): cleanup duplicate lines in trinity.py
+8714392 fix(tui): resolve IndexError in event loop and enhance logging verbosity
+6b0667b fix(core): cleanup duplicate lines in trinity.py
 17ebe8e fix(core): implement strict step status tracking (last_step_status) to prevent premature task completion
 c5993b2 docs: Update project structure documentation and last response record.
 e01edf2 feat: upgrade to Hyper System (autonomy, cleanup, hyper_mode)
-5d53027 fix: Reconfigure stdin to UTF-8 encoding and add 90-second timeouts to Copilot API requests.
 ```
 
 ---
@@ -11944,7 +12065,6 @@ System/
 ├── output.txt
 ├── project_structure_final.txt
 ├── pytest.ini
-├── refactor.md
 ├── requirements.txt
 ├── RESPONSE_SAVING_WORKFLOW.md
 ├── save_response.sh
@@ -12221,7 +12341,7 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (12.3 KB)
+### `.last_response.txt` (15.1 KB)
 
 ```text
 ## My Last Response
@@ -12280,6 +12400,8 @@ kinotavr.md
 2025-12-17 07:49:22 | INFO | system_cli.cli | cli_main:4800 | CLI started with arguments
 
 Система готова до повноцінного використання! 🎉
+
+---
 
 ---
 
@@ -12420,6 +12542,44 @@ cli.py                      |   6 +
  project_structure_final.txt | 314 +++++++++++++++++++++++++++++++++++++++++---
  providers/copilot.py        |   4 +-
  3 files changed, 305 insertions(+), 19 deletions(-)
+
+Verification:
+- status: unknown (no explicit signal)
+
+Tests:
+- not executed by Trinity (no deterministic test runner in pipeline)
+
+---
+
+## Trinity Report
+
+[Atlas] Final report
+
+Task: Велике комплексне завдання: Створення автоматизованого звіту про систему
+1. Створи папку для звіту на робочому столі з назвою "System_Report_2025"
+2. Зроби скріншот всього екрану і збережи його в цю папку як "desktop_screenshot.png"
+3. Відкрий Safari, перейди на сайт apple.com, зроби скріншот вікна Safari, збережи як "safari_apple.png"
+4. Відкрой Finder і покажи вміст папки Downloads. Зроби скріншот Finder, збережи як "finder_downloads.png"
+    * Створи текстовий файл "system_info.txt" в папці звіту з такою інформацією:
+    * Дата і час створення звіту
+    * Ім'я користувача системи
+    * Версія macOS
+    * Кількість RAM (пам'яті)
+    * Інформація про процесор
+5. Відкрой Chrome в гостьовому режимі, перейди на google.com, знайди інформацію про "macOS automation", зроби скріншот, збережи як "chrome_search.png"
+6. Створи Shortcuts (якщо увімкнено), який автоматично відкриває Terminal і виконує команду "date", збережи як "auto_date_shortcut"
+7. Згенеруй звіт - створи файл "report_summary.md" з описом всіх виконаних дій, списком створених файлів та їх розмірами
+8. Архівуй всю папку System_Report_2025 в ZIP файл з назвою "System_Report_2025.zip"
+9. Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+10.  Надішлі сповіщення про завершення завдання з текстом "Звіт про систему успішно створено"
+Outcome: failed_artifacts_missing
+Last agent: atlas
+
+Last message:
+System_Report_2025 artifacts missing. Expected files were not found on Desktop. Missing (first 6): /Users/dev/Desktop/System_Report_2025, /Users/dev/Desktop/System_Report_2025/desktop_screenshot.png, /Users/dev/Desktop/System_Report_2025/safari_apple.png, /Users/dev/Desktop/System_Report_2025/finder_downloads.png, /Users/dev/Desktop/System_Report_2025/chrome_search.png, /Users/dev/Desktop/System_Report_2025/system_info.txt
+
+Changed files:
+- (no uncommitted changes detected)
 
 Verification:
 - status: unknown (no explicit signal)
@@ -23322,88 +23482,6 @@ norecursedirs = .venv unused configs_vscode
 addopts = -ra
 ```
 
-### `refactor.md` (7.4 KB)
-
-```markdown
-# Технічне завдання (ТЗ): Перехід Trinity Runtime до гібридного виконання з пріоритетом native API та fallback на low-level GUI automation
-
-## Мета змін
-Перетворити систему виконання задач у Project Atlas (Trinity Graph Runtime) на **гібридну модель**, де:
-- Виконання кроків відбувається максимально через **native/macOS API** (AppleScript, Shortcuts, shell де доцільно).
-- При відсутності native-шляху автоматично переходить до **low-level GUI automation** за допомогою обмеженого набору універсальних інструментів (клік миші, введення тексту, захоплення екрану, OCR).
-- Значно зменшується залежність від великого набору спеціалізованих tool-ів, що зменшить галюцинації та помилки "tool не знайдено".
-
-## Обсяг робіт
-
-### 1. Додати/оновити набір low-level GUI tools (в `core/mcp.py`)
-Створити або розширити наступні інструменти (на базі Accessibility API macOS):
-
-| Tool name                | Опис                                                                 | Параметри                                      | Пріоритет |
-|--------------------------|----------------------------------------------------------------------|------------------------------------------------|-----------|
-| `move_mouse`             | Перемістити курсор миші в абсолютні координати                       | x: int, y: int                                 | Високий   |
-| `click_mouse`            | Клік миші (лівий, правий, подвійний)                                 | button: "left"|"right"|"double", modifiers?    | Високий   |
-| `type_text`              | Ввести текст з імітацією клавіатури                                  | text: str, clear_first: bool = False           | Високий   |
-| `press_key`              | Натиснути спеціальну клавішу або комбінацію                          | key: str (наприклад, "return", "cmd+c")         | Середній  |
-| `capture_screen_region`  | Захопити скріншот регіону (розширення існуючого `capture_screen`)    | x, y, width, height                            | Високий   |
-| `ocr_region`             | Розпізнати текст у регіоні екрану (використовувати Vision Framework або Apple Intelligence on-device OCR) | x, y, width, height → str | Високий   |
-| `find_image_on_screen`   | Пошук зображення (шаблону) на екрані з tolerance (для vision-based click) | template_path: str або base64, tolerance: float | Середній  |
-
-> Реалізація: Використовувати `pyobjc` + `Accessibility` або `AppKit`/`CoreGraphics` для миші/клавіатури. Для OCR — `Vision.framework` через pyobjc.
-
-### 2. Розширити/оновити native tools
-Перевірити та залишити/додати високорівневі native інструменти:
-- `run_applescript` (вже є) — розблокувати за замовчуванням в unsafe_mode.
-- `run_shortcut` — новий tool для запуску Shortcuts через URL scheme (`shortcuts://run-shortcut?name=...`).
-- `open_url` / `open_app` — прості native альтернативи.
-
-### 3. Змінити логіку Tetyana node (`_tetyana_node` в `core/trinity.py`)
-Впровадити **пріоритетне виконання**:
-
-1. Спробувати виконати крок через **native/high-level tools** (run_applescript, run_shortcut тощо).
-2. Якщо крок не може бути виконаний native (немає відповідного tool або tool повернув помилку "не підтримується") — перейти до **GUI fallback**.
-3. У GUI-режимі Tetyana використовує лише low-level tools + vision (capture → ocr → plan next action).
-
-Додати в промпт Tetyana явну інструкцію:
-```
-Спочатку завжди шукай native спосіб (AppleScript, Shortcuts, URL schemes).
-Якщо native неможливий — використовуй GUI automation: спочатку capture/ocr для орієнтації, потім move/click/type.
-Ніколи не вигадуй неіснуючі інструменти.
-```
-
-### 4. Розширити Grisha node (`_grisha_node`) для vision verification
-- Після кожного GUI-кроку обов’язково робити `capture_screen_region` + OCR для верифікації результату.
-- Grisha вирішує: чи досягнуто мети, чи потрібно продовжити/виправити.
-
-### 5. Оновити систему безпеки та дозволів
-- Low-level GUI tools (move_mouse, click_mouse, type_text тощо) — вважати **небезпечними** і блокувати в safe mode (вимагають CONFIRM_* або ui_unsafe_mode=ON).
-- Додати окреме підтвердження для "GUI automation mode" при першому переході в fallback.
-
-### 6. Оновити TUI/CLI інтерфейс
-Додати команди:
-- `/gui_mode status|on|off|auto` — керування режимом (авто = пріоритет native + fallback).
-- Відображення в логах: чітко позначати "Native execution" vs "GUI fallback".
-
-### 7. Тестування та smoke tests (додати до Test Plan)
-- Native: "Відкрий google.com в Safari" → має використовувати run_applescript.
-- Fallback: "Клікни на кнопку, якої немає в AppleScript" (наприклад, в несумісному app) → перехід до GUI.
-- Vision loop: "Знайди іконку Finder на Dock і клікни" → використовує find_image_on_screen або OCR.
-- Безпека: В safe mode спроба GUI → пауза з підтвердженням.
-
-## Очікувані результати
-- Система стає **універсальною** — працює з будь-яким macOS-додатком.
-- Значно менше галюцинацій tool-ів.
-- Виконання простих задач — швидке (native), складних/несумісних — надійне (GUI + vision).
-- Project Atlas наближається до рівня "desktop agent" як у Anthropic Computer Use, але з фокусом на macOS.
-
-## Терміни реалізації (орієнтовно)
-- Етап 1 (tools + native): 3–5 днів.
-- Етап 2 (fallback логіка + промпти): 4–7 днів.
-- Етап 3 (vision verification + безпека): 5–7 днів.
-- Тестування та стабілізація: 5 днів.
-
-Готовий допомогти з кодом конкретних tool-ів або прикладами промптів. Це буде потужний апгрейд системи! 🚀
-```
-
 ### `requirements.txt` (0.2 KB)
 
 ```text
@@ -33989,7 +34067,7 @@ def build_keybindings(
     return kb
 ```
 
-### `tui/layout.py` (7.2 KB)
+### `tui/layout.py` (7.7 KB)
 
 ```python
 from __future__ import annotations
@@ -34030,6 +34108,12 @@ def _cached_getter(getter: Callable[[], Any], *, ttl_s: float = 0.05) -> Callabl
             return value
         except Exception:
             return cache.get("value")
+    
+    # Expose the last cached value safely
+    def _get_last_value() -> Any:
+        return cache.get("value")
+    
+    setattr(_inner, "get_last_value", _get_last_value)
 
     return _inner
 
@@ -34038,7 +34122,14 @@ def _safe_cursor_position(get_text: Callable[[], Any], get_cursor: Callable[[], 
     def _inner() -> Point:
         try:
             cursor = get_cursor()
-            text = get_text()
+            
+            # Use cached text if available to ensure consistency with what was just rendered
+            # This prevents race conditions where text updates between render and cursor calc
+            if hasattr(get_text, "get_last_value"):
+                text = get_text.get_last_value()
+            else:
+                text = get_text()
+                
             if not text:
                 return Point(x=0, y=0)
             combined = "".join(str(t or "") for _, t in text) if isinstance(text, list) else str(text or "")
@@ -34303,8 +34394,10 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
             backupCount=5,
             encoding="utf-8"
         )
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
+        file_handler.setLevel(logging.DEBUG)  # Force DEBUG level
+        # Detailed format including thread name
+        detailed_fmt = "%(asctime)s | %(levelname)-8s | %(threadName)s | %(name)s | %(funcName)s:%(lineno)d | %(message)s"
+        file_handler.setFormatter(logging.Formatter(detailed_fmt, datefmt=DATE_FORMAT))
         logger.addHandler(file_handler)
     except Exception as e:
         print(f"Failed to setup main log file: {e}", file=sys.stderr)
@@ -34318,12 +34411,12 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
             encoding="utf-8"
         )
         error_handler.setLevel(logging.ERROR)
-        error_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
+        error_handler.setFormatter(logging.Formatter(detailed_fmt, datefmt=DATE_FORMAT))
         logger.addHandler(error_handler)
     except Exception as e:
         print(f"Failed to setup error log file: {e}", file=sys.stderr)
     
-    # 3. Debug log file (debug messages only, for detailed troubleshooting)
+    # 3. Debug log file (debug messages only) - same detailed format
     try:
         debug_handler = logging.handlers.RotatingFileHandler(
             DEBUG_LOG_FILE,
@@ -34332,22 +34425,15 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
             encoding="utf-8"
         )
         debug_handler.setLevel(logging.DEBUG)
-        debug_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
+        debug_handler.setFormatter(logging.Formatter(detailed_fmt, datefmt=DATE_FORMAT))
         logger.addHandler(debug_handler)
     except Exception as e:
         print(f"Failed to setup debug log file: {e}", file=sys.stderr)
-    
+
     # 4. Memory handler (for TUI display)
-    _memory_handler.setLevel(logging.DEBUG)
+    _memory_handler.setLevel(logging.INFO) # Keep TUI display cleaner (INFO+), or DEBUG if preferred? User asked for detailed logs "for me" (likely file), but TUI shouldn't be spammed.
     _memory_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
     logger.addHandler(_memory_handler)
-    
-    # 5. Console handler (if verbose)
-    if verbose:
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
-        logger.addHandler(console_handler)
     
     return logger
 
@@ -35321,5 +35407,5 @@ graph TD
 
 ## Summary
 
-- **Total Files**: 108
-- **Skipped**: 12195
+- **Total Files**: 107
+- **Skipped**: 12204
