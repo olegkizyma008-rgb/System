@@ -49,8 +49,8 @@ class TrinityState(TypedDict):
     last_step_status: Optional[str] # success|failed|uncertain
 
 class TrinityRuntime:
-    MAX_REPLANS = 5
-    MAX_STEPS = 30
+    MAX_REPLANS = 10
+    MAX_STEPS = 50
     
     # Dev task keywords (allow execution)
     DEV_KEYWORDS = {
@@ -948,78 +948,41 @@ class TrinityRuntime:
             content = f"Error invoking Grisha: {e}"
 
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
-        # ------------------------------------------------------------------
-        # FEEDBACK LOOP LOGIC (Phase 3)
-        # ------------------------------------------------------------------
-
         lower_content = content.lower()
-
         step_status = "uncertain"
+        next_agent = "atlas"
 
-        has_question = ("?" in content) or lower_content.strip().startswith("чи ") or (" чи " in lower_content)
-        uncertainty_keywords = [
-            "уточн",
-            "потрібно уточн",
-            "маю уточн",
-            "перед початком",
-            "якщо ",
-            "не впевнен",
-            "потрібна допомога",
-            "питання",
-        ]
-        has_uncertainty = any(k in lower_content for k in uncertainty_keywords)
-
+        # 1. Check for explicit success markers
         explicit_complete_markers = [
-            "[verified]",
-            "[confirmed]",
-            "verification passed",
-            "qa passed",
-            "verdict: pass",
-            "верифікація пройдена",
-            "перевірку пройдено",
+            "[verified]", "[confirmed]", "verification passed", "qa passed", 
+            "verdict: pass", "верифікація пройдена", "перевірку пройдено", "підтверджую"
         ]
         has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
         
-        # Check for test failures first (highest priority)
+        # 2. Check for tool usage
+        if tool_calls:
+            next_agent = "atlas"
+            step_status = "uncertain"
+        
+        # 3. Check for test failures
         has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
         
-        # Check for positive verification keywords
-        positive_keywords = ["успішно", "verified", "confirmed", "success", "завершено", "готово", "працює", "відкрито"]
-        has_positive = any(kw in lower_content for kw in positive_keywords)
-        
-        # Check for negative keywords
-        negative_keywords = ["failed", "error", "rejected", "помилка", "не вдалося"]
-        has_negative = any(kw in lower_content for kw in negative_keywords)
-        
+        # 4. Success / Failure / Indecision
         if has_test_failure:
-            # Case A: TESTS FAILED - block task and return to Atlas for replan
-            if self.verbose:
-                print("👁️ [Grisha] Tests failed - blocking task and requesting replan")
-            next_agent = "atlas"
             step_status = "failed"
-            
-        elif "tools results" in lower_content and tool_calls:
-            # Case B: Grisha used a tool (e.g. took a screenshot). 
-            # Loop back to Atlas to analyze the screenshot.
             next_agent = "atlas"
-            step_status = "uncertain"
-            
-        elif has_negative:
-            # Case C: VERIFICATION FAILED.
-            # Trigger "Dynamic Granularity" (Replan).
-            next_agent = "atlas"
-            step_status = "failed"
-            
-        elif (has_explicit_complete or (has_positive and (not has_uncertainty) and (not has_question))) and not tool_calls:
-            # Case D: VERIFICATION PASSED and no new tools called.
-            # TASK IS COMPLETE! (Only this step is complete, return to Atlas to check plan)
-            next_agent = "atlas"
+        elif has_explicit_complete:
             step_status = "success"
-            
-        else:
-            # Default fallback - continue to atlas for more instructions
             next_agent = "atlas"
+        elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово"]):
+            step_status = "success"
+            next_agent = "atlas"
+        elif any(kw in lower_content for kw in ["failed", "error", "помилка", "не вдалося"]):
+            step_status = "failed"
+            next_agent = "atlas"
+        else:
             step_status = "uncertain"
+            next_agent = "atlas"
 
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
@@ -1034,11 +997,11 @@ class TrinityRuntime:
             "messages": updated_messages,
             "last_step_status": step_status,
         }
+        
+        # Determine if we need to increase replan_count
         if next_agent == "atlas" and step_status in {"failed", "uncertain"}:
-            try:
-                current_replan = int(state.get("replan_count") or 0)
-            except Exception:
-                current_replan = 0
+            current_replan = int(state.get("replan_count") or 0)
+            # Only increment replan if plan is effectively cleared
             out["replan_count"] = current_replan + 1
             out["plan"] = None
             try:
