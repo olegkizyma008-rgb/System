@@ -4,62 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13496
+- **Files Skipped**: 13504
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:48:36
+- **Generated**: 2025-12-18 02:51:54
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Verification passed. [VERIFIED]"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "верифікація пройдена\n[VERIFIED]"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "I'll verify using tools."}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "do something"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "windsurf", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "windsurf"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-18 02:38:52 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
-2025-12-18 02:44:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 02:44:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 02:44:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 02:45:02 | INFO     | MainThread | system_cli.cli | cli_main:2462 | TUI mode exited successfully
-2025-12-18 02:45:07 | INFO     | MainThread | system_cli.cli | cli_main:2414 | CLI started with arguments: []
-2025-12-18 02:45:07 | DEBUG    | MainThread | system_cli.cli | cli_main:2456 | Parsed command: None
-2025-12-18 02:45:07 | INFO     | MainThread | system_cli.cli | cli_main:2459 | Starting TUI mode
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-editors']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-editors
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2485 | Listing editors
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2488 | Editors listed successfully
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-modules
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
-2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Listing modules for editor: windsurf
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2502 | Modules listed for windsurf
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: run
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
 2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
 2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
 2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules']
@@ -113,6 +66,53 @@
 2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
 2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
 2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
+2025-12-18 02:49:01 | INFO     | MainThread | system_cli.cli | cli_main:2462 | TUI mode exited successfully
+2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:49:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
+    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
+              ^^^^^^^^^
+NameError: name 'Condition' is not defined
+2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
+    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
+              ^^^^^^^^^
+NameError: name 'Condition' is not defined
+2025-12-18 02:49:08 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:49:08 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:49:08 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:49:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
+    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
+              ^^^^^^^^^
+NameError: name 'Condition' is not defined
+2025-12-18 02:49:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
+    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
+              ^^^^^^^^^
+NameError: name 'Condition' is not defined
+2025-12-18 02:50:13 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
+2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 02:50:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
 ```
 
 ---
@@ -153,18 +153,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37139 +-----------------------------------------
- 1 file changed, 2 insertions(+), 37137 deletions(-)
+ project_structure_final.txt | 37225 +-----------------------------------------
+ 1 file changed, 49 insertions(+), 37176 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-44a5f1b feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
+cdc9706 feat: Add prompt_toolkit Condition import to cli.py
+c315869 feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
 09807d9 Update: Add latest response
 b13d020 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
 6d2c7e4 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
-01e53fb feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
 ```
 
 ---
@@ -11334,7 +11334,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (516.1 KB)
+### `project_structure_final.txt` (510.3 KB)
 
 ```text
 # System — Project Structure
@@ -11343,62 +11343,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13496
+- **Files Skipped**: 13504
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:48:36
+- **Generated**: 2025-12-18 02:51:54
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Verification passed. [VERIFIED]"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "верифікація пройдена\n[VERIFIED]"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "I'll verify using tools."}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "do something"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "windsurf", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "windsurf"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
-2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-18 02:38:52 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
-2025-12-18 02:44:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 02:44:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 02:44:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 02:45:02 | INFO     | MainThread | system_cli.cli | cli_main:2462 | TUI mode exited successfully
-2025-12-18 02:45:07 | INFO     | MainThread | system_cli.cli | cli_main:2414 | CLI started with arguments: []
-2025-12-18 02:45:07 | DEBUG    | MainThread | system_cli.cli | cli_main:2456 | Parsed command: None
-2025-12-18 02:45:07 | INFO     | MainThread | system_cli.cli | cli_main:2459 | Starting TUI mode
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-editors']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-editors
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2485 | Listing editors
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2488 | Editors listed successfully
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-modules
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
-2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Listing modules for editor: windsurf
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2502 | Modules listed for windsurf
-2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: run
-2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
 2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
 2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
 2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules']
@@ -11452,6 +11405,53 @@ test content
 2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
 2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
 2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
+2025-12-18 02:49:01 | INFO     | MainThread | system_cli.cli | cli_main:2462 | TUI mode exited successfully
+2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:49:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:49:03 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
+    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
+              ^^^^^^^^^
+NameError: name 'Condition' is not defined
+2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
+    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
+              ^^^^^^^^^
+NameError: name 'Condition' is not defined
+2025-12-18 02:49:08 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:49:08 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:49:08 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:49:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
+    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
+              ^^^^^^^^^
+NameError: name 'Condition' is not defined
+2025-12-18 02:49:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
+    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
+              ^^^^^^^^^
+NameError: name 'Condition' is not defined
+2025-12-18 02:50:13 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
+2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 02:50:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
 ```
 
 ---
@@ -11492,18 +11492,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37139 +-----------------------------------------
- 1 file changed, 2 insertions(+), 37137 deletions(-)
+ project_structure_final.txt | 37225 +-----------------------------------------
+ 1 file changed, 49 insertions(+), 37176 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-44a5f1b feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
+cdc9706 feat: Add prompt_toolkit Condition import to cli.py
+c315869 feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
 09807d9 Update: Add latest response
 b13d020 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
 6d2c7e4 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
-01e53fb feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
 ```
 
 ---
@@ -29343,6 +29343,7 @@ from prompt_toolkit.data_structures import Point
 from prompt_toolkit.styles import DynamicStyle, Style
 from prompt_toolkit.application import run_in_terminal
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.filters import Condition
 
 from tui.layout import build_app, force_ui_update
 from tui.menu import build_menu
@@ -32333,7 +32334,7 @@ MAIN_MENU_ITEMS: List[Tuple[str, MenuLevel]] = [
 ]
 ```
 
-### `tui/i18n.py` (9.0 KB)
+### `tui/i18n.py` (9.1 KB)
 
 ```python
 from __future__ import annotations
@@ -32408,6 +32409,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.item.monitoring": "Monitoring",
         "menu.item.settings": "Settings",
         "menu.item.localization": "Localization",
+        "menu.back": "Back",
         "prompt.default": " > ",
         "prompt.paused": " (PAUSED) > ",
         "prompt.confirm_shell": " (CONFIRM SHELL) > ",
@@ -32465,6 +32467,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "menu.item.monitoring": "Моніторинг",
         "menu.item.settings": "Налаштування",
         "menu.item.localization": "Локалізація",
+        "menu.back": "Назад",
         "prompt.default": " > ",
         "prompt.paused": " (ПАУЗА) > ",
         "prompt.confirm_shell": " (CONFIRM SHELL) > ",
@@ -37239,4 +37242,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13496
+- **Skipped**: 13504

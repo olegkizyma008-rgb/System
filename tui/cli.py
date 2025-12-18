@@ -49,6 +49,7 @@ from prompt_toolkit.data_structures import Point
 from prompt_toolkit.styles import DynamicStyle, Style
 from prompt_toolkit.application import run_in_terminal
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.filters import Condition
 
 from tui.layout import build_app, force_ui_update
 from tui.menu import build_menu
