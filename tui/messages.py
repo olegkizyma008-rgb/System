@@ -51,6 +51,8 @@ class MessageFilter:
         return any(pattern.lower() in lower_text for pattern in MessageFilter.TECHNICAL_PATTERNS)
     
     @staticmethod
+    def clean_message(text: str) -> str:
+        """Remove technical details from message while prioritizing [VOICE] content."""
         # Strict Voice Filtering
         if "[VOICE]" in text:
             import re

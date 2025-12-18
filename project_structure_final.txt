@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13622
+- **Files Skipped**: 13629
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 04:57:56
+- **Generated**: 2025-12-18 04:59:57
 
 ---
 
@@ -144,18 +144,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37485 +-----------------------------------------
- 1 file changed, 3 insertions(+), 37482 deletions(-)
+ project_structure_final.txt | 37516 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 37514 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-73623d0 feat(ui): implement [VOICE] tag filtering for clean agent dialogue in TUI
+8726fe3 fix(tui): restore missing function signature in messages.py causing IndentationError
+5594eef feat(ui): implement [VOICE] tag filtering for clean agent dialogue in TUI
 32a8235 fix(core): ensure Grisha returns to Atlas after step verification to continue multi-step plans
 76a23c4 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
 62675c2 Update MCP execution logic to support '_args' parameter convention
-e04f293 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
 ```
 
 ---
@@ -11386,7 +11386,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (520.7 KB)
+### `project_structure_final.txt` (520.6 KB)
 
 ```text
 # System — Project Structure
@@ -11395,9 +11395,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13622
+- **Files Skipped**: 13629
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 04:57:56
+- **Generated**: 2025-12-18 04:59:57
 
 ---
 
@@ -11535,18 +11535,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37485 +-----------------------------------------
- 1 file changed, 3 insertions(+), 37482 deletions(-)
+ project_structure_final.txt | 37516 +-----------------------------------------
+ 1 file changed, 2 insertions(+), 37514 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-73623d0 feat(ui): implement [VOICE] tag filtering for clean agent dialogue in TUI
+8726fe3 fix(tui): restore missing function signature in messages.py causing IndentationError
+5594eef feat(ui): implement [VOICE] tag filtering for clean agent dialogue in TUI
 32a8235 fix(core): ensure Grisha returns to Atlas after step verification to continue multi-step plans
 76a23c4 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
 62675c2 Update MCP execution logic to support '_args' parameter convention
-e04f293 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
 ```
 
 ---
@@ -34370,7 +34370,7 @@ def build_menu(
     return show_menu, get_menu_content
 ```
 
-### `tui/messages.py` (8.8 KB)
+### `tui/messages.py` (8.9 KB)
 
 ```python
 """Clean agent messages display component.
@@ -34426,6 +34426,8 @@ class MessageFilter:
         return any(pattern.lower() in lower_text for pattern in MessageFilter.TECHNICAL_PATTERNS)
     
     @staticmethod
+    def clean_message(text: str) -> str:
+        """Remove technical details from message while prioritizing [VOICE] content."""
         # Strict Voice Filtering
         if "[VOICE]" in text:
             import re
@@ -37624,4 +37626,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13622
+- **Skipped**: 13629
