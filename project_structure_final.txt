@@ -4,44 +4,23 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13544
+- **Files Skipped**: 13560
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 03:44:31
+- **Generated**: 2025-12-18 04:05:59
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "uncertain", "step_count": null, "replan_count": 5}
-2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 6, "replan_count": 5, "last_step_status": "uncertain", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Чудово, я перевірю наявність результатів перевірки конфігурації. Спершу перегляну доступні дані для пошуку скріншотів або логів помилок. \n\nПочинаю аналіз."}
-2025-12-18 03:29:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 6, "replan_count": 5}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 2 → 3 steps (added 1 verify steps)
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 3, "step_count": 6, "replan_count": 5}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 6, "replan_count": 5, "description_preview": "Переглянути доступні дані для пошуку скріншотів або логів помилок"}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 6, "replan_count": 5}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 3, "last_msg_preview": "[Atlas] Plan: 3 steps. Current: Переглянути доступні дані для пошуку скріншотів або логів помилок. Next: tetyana"}
-2025-12-18 03:29:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 3, "content_preview": "Перегляну доступні дані для пошуку скріншотів або логів помилок."}
-2025-12-18 03:29:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_gui_fallback", "from": "native", "to": "gui"}
-2025-12-18 03:29:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-18 03:41:04 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:41:08 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:41:08 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:41:08 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:41:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
-    run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
     app = build_app(
           ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 207, in build_app
     log_window = Window(
                  ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:41:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+TypeError: Window.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 03:56:24 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
     cli_main(sys.argv[1:])
@@ -50,54 +29,25 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
     app = build_app(
           ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 207, in build_app
     log_window = Window(
                  ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:41:11 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:41:11 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:41:11 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:41:11 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+TypeError: Window.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 03:56:27 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:56:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:56:27 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:56:27 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
     app = build_app(
           ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 207, in build_app
     log_window = Window(
                  ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:41:11 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:41:57 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
-2025-12-18 03:42:05 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui', '--help']
-2025-12-18 03:43:13 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui']
-2025-12-18 03:43:13 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: tui
-2025-12-18 03:43:13 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:43:13 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:43:13 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+TypeError: Window.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 03:56:27 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
     cli_main(sys.argv[1:])
@@ -106,13 +56,63 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
     app = build_app(
           ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 207, in build_app
     log_window = Window(
                  ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:44:01 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui']
-2025-12-18 03:44:01 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: tui
-2025-12-18 03:44:01 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+TypeError: Window.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 03:56:50 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
+2025-12-18 03:57:47 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui', '--help']
+2025-12-18 04:01:37 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 04:01:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 04:01:37 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 04:01:37 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 208, in build_app
+    FormattedTextControl(
+TypeError: FormattedTextControl.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 04:01:37 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 208, in build_app
+    FormattedTextControl(
+TypeError: FormattedTextControl.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 04:01:41 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 04:01:41 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 04:01:41 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 04:01:41 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 208, in build_app
+    FormattedTextControl(
+TypeError: FormattedTextControl.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 04:01:41 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 208, in build_app
+    FormattedTextControl(
+TypeError: FormattedTextControl.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 04:03:42 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui', '--help']
 ```
 
 ---
@@ -123,11 +123,11 @@ TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
 
 Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
 Outcome: completed
-Replans: 2
+Replans: 6
 Last agent: atlas
 
 Last message:
-No plan generated.
+[Atlas] Ліміт перепланувань (5) досягнуто. Потрібна допомога користувача.
 
 Changed files:
 - (no uncommitted changes detected)
@@ -144,18 +144,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37437 +-----------------------------------------
- 1 file changed, 93 insertions(+), 37344 deletions(-)
+ project_structure_final.txt | 37384 +-----------------------------------------
+ 1 file changed, 57 insertions(+), 37327 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-c3c0c0b fix(tui): resolve startup crash and enable real-time agent streaming
+69330e2 feat: Enhance TUI with menu hover, log scrolling, and improved tool execution with `**kwargs` support
+35e3fb3 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
+ec1727c fix(tui): resolve startup crash and enable real-time agent streaming
 3e72610 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
 6815838 tui: implement auto-switching to agents panel on menu exit and fix mouse interaction
-f94778b feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
-a5dbf4f Trinity task completed: Привіт
 ```
 
 ---
@@ -577,18 +577,18 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (1.8 KB)
+### `.last_response.txt` (1.9 KB)
 
 ```text
 [Atlas] Final report
 
 Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
 Outcome: completed
-Replans: 2
+Replans: 6
 Last agent: atlas
 
 Last message:
-No plan generated.
+[Atlas] Ліміт перепланувань (5) досягнуто. Потрібна допомога користувача.
 
 Changed files:
 - (no uncommitted changes detected)
@@ -7952,7 +7952,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/mcp.py` (15.8 KB)
+### `core/mcp.py` (16.4 KB)
 
 ```python
 from typing import Dict, Any, Callable, List, Optional
@@ -8059,24 +8059,26 @@ class MCPToolRegistry:
             except Exception:
                 return
 
-        def _open_app_wrapped(name: str) -> Any:
+        def _open_app_wrapped(name: str, **kwargs) -> Any:
             res = open_app(name=name)
-            _record_automation_event("open_app", {"name": name}, res)
+            # Record with full kwargs for debugging
+            _record_automation_event("open_app", {"name": name, **kwargs}, res)
             return res
 
-        def _run_applescript_wrapped(script: str, allow: bool = True) -> Any:
+        def _run_applescript_wrapped(script: str, allow: bool = True, **kwargs) -> Any:
             res = run_applescript(script=script, allow=allow)
-            _record_automation_event("run_applescript", {"script": script, "allow": allow}, res)
+            _record_automation_event("run_applescript", {"script": script, "allow": allow, **kwargs}, res)
             return res
 
-        def _run_shell_wrapped(command: str, allow: bool = True) -> Any:
-            res = run_shell(command=command, allow=allow)
-            _record_automation_event("run_shell", {"command": command, "allow": allow}, res)
+        def _run_shell_wrapped(command: str, allow: bool = True, **kwargs) -> Any:
+            # Handle potential 'cwd' or other kwargs passed by LLM
+            res = run_shell(command=command, allow=allow, **kwargs)
+            _record_automation_event("run_shell", {"command": command, "allow": allow, **kwargs}, res)
             return res
 
-        def _run_shortcut_wrapped(name: str, allow: bool = True) -> Any:
+        def _run_shortcut_wrapped(name: str, allow: bool = True, **kwargs) -> Any:
             res = run_shortcut(name=name, allow=allow)
-            _record_automation_event("run_shortcut", {"name": name, "allow": allow}, res)
+            _record_automation_event("run_shortcut", {"name": name, "allow": allow, **kwargs}, res)
             return res
 
         # Overwrite foundation tools with recorder-aware wrappers.
@@ -8258,15 +8260,25 @@ class MCPToolRegistry:
             return f"Error: Tool '{tool_name}' not found."
         
         try:
-            # We strictly map args from the dict to the function
-            # Note: This simple implementation assumes args match function signature
-            # In a robust system, we'd inspect signature or use **args
+            # Inspection of function signature to avoid TypeError: unexpected keyword argument
+            import inspect
+            sig = inspect.signature(func)
             
-            # Special handling for 'allow' kwarg in executor tools
-            if "allow" in func.__code__.co_varnames and "allow" not in args:
+            # Special handling for 'allow' kwarg in executor tools if not present but needed
+            if "allow" in sig.parameters and "allow" not in args:
                 args["allow"] = True
+            
+            # Filter args to only those supported by the function, unless it has **kwargs
+            has_varkw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+            
+            if has_varkw:
+                # If function has **kwargs, pass everything
+                result = func(**args)
+            else:
+                # Filter to supported params
+                supported_args = {k: v for k, v in args.items() if k in sig.parameters}
+                result = func(**supported_args)
                 
-            result = func(**args)
             return json.dumps(result, indent=2, ensure_ascii=False)
         except Exception as e:
             return f"Error executing '{tool_name}': {str(e)}"
@@ -11328,7 +11340,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (501.8 KB)
+### `project_structure_final.txt` (500.0 KB)
 
 ```text
 # System — Project Structure
@@ -11337,44 +11349,23 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13544
+- **Files Skipped**: 13560
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 03:44:31
+- **Generated**: 2025-12-18 04:05:59
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "uncertain", "step_count": null, "replan_count": 5}
-2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 6, "replan_count": 5, "last_step_status": "uncertain", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Чудово, я перевірю наявність результатів перевірки конфігурації. Спершу перегляну доступні дані для пошуку скріншотів або логів помилок. \n\nПочинаю аналіз."}
-2025-12-18 03:29:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 6, "replan_count": 5}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 2 → 3 steps (added 1 verify steps)
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 3, "step_count": 6, "replan_count": 5}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 6, "replan_count": 5, "description_preview": "Переглянути доступні дані для пошуку скріншотів або логів помилок"}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 6, "replan_count": 5}
-2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 3, "last_msg_preview": "[Atlas] Plan: 3 steps. Current: Переглянути доступні дані для пошуку скріншотів або логів помилок. Next: tetyana"}
-2025-12-18 03:29:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 3, "content_preview": "Перегляну доступні дані для пошуку скріншотів або логів помилок."}
-2025-12-18 03:29:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_gui_fallback", "from": "native", "to": "gui"}
-2025-12-18 03:29:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-18 03:41:04 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:41:08 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:41:08 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:41:08 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:41:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
-    run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
     app = build_app(
           ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 207, in build_app
     log_window = Window(
                  ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:41:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+TypeError: Window.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 03:56:24 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
     cli_main(sys.argv[1:])
@@ -11383,54 +11374,25 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
     app = build_app(
           ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 207, in build_app
     log_window = Window(
                  ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:41:11 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:41:11 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:41:11 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:41:11 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+TypeError: Window.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 03:56:27 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:56:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:56:27 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:56:27 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
     run_tui()
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
     app = build_app(
           ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 207, in build_app
     log_window = Window(
                  ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:41:11 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:41:57 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
-2025-12-18 03:42:05 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui', '--help']
-2025-12-18 03:43:13 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui']
-2025-12-18 03:43:13 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: tui
-2025-12-18 03:43:13 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:43:13 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
-    log_window = Window(
-                 ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:43:13 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+TypeError: Window.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 03:56:27 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
     cli_main(sys.argv[1:])
@@ -11439,13 +11401,63 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
     app = build_app(
           ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 207, in build_app
     log_window = Window(
                  ^^^^^^^
-TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
-2025-12-18 03:44:01 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui']
-2025-12-18 03:44:01 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: tui
-2025-12-18 03:44:01 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+TypeError: Window.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 03:56:50 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
+2025-12-18 03:57:47 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui', '--help']
+2025-12-18 04:01:37 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 04:01:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 04:01:37 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 04:01:37 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 208, in build_app
+    FormattedTextControl(
+TypeError: FormattedTextControl.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 04:01:37 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 208, in build_app
+    FormattedTextControl(
+TypeError: FormattedTextControl.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 04:01:41 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 04:01:41 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 04:01:41 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 04:01:41 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 208, in build_app
+    FormattedTextControl(
+TypeError: FormattedTextControl.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 04:01:41 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 208, in build_app
+    FormattedTextControl(
+TypeError: FormattedTextControl.__init__() got an unexpected keyword argument 'mouse_handler'
+2025-12-18 04:03:42 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui', '--help']
 ```
 
 ---
@@ -11456,11 +11468,11 @@ TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
 
 Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
 Outcome: completed
-Replans: 2
+Replans: 6
 Last agent: atlas
 
 Last message:
-No plan generated.
+[Atlas] Ліміт перепланувань (5) досягнуто. Потрібна допомога користувача.
 
 Changed files:
 - (no uncommitted changes detected)
@@ -11477,18 +11489,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37437 +-----------------------------------------
- 1 file changed, 93 insertions(+), 37344 deletions(-)
+ project_structure_final.txt | 37384 +-----------------------------------------
+ 1 file changed, 57 insertions(+), 37327 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-c3c0c0b fix(tui): resolve startup crash and enable real-time agent streaming
+69330e2 feat: Enhance TUI with menu hover, log scrolling, and improved tool execution with `**kwargs` support
+35e3fb3 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
+ec1727c fix(tui): resolve startup crash and enable real-time agent streaming
 3e72610 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
 6815838 tui: implement auto-switching to agents panel on menu exit and fix mouse interaction
-f94778b feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
-a5dbf4f Trinity task completed: Привіт
 ```
 
 ---
@@ -11910,18 +11922,18 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (1.8 KB)
+### `.last_response.txt` (1.9 KB)
 
 ```text
 [Atlas] Final report
 
 Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
 Outcome: completed
-Replans: 2
+Replans: 6
 Last agent: atlas
 
 Last message:
-No plan generated.
+[Atlas] Ліміт перепланувань (5) досягнуто. Потрібна допомога користувача.
 
 Changed files:
 - (no uncommitted changes detected)
@@ -19285,7 +19297,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/mcp.py` (15.8 KB)
+### `core/mcp.py` (16.4 KB)
 
 ```python
 from typing import Dict, Any, Callable, List, Optional
@@ -19392,24 +19404,26 @@ class MCPToolRegistry:
             except Exception:
                 return
 
-        def _open_app_wrapped(name: str) -> Any:
+        def _open_app_wrapped(name: str, **kwargs) -> Any:
             res = open_app(name=name)
-            _record_automation_event("open_app", {"name": name}, res)
+            # Record with full kwargs for debugging
+            _record_automation_event("open_app", {"name": name, **kwargs}, res)
             return res
 
-        def _run_applescript_wrapped(script: str, allow: bool = True) -> Any:
+        def _run_applescript_wrapped(script: str, allow: bool = True, **kwargs) -> Any:
             res = run_applescript(script=script, allow=allow)
-            _record_automation_event("run_applescript", {"script": script, "allow": allow}, res)
+            _record_automation_event("run_applescript", {"script": script, "allow": allow, **kwargs}, res)
             return res
 
-        def _run_shell_wrapped(command: str, allow: bool = True) -> Any:
-            res = run_shell(command=command, allow=allow)
-            _record_automation_event("run_shell", {"command": command, "allow": allow}, res)
+        def _run_shell_wrapped(command: str, allow: bool = True, **kwargs) -> Any:
+            # Handle potential 'cwd' or other kwargs passed by LLM
+            res = run_shell(command=command, allow=allow, **kwargs)
+            _record_automation_event("run_shell", {"command": command, "allow": allow, **kwargs}, res)
             return res
 
-        def _run_shortcut_wrapped(name: str, allow: bool = True) -> Any:
+        def _run_shortcut_wrapped(name: str, allow: bool = True, **kwargs) -> Any:
             res = run_shortcut(name=name, allow=allow)
-            _record_automation_event("run_shortcut", {"name": name, "allow": allow}, res)
+            _record_automation_event("run_shortcut", {"name": name, "allow": allow, **kwargs}, res)
             return res
 
         # Overwrite foundation tools with recorder-aware wrappers.
@@ -19591,15 +19605,25 @@ class MCPToolRegistry:
             return f"Error: Tool '{tool_name}' not found."
         
         try:
-            # We strictly map args from the dict to the function
-            # Note: This simple implementation assumes args match function signature
-            # In a robust system, we'd inspect signature or use **args
+            # Inspection of function signature to avoid TypeError: unexpected keyword argument
+            import inspect
+            sig = inspect.signature(func)
             
-            # Special handling for 'allow' kwarg in executor tools
-            if "allow" in func.__code__.co_varnames and "allow" not in args:
+            # Special handling for 'allow' kwarg in executor tools if not present but needed
+            if "allow" in sig.parameters and "allow" not in args:
                 args["allow"] = True
+            
+            # Filter args to only those supported by the function, unless it has **kwargs
+            has_varkw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+            
+            if has_varkw:
+                # If function has **kwargs, pass everything
+                result = func(**args)
+            else:
+                # Filter to supported params
+                supported_args = {k: v for k, v in args.items() if k in sig.parameters}
+                result = func(**supported_args)
                 
-            result = func(**args)
             return json.dumps(result, indent=2, ensure_ascii=False)
         except Exception as e:
             return f"Error executing '{tool_name}': {str(e)}"
@@ -32619,7 +32643,7 @@ def normalize_lang(code: Optional[str]) -> str:
     return c
 ```
 
-### `tui/keybindings.py` (22.2 KB)
+### `tui/keybindings.py` (22.5 KB)
 
 ```python
 from __future__ import annotations
@@ -32809,10 +32833,18 @@ def build_keybindings(
         if state.menu_level == MenuLevel.NONE:
             state.menu_level = MenuLevel.MAIN
             state.menu_index = 0
+            # Focus the menu window
+            w = _find_window_by_name(event, "menu")
+            if w:
+                event.app.layout.focus(w)
         else:
             state.menu_level = MenuLevel.NONE
             state.menu_index = 0
             state.ui_scroll_target = "agents"
+            # Focus back to agent/log if needed, but usually we just want navigation
+            w = _find_window_by_name(event, "agents")
+            if w:
+                event.app.layout.focus(w)
 
     @kb.add("escape")
     @kb.add("q")
@@ -33177,7 +33209,7 @@ def build_keybindings(
     return kb, handle_menu_enter
 ```
 
-### `tui/layout.py` (12.3 KB)
+### `tui/layout.py` (14.0 KB)
 
 ```python
 from __future__ import annotations
@@ -33354,13 +33386,46 @@ def build_app(
         right_margins=[ScrollbarMargin(display_arrows=True)],
     )
 
+    def make_scroll_handler(name: str):
+        def _handler(mouse_event: Any):
+            from prompt_toolkit.mouse_events import MouseEventType
+            if mouse_event.event_type == MouseEventType.SCROLL_UP:
+                for _ in range(3):
+                    from prompt_toolkit.application.current import get_app
+                    app = get_app()
+                    for w in app.layout.find_all_windows():
+                        if getattr(w, "name", None) == name:
+                            info = w.render_info
+                            if info:
+                                w.vertical_scroll = max(0, w.vertical_scroll - 1)
+                force_ui_update()
+                return None # Handled
+            elif mouse_event.event_type == MouseEventType.SCROLL_DOWN:
+                for _ in range(3):
+                    from prompt_toolkit.application.current import get_app
+                    app = get_app()
+                    for w in app.layout.find_all_windows():
+                        if getattr(w, "name", None) == name:
+                            info = w.render_info
+                            if info:
+                                max_scroll = max(0, info.content_height - info.window_height)
+                                w.vertical_scroll = min(max_scroll, w.vertical_scroll + 1)
+                force_ui_update()
+                return None # Handled
+            return NotImplemented
+        return _handler
+
     safe_get_logs = _cached_getter(_safe_formatted_text(get_logs, fallback_style="class:log.info"))
+    log_control = FormattedTextControl(
+        safe_get_logs, 
+        get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
+        show_cursor=True,
+        focusable=True,
+    )
+    log_control.mouse_handler = make_scroll_handler("log")
+
     log_window = Window(
-        FormattedTextControl(
-            safe_get_logs, 
-            get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
-            show_cursor=True,
-        ),
+        log_control,
         wrap_lines=False,
         right_margins=[ScrollbarMargin(display_arrows=True)],
         style="class:log.window", # ensure background
@@ -33372,12 +33437,16 @@ def build_app(
         _safe_formatted_text(get_agent_messages or (lambda: []), fallback_style="class:agent.text")
     )
     if get_agent_messages:
+        agent_control = FormattedTextControl(
+            safe_get_agent_messages,
+            get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
+            show_cursor=True,
+            focusable=True,
+        )
+        agent_control.mouse_handler = make_scroll_handler("agents")
+
         agent_messages_window = Window(
-            FormattedTextControl(
-                safe_get_agent_messages,
-                get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
-                show_cursor=True,
-            ),
+            agent_control,
             wrap_lines=False,
             style="class:agent.panel",
             right_margins=[ScrollbarMargin(display_arrows=True)],
@@ -33387,11 +33456,15 @@ def build_app(
         agent_messages_window = None
 
     menu_window = Window(
-        FormattedTextControl(_safe_formatted_text(get_menu_content, fallback_style="class:menu.item")), 
+        FormattedTextControl(
+            _safe_formatted_text(get_menu_content, fallback_style="class:menu.item"),
+            focusable=True,
+        ), 
         style="class:menu", 
         wrap_lines=True,
         right_margins=[ScrollbarMargin(display_arrows=True)],
     )
+    setattr(menu_window, "name", "menu")
 
     input_area = VSplit(
         [
@@ -33766,7 +33839,7 @@ def get_log_files_info() -> dict:
 _default_logger = setup_logging(verbose=False)
 ```
 
-### `tui/menu.py` (19.5 KB)
+### `tui/menu.py` (19.9 KB)
 
 ```python
 from __future__ import annotations
@@ -33811,8 +33884,16 @@ def build_menu(
         def _click(mouse_event: Any) -> None:
             from prompt_toolkit.mouse_events import MouseEventType
             
-            # Only respond to actual clicks, not hover/move
             event_type = getattr(mouse_event, 'event_type', None)
+            
+            # Hover highlight
+            if event_type == MouseEventType.MOUSE_MOVE:
+                if state.menu_index != idx:
+                    state.menu_index = idx
+                    force_ui_update()
+                return
+
+            # Selection (click/double-click)
             if event_type not in (MouseEventType.MOUSE_UP, MouseEventType.MOUSE_DOWN):
                 return
             
@@ -33863,12 +33944,15 @@ def build_menu(
         result: List[Tuple[str, str]] = []
 
         def add_back_btn(res):
-            def _go_back(*args):
-                 state.menu_level = MenuLevel.MAIN
-                 state.menu_index = 0
-                 force_ui_update()
-            res.append(("class:menu.item", " [ < " + tr("menu.back", state.ui_lang) + " ]\n", _go_back))
-            res.append(("", "\n"))
+            def _back_handler(mouse_event: Any):
+                from prompt_toolkit.mouse_events import MouseEventType
+                if mouse_event.event_type == MouseEventType.MOUSE_UP:
+                    state.menu_level = MenuLevel.MAIN
+                    state.menu_index = 0
+                    force_ui_update()
+            
+            res.append(("class:menu.selected", " [ < " + tr("menu.back", state.ui_lang).upper() + " ] ", _back_handler))
+            res.append(("", "\n\n"))
 
         if state.menu_level == MenuLevel.MAIN:
             result.append(("class:menu.title", f" {tr('menu.main.title', state.ui_lang)}\n\n"))
@@ -36767,7 +36851,7 @@ def tool_organize_desktop(args: Dict[str, Any], allow_shell: bool) -> Dict[str, 
     }
 
 
-def tool_organize_desktop_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
+def tool_organize_desktop_wrapper(args: Dict[str, Any], **kwargs) -> Dict[str, Any]:
     """Wrapper for organize_desktop that checks permissions."""
     allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
         getattr(_agent_last_permissions, "allow_shell", False)
@@ -36864,7 +36948,7 @@ def tool_run_shell(args: Dict[str, Any], allow_shell: bool) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-def tool_run_shell_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
+def tool_run_shell_wrapper(args: Dict[str, Any], **kwargs) -> Dict[str, Any]:
     """Wrapper for run_shell that checks permissions."""
     allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
         getattr(_agent_last_permissions, "allow_shell", False)
@@ -37406,4 +37490,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13544
+- **Skipped**: 13560

@@ -171,7 +171,7 @@ def tool_organize_desktop(args: Dict[str, Any], allow_shell: bool) -> Dict[str, 
     }
 
 
-def tool_organize_desktop_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
+def tool_organize_desktop_wrapper(args: Dict[str, Any], **kwargs) -> Dict[str, Any]:
     """Wrapper for organize_desktop that checks permissions."""
     allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
         getattr(_agent_last_permissions, "allow_shell", False)
@@ -268,7 +268,7 @@ def tool_run_shell(args: Dict[str, Any], allow_shell: bool) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
-def tool_run_shell_wrapper(args: Dict[str, Any]) -> Dict[str, Any]:
+def tool_run_shell_wrapper(args: Dict[str, Any], **kwargs) -> Dict[str, Any]:
     """Wrapper for run_shell that checks permissions."""
     allow_shell = bool(getattr(state, "ui_unsafe_mode", False)) or bool(
         getattr(_agent_last_permissions, "allow_shell", False)

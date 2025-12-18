@@ -185,10 +185,18 @@ def build_keybindings(
         if state.menu_level == MenuLevel.NONE:
             state.menu_level = MenuLevel.MAIN
             state.menu_index = 0
+            # Focus the menu window
+            w = _find_window_by_name(event, "menu")
+            if w:
+                event.app.layout.focus(w)
         else:
             state.menu_level = MenuLevel.NONE
             state.menu_index = 0
             state.ui_scroll_target = "agents"
+            # Focus back to agent/log if needed, but usually we just want navigation
+            w = _find_window_by_name(event, "agents")
+            if w:
+                event.app.layout.focus(w)
 
     @kb.add("escape")
     @kb.add("q")

@@ -40,8 +40,16 @@ def build_menu(
         def _click(mouse_event: Any) -> None:
             from prompt_toolkit.mouse_events import MouseEventType
             
-            # Only respond to actual clicks, not hover/move
             event_type = getattr(mouse_event, 'event_type', None)
+            
+            # Hover highlight
+            if event_type == MouseEventType.MOUSE_MOVE:
+                if state.menu_index != idx:
+                    state.menu_index = idx
+                    force_ui_update()
+                return
+
+            # Selection (click/double-click)
             if event_type not in (MouseEventType.MOUSE_UP, MouseEventType.MOUSE_DOWN):
                 return
             
@@ -92,12 +100,15 @@ def build_menu(
         result: List[Tuple[str, str]] = []
 
         def add_back_btn(res):
-            def _go_back(*args):
-                 state.menu_level = MenuLevel.MAIN
-                 state.menu_index = 0
-                 force_ui_update()
-            res.append(("class:menu.item", " [ < " + tr("menu.back", state.ui_lang) + " ]\n", _go_back))
-            res.append(("", "\n"))
+            def _back_handler(mouse_event: Any):
+                from prompt_toolkit.mouse_events import MouseEventType
+                if mouse_event.event_type == MouseEventType.MOUSE_UP:
+                    state.menu_level = MenuLevel.MAIN
+                    state.menu_index = 0
+                    force_ui_update()
+            
+            res.append(("class:menu.selected", " [ < " + tr("menu.back", state.ui_lang).upper() + " ] ", _back_handler))
+            res.append(("", "\n\n"))
 
         if state.menu_level == MenuLevel.MAIN:
             result.append(("class:menu.title", f" {tr('menu.main.title', state.ui_lang)}\n\n"))

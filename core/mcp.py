@@ -102,24 +102,26 @@ class MCPToolRegistry:
             except Exception:
                 return
 
-        def _open_app_wrapped(name: str) -> Any:
+        def _open_app_wrapped(name: str, **kwargs) -> Any:
             res = open_app(name=name)
-            _record_automation_event("open_app", {"name": name}, res)
+            # Record with full kwargs for debugging
+            _record_automation_event("open_app", {"name": name, **kwargs}, res)
             return res
 
-        def _run_applescript_wrapped(script: str, allow: bool = True) -> Any:
+        def _run_applescript_wrapped(script: str, allow: bool = True, **kwargs) -> Any:
             res = run_applescript(script=script, allow=allow)
-            _record_automation_event("run_applescript", {"script": script, "allow": allow}, res)
+            _record_automation_event("run_applescript", {"script": script, "allow": allow, **kwargs}, res)
             return res
 
-        def _run_shell_wrapped(command: str, allow: bool = True) -> Any:
-            res = run_shell(command=command, allow=allow)
-            _record_automation_event("run_shell", {"command": command, "allow": allow}, res)
+        def _run_shell_wrapped(command: str, allow: bool = True, **kwargs) -> Any:
+            # Handle potential 'cwd' or other kwargs passed by LLM
+            res = run_shell(command=command, allow=allow, **kwargs)
+            _record_automation_event("run_shell", {"command": command, "allow": allow, **kwargs}, res)
             return res
 
-        def _run_shortcut_wrapped(name: str, allow: bool = True) -> Any:
+        def _run_shortcut_wrapped(name: str, allow: bool = True, **kwargs) -> Any:
             res = run_shortcut(name=name, allow=allow)
-            _record_automation_event("run_shortcut", {"name": name, "allow": allow}, res)
+            _record_automation_event("run_shortcut", {"name": name, "allow": allow, **kwargs}, res)
             return res
 
         # Overwrite foundation tools with recorder-aware wrappers.
@@ -301,15 +303,25 @@ class MCPToolRegistry:
             return f"Error: Tool '{tool_name}' not found."
         
         try:
-            # We strictly map args from the dict to the function
-            # Note: This simple implementation assumes args match function signature
-            # In a robust system, we'd inspect signature or use **args
+            # Inspection of function signature to avoid TypeError: unexpected keyword argument
+            import inspect
+            sig = inspect.signature(func)
             
-            # Special handling for 'allow' kwarg in executor tools
-            if "allow" in func.__code__.co_varnames and "allow" not in args:
+            # Special handling for 'allow' kwarg in executor tools if not present but needed
+            if "allow" in sig.parameters and "allow" not in args:
                 args["allow"] = True
+            
+            # Filter args to only those supported by the function, unless it has **kwargs
+            has_varkw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+            
+            if has_varkw:
+                # If function has **kwargs, pass everything
+                result = func(**args)
+            else:
+                # Filter to supported params
+                supported_args = {k: v for k, v in args.items() if k in sig.parameters}
+                result = func(**supported_args)
                 
-            result = func(**args)
             return json.dumps(result, indent=2, ensure_ascii=False)
         except Exception as e:
             return f"Error executing '{tool_name}': {str(e)}"
