@@ -220,3 +220,29 @@ def _legacy_screencapture_full():
         return {"tool": "take_screenshot", "status": "success", "path": output_path, "vision_mode": "legacy_cli"}
     except Exception as e:
         return {"tool": "take_screenshot", "status": "error", "error": str(e)}
+
+def take_burst_screenshot(app_name: Optional[str] = None, count: int = 3, interval: float = 0.3) -> Dict[str, Any]:
+    """Takes multiple screenshots in a burst to capture blinking cursors/animations.
+    
+    Args:
+        app_name: Optional application name to focus on
+        count: Number of shots (default 3)
+        interval: Seconds between shots (default 0.3)
+    """
+    try:
+        paths = []
+        for i in range(count):
+            res = take_screenshot(app_name=app_name)
+            if res.get("status") == "success":
+                paths.append(res.get("path"))
+            if i < count - 1:
+                time.sleep(interval)
+        
+        return {
+            "tool": "take_burst_screenshot",
+            "status": "success",
+            "paths": paths,
+            "message": f"Captured {len(paths)} frames to detect changes (like blinking cursors)"
+        }
+    except Exception as e:
+        return {"tool": "take_burst_screenshot", "status": "error", "error": str(e)}

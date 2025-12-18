@@ -63,9 +63,17 @@ class BrowserManager:
                 color_scheme="dark"
             )
             self._page = self._context.new_page()
+            # Store current mode
+            self._current_headless = headless
         else:
-            # If already started, just ensure we have a page
-            self._ensure_page_valid()
+            # If already started, check if mode changed
+            if hasattr(self, '_current_headless') and self._current_headless != headless:
+                print(f"[BrowserManager] Switching headless mode: {self._current_headless} -> {headless}. Restarting...")
+                self.stop()
+                self.start(headless=headless)
+            else:
+                # Just ensure we have a page
+                self._ensure_page_valid()
 
     def get_page(self) -> Page:
         self.start()
@@ -146,10 +154,21 @@ def browser_open_url(url: str, headless: bool = False) -> Dict[str, Any]:
         page.goto(url, wait_until="load", timeout=60000)
         page.wait_for_load_state("networkidle")
         
+        # Anti-bot detection: Google "Sorry" page
+        title = page.title()
+        content = page.content().lower()
+        if "google.com/sorry" in page.url or "unusual traffic" in content:
+            return {
+                "tool": "browser_open_url",
+                "status": "error",
+                "error": "Google detected bot traffic (CAPTCHA/Sorry page). Switch to another search engine or use Native GUI.",
+                "url": page.url
+            }
+            
         return {
             "tool": "browser_open_url",
             "status": "success",
-            "title": page.title(),
+            "title": title,
             "url": page.url
         }
     except Exception as e:

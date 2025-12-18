@@ -15,7 +15,7 @@ from system_ai.tools.windsurf import (
     open_project_in_windsurf,
 )
 from system_ai.tools.input import click, type_text, press_key, move_mouse, click_mouse
-from system_ai.tools.screenshot import capture_screen_region
+from system_ai.tools.screenshot import take_screenshot, capture_screen_region, take_burst_screenshot
 from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen, compare_images
 from core.memory import save_memory_tool, query_memory_tool
 
@@ -202,6 +202,7 @@ class MCPToolRegistry:
         # Vision/Input
         self.register_tool("capture_screen", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
         self.register_tool("take_screenshot", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
+        self.register_tool("take_burst_screenshot", take_burst_screenshot, "Take multiple screenshots in a burst. Args: app_name (optional), count (int), interval (float)")
         self.register_tool("capture_screen_region", capture_screen_region, "Capture screenshot of screen region. Args: x,y,width,height")
         self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen image with AI. Args: image_path (str), prompt (str)")
         self.register_tool("ocr_region", ocr_region, "OCR a screen region using vision. Args: x,y,width,height")

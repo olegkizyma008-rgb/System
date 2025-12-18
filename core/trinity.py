@@ -1016,7 +1016,7 @@ class TrinityRuntime:
         elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
             step_status = "success"
             next_agent = "atlas"
-        elif any(kw in lower_content for kw in ["failed", "error", "помилка", "не вдалося", "неможливо", "blocked", "sorry"]):
+        elif any(kw in lower_content for kw in ["[failed]", "critical error", "fatal error", "access denied", "blocked", "sorry"]):    
             step_status = "failed"
             next_agent = "atlas"
         else:
@@ -1103,7 +1103,17 @@ class TrinityRuntime:
             )
             
             if should_replan:
-                out["replan_count"] = current_replan + 1
+                new_replan_count = current_replan + 1
+                if new_replan_count > 10:
+                    try:
+                        trace(self.logger, "replan_limit_reached", {"count": new_replan_count})
+                    except Exception:
+                        pass
+                    out["current_agent"] = "end"
+                    out["messages"] = updated_messages + [AIMessage(content="[VOICE] Досягнуто ліміту перепланувань (10). Зупинка для безпеки.")]
+                    return out
+                
+                out["replan_count"] = new_replan_count
                 out["plan"] = None  # Clear plan to trigger regeneration
                 try:
                     trace(self.logger, "replan_triggered", {"replan_count": out["replan_count"], "status": step_status, "streak": current_streak})
