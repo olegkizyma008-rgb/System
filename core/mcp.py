@@ -1,6 +1,12 @@
-from typing import Dict, Any, Callable, List, Optional
 import json
 import time
+import asyncio
+import threading
+import os
+import contextlib
+from typing import Dict, Any, Callable, List, Optional, Union
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
 
 # Import all tools
 from system_ai.tools.executor import run_shell, open_app, run_applescript, run_shortcut
@@ -35,6 +41,68 @@ from system_ai.tools.browser import (
     browser_screenshot
 )
 
+class ExternalMCPProvider:
+    """Handles connection to an external MCP server via stdio."""
+    def __init__(self, name: str, command: str, args: List[str]):
+        self.name = name
+        self.command = command
+        self.args = args
+        self._server_params = StdioServerParameters(command=command, args=args, env=os.environ.copy())
+        self._tools: Dict[str, Any] = {}
+        self._loop = asyncio.new_event_loop()
+        self._thread = threading.Thread(target=self._run_loop, daemon=True)
+        self._thread.start()
+        self._connected = False
+        
+    def _run_loop(self):
+        asyncio.set_event_loop(self._loop)
+        self._loop.run_forever()
+
+    def connect(self):
+        if self._connected:
+            return
+        future = asyncio.run_coroutine_threadsafe(self._async_connect(), self._loop)
+        future.result(timeout=30)
+        self._connected = True
+
+    async def _async_connect(self):
+        self._exit_stack = contextlib.AsyncExitStack()
+        read, write = await self._exit_stack.enter_async_context(stdio_client(self._server_params))
+        self._session = await self._exit_stack.enter_async_context(ClientSession(read, write))
+        await self._session.initialize()
+        
+        # List tools
+        tools_list = await self._session.list_tools()
+        for tool in tools_list.tools:
+            self._tools[tool.name] = tool
+        
+    def execute(self, tool_name: str, args: Dict[str, Any]) -> Any:
+        if not self._connected:
+            self.connect()
+        future = asyncio.run_coroutine_threadsafe(self._async_execute(tool_name, args), self._loop)
+        return future.result(timeout=60)
+
+    async def _async_execute(self, tool_name: str, args: Dict[str, Any]) -> Any:
+        try:
+            result = await self._session.call_tool(tool_name, args)
+            # Standardize output for Trinity (JSON string or dict)
+            content = []
+            for item in result.content:
+                if hasattr(item, "text"):
+                    content.append(item.text)
+                elif hasattr(item, "data"):
+                    # Handle image/binary data if needed
+                    content.append(f"[Binary Data: {len(item.data)} bytes]")
+            
+            return {
+                "tool": tool_name,
+                "status": "success" if not result.isError else "error",
+                "output": "\n".join(content) if content else "",
+                "raw": str(result)
+            }
+        except Exception as e:
+            return {"tool": tool_name, "status": "error", "error": str(e)}
+
 class MCPToolRegistry:
     """
     The strictly defined Tool Registry for Project Atlas.
@@ -44,7 +112,10 @@ class MCPToolRegistry:
     def __init__(self):
         self._tools: Dict[str, Callable] = {}
         self._descriptions: Dict[str, str] = {}
+        self._external_providers: Dict[str, ExternalMCPProvider] = {}
+        self._external_tools_map: Dict[str, str] = {} # tool_name -> provider_name
         self._register_defaults()
+        self._register_external_mcp()
         
     def _register_defaults(self):
         # Foundation Tools
@@ -290,6 +361,22 @@ class MCPToolRegistry:
             "Save last response to .last_response.txt and regenerate project_structure_final.txt. Args: text (str)"
         )
 
+    def _register_external_mcp(self):
+        """Register external MCP servers (Playwright & PyAutoGUI)."""
+        providers = [
+            ("playwright", "npx", ["@playwright/mcp@latest", "--no-sandbox"]),
+            ("pyautogui", "mcp-pyautogui-server", [])
+        ]
+        
+        for name, cmd, args in providers:
+            try:
+                provider = ExternalMCPProvider(name, cmd, args)
+                self._external_providers[name] = provider
+                # Lazy loading: we don't connect yet, just register the intent
+                # Note: list_tools() will trigger connection if needed to get descriptions
+            except Exception as e:
+                print(f"[MCP] Failed to initialize external provider {name}: {e}")
+
     def register_tool(self, name: str, func: Callable, description: str):
         self._tools[name] = func
         self._descriptions[name] = description
@@ -300,12 +387,36 @@ class MCPToolRegistry:
     def list_tools(self) -> str:
         """Returns a formatted list of tools for the System Prompt."""
         lines = []
+        # Local tools
         for name, desc in self._descriptions.items():
             lines.append(f"- {name}: {desc}")
+        
+        # External tools
+        for p_name, provider in self._external_providers.items():
+            try:
+                provider.connect()
+                for t_name, tool in provider._tools.items():
+                    # Prefix external tools to avoid collisions if needed, 
+                    # but user specifically wants to use these mcp tool names.
+                    self._external_tools_map[t_name] = p_name
+                    lines.append(f"- {t_name}: {tool.description} (via {p_name})")
+            except Exception as e:
+                lines.append(f"- [Provider Offline] {p_name}: {e}")
+                
         return "\n".join(lines)
 
     def execute(self, tool_name: str, args: Dict[str, Any]) -> str:
         """Executes a tool safely and returns a string result."""
+        # Check external tools first
+        provider_name = self._external_tools_map.get(tool_name)
+        if provider_name and provider_name in self._external_providers:
+            provider = self._external_providers[provider_name]
+            try:
+                res = provider.execute(tool_name, args)
+                return json.dumps(res, indent=2, ensure_ascii=False)
+            except Exception as e:
+                return f"Error executing external tool '{tool_name}': {str(e)}"
+
         func = self._tools.get(tool_name)
         if not func:
             return f"Error: Tool '{tool_name}' not found."

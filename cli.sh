@@ -4,36 +4,35 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Активуємо віртуальне оточення, якщо є
-if [ -d ".venv" ]; then
-  source .venv/bin/activate
+# Strict check for Python 3.12 .venv
+if [ -f "$SCRIPT_DIR/.venv/bin/activate" ]; then
+  source "$SCRIPT_DIR/.venv/bin/activate"
+  PYTHON_EXE="$SCRIPT_DIR/.venv/bin/python"
+else
+  echo "❌ .venv не знайдено. Будь ласка, запустіть ./setup.sh спочатку." >&2
+  exit 1
+fi
+
+# Verify version in venv
+VENV_VERSION=$("$PYTHON_EXE" --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
+if [ "$VENV_VERSION" != "3.12" ]; then
+  echo "❌ .venv використовує Python $VENV_VERSION, але потрібно 3.12. Запустіть ./setup.sh." >&2
+  exit 1
 fi
 
 # Завантажуємо .env, якщо є (включаючи SUDO_PASSWORD)
-if [ -f ".env" ]; then
+if [ -f "$SCRIPT_DIR/.env" ]; then
   while IFS= read -r line || [[ -n "$line" ]]; do
-    # Пропускаємо коментарі та порожні рядки
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
     [[ -z "${line// }" ]] && continue
-    
-    # Видаляємо пробіли на початку/кінці
     line=$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    
-    # Якщо є знак '=', розділяємо на ключ і значення
     if [[ "$line" =~ ^[[:alpha:]_][[:alnum:]_]*= ]]; then
       key="${line%%=*}"
       value="${line#*=}"
-      # Видаляємо лапки з значення
       value=$(echo "$value" | sed 's/^"//;s/"$//;s/^'\''//;s/'\''$//')
       export "$key=$value"
     fi
-  done < .env
-fi
-
-# Перевіряємо python3
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "Python 3 не знайдено. Встановіть python3 (brew install python3)" >&2
-  exit 1
+  done < "$SCRIPT_DIR/.env"
 fi
 
 # Створюємо директорію для налаштувань, якщо її немає
@@ -61,7 +60,7 @@ fi
 export TOKENIZERS_PARALLELISM=false
 
 # Запускаємо cli.py з усіма аргументами
-python3 "$SCRIPT_DIR/cli.py" "$@"
+"$PYTHON_EXE" "$SCRIPT_DIR/cli.py" "$@"
 
 # Очищення при виході
 if [ -f "$HOME/.system_cli/.sudo_askpass" ]; then

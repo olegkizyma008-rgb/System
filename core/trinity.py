@@ -982,7 +982,12 @@ class TrinityRuntime:
         has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
         
         # 2. Check for tool execution errors in context
-        has_tool_error_in_context = '"status": "error"' in content or '"status":"error"' in content
+        # ONLY look at the latest verification results, ignore history errors
+        latest_tools_result = ""
+        if "Verification Tools Results:" in content:
+            latest_tools_result = content.split("Verification Tools Results:")[-1]
+            
+        has_tool_error_in_context = '"status": "error"' in latest_tools_result
         
         # 3. Check for test failures
         has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
@@ -991,8 +996,7 @@ class TrinityRuntime:
         has_successful_tool_result = (
             "tool results:" in lower_content and 
             (
-                '"status": "success"' in content or
-                '"status":"success"' in content or
+                '"status": "success"' in latest_tools_result or
                 ('"result for "' in lower_content and not has_tool_error_in_context)
             )
         )
@@ -1003,20 +1007,19 @@ class TrinityRuntime:
             step_status = "failed"
             next_agent = "atlas"
         elif has_tool_error_in_context:
+            # Technically, if the LATEST tool failed, it's a failure.
             step_status = "failed"
             next_agent = "atlas"
         elif has_explicit_complete:
-            # LLM explicitly said it's done or Tetyana finished all tools
             step_status = "success"
             next_agent = "atlas"
         elif has_successful_tool_result and not has_tool_error_in_context:
-            # technical success is SUCCESS (not uncertain!)
             step_status = "success"
             next_agent = "atlas"
         elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
             step_status = "success"
             next_agent = "atlas"
-        elif any(kw in lower_content for kw in ["[failed]", "critical error", "fatal error", "access denied", "blocked", "sorry"]):    
+        elif "[failed]" in lower_content or "critical error" in lower_content or "fatal error" in lower_content:
             step_status = "failed"
             next_agent = "atlas"
         else:
@@ -1037,14 +1040,14 @@ class TrinityRuntime:
                     if img_path:
                         analysis = self.registry.execute(
                             "analyze_screen",
-                            {"image_path": img_path, "prompt": "Describe what you see. Is this a success state or an error state?"},
+                            {"image_path": img_path, "prompt": "Describe what you see. Focus on finding errors or success indicators. If no obvious error, say [QA_PASSED]."},
                         )
                         content += "\n\n[FORCED_VERIFY] analyze_screen:\n" + str(analysis)
                         # Check analysis result for success/failure indicators
                         analysis_lower = str(analysis).lower()
-                        if any(kw in analysis_lower for kw in ["success", "done", "completed", "expected", "correct"]):
+                        if "[qa_passed]" in analysis_lower or any(kw in analysis_lower for kw in ["success", "done", "completed", "expected evidence found"]):
                             step_status = "success"
-                        elif any(kw in analysis_lower for kw in ["error", "fail", "wrong", "unexpected"]):
+                        elif "[failed]" in analysis_lower or any(kw in analysis_lower for kw in ["critical error", "blocked", "forbidden", "page not found"]):
                             step_status = "failed"
                 except Exception as ve:
                     if self.verbose:
