@@ -246,6 +246,7 @@ class CopilotLLM(BaseChatModel):
         stop: Optional[List[str]] = None,
         run_manager: Optional[Any] = None,
         stream: Optional[bool] = None,
+        on_delta: Optional[Callable[[str], None]] = None,
         **kwargs: Any,
     ) -> ChatResult:
         try:
@@ -270,7 +271,7 @@ class CopilotLLM(BaseChatModel):
                 timeout=90
             )
             if stream_mode:
-                return self._stream_response(response, messages)
+                return self._stream_response(response, messages, on_delta=on_delta)
             else:
                 response.raise_for_status()
                 data = response.json()
@@ -341,7 +342,7 @@ class CopilotLLM(BaseChatModel):
         except Exception as e:
              return ChatResult(generations=[ChatGeneration(message=AIMessage(content=f"[COPILOT ERROR] {e}"))])
 
-    def _stream_response(self, response: requests.Response, messages: List[BaseMessage]) -> ChatResult:
+    def _stream_response(self, response: requests.Response, messages: List[BaseMessage], on_delta: Optional[Callable[[str], None]] = None) -> ChatResult:
         """Handle streaming response from Copilot API."""
         content = ""
         tool_calls = []
@@ -358,7 +359,10 @@ class CopilotLLM(BaseChatModel):
                         if 'choices' in data and len(data['choices']) > 0:
                             delta = data['choices'][0].get('delta', {})
                             if 'content' in delta:
-                                content += delta['content']
+                                chunk = delta['content']
+                                content += chunk
+                                if on_delta:
+                                    on_delta(chunk)
                     except json.JSONDecodeError:
                         continue
         

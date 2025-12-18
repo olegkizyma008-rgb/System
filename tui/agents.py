@@ -14,6 +14,8 @@ import json
 import os
 import re
 import threading
+import time
+import traceback
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -628,7 +630,15 @@ def run_graph_agent_task(
                 tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
                 messages = state_update.get("messages", [])
                 last_msg = messages[-1] if messages else None
-                content = getattr(last_msg, "content", "") if last_msg else ""
+                
+                content = ""
+                if last_msg:
+                    if hasattr(last_msg, "content"):
+                        content = str(last_msg.content or "")
+                    elif isinstance(last_msg, dict):
+                        content = str(last_msg.get("content", ""))
+                    else:
+                        content = str(last_msg)
                 
                 if not use_stream:
                     log(f"[{tag}] {content}", "info")
@@ -660,7 +670,12 @@ def run_graph_agent_task(
                 
     except Exception as e:
         tail_active.clear()
+        err_msg = traceback.format_exc()
         log(f"[TRINITY] Runtime error: {e}", "error")
+        # Log to hidden debug log if needed, or just standard log
+        # For now, let's put it in the info log so we can see it
+        # but maybe it's too long. Let's just log the last line of the traceback.
+        log(f"Traceback: {err_msg.splitlines()[-1]}", "info")
         return
 
     tail_active.clear()

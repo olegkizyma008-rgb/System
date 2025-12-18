@@ -4,115 +4,115 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13527
+- **Files Skipped**: 13544
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 03:23:51
+- **Generated**: 2025-12-18 03:44:31
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
-    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
-              ^^^^^^^^^
-NameError: name 'Condition' is not defined
-2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "uncertain", "step_count": null, "replan_count": 5}
+2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 6, "replan_count": 5, "last_step_status": "uncertain", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Чудово, я перевірю наявність результатів перевірки конфігурації. Спершу перегляну доступні дані для пошуку скріншотів або логів помилок. \n\nПочинаю аналіз."}
+2025-12-18 03:29:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 6, "replan_count": 5}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 2 → 3 steps (added 1 verify steps)
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 3, "step_count": 6, "replan_count": 5}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 6, "replan_count": 5, "description_preview": "Переглянути доступні дані для пошуку скріншотів або логів помилок"}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 6, "replan_count": 5}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 3, "last_msg_preview": "[Atlas] Plan: 3 steps. Current: Переглянути доступні дані для пошуку скріншотів або логів помилок. Next: tetyana"}
+2025-12-18 03:29:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 3, "content_preview": "Перегляну доступні дані для пошуку скріншотів або логів помилок."}
+2025-12-18 03:29:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_gui_fallback", "from": "native", "to": "gui"}
+2025-12-18 03:29:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 03:41:04 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:41:08 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:41:08 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:41:08 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:41:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:41:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
     cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
     run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
-    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
-              ^^^^^^^^^
-NameError: name 'Condition' is not defined
-2025-12-18 02:49:08 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:49:08 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:49:08 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:49:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:41:11 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:41:11 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:41:11 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:41:11 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
     run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
-    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
-              ^^^^^^^^^
-NameError: name 'Condition' is not defined
-2025-12-18 02:49:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:41:11 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
     cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
     run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
-    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
-              ^^^^^^^^^
-NameError: name 'Condition' is not defined
-2025-12-18 02:50:13 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
-2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 02:50:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 02:52:56 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 02:52:59 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 02:52:59 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 02:52:59 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 02:53:00 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 02:53:12 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 02:53:12 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 02:53:12 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Привіт"}
-2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Привіт"}
-2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 1 → 0 steps (added -1 verify steps)
-2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 0, "step_count": 1, "replan_count": 0}
-2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
-2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-18 02:53:40 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
-2025-12-18 02:54:32 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 02:54:37 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 02:54:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 02:54:37 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 02:54:47 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 02:54:47 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 02:54:48 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 20 steps (added 0 verify steps)
-2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 20, "step_count": 1, "replan_count": 0}
-2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 1, "replan_count": 0, "description_preview": "Отримати базову інформацію про систему (CPU, RAM, uptime)."}
-2025-12-18 03:00:15 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:00:17 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:00:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:00:17 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:00:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 03:00:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 03:00:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
-2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
-2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
-2025-12-18 03:02:41 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:03:12 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:03:12 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:03:12 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
-2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
-2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
-2025-12-18 03:09:50 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:09:53 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:09:53 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:09:53 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система "}
-2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система "}
-2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
-2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
-2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
-2025-12-18 03:19:49 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:19:52 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:19:52 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:19:52 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:41:57 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
+2025-12-18 03:42:05 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui', '--help']
+2025-12-18 03:43:13 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui']
+2025-12-18 03:43:13 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: tui
+2025-12-18 03:43:13 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:43:13 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:43:13 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:44:01 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui']
+2025-12-18 03:44:01 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: tui
+2025-12-18 03:44:01 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
 ```
 
 ---
@@ -121,9 +121,9 @@ NameError: name 'Condition' is not defined
 
 [Atlas] Final report
 
-Task: Привіт
+Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
 Outcome: completed
-Replans: 0
+Replans: 2
 Last agent: atlas
 
 Last message:
@@ -144,18 +144,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37261 +-----------------------------------------
- 1 file changed, 6 insertions(+), 37255 deletions(-)
+ project_structure_final.txt | 37437 +-----------------------------------------
+ 1 file changed, 93 insertions(+), 37344 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-6cdc4e2 tui: implement auto-switching to agents panel on menu exit and fix mouse interaction
+c3c0c0b fix(tui): resolve startup crash and enable real-time agent streaming
+3e72610 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
+6815838 tui: implement auto-switching to agents panel on menu exit and fix mouse interaction
 f94778b feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
 a5dbf4f Trinity task completed: Привіт
-031eba4 feat: Add prompt_toolkit Condition import to cli.py
-c315869 feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
 ```
 
 ---
@@ -577,14 +577,14 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (0.3 KB)
+### `.last_response.txt` (1.8 KB)
 
 ```text
 [Atlas] Final report
 
-Task: Привіт
+Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
 Outcome: completed
-Replans: 0
+Replans: 2
 Last agent: atlas
 
 Last message:
@@ -8396,7 +8396,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (73.0 KB)
+### `core/trinity.py` (73.3 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8897,8 +8897,12 @@ class TrinityRuntime:
         content = ""  # Initialize content variable
         
         try:
-            # For tool-bound calls, don't stream (JSON protocol needs complete response)
-            response = bound_llm.invoke(prompt.format_messages())
+            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("tetyana", chunk)
+            
+            response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
@@ -9265,8 +9269,12 @@ class TrinityRuntime:
         content = ""  # Initialize content variable
         try:
             trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
-            # For tool-bound calls, don't stream (JSON protocol needs complete response)
-            response = self.llm.invoke(prompt.format_messages())
+            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("grisha", chunk)
+            
+            response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
@@ -11320,7 +11328,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (505.3 KB)
+### `project_structure_final.txt` (501.8 KB)
 
 ```text
 # System — Project Structure
@@ -11329,115 +11337,115 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13527
+- **Files Skipped**: 13544
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 03:23:51
+- **Generated**: 2025-12-18 03:44:31
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
-    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
-              ^^^^^^^^^
-NameError: name 'Condition' is not defined
-2025-12-18 02:49:03 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "uncertain", "step_count": null, "replan_count": 5}
+2025-12-18 03:29:02 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 6, "replan_count": 5, "last_step_status": "uncertain", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Чудово, я перевірю наявність результатів перевірки конфігурації. Спершу перегляну доступні дані для пошуку скріншотів або логів помилок. \n\nПочинаю аналіз."}
+2025-12-18 03:29:04 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 6, "replan_count": 5}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 2 → 3 steps (added 1 verify steps)
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 3, "step_count": 6, "replan_count": 5}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 6, "replan_count": 5, "description_preview": "Переглянути доступні дані для пошуку скріншотів або логів помилок"}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 6, "replan_count": 5}
+2025-12-18 03:29:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 3, "last_msg_preview": "[Atlas] Plan: 3 steps. Current: Переглянути доступні дані для пошуку скріншотів або логів помилок. Next: tetyana"}
+2025-12-18 03:29:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 3, "content_preview": "Перегляну доступні дані для пошуку скріншотів або логів помилок."}
+2025-12-18 03:29:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_gui_fallback", "from": "native", "to": "gui"}
+2025-12-18 03:29:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-18 03:41:04 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
+2025-12-18 03:41:08 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:41:08 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:41:08 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:41:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:41:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
     cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
     run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
-    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
-              ^^^^^^^^^
-NameError: name 'Condition' is not defined
-2025-12-18 02:49:08 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:49:08 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:49:08 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:49:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:41:11 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
+2025-12-18 03:41:11 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
+2025-12-18 03:41:11 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:41:11 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
 Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
     run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
-    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
-              ^^^^^^^^^
-NameError: name 'Condition' is not defined
-2025-12-18 02:49:08 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:41:11 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
     cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
     run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1619, in run_tui
-    show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
-              ^^^^^^^^^
-NameError: name 'Condition' is not defined
-2025-12-18 02:50:13 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
-2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 02:50:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 02:50:40 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 02:52:56 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 02:52:59 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 02:52:59 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 02:52:59 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 02:53:00 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 02:53:12 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 02:53:12 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 02:53:12 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Привіт"}
-2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Привіт"}
-2025-12-18 02:53:36 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 1 → 0 steps (added -1 verify steps)
-2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 0, "step_count": 1, "replan_count": 0}
-2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
-2025-12-18 02:53:39 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-18 02:53:40 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
-2025-12-18 02:54:32 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 02:54:37 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 02:54:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 02:54:37 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 02:54:47 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 02:54:47 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 02:54:48 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 20 steps (added 0 verify steps)
-2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 20, "step_count": 1, "replan_count": 0}
-2025-12-18 02:55:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "tetyana", "step_type": "execute", "step_count": 1, "replan_count": 0, "description_preview": "Отримати базову інформацію про систему (CPU, RAM, uptime)."}
-2025-12-18 03:00:15 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:00:17 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:00:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:00:17 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:00:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 03:00:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 03:00:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
-2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
-2025-12-18 03:00:49 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
-2025-12-18 03:02:41 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:03:12 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:03:12 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:03:12 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
-2025-12-18 03:03:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
-2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
-2025-12-18 03:03:38 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
-2025-12-18 03:09:50 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:09:53 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:09:53 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:09:53 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
-2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система "}
-2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система "}
-2025-12-18 03:11:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
-2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:67 | [Verifier] Plan optimized: 20 → 10 steps (added -10 verify steps)
-2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 10, "step_count": 1, "replan_count": 0}
-2025-12-18 03:11:12 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_dispatch", "next_agent": "grisha", "step_type": "verify", "step_count": 1, "replan_count": 0, "description_preview": "Перевірити, що система стабільна і готова до взаємодії"}
-2025-12-18 03:19:49 | INFO     | MainThread | system_cli.cli | cli_main:2464 | TUI mode exited successfully
-2025-12-18 03:19:52 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: []
-2025-12-18 03:19:52 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: None
-2025-12-18 03:19:52 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:41:57 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['--help']
+2025-12-18 03:42:05 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui', '--help']
+2025-12-18 03:43:13 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui']
+2025-12-18 03:43:13 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: tui
+2025-12-18 03:43:13 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
+2025-12-18 03:43:13 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:43:13 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2625, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2463, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1694, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 176, in build_app
+    log_window = Window(
+                 ^^^^^^^
+TypeError: Window.__init__() got an unexpected keyword argument 'show_cursor'
+2025-12-18 03:44:01 | INFO     | MainThread | system_cli.cli | cli_main:2416 | CLI started with arguments: ['tui']
+2025-12-18 03:44:01 | DEBUG    | MainThread | system_cli.cli | cli_main:2458 | Parsed command: tui
+2025-12-18 03:44:01 | INFO     | MainThread | system_cli.cli | cli_main:2461 | Starting TUI mode
 ```
 
 ---
@@ -11446,9 +11454,9 @@ NameError: name 'Condition' is not defined
 
 [Atlas] Final report
 
-Task: Привіт
+Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
 Outcome: completed
-Replans: 0
+Replans: 2
 Last agent: atlas
 
 Last message:
@@ -11469,18 +11477,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 37261 +-----------------------------------------
- 1 file changed, 6 insertions(+), 37255 deletions(-)
+ project_structure_final.txt | 37437 +-----------------------------------------
+ 1 file changed, 93 insertions(+), 37344 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-6cdc4e2 tui: implement auto-switching to agents panel on menu exit and fix mouse interaction
+c3c0c0b fix(tui): resolve startup crash and enable real-time agent streaming
+3e72610 Trinity task completed: Атлас, виконай практичну перевірку нових можливостей системи як єдиний…
+6815838 tui: implement auto-switching to agents panel on menu exit and fix mouse interaction
 f94778b feat: Implement real-time TUI log streaming with categorized tool execution feedback, refine menu click handling, and enhance Trinity's plan context.
 a5dbf4f Trinity task completed: Привіт
-031eba4 feat: Add prompt_toolkit Condition import to cli.py
-c315869 feat: Implement double-click menu activation, improve editor fallback logic, and refine UI button behavior and input buffer display.
 ```
 
 ---
@@ -11902,14 +11910,14 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (0.3 KB)
+### `.last_response.txt` (1.8 KB)
 
 ```text
 [Atlas] Final report
 
-Task: Привіт
+Task: Атлас, виконай практичну перевірку нових можливостей системи як єдиний сценарій. 1. Почни з аналізу стану системи • Отримай базову інформацію про систему (CPU, RAM, uptime). • Переконайся, що система стабільна і готова до взаємодії. 2. Подивись на поточний робочий простір • Визнач, які вікна зараз відкриті. • З’ясуй, скільки активних моніторів і яка їх конфігурація. 3. Перейди до браузерної дії • Відкрий браузер. • Зайди на google.com. • Знайди інформацію за запитом “macOS automation”. 4. Використай результат пошуку • Відкрий один з релевантних результатів. • Витягни коротке текстове резюме зі сторінки (2–3 речення). 5. Підтвердь керування контекстом • Скопіюй це резюме в clipboard. • Перевір, що clipboard дійсно містить цей текст. 6. Заверши перевірку • Коротко опиши: • які інструменти були задіяні, • що саме було виконано, • чи виникли обмеження або збої.
 Outcome: completed
-Replans: 0
+Replans: 2
 Last agent: atlas
 
 Last message:
@@ -19721,7 +19729,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (73.0 KB)
+### `core/trinity.py` (73.3 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20222,8 +20230,12 @@ class TrinityRuntime:
         content = ""  # Initialize content variable
         
         try:
-            # For tool-bound calls, don't stream (JSON protocol needs complete response)
-            response = bound_llm.invoke(prompt.format_messages())
+            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("tetyana", chunk)
+            
+            response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
@@ -20590,8 +20602,12 @@ class TrinityRuntime:
         content = ""  # Initialize content variable
         try:
             trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
-            # For tool-bound calls, don't stream (JSON protocol needs complete response)
-            response = self.llm.invoke(prompt.format_messages())
+            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("grisha", chunk)
+            
+            response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
@@ -22587,7 +22603,7 @@ if __name__ == "__main__":
 from .copilot import CopilotLLM
 ```
 
-### `providers/copilot.py` (21.2 KB)
+### `providers/copilot.py` (21.4 KB)
 
 ```python
 
@@ -22838,6 +22854,7 @@ class CopilotLLM(BaseChatModel):
         stop: Optional[List[str]] = None,
         run_manager: Optional[Any] = None,
         stream: Optional[bool] = None,
+        on_delta: Optional[Callable[[str], None]] = None,
         **kwargs: Any,
     ) -> ChatResult:
         try:
@@ -22862,7 +22879,7 @@ class CopilotLLM(BaseChatModel):
                 timeout=90
             )
             if stream_mode:
-                return self._stream_response(response, messages)
+                return self._stream_response(response, messages, on_delta=on_delta)
             else:
                 response.raise_for_status()
                 data = response.json()
@@ -22933,7 +22950,7 @@ class CopilotLLM(BaseChatModel):
         except Exception as e:
              return ChatResult(generations=[ChatGeneration(message=AIMessage(content=f"[COPILOT ERROR] {e}"))])
 
-    def _stream_response(self, response: requests.Response, messages: List[BaseMessage]) -> ChatResult:
+    def _stream_response(self, response: requests.Response, messages: List[BaseMessage], on_delta: Optional[Callable[[str], None]] = None) -> ChatResult:
         """Handle streaming response from Copilot API."""
         content = ""
         tool_calls = []
@@ -22950,7 +22967,10 @@ class CopilotLLM(BaseChatModel):
                         if 'choices' in data and len(data['choices']) > 0:
                             delta = data['choices'][0].get('delta', {})
                             if 'content' in delta:
-                                content += delta['content']
+                                chunk = delta['content']
+                                content += chunk
+                                if on_delta:
+                                    on_delta(chunk)
                     except json.JSONDecodeError:
                         continue
         
@@ -28305,7 +28325,7 @@ def test_find_image_on_screen_missing_cv2_dependency(tmp_path, monkeypatch):
 
 ```
 
-### `tui/agents.py` (25.8 KB)
+### `tui/agents.py` (26.5 KB)
 
 ```python
 """Agent session and LLM interaction for TUI.
@@ -28324,6 +28344,8 @@ import json
 import os
 import re
 import threading
+import time
+import traceback
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -28938,7 +28960,15 @@ def run_graph_agent_task(
                 tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
                 messages = state_update.get("messages", [])
                 last_msg = messages[-1] if messages else None
-                content = getattr(last_msg, "content", "") if last_msg else ""
+                
+                content = ""
+                if last_msg:
+                    if hasattr(last_msg, "content"):
+                        content = str(last_msg.content or "")
+                    elif isinstance(last_msg, dict):
+                        content = str(last_msg.get("content", ""))
+                    else:
+                        content = str(last_msg)
                 
                 if not use_stream:
                     log(f"[{tag}] {content}", "info")
@@ -28970,7 +29000,12 @@ def run_graph_agent_task(
                 
     except Exception as e:
         tail_active.clear()
+        err_msg = traceback.format_exc()
         log(f"[TRINITY] Runtime error: {e}", "error")
+        # Log to hidden debug log if needed, or just standard log
+        # For now, let's put it in the info log so we can see it
+        # but maybe it's too long. Let's just log the last line of the traceback.
+        log(f"Traceback: {err_msg.splitlines()[-1]}", "info")
         return
 
     tail_active.clear()
@@ -33142,7 +33177,7 @@ def build_keybindings(
     return kb, handle_menu_enter
 ```
 
-### `tui/layout.py` (11.7 KB)
+### `tui/layout.py` (12.3 KB)
 
 ```python
 from __future__ import annotations
@@ -33286,18 +33321,21 @@ def build_app(
 
     def get_interactive_header() -> AnyFormattedText:
         base = _safe_formatted_text(get_header, fallback_style="class:header")()
-        # Ensure base is list
         if not isinstance(base, list):
             base = [("", str(base))]
+            
+        cur_scroll = str(getattr(state, "ui_scroll_target", "log") or "log").upper()
+        # Clean [ACTIVE] or [SCROLL] from base if it exists (some old get_header versions might have it)
+        # But here we just append our dynamic labels
             
         # Add labels purely informational
         labels = [
              ("class:header", "  "),
-             ("class:button", "[ F2: MENU ]"),
+             ("class:button", f"[ F2: {'CLOSE' if state.menu_level != MenuLevel.NONE else 'MENU'} ]"),
              ("class:header", " "),
-             ("class:button", "[ PgUp: LOGS ]"),
+             ("class:button", f"[ PgUp: LOGS {'[SCROLL]' if cur_scroll == 'LOG' else ''} ]"),
              ("class:header", " "),
-             ("class:button", "[ PgDn: AGENTS ]"),
+             ("class:button", f"[ PgDn: AGENTS {'[SCROLL]' if cur_scroll == 'AGENTS' else ''} ]"),
              ("class:header", "  "),
         ]
         
@@ -33318,10 +33356,14 @@ def build_app(
 
     safe_get_logs = _cached_getter(_safe_formatted_text(get_logs, fallback_style="class:log.info"))
     log_window = Window(
-        FormattedTextControl(safe_get_logs, get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position)),
+        FormattedTextControl(
+            safe_get_logs, 
+            get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
+            show_cursor=True,
+        ),
         wrap_lines=False,
         right_margins=[ScrollbarMargin(display_arrows=True)],
-        style="class:log.window" # ensure background
+        style="class:log.window", # ensure background
     )
     setattr(log_window, "name", "log")
 
@@ -33334,6 +33376,7 @@ def build_app(
             FormattedTextControl(
                 safe_get_agent_messages,
                 get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
+                show_cursor=True,
             ),
             wrap_lines=False,
             style="class:agent.panel",
@@ -33377,7 +33420,7 @@ def build_app(
              base = [("", str(base))]
          
          # Informational hint (no callback as requested)
-         return base + [("class:status", "  "), ("class:button", "[ F2: Menu ]")]
+         return base + [("class:status", "  "), ("class:button", f"[ F2: {'Close' if state.menu_level != MenuLevel.NONE else 'Menu'} ]")]
 
     status_window = Window(FormattedTextControl(get_interactive_status), height=1, style="class:status")
 
@@ -33433,7 +33476,7 @@ def build_app(
                     ConditionalContainer(
                         Frame(
                             w,
-                            title=lambda: f" {title} [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "agents" and title == "АГЕНТИ" else f" {title} ",
+                            title=lambda t=title: f" {t} [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "agents" and t == "АГЕНТИ" else f" {t} ",
                             style="class:frame.border",
                             width=lambda: Dimension(
                                 weight=int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
@@ -33443,9 +33486,9 @@ def build_app(
                         ),
                         filter=filt
                     ) for w, title, filt in [
-                        (agent_messages_window, "АГЕНТИ", Condition(lambda: agent_messages_window is not None and not show_menu())),
-                        (context_window, "КОНТЕКСТ", Condition(lambda: agent_messages_window is None and not show_menu())),
-                        (menu_window, "MENU", show_menu)
+                        (agent_messages_window, "АГЕНТИ", Condition(lambda: agent_messages_window is not None and state.menu_level == MenuLevel.NONE)),
+                        (context_window, "КОНТЕКСТ", Condition(lambda: agent_messages_window is None and state.menu_level == MenuLevel.NONE)),
+                        (menu_window, "MENU", Condition(lambda: state.menu_level != MenuLevel.NONE))
                     ] if w is not None
                 ]
             ),
@@ -36120,7 +36163,7 @@ _get_context = get_context
 _get_status = get_status
 ```
 
-### `tui/themes.py` (14.1 KB)
+### `tui/themes.py` (14.2 KB)
 
 ```python
 import os
@@ -36148,7 +36191,7 @@ THEMES: Dict[str, Dict[str, str]] = {
         "context.title": "#00afaf",
         "context.label": "#3d5050",
         "context.value": "#87d7d7",
-        "input": "bg:#0d1117",
+        "input": "bg:#0d1117 #d0d0d0",
         "input.prompt": "#00afaf",
         "menu": "bg:#0d1117",
         "menu.title": "#00afaf",
@@ -36197,7 +36240,7 @@ THEMES: Dict[str, Dict[str, str]] = {
         "context.title": "#bd93f9",
         "context.label": "#44475a",
         "context.value": "#c8c8c8",
-        "input": "bg:#1e1f29",
+        "input": "bg:#1e1f29 #f8f8f2",
         "input.prompt": "#50fa7b",
         "menu": "bg:#282a36",
         "menu.title": "#bd93f9",
@@ -36239,7 +36282,7 @@ THEMES: Dict[str, Dict[str, str]] = {
         "context.title": "#88c0d0",
         "context.label": "#4c566a",
         "context.value": "#d8dee9",
-        "input": "bg:#3b4252",
+        "input": "bg:#3b4252 #eceff4",
         "input.prompt": "#a3be8c",
         "menu": "bg:#2e3440",
         "menu.title": "#88c0d0",
@@ -36281,7 +36324,7 @@ THEMES: Dict[str, Dict[str, str]] = {
         "context.title": "#d79921",
         "context.label": "#665c54",
         "context.value": "#d5c4a1",
-        "input": "bg:#1d2021",
+        "input": "bg:#1d2021 #fbf1c7",
         "input.prompt": "#b8bb26",
         "menu": "bg:#282828",
         "menu.title": "#d79921",
@@ -36323,7 +36366,7 @@ THEMES: Dict[str, Dict[str, str]] = {
         "context.title": "#268bd2",
         "context.label": "#586e75",
         "context.value": "#93a1a1",
-        "input": "bg:#073642",
+        "input": "bg:#073642 #93a1a1",
         "input.prompt": "#859900",
         "menu": "bg:#002b36",
         "menu.title": "#268bd2",
@@ -36365,7 +36408,7 @@ THEMES: Dict[str, Dict[str, str]] = {
         "context.title": "#61afef",
         "context.label": "#5c6370",
         "context.value": "#abb2bf",
-        "input": "bg:#21252b",
+        "input": "bg:#21252b #abb2bf",
         "input.prompt": "#98c379",
         "menu": "bg:#282c34",
         "menu.title": "#61afef",
@@ -36407,7 +36450,7 @@ THEMES: Dict[str, Dict[str, str]] = {
         "context.title": "#89b4fa",
         "context.label": "#6c7086",
         "context.value": "#cdd6f4",
-        "input": "bg:#181825",
+        "input": "bg:#181825 #cdd6f4",
         "input.prompt": "#a6e3a1",
         "menu": "bg:#1e1e2e",
         "menu.title": "#89b4fa",
@@ -36449,7 +36492,7 @@ THEMES: Dict[str, Dict[str, str]] = {
         "context.title": "#7aa2f7",
         "context.label": "#565f89",
         "context.value": "#a9b1d6",
-        "input": "bg:#16161e",
+        "input": "bg:#16161e #c0caf5",
         "input.prompt": "#9ece6a",
         "menu": "bg:#1a1b26",
         "menu.title": "#7aa2f7",
@@ -36491,7 +36534,7 @@ THEMES: Dict[str, Dict[str, str]] = {
         "context.title": "#9ccfd8",
         "context.label": "#6e6a86",
         "context.value": "#e0def4",
-        "input": "bg:#1f1d2e",
+        "input": "bg:#1f1d2e #e0def4",
         "input.prompt": "#31748f",
         "menu": "bg:#191724",
         "menu.title": "#9ccfd8",
@@ -37363,4 +37406,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13527
+- **Skipped**: 13544

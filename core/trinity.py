@@ -496,8 +496,12 @@ class TrinityRuntime:
         content = ""  # Initialize content variable
         
         try:
-            # For tool-bound calls, don't stream (JSON protocol needs complete response)
-            response = bound_llm.invoke(prompt.format_messages())
+            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("tetyana", chunk)
+            
+            response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             
@@ -864,8 +868,12 @@ class TrinityRuntime:
         content = ""  # Initialize content variable
         try:
             trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
-            # For tool-bound calls, don't stream (JSON protocol needs complete response)
-            response = self.llm.invoke(prompt.format_messages())
+            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("grisha", chunk)
+            
+            response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
             content = response.content
             tool_calls = response.tool_calls if hasattr(response, 'tool_calls') else []
             

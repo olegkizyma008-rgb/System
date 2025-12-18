@@ -139,18 +139,21 @@ def build_app(
 
     def get_interactive_header() -> AnyFormattedText:
         base = _safe_formatted_text(get_header, fallback_style="class:header")()
-        # Ensure base is list
         if not isinstance(base, list):
             base = [("", str(base))]
+            
+        cur_scroll = str(getattr(state, "ui_scroll_target", "log") or "log").upper()
+        # Clean [ACTIVE] or [SCROLL] from base if it exists (some old get_header versions might have it)
+        # But here we just append our dynamic labels
             
         # Add labels purely informational
         labels = [
              ("class:header", "  "),
-             ("class:button", "[ F2: MENU ]"),
+             ("class:button", f"[ F2: {'CLOSE' if state.menu_level != MenuLevel.NONE else 'MENU'} ]"),
              ("class:header", " "),
-             ("class:button", "[ PgUp: LOGS ]"),
+             ("class:button", f"[ PgUp: LOGS {'[SCROLL]' if cur_scroll == 'LOG' else ''} ]"),
              ("class:header", " "),
-             ("class:button", "[ PgDn: AGENTS ]"),
+             ("class:button", f"[ PgDn: AGENTS {'[SCROLL]' if cur_scroll == 'AGENTS' else ''} ]"),
              ("class:header", "  "),
         ]
         
@@ -171,10 +174,14 @@ def build_app(
 
     safe_get_logs = _cached_getter(_safe_formatted_text(get_logs, fallback_style="class:log.info"))
     log_window = Window(
-        FormattedTextControl(safe_get_logs, get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position)),
+        FormattedTextControl(
+            safe_get_logs, 
+            get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
+            show_cursor=True,
+        ),
         wrap_lines=False,
         right_margins=[ScrollbarMargin(display_arrows=True)],
-        style="class:log.window" # ensure background
+        style="class:log.window", # ensure background
     )
     setattr(log_window, "name", "log")
 
@@ -187,6 +194,7 @@ def build_app(
             FormattedTextControl(
                 safe_get_agent_messages,
                 get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
+                show_cursor=True,
             ),
             wrap_lines=False,
             style="class:agent.panel",
@@ -230,7 +238,7 @@ def build_app(
              base = [("", str(base))]
          
          # Informational hint (no callback as requested)
-         return base + [("class:status", "  "), ("class:button", "[ F2: Menu ]")]
+         return base + [("class:status", "  "), ("class:button", f"[ F2: {'Close' if state.menu_level != MenuLevel.NONE else 'Menu'} ]")]
 
     status_window = Window(FormattedTextControl(get_interactive_status), height=1, style="class:status")
 
@@ -286,7 +294,7 @@ def build_app(
                     ConditionalContainer(
                         Frame(
                             w,
-                            title=lambda: f" {title} [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "agents" and title == "АГЕНТИ" else f" {title} ",
+                            title=lambda t=title: f" {t} [ACTIVE] " if getattr(state, "ui_scroll_target", "log") == "agents" and t == "АГЕНТИ" else f" {t} ",
                             style="class:frame.border",
                             width=lambda: Dimension(
                                 weight=int((1.0 - getattr(state, "ui_left_panel_ratio", 0.6)) * 100),
@@ -296,9 +304,9 @@ def build_app(
                         ),
                         filter=filt
                     ) for w, title, filt in [
-                        (agent_messages_window, "АГЕНТИ", Condition(lambda: agent_messages_window is not None and not show_menu())),
-                        (context_window, "КОНТЕКСТ", Condition(lambda: agent_messages_window is None and not show_menu())),
-                        (menu_window, "MENU", show_menu)
+                        (agent_messages_window, "АГЕНТИ", Condition(lambda: agent_messages_window is not None and state.menu_level == MenuLevel.NONE)),
+                        (context_window, "КОНТЕКСТ", Condition(lambda: agent_messages_window is None and state.menu_level == MenuLevel.NONE)),
+                        (menu_window, "MENU", Condition(lambda: state.menu_level != MenuLevel.NONE))
                     ] if w is not None
                 ]
             ),
