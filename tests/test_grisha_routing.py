@@ -11,6 +11,11 @@ class _DummyLLM:
     def invoke(self, _messages):
         return AIMessage(content=self._content)
 
+    def invoke_with_stream(self, _messages, on_delta=None):
+        if on_delta:
+            on_delta(self._content)
+        return AIMessage(content=self._content)
+
 
 class _DummyLLMWithToolCalls:
     class _Resp:
@@ -19,6 +24,9 @@ class _DummyLLMWithToolCalls:
             self.tool_calls = [{"name": "capture_screen", "args": {}}]
 
     def invoke(self, _messages):
+        return self._Resp()
+
+    def invoke_with_stream(self, _messages, on_delta=None):
         return self._Resp()
 
 
@@ -60,7 +68,8 @@ def test_grisha_explicit_verified_marker_ends(monkeypatch: pytest.MonkeyPatch, g
     state = {"messages": [AIMessage(content="previous")], "gui_mode": "off", "execution_mode": "native"}
     out = rt._grisha_node(state)
 
-    assert out["current_agent"] == "end"
+    assert out["current_agent"] == "atlas"
+    assert out["last_step_status"] == "success"
 
 
 def test_grisha_tool_calls_branch_does_not_crash(monkeypatch: pytest.MonkeyPatch):

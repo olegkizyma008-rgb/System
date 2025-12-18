@@ -478,6 +478,7 @@ class TrinityRuntime:
         task_type = str(state.get("task_type") or "").strip().upper()
         requires_windsurf = bool(state.get("requires_windsurf") or False)
         dev_edit_mode = str(state.get("dev_edit_mode") or ("windsurf" if requires_windsurf else "cli")).strip().lower()
+        had_failure = False # Initialize for scope safety
         
         try:
             plan_preview = state.get("plan")
@@ -535,7 +536,6 @@ class TrinityRuntime:
                 pass
             
             results = []
-            had_failure = False
             gui_tools = {
                 "move_mouse",
                 "click_mouse",
@@ -794,7 +794,7 @@ class TrinityRuntime:
         try:
             trace(self.logger, "tetyana_exit", {
                 "next_agent": "grisha",
-                "last_step_status": "success",
+                "last_step_status": "failed" if had_failure else "success",
                 "execution_mode": execution_mode,
                 "gui_mode": gui_mode,
                 "dev_edit_mode": dev_edit_mode,
@@ -808,7 +808,7 @@ class TrinityRuntime:
             "gui_mode": gui_mode,
             "gui_fallback_attempted": gui_fallback_attempted,
             "dev_edit_mode": dev_edit_mode,
-            "last_step_status": "success",
+            "last_step_status": "failed" if had_failure else "success",
         }
 
     def _grisha_node(self, state: TrinityState):
@@ -817,6 +817,7 @@ class TrinityRuntime:
         if not context:
             return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для перевірки.")]}
         last_msg = context[-1].content
+        tool_calls = [] # Initialize for scope safety
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
         execution_mode = str(state.get("execution_mode") or "native").strip().lower()

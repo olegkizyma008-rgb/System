@@ -21,6 +21,9 @@ class _DummyToolLLM:
 
         return _Resp(self._tool_calls)
 
+    def invoke_with_stream(self, _messages, on_delta=None):
+        return self.invoke(_messages)
+
 
 class _DummyRegistry:
     def __init__(self):

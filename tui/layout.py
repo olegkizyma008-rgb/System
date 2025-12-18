@@ -7,14 +7,6 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.data_structures import Point
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
-# Added import for MenuLevel
-# Assuming MenuLevel is in system_cli.state or tui.state. 
-# Based on existing imports 'from system_cli.state import state', let's guess MenuLevel is there or locally defined?
-# Wait, in tui/cli.py: line 1637: MenuLevel=MenuLevel passed to build_menu.
-# MenuLevel is often an IntEnum. It seems to be missing in layout.py
-# I will add 'from tui.state import MenuLevel' if it exists, or check where it is.
-# Actually, let's fix the missing _safe_formatted_text first.
-
 from prompt_toolkit.layout.containers import ConditionalContainer, HSplit, VSplit, Window
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.formatted_text import AnyFormattedText
@@ -205,7 +197,6 @@ def build_app(
     log_control = FormattedTextControl(
         safe_get_logs, 
         get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
-        show_cursor=False, # Disable to allow free mouse scrolling
         focusable=True,
     )
     log_control.mouse_handler = make_scroll_handler("log")
@@ -213,6 +204,7 @@ def build_app(
     log_window = Window(
         log_control,
         wrap_lines=True,
+        show_cursor=False, # Disable to allow free mouse scrolling
         right_margins=[ScrollbarMargin(display_arrows=True)],
         style="class:log.window", # ensure background
     )
@@ -226,7 +218,6 @@ def build_app(
         agent_control = FormattedTextControl(
             safe_get_agent_messages,
             get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
-            show_cursor=False, # Disable to allow free mouse scrolling
             focusable=True,
         )
         agent_control.mouse_handler = make_scroll_handler("agents")
@@ -234,6 +225,7 @@ def build_app(
         agent_messages_window = Window(
             agent_control,
             wrap_lines=True,
+            show_cursor=False, # Disable to allow free mouse scrolling
             style="class:agent.panel",
             right_margins=[ScrollbarMargin(display_arrows=True)],
         )
