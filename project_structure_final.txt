@@ -4,52 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13455
+- **Files Skipped**: 13463
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:26:56
+- **Generated**: 2025-12-18 02:30:11
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 149, in build_app
-    FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")),
-                        ^^^^^^^^^^^^^^^^^^^^
-NameError: name '_safe_formatted_text' is not defined
-2025-12-18 01:26:51 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: ['--help']
-2025-12-18 01:27:51 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: ['--help']
-2025-12-18 01:30:59 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: ['--help']
-2025-12-18 01:31:59 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: ['--help']
-2025-12-18 01:32:18 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:32:18 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:32:18 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:32:46 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:35:42 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:35:42 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:35:42 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:37:07 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:37:07 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:37:07 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 02:18:22 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 02:18:26 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 02:18:26 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 02:18:26 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 02:21:01 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 02:21:06 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:21:06 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:21:06 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:21:06 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
     keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
@@ -58,7 +21,7 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
 ValueError: Invalid key: s-enter
-2025-12-18 02:21:06 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+2025-12-18 02:27:17 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
     cli_main(sys.argv[1:])
@@ -76,10 +39,10 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
 ValueError: Invalid key: s-enter
-2025-12-18 02:21:11 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:21:11 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:21:11 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:21:11 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+2025-12-18 02:27:27 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:27:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:27:27 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:27:27 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
@@ -95,7 +58,44 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
 ValueError: Invalid key: s-enter
-2025-12-18 02:21:11 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+2025-12-18 02:27:27 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:27:45 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:27:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:27:45 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:27:45 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:27:45 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
     cli_main(sys.argv[1:])
@@ -147,18 +147,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 36676 +-----------------------------------------
- 1 file changed, 2 insertions(+), 36674 deletions(-)
+ project_structure_final.txt | 36838 +-----------------------------------------
+ 1 file changed, 38 insertions(+), 36800 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-90db1b0 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
+fe701a6 feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
+d74c634 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
 77c9407 feat: Enhance TUI input keybindings, enable clickable menu items, add dynamic panel titles, and introduce a JSON logger for AI events.
 b60dddf feat: Add initial project README and implement browser and desktop automation tools.
 479922a Fix TUI startup: NameError resolution and list-editors bugfix
-8972bd4 Trinity task completed: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а вс…
 ```
 
 ---
@@ -11194,7 +11194,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (498.7 KB)
+### `project_structure_final.txt` (498.0 KB)
 
 ```text
 # System — Project Structure
@@ -11203,52 +11203,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13455
+- **Files Skipped**: 13463
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:26:56
+- **Generated**: 2025-12-18 02:30:11
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1677, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 149, in build_app
-    FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")),
-                        ^^^^^^^^^^^^^^^^^^^^
-NameError: name '_safe_formatted_text' is not defined
-2025-12-18 01:26:51 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: ['--help']
-2025-12-18 01:27:51 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: ['--help']
-2025-12-18 01:30:59 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: ['--help']
-2025-12-18 01:31:59 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: ['--help']
-2025-12-18 01:32:18 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:32:18 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:32:18 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:32:46 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 01:35:42 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:35:42 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:35:42 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 01:37:07 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 01:37:07 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 01:37:07 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 02:18:22 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 02:18:26 | INFO     | MainThread | system_cli.cli | cli_main:2398 | CLI started with arguments: []
-2025-12-18 02:18:26 | DEBUG    | MainThread | system_cli.cli | cli_main:2440 | Parsed command: None
-2025-12-18 02:18:26 | INFO     | MainThread | system_cli.cli | cli_main:2443 | Starting TUI mode
-2025-12-18 02:21:01 | INFO     | MainThread | system_cli.cli | cli_main:2446 | TUI mode exited successfully
-2025-12-18 02:21:06 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:21:06 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:21:06 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:21:06 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("s-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
     keys = tuple(_parse_key(k) for k in keys)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
@@ -11257,7 +11220,7 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
 ValueError: Invalid key: s-enter
-2025-12-18 02:21:06 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+2025-12-18 02:27:17 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
     cli_main(sys.argv[1:])
@@ -11275,10 +11238,10 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
 ValueError: Invalid key: s-enter
-2025-12-18 02:21:11 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:21:11 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:21:11 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:21:11 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+2025-12-18 02:27:27 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:27:27 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:27:27 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:27:27 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
     run_tui()
@@ -11294,7 +11257,44 @@ Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
     raise ValueError(f"Invalid key: {key}")
 ValueError: Invalid key: s-enter
-2025-12-18 02:21:11 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+2025-12-18 02:27:27 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:27:45 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
+2025-12-18 02:27:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
+2025-12-18 02:27:45 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
+2025-12-18 02:27:45 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
+    @input_kb.add("s-enter")
+     ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
+    keys = tuple(_parse_key(k) for k in keys)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
+    keys = tuple(_parse_key(k) for k in keys)
+                 ^^^^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
+    raise ValueError(f"Invalid key: {key}")
+ValueError: Invalid key: s-enter
+2025-12-18 02:27:45 | ERROR    | MainThread | system_cli.cli | log_exception:192 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
     cli_main(sys.argv[1:])
@@ -11346,18 +11346,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 36676 +-----------------------------------------
- 1 file changed, 2 insertions(+), 36674 deletions(-)
+ project_structure_final.txt | 36838 +-----------------------------------------
+ 1 file changed, 38 insertions(+), 36800 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-90db1b0 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
+fe701a6 feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
+d74c634 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
 77c9407 feat: Enhance TUI input keybindings, enable clickable menu items, add dynamic panel titles, and introduce a JSON logger for AI events.
 b60dddf feat: Add initial project README and implement browser and desktop automation tools.
 479922a Fix TUI startup: NameError resolution and list-editors bugfix
-8972bd4 Trinity task completed: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а вс…
 ```
 
 ---
@@ -30672,7 +30672,7 @@ def run_tui() -> None:
         if buff.text.strip():
             buff.validate_and_handle()
 
-    @input_kb.add("s-enter")
+    @input_kb.add("shift-enter")
     @input_kb.add("c-enter")
     @input_kb.add("escape", "enter")
     def _(event):
@@ -33082,7 +33082,7 @@ def build_app(
     return app
 ```
 
-### `tui/logger.py` (7.9 KB)
+### `tui/logger.py` (8.0 KB)
 
 ```python
 #!/usr/bin/env python3
@@ -33099,6 +33099,7 @@ import logging
 import logging.handlers
 import os
 import sys
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -36901,4 +36902,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13455
+- **Skipped**: 13463

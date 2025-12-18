@@ -1684,7 +1684,7 @@ def run_tui() -> None:
         if buff.text.strip():
             buff.validate_and_handle()
 
-    @input_kb.add("s-enter")
+    @input_kb.add("shift-enter")
     @input_kb.add("c-enter")
     @input_kb.add("escape", "enter")
     def _(event):
