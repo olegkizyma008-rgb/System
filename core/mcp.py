@@ -30,7 +30,9 @@ from system_ai.tools.browser import (
     browser_type_text,
     browser_get_content,
     browser_execute_script,
-    browser_ensure_ready
+    browser_ensure_ready,
+    browser_press_key,
+    browser_screenshot
 )
 
 class MCPToolRegistry:

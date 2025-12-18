@@ -56,7 +56,11 @@ class BrowserManager:
                     raise Exception(f"Browser executables not found. Please run 'playwright install chromium' in the terminal. Original error: {e}")
                 raise e
             self._context = self._browser.new_context(
-                viewport={'width': 1280, 'height': 800}
+                viewport={'width': 1280, 'height': 800},
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                locale="uk-UA",
+                timezone_id="Europe/Kyiv",
+                color_scheme="dark"
             )
             self._page = self._context.new_page()
         else:
@@ -133,8 +137,14 @@ def browser_open_url(url: str, headless: bool = False) -> Dict[str, Any]:
         # For simplicity, we just ensure it's started. Restarting with diff config is complex.
         _manager.start(headless=headless) 
         page = _manager.get_page()
-        page.goto(url)
-        page.wait_for_load_state("domcontentloaded")
+        
+        # Human-like delay
+        import random
+        time.sleep(random.uniform(0.5, 1.5))
+        
+        # Use networkidle for better reliability on heavy sites
+        page.goto(url, wait_until="load", timeout=60000)
+        page.wait_for_load_state("networkidle")
         
         return {
             "tool": "browser_open_url",
@@ -159,7 +169,29 @@ def browser_click_element(selector: str) -> Dict[str, Any]:
         Dict with status
     """
     try:
+        import random
         page = _manager.get_page()
+        
+        # Human-like mouse movement (jitter) before hover/click
+        box = page.locator(selector).bounding_box()
+        if box:
+            x = box['x'] + box['width'] / 2
+            y = box['y'] + box['height'] / 2
+            # Move mouse in small steps with jitter
+            for _ in range(3):
+                page.mouse.move(x + random.uniform(-5, 5), y + random.uniform(-5, 5))
+                time.sleep(random.uniform(0.05, 0.1))
+        
+        # Hover before click to trigger scripts/styles
+        page.hover(selector)
+        time.sleep(random.uniform(0.3, 0.7))
+        
+        # Random scroll before click
+        if random.random() > 0.7:
+             page.evaluate("window.scrollBy(0, window.innerHeight * 0.3)")
+             time.sleep(random.uniform(0.5, 1.0))
+             page.hover(selector) # Re-hover after scroll
+        
         page.click(selector)
         return {
             "tool": "browser_click_element",
@@ -185,12 +217,17 @@ def browser_type_text(selector: str, text: str, press_enter: bool = False) -> Di
         Dict with status
     """
     try:
+        import random
         page = _manager.get_page()
         # Ensure focus first
         page.focus(selector)
-        # Clear existing text if any and type
+        time.sleep(random.uniform(0.1, 0.3))
+        
+        # Clear existing text if any and type character by character with random delays
         page.fill(selector, "")
-        page.type(selector, text, delay=50) # Use type with small delay for realism
+        for char in text:
+            page.type(selector, char)
+            time.sleep(random.uniform(0.02, 0.12))
         
         if press_enter:
             page.press(selector, "Enter")

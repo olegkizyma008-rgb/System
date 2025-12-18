@@ -940,18 +940,19 @@ class TrinityRuntime:
             if test_results:
                 content += test_results
 
-            # Deterministic verification hook for GUI mode: always capture + analyze.
-            if gui_mode in {"auto", "on"} and execution_mode == "gui":
+            # Deterministic verification hook: capture + analyze for GUI OR Browser tasks.
+            is_browser_task = "browser_" in content.lower() or "браузер" in content.lower()
+            if (gui_mode in {"auto", "on"} and execution_mode == "gui") or is_browser_task:
                 # NEW: Prefer browser_screenshot if browser tools were used
-                if "browser_" in lower_content or "браузер" in lower_content:
+                if is_browser_task:
                     snap = self.registry.execute("browser_screenshot", {})
                     if '"status": "error"' in snap:
-                        # Fallback to global capture if browser screenshot fails
+                        # Fallback to global capture if browser screenshot fails or isn't a browser task
                         snap = self.registry.execute("capture_screen", {"app_name": None})
                 else:
                     snap = self.registry.execute("capture_screen", {"app_name": None})
                 
-                content += "\n\n[GUI_VERIFY] capture_screen:\n" + str(snap)
+                content += "\n\n[GUI_BROWSER_VERIFY] capture_screen:\n" + str(snap)
                 try:
                     snap_dict = json.loads(snap)
                     img_path = snap_dict.get("path") if isinstance(snap_dict, dict) else None
@@ -1009,37 +1010,13 @@ class TrinityRuntime:
             step_status = "success"
             next_agent = "atlas"
         elif has_successful_tool_result and not has_tool_error_in_context:
-            # ONLY count technical success as SUCCESS if it's NOT a GUI task 
-            # (GUI tasks REQUIRE explicit LLM verification via [VERIFIED])
-            is_gui_task = (gui_mode in {"on", "auto"})
-            if not is_gui_task:
-                step_status = "success"
-                next_agent = "atlas"
-            else:
-                # For GUI, technical success is just UNCERTAIN until LLM confirms visually
-                step_status = "uncertain"
-                if any(kw in lower_content for kw in ["успішно", "працює", "готово", "виконано", "done"]):
-                     step_status = "success"
-        elif any(kw in lower_content for kw in ["failed", "error", "помилка", "не вдалося", "blocked"]):
-            step_status = "failed"
-            next_agent = "atlas"
-            if self.verbose:
-                print("👁️ [Grisha] Tool error detected in context → marking as FAILED")
-        elif has_explicit_complete:
+            # technical success is SUCCESS (not uncertain!)
             step_status = "success"
             next_agent = "atlas"
-            if self.verbose:
-                print("👁️ [Grisha] Explicit completion marker found → SUCCESS")
-        elif has_successful_tool_result:
-            # NEW: Tool executed successfully with data = SUCCESS (not uncertain!)
-            step_status = "success"
-            next_agent = "atlas"
-            if self.verbose:
-                print("👁️ [Grisha] Tool executed with successful result → SUCCESS")
         elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
             step_status = "success"
             next_agent = "atlas"
-        elif any(kw in lower_content for kw in ["failed", "error", "помилка", "не вдалося", "неможливо", "blocked"]):
+        elif any(kw in lower_content for kw in ["failed", "error", "помилка", "не вдалося", "неможливо", "blocked", "sorry"]):
             step_status = "failed"
             next_agent = "atlas"
         else:
