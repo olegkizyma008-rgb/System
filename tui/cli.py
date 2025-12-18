@@ -1681,15 +1681,27 @@ def run_tui() -> None:
     input_kb = KeyBindings()
 
     @input_kb.add("enter")
+    @input_kb.add("c-j")
     def _(event):
         buff = event.current_buffer
         if buff.text.strip():
             buff.validate_and_handle()
+        else:
+            # If empty, maybe they just want a newline if it's multiline? 
+            # No, usually Enter on empty does nothing or clears.
+            buff.text = ""
 
     @input_kb.add("escape", "enter")
-    @input_kb.add("c-j")  # Often Ctrl+Enter in some terminals
     def _(event):
         event.current_buffer.insert_text("\n")
+
+    @input_kb.add("c-v")
+    def _(event):
+        """Handle paste from clipboard."""
+        from prompt_toolkit.clipboard import ClipboardData
+        data = event.app.clipboard.get_data()
+        if data.text:
+            event.current_buffer.insert_text(data.text)
 
     app = build_app(
         input_key_bindings=input_kb,

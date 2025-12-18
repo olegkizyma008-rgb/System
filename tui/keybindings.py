@@ -193,8 +193,8 @@ def build_keybindings(
             state.menu_level = MenuLevel.NONE
             state.menu_index = 0
             state.ui_scroll_target = "agents"
-            # Focus back to agent/log if needed, but usually we just want navigation
-            w = _find_window_by_name(event, "agents")
+            # Focus back to input field
+            w = _find_window_by_name(event, "input")
             if w:
                 event.app.layout.focus(w)
 
@@ -226,6 +226,18 @@ def build_keybindings(
         }:
             state.menu_level = MenuLevel.MAIN
             state.menu_index = 0
+        else:
+            # Not in menu, focus the input field
+            w = _find_window_by_name(event, "input")
+            if w:
+                event.app.layout.focus(w)
+
+    @kb.add("c-l")
+    def _(event):
+        """Focus the input field."""
+        w = _find_window_by_name(event, "input")
+        if w:
+            event.app.layout.focus(w)
 
     @kb.add("up", filter=show_menu)
     def _(event):

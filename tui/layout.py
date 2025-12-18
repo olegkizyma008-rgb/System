@@ -252,6 +252,14 @@ def build_app(
     )
     setattr(menu_window, "name", "menu")
 
+    input_window = Window(
+        BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
+        style="class:input",
+        wrap_lines=True, # Ensure long pastes are visible
+        height=Dimension(min=1, preferred=2, max=10) # Dynamic height
+    )
+    setattr(input_window, "name", "input")
+
     input_area = VSplit(
         [
             Window(
@@ -260,12 +268,7 @@ def build_app(
                 style="class:input",
                 dont_extend_width=True,
             ),
-            Window(
-                BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
-                style="class:input",
-                wrap_lines=True, # Ensure long pastes are visible
-                height=Dimension(min=1, preferred=2, max=10) # Dynamic height
-            ),
+            input_window,
         ]
     )
 
@@ -357,7 +360,7 @@ def build_app(
     )
 
     app = Application(
-        layout=Layout(main_body),
+        layout=Layout(main_body, focused_element=input_window),
         key_bindings=kb,
         full_screen=True,
         style=style,
