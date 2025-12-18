@@ -316,6 +316,8 @@ class MCPToolRegistry:
             # TUI Tool Convention: If the function explicitly requests 'args', pass the full dictionary
             if "args" in sig.parameters:
                 call_kwargs["args"] = args
+            elif "_args" in sig.parameters:
+                call_kwargs["_args"] = args
             
             # Filter args to only those supported by the function, unless it has **kwargs
             has_varkw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
