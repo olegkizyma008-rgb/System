@@ -4,120 +4,126 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13479
+- **Files Skipped**: 13485
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:38:14
+- **Generated**: 2025-12-18 02:47:41
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:30:25 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:30:45 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:30:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:30:45 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:30:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:30:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:31:35 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:31:35 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:31:35 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:31:35 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:31:35 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:32:29 | INFO     | MainThread | system_cli.cli | cli_main:2414 | CLI started with arguments: ['--help']
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Verification passed. [VERIFIED]"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "верифікація пройдена\n[VERIFIED]"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "I'll verify using tools."}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "do something"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "windsurf", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "windsurf"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-18 02:38:52 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
+2025-12-18 02:44:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 02:44:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 02:44:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 02:45:02 | INFO     | MainThread | system_cli.cli | cli_main:2462 | TUI mode exited successfully
+2025-12-18 02:45:07 | INFO     | MainThread | system_cli.cli | cli_main:2414 | CLI started with arguments: []
+2025-12-18 02:45:07 | DEBUG    | MainThread | system_cli.cli | cli_main:2456 | Parsed command: None
+2025-12-18 02:45:07 | INFO     | MainThread | system_cli.cli | cli_main:2459 | Starting TUI mode
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-editors']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-editors
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2485 | Listing editors
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2488 | Editors listed successfully
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-modules
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Listing modules for editor: windsurf
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2502 | Modules listed for windsurf
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: run
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-modules
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Listing modules for editor: windsurf
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2502 | Modules listed for windsurf
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['run', '--dry-run']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: run
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "План виглядає безпечним і чітким. Проте перед початком перевірки я маю уточнити кілька моментів:\n\n1. Чи впевнені ви, що папка `System_Report_2025` доступна для читання?\n\n2. Якщо все готово, я можу роз"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Якщо все готово, можу починати?"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Все перевірено. [VERIFIED]"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Verification passed. [VERIFIED]"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "верифікація пройдена\n[VERIFIED]"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "I'll verify using tools."}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "do something"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "windsurf", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "windsurf"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
 ```
 
 ---
 
 ## Last Response
+
+## My Last Response
+
+Add Trinity trace logs and replan tracking
+
+---
 
 [Atlas] Final report
 
@@ -147,18 +153,23 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 36862 +-----------------------------------------
- 1 file changed, 2 insertions(+), 36860 deletions(-)
+ project_structure_final.txt | 37249 +-----------------------------------------
+ tui/cleanup.py              |    34 +-
+ tui/cli.py                  |    55 +-
+ tui/keybindings.py          |     4 +-
+ tui/layout.py               |    31 +-
+ tui/menu.py                 |    48 +-
+ 6 files changed, 216 insertions(+), 37205 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-81cf870 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
+aa16cf9 Update: Add latest response
+b13d020 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
 6d2c7e4 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
 01e53fb feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
 d74c634 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
-77c9407 feat: Enhance TUI input keybindings, enable clickable menu items, add dynamic panel titles, and introduce a JSON logger for AI events.
 ```
 
 ---
@@ -580,9 +591,15 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (3.7 KB)
+### `.last_response.txt` (3.8 KB)
 
 ```text
+## My Last Response
+
+Add Trinity trace logs and replan tracking
+
+---
+
 [Atlas] Final report
 
 Task: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а всередині репозиторія /Users/dev/Documents/GitHub/System/data ⸻ Велике комплексне завдання Створення автоматизованого звіту про систему (repo-based) Базовий шлях Усі файли та папки створюються тільки всередині репозиторія: /Users/dev/Documents/GitHub/System/data ⸻ 1. Створення папки звіту Створи папку для звіту за шляхом: /Users/dev/Documents/GitHub/System/data/System_Report_1212 ⸻ 2. Скріншот всього екрану Зроби скріншот усього екрану Збережи файл у папку звіту з назвою: desktop_screenshot.png ⸻ 3. Safari → apple.com • Відкрий Safari • Перейди на сайт https://apple.com • Зроби скріншот вікна Safari • Збережи у папку звіту як: safari_apple.png ⸻ 4. Finder → Downloads + system info • Відкрий Finder • Покажи вміст папки Downloads • Зроби скріншот вікна Finder • Збережи як: finder_downloads.png Додатково У папці звіту створи файл: system_info.txt З таким вмістом: • Дата і час створення звіту • Ім’я користувача системи • Версія macOS • Кількість RAM • Інформація про процесор ⸻ 5. Chrome (Guest) → Google Search • Відкрий Google Chrome у гостьовому режимі • Перейди на https://google.com • Знайди: “macOS automation” • Зроби скріншот результатів пошуку • Збережи як: chrome_search.png ⸻ 6. Shortcuts automation Якщо Shortcuts увімкнено: • Створи Shortcut, який: • відкриває Terminal • виконує команду date • Збережи Shortcut з назвою: auto_date_shortcut ⸻ 7. Генерація звіту Створи файл: report_summary.md У ньому опиши: • всі виконані дії (по пунктах) • список створених файлів • розміри кожного файлу ⸻ 8. Архівація Заархівуй всю папку: System_Report_1212 у файл: System_Report_1212.zip Архів має лежати в: /Users/dev/Documents/GitHub/System/data ⸻ 9–10. Сповіщення про завершення Надішли два сповіщення з текстом: "Звіт про систему успішно створено" ⸻ Важливо • ❌ Не використовувати Desktop • ✅ Усі артефакти — тільки всередині репозиторія • ✅ Шлях фіксований і відтворюваний • ✅ Підходить для автоматизації (Shortcuts / AppleScript / shell) ⸻ Якщо хочеш — можу: • перетворити це в Automator / Shortcuts workflow • або написати shell-скрипт, який робить 80% автоматично • або адаптувати під CI / dev-task для Trinity
@@ -11322,7 +11339,7 @@ if __name__ == "__main__":
 test content
 ```
 
-### `project_structure_final.txt` (503.2 KB)
+### `project_structure_final.txt` (516.3 KB)
 
 ```text
 # System — Project Structure
@@ -11331,120 +11348,126 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 119
-- **Files Skipped**: 13479
+- **Files Skipped**: 13485
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-18 02:38:14
+- **Generated**: 2025-12-18 02:47:41
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:30:25 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:30:45 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:30:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:30:45 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:30:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:30:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/.venv/lib/python3.12/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:31:35 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: []
-2025-12-18 02:31:35 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: None
-2025-12-18 02:31:35 | INFO     | MainThread | system_cli.cli | cli_main:2460 | Starting TUI mode
-2025-12-18 02:31:35 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:31:35 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2624, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2462, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1687, in run_tui
-    @input_kb.add("shift-enter")
-     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in add
-    keys = tuple(_parse_key(k) for k in keys)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 280, in <genexpr>
-    keys = tuple(_parse_key(k) for k in keys)
-                 ^^^^^^^^^^^^^
-  File "/Users/dev/.pyenv/versions/3.11.13/lib/python3.11/site-packages/prompt_toolkit/key_binding/key_bindings.py", line 455, in _parse_key
-    raise ValueError(f"Invalid key: {key}")
-ValueError: Invalid key: shift-enter
-2025-12-18 02:32:29 | INFO     | MainThread | system_cli.cli | cli_main:2414 | CLI started with arguments: ['--help']
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Verification passed. [VERIFIED]"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "верифікація пройдена\n[VERIFIED]"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "I'll verify using tools."}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "do something"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "windsurf", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "windsurf"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
+2025-12-18 02:38:51 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-18 02:38:52 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
+2025-12-18 02:44:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 02:44:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 1, "replan_count": 0, "last_step_status": null, "plan_len": 0, "task_type": "DEV", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "Завдання для Атласа (verification task) Контекст: Система оновлена і має повний доступ до system, desktop та browser інструментів. Потрібно перевірити, що ці можливості реально використовуються в зв’я"}
+2025-12-18 02:44:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 1, "replan_count": 0}
+2025-12-18 02:45:02 | INFO     | MainThread | system_cli.cli | cli_main:2462 | TUI mode exited successfully
+2025-12-18 02:45:07 | INFO     | MainThread | system_cli.cli | cli_main:2414 | CLI started with arguments: []
+2025-12-18 02:45:07 | DEBUG    | MainThread | system_cli.cli | cli_main:2456 | Parsed command: None
+2025-12-18 02:45:07 | INFO     | MainThread | system_cli.cli | cli_main:2459 | Starting TUI mode
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-editors']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-editors
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2485 | Listing editors
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2488 | Editors listed successfully
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules', '--editor', '__unknown__']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-modules
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Listing modules for editor: windsurf
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2502 | Modules listed for windsurf
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['run', '--editor', 'windsurf', '--dry-run']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: run
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['list-modules']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: list-modules
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2493 | Listing modules for editor: windsurf
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2502 | Modules listed for windsurf
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2415 | CLI started with arguments: ['run', '--dry-run']
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2457 | Parsed command: run
+2025-12-18 02:46:37 | DEBUG    | MainThread | system_cli.cli | cli_main:2471 | Cleanup config loaded successfully
+2025-12-18 02:46:37 | WARNING  | MainThread | system_cli.cli | cli_main:2478 | Editor not specified. Доступні редактори: windsurf, vscode, antigravity, cursor. Вкажіть --editor.
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2507 | Running cleanup for editor: windsurf, dry_run=True
+2025-12-18 02:46:37 | INFO     | MainThread | system_cli.cli | cli_main:2510 | Cleanup completed: [DRY-RUN] Windsurf: deep_windsurf, advanced_windsurf, windsurf_identifier_cleanup, deep_vscode_for_windsurf, stealth_cleanup, hardware_spoof, check_identifier_cleanup, windsurf_cache_local_cleanup
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "План виглядає безпечним і чітким. Проте перед початком перевірки я маю уточнити кілька моментів:\n\n1. Чи впевнені ви, що папка `System_Report_2025` доступна для читання?\n\n2. Якщо все готово, я можу роз"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Якщо все готово, можу починати?"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Все перевірено. [VERIFIED]"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "Verification passed. [VERIFIED]"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "верифікація пройдена\n[VERIFIED]"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "end", "last_step_status": "success"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": null, "replan_count": null, "plan_len": 0, "task_type": null, "gui_mode": "off", "execution_mode": "native", "last_msg_preview": "previous"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "", "critical_changes": false, "changed_files": [], "skip": false}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": "I'll verify using tools."}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "do something"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "windsurf", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "windsurf"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "DEV", "requires_windsurf": true, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "off", "gui_fallback_attempted": false, "plan_len": 0, "last_msg_preview": "change code"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "off", "dev_edit_mode": "cli"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "DEV", "requires_windsurf": true, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 100, "input_preview": "Зроби зміну у файлі some_change.txt"}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-18 02:46:38 | DEBUG    | MainThread | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 0}
 ```
 
 ---
 
 ## Last Response
+
+## My Last Response
+
+Add Trinity trace logs and replan tracking
+
+---
 
 [Atlas] Final report
 
@@ -11474,18 +11497,23 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 36862 +-----------------------------------------
- 1 file changed, 2 insertions(+), 36860 deletions(-)
+ project_structure_final.txt | 37249 +-----------------------------------------
+ tui/cleanup.py              |    34 +-
+ tui/cli.py                  |    55 +-
+ tui/keybindings.py          |     4 +-
+ tui/layout.py               |    31 +-
+ tui/menu.py                 |    48 +-
+ 6 files changed, 216 insertions(+), 37205 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-81cf870 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
+aa16cf9 Update: Add latest response
+b13d020 feat: Implement detailed workflow tracing and replan count tracking, and streamline logger access.
 6d2c7e4 feat: Add telemetry tracing for tetyana agent flow and update CLI newline keybindings.
 01e53fb feat: Add `json` module import to logger and update CLI key binding from `s-enter` to `shift-enter`.
 d74c634 feat: add detailed tracing for Atlas agent lifecycle events and remove direct LLM invocation for step announcements
-77c9407 feat: Enhance TUI input keybindings, enable clickable menu items, add dynamic panel titles, and introduce a JSON logger for AI events.
 ```
 
 ---
@@ -11907,9 +11935,15 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (3.7 KB)
+### `.last_response.txt` (3.8 KB)
 
 ```text
+## My Last Response
+
+Add Trinity trace logs and replan tracking
+
+---
+
 [Atlas] Final report
 
 Task: Ось перероблена версія завдання з чіткою прив’язкою не до Desktop, а всередині репозиторія /Users/dev/Documents/GitHub/System/data ⸻ Велике комплексне завдання Створення автоматизованого звіту про систему (repo-based) Базовий шлях Усі файли та папки створюються тільки всередині репозиторія: /Users/dev/Documents/GitHub/System/data ⸻ 1. Створення папки звіту Створи папку для звіту за шляхом: /Users/dev/Documents/GitHub/System/data/System_Report_1212 ⸻ 2. Скріншот всього екрану Зроби скріншот усього екрану Збережи файл у папку звіту з назвою: desktop_screenshot.png ⸻ 3. Safari → apple.com • Відкрий Safari • Перейди на сайт https://apple.com • Зроби скріншот вікна Safari • Збережи у папку звіту як: safari_apple.png ⸻ 4. Finder → Downloads + system info • Відкрий Finder • Покажи вміст папки Downloads • Зроби скріншот вікна Finder • Збережи як: finder_downloads.png Додатково У папці звіту створи файл: system_info.txt З таким вмістом: • Дата і час створення звіту • Ім’я користувача системи • Версія macOS • Кількість RAM • Інформація про процесор ⸻ 5. Chrome (Guest) → Google Search • Відкрий Google Chrome у гостьовому режимі • Перейди на https://google.com • Знайди: “macOS automation” • Зроби скріншот результатів пошуку • Збережи як: chrome_search.png ⸻ 6. Shortcuts automation Якщо Shortcuts увімкнено: • Створи Shortcut, який: • відкриває Terminal • виконує команду date • Збережи Shortcut з назвою: auto_date_shortcut ⸻ 7. Генерація звіту Створи файл: report_summary.md У ньому опиши: • всі виконані дії (по пунктах) • список створених файлів • розміри кожного файлу ⸻ 8. Архівація Заархівуй всю папку: System_Report_1212 у файл: System_Report_1212.zip Архів має лежати в: /Users/dev/Documents/GitHub/System/data ⸻ 9–10. Сповіщення про завершення Надішли два сповіщення з текстом: "Звіт про систему успішно створено" ⸻ Важливо • ❌ Не використовувати Desktop • ✅ Усі артефакти — тільки всередині репозиторія • ✅ Шлях фіксований і відтворюваний • ✅ Підходить для автоматизації (Shortcuts / AppleScript / shell) ⸻ Якщо хочеш — можу: • перетворити це в Automator / Shortcuts workflow • або написати shell-скрипт, який робить 80% автоматично • або адаптувати під CI / dev-task для Trinity
@@ -28921,7 +28955,7 @@ def run_tui(runtime: TuiRuntime) -> None:
     runtime.app.run()
 ```
 
-### `tui/cleanup.py` (10.5 KB)
+### `tui/cleanup.py` (11.5 KB)
 
 ```python
 """Cleanup and editor module management for TUI.
@@ -29004,10 +29038,29 @@ def list_editors(cfg: Dict[str, Any]) -> List[str]:
 def resolve_editor_arg(cfg: Dict[str, Any], editor: Optional[str]) -> Tuple[str, Optional[str]]:
     """Resolve editor argument to a valid editor key."""
     editors = cfg.get("editors", {}) or {}
+
+    def _pick_fallback() -> str:
+        if not editors:
+            return ""
+        if "windsurf" in editors:
+            return "windsurf"
+        for key, meta in editors.items():
+            try:
+                modules = (meta or {}).get("modules", []) if isinstance(meta, dict) else []
+                if any(isinstance(m, dict) and m.get("enabled") for m in (modules or [])):
+                    return key
+            except Exception:
+                continue
+        return sorted([str(k) for k in editors.keys() if str(k)])[:1][0]
+
     if not editor:
-        if len(editors) == 1:
-            return list(editors.keys())[0], None
-        return "", f"Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+        fallback = _pick_fallback()
+        if len(editors) == 1 and fallback:
+            return fallback, None
+        if fallback:
+            note = f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+            return fallback, note
+        return "", f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
 
     low = editor.strip().lower()
     aliases = {
@@ -29024,7 +29077,14 @@ def resolve_editor_arg(cfg: Dict[str, Any], editor: Optional[str]) -> Tuple[str,
         "curs": "cursor",
         "cur": "cursor",
     }
-    return aliases.get(low, low), None
+    resolved = aliases.get(low, low)
+    if resolved in editors:
+        return resolved, None
+    fallback = _pick_fallback()
+    if fallback:
+        note = f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+        return fallback, note
+    return resolved, None
 
 
 def find_module(cfg: Dict[str, Any], editor: str, module_id: str) -> Optional[ModuleRef]:
@@ -29239,7 +29299,7 @@ _scan_traces = scan_traces
 _get_editors_list = get_editors_list
 ```
 
-### `tui/cli.py` (88.6 KB)
+### `tui/cli.py` (88.7 KB)
 
 ```python
 #!/usr/bin/env python3
@@ -30857,35 +30917,10 @@ def run_tui() -> None:
     get_agent_menu_items_cb = globals().get("_get_agent_menu_items") or (lambda: [])
     get_automation_permissions_menu_items_cb = globals().get("_get_automation_permissions_menu_items") or (lambda: [])
 
-    show_menu, get_menu_content = build_menu(
+    kb, handle_menu_enter = build_keybindings(
         state=state,
         MenuLevel=MenuLevel,
-        tr=lambda k, l: tr(k, l),
-        lang_name=lang_name,
-        MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
-        get_custom_tasks_menu_items=get_custom_tasks_menu_items_cb,
-        get_monitoring_menu_items=get_monitoring_menu_items_cb,
-        get_settings_menu_items=get_settings_menu_items_cb,
-        get_llm_menu_items=get_llm_menu_items_cb,
-        get_agent_menu_items=get_agent_menu_items_cb,
-        get_automation_permissions_menu_items=get_automation_permissions_menu_items_cb,
-        get_editors_list=_get_editors_list,
-        get_cleanup_cfg=_get_cleanup_cfg,
-        AVAILABLE_LOCALES=AVAILABLE_LOCALES,
-        localization=localization,
-        get_monitor_menu_items=_get_monitor_menu_items,
-        normalize_menu_index=_normalize_menu_index,
-        MONITOR_TARGETS_PATH=MONITOR_TARGETS_PATH,
-        MONITOR_EVENTS_DB_PATH=MONITOR_EVENTS_DB_PATH,
-        CLEANUP_CONFIG_PATH=CLEANUP_CONFIG_PATH,
-        LOCALIZATION_CONFIG_PATH=LOCALIZATION_CONFIG_PATH,
-        force_ui_update=force_ui_update,
-    )
-
-    kb = build_keybindings(
-        state=state,
-        MenuLevel=MenuLevel,
-        show_menu=show_menu,
+        show_menu=Condition(lambda: state.menu_level != MenuLevel.NONE), # Temporary placeholder
         MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
         get_custom_tasks_menu_items=get_custom_tasks_menu_items_cb,
         TOP_LANGS=TOP_LANGS,
@@ -30918,6 +30953,32 @@ def run_tui() -> None:
         monitor_service=monitor_service,
         fs_usage_service=fs_usage_service,
         opensnoop_service=opensnoop_service,
+    )
+
+    show_menu, get_menu_content = build_menu(
+        state=state,
+        MenuLevel=MenuLevel,
+        tr=lambda k, l: tr(k, l),
+        lang_name=lang_name,
+        MAIN_MENU_ITEMS=MAIN_MENU_ITEMS,
+        get_custom_tasks_menu_items=get_custom_tasks_menu_items_cb,
+        get_monitoring_menu_items=get_monitoring_menu_items_cb,
+        get_settings_menu_items=get_settings_menu_items_cb,
+        get_llm_menu_items=get_llm_menu_items_cb,
+        get_agent_menu_items=get_agent_menu_items_cb,
+        get_automation_permissions_menu_items=get_automation_permissions_menu_items_cb,
+        get_editors_list=_get_editors_list,
+        get_cleanup_cfg=_get_cleanup_cfg,
+        AVAILABLE_LOCALES=AVAILABLE_LOCALES,
+        localization=localization,
+        get_monitor_menu_items=_get_monitor_menu_items,
+        normalize_menu_index=_normalize_menu_index,
+        MONITOR_TARGETS_PATH=MONITOR_TARGETS_PATH,
+        MONITOR_EVENTS_DB_PATH=MONITOR_EVENTS_DB_PATH,
+        CLEANUP_CONFIG_PATH=CLEANUP_CONFIG_PATH,
+        LOCALIZATION_CONFIG_PATH=LOCALIZATION_CONFIG_PATH,
+        force_ui_update=force_ui_update,
+        on_enter=handle_menu_enter,
     )
 
     input_kb = KeyBindings()
@@ -32838,7 +32899,7 @@ def build_keybindings(
         log(f"Monitoring sudo: {'ON' if state.monitor_use_sudo else 'OFF'}", "action")
 
     @kb.add("enter", filter=show_menu)
-    def _(event):
+    def handle_menu_enter(event=None):
         if state.menu_level == MenuLevel.MAIN:
             _, lvl = MAIN_MENU_ITEMS[state.menu_index]
             state.menu_level = lvl
@@ -33005,10 +33066,10 @@ def build_keybindings(
             log(msg, "action" if ok else "error")
             return
 
-    return kb
+    return kb, handle_menu_enter
 ```
 
-### `tui/layout.py` (11.9 KB)
+### `tui/layout.py` (11.7 KB)
 
 ```python
 from __future__ import annotations
@@ -33156,23 +33217,18 @@ def build_app(
         if not isinstance(base, list):
             base = [("", str(base))]
             
-        # Add clickable buttons styled
-        # We append them to the header text
-        # Format: [ MENU ] [ LOGS ] [ AGENTS ]
-        
-        btn_style = "class:button"
-        
-        buttons = [
+        # Add labels purely informational
+        labels = [
              ("class:header", "  "),
-             (btn_style, "[ F2: MENU ]", header_callback_menu),
+             ("class:button", "[ F2: MENU ]"),
              ("class:header", " "),
-             (btn_style, "[ PgUp: LOGS ]", header_callback_logs),
+             ("class:button", "[ PgUp: LOGS ]"),
              ("class:header", " "),
-             (btn_style, "[ PgDn: AGENTS ]", header_callback_agents),
+             ("class:button", "[ PgDn: AGENTS ]"),
              ("class:header", "  "),
         ]
         
-        return base + buttons
+        return base + labels
 
     header_window = Window(
         FormattedTextControl(get_interactive_header), 
@@ -33229,7 +33285,12 @@ def build_app(
                 style="class:input",
                 dont_extend_width=True,
             ),
-            Window(BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), style="class:input"),
+            Window(
+                BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
+                style="class:input",
+                wrap_lines=True, # Ensure long pastes are visible
+                height=Dimension(min=1, preferred=2, max=10) # Dynamic height
+            ),
         ]
     )
 
@@ -33237,16 +33298,13 @@ def build_app(
         return get_status()
     
     # Interactive status bar
-    def status_callback_menu(*args):
-         state.menu_level = MenuLevel.MAIN if state.menu_level == MenuLevel.NONE else MenuLevel.NONE
-
     def get_interactive_status() -> AnyFormattedText:
          base = _safe_formatted_text(get_status_text, fallback_style="class:status")()
          if not isinstance(base, list):
              base = [("", str(base))]
          
-         # Add help hint
-         return base + [("class:status", "  "), ("class:button", "[ Click/F2 For Menu ]", status_callback_menu)]
+         # Informational hint (no callback as requested)
+         return base + [("class:status", "  "), ("class:button", "[ F2: Menu ]")]
 
     status_window = Window(FormattedTextControl(get_interactive_status), height=1, style="class:status")
 
@@ -33592,17 +33650,14 @@ def get_log_files_info() -> dict:
 _default_logger = setup_logging(verbose=False)
 ```
 
-### `tui/menu.py` (17.7 KB)
+### `tui/menu.py` (18.9 KB)
 
 ```python
 from __future__ import annotations
-
+import time
 from typing import Any, Callable, List, Sequence, Tuple
-
 from prompt_toolkit.filters import Condition
-
 from tui.themes import THEMES, get_theme_names
-
 
 def build_menu(
     *,
@@ -33628,18 +33683,28 @@ def build_menu(
     CLEANUP_CONFIG_PATH: str,
     LOCALIZATION_CONFIG_PATH: str,
     force_ui_update: Callable[[], None],
+    on_enter: Callable[[], None],
 ) -> Tuple[Condition, Callable[[], List[Tuple[str, str]]]]:
     @Condition
     def show_menu() -> bool:
         return state.menu_level != MenuLevel.NONE
 
+    last_click = {"time": 0, "idx": -1}
+
     def make_click(idx: int) -> Callable[[Any], None]:
         def _click(mouse_event: Any) -> None:
-            if state.menu_index != idx:
-                state.menu_index = idx
+            now = time.time()
+            # Double click detection (mac standard style)
+            if last_click["idx"] == idx and now - last_click["time"] < 0.4:
+                on_enter()
                 force_ui_update()
-            # If prompt_toolkit supports double click, we could execute. 
-            # For now, just focus.
+            else:
+                if state.menu_index != idx:
+                    state.menu_index = idx
+                    force_ui_update()
+            
+            last_click["idx"] = idx
+            last_click["time"] = now
         return _click
 
     def get_toggle_text(val: bool) -> List[Tuple[str, str]]:
@@ -33670,6 +33735,14 @@ def build_menu(
     def get_menu_content() -> List[Tuple[str, str]]:
         result: List[Tuple[str, str]] = []
 
+        def add_back_btn(res):
+            def _go_back(*args):
+                 state.menu_level = MenuLevel.MAIN
+                 state.menu_index = 0
+                 force_ui_update()
+            res.append(("class:menu.item", " [ < " + tr("menu.back", state.ui_lang) + " ]\n", _go_back))
+            res.append(("", "\n"))
+
         if state.menu_level == MenuLevel.MAIN:
             result.append(("class:menu.title", f" {tr('menu.main.title', state.ui_lang)}\n\n"))
             for i, (name, _) in enumerate(MAIN_MENU_ITEMS):
@@ -33680,6 +33753,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.CUSTOM_TASKS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.custom_tasks.title', state.ui_lang)}\n\n"))
             items = get_custom_tasks_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
@@ -33691,6 +33765,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MONITORING:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.monitoring.title', state.ui_lang)}\n\n"))
             items = get_monitoring_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
@@ -33701,6 +33776,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.SETTINGS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.settings.title', state.ui_lang)}\n\n"))
             items = get_settings_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
@@ -33716,6 +33792,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.LLM_SETTINGS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.llm.title', state.ui_lang)}\n\n"))
             items = get_llm_menu_items()
             if not items:
@@ -33730,6 +33807,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.AGENT_SETTINGS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.agent.title', state.ui_lang)}\n\n"))
             items = get_agent_menu_items()
             if not items:
@@ -33744,6 +33822,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.APPEARANCE:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.appearance.title', state.ui_lang)}\n\n"))
             themes = list(get_theme_names())
             state.menu_index = max(0, min(state.menu_index, len(themes) - 1))
@@ -33758,6 +33837,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.LANGUAGE:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.language.title', state.ui_lang)}\n\n"))
             items = [
                 (f"UI: {state.ui_lang} - {lang_name(state.ui_lang)}", "ui"),
@@ -33773,6 +33853,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.UNSAFE_MODE:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.unsafe_mode.title', state.ui_lang)}\n\n"))
             on = bool(getattr(state, "ui_unsafe_mode", False))
             prefix = " > "
@@ -33783,6 +33864,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.automation_permissions.title', state.ui_lang)}\n\n"))
             items = get_automation_permissions_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
@@ -33802,6 +33884,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.LAYOUT:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.layout.title', state.ui_lang)}\n\n"))
             items = [
                 (tr("menu.layout.left_panel_ratio", state.ui_lang), "ratio"),
@@ -33821,6 +33904,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MONITOR_CONTROL:
+            add_back_btn(result)
             result.append(("class:menu.title", " MONITORING (Enter: Start/Stop, S: Source, U: Sudo, Q/Esc: Back)\n"))
             state_line = "ACTIVE" if state.monitor_active else "INACTIVE"
             result.append(("class:menu.item", f" State: {state_line}\n"))
@@ -33844,6 +33928,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
+            add_back_btn(result)
             result.append(("class:menu.title", " MONITORING TARGETS (Space: Toggle, Enter: Save, Q/Esc: Back)\n"))
             result.append(("class:menu.item", f" Config: {MONITOR_TARGETS_PATH}\n\n"))
 
@@ -33866,6 +33951,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.CLEANUP_EDITORS:
+            add_back_btn(result)
             result.append(("class:menu.title", " RUN CLEANUP (Enter: Run, D: Dry-run, Q/Esc: Back)\n\n"))
             editors = get_editors_list()
             for i, (key, label) in enumerate(editors):
@@ -33876,6 +33962,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MODULE_EDITORS:
+            add_back_btn(result)
             result.append(("class:menu.title", " MODULES: CHOOSE EDITOR (Enter: Select, Q/Esc: Back)\n\n"))
             editors = get_editors_list()
             for i, (key, label) in enumerate(editors):
@@ -33886,6 +33973,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.MODULE_LIST:
+            add_back_btn(result)
             editor = state.selected_editor
             if not editor:
                 result.append(("class:menu.title", " MODULES (no editor selected)\n"))
@@ -33912,6 +34000,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.INSTALL_EDITORS:
+            add_back_btn(result)
             result.append(("class:menu.title", " INSTALL (Enter: Open installer, Q/Esc: Back)\n\n"))
             editors = get_editors_list()
             for i, (key, label) in enumerate(editors):
@@ -33922,6 +34011,7 @@ def build_menu(
             return result
 
         if state.menu_level == MenuLevel.LOCALES:
+            add_back_btn(result)
             result.append(("class:menu.title", f" {tr('menu.locales.title', state.ui_lang)}\n\n"))
             for idx, loc in enumerate(AVAILABLE_LOCALES):
                 prefix = " > " if idx == state.menu_index else "   "
@@ -37157,4 +37247,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 119
-- **Skipped**: 13479
+- **Skipped**: 13485
