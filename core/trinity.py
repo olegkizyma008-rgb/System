@@ -223,23 +223,51 @@ class TrinityRuntime:
         if self.verbose: print("🌐 [Atlas] Strategizing...")
         context = state.get("messages", [])
         last_msg = context[-1].content if context else "Start"
-        
+         
         # Check step/replan limits
         step_count = state.get("step_count", 0) + 1
         replan_count = state.get("replan_count", 0)
-        
+
+        try:
+            plan_preview = state.get("plan")
+            trace(self.logger, "atlas_enter", {
+                "step_count": step_count,
+                "replan_count": replan_count,
+                "last_step_status": state.get("last_step_status"),
+                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
+                "task_type": state.get("task_type"),
+                "execution_mode": state.get("execution_mode"),
+                "gui_mode": state.get("gui_mode"),
+                "dev_edit_mode": state.get("dev_edit_mode"),
+                "last_msg_preview": str(last_msg)[:200],
+            })
+        except Exception:
+            pass
+         
         if step_count > self.MAX_STEPS:
+            try:
+                trace(self.logger, "atlas_limit_reached", {"step_count": step_count, "max_steps": self.MAX_STEPS})
+            except Exception:
+                pass
             return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт кроків ({self.MAX_STEPS}) досягнуто. Завершую.")]}
-        
+         
         if replan_count > self.MAX_REPLANS:
+            try:
+                trace(self.logger, "atlas_replan_limit_reached", {"replan_count": replan_count, "max_replans": self.MAX_REPLANS})
+            except Exception:
+                pass
             return {"current_agent": "end", "messages": [AIMessage(content=f"[Atlas] Ліміт перепланувань ({self.MAX_REPLANS}) досягнуто. Потрібна допомога користувача.")]}
-        
+         
         # Check for pause (permission required)
         pause_info = state.get("pause_info")
         if pause_info:
             msg = pause_info.get("message", "Permission required")
             if self.verbose:
                 print(f"⚠️ [Atlas] PAUSED: {msg}")
+            try:
+                trace(self.logger, "atlas_paused", {"message": str(msg)[:200], "pause_info": pause_info})
+            except Exception:
+                pass
             return {
                 "current_agent": "end",
                 "task_status": "paused",
@@ -288,20 +316,40 @@ class TrinityRuntime:
                 if len(plan) > 0:
                     plan.pop(0)
                     if self.verbose: print(f"🌐 [Atlas] Step completed successfully. Remaining steps: {len(plan)}")
+                    try:
+                        trace(self.logger, "atlas_step_consumed", {"remaining_steps": len(plan), "step_count": step_count})
+                    except Exception:
+                        pass
                     # If plan is now empty, we are done!
                     if not plan:
+                        try:
+                            trace(self.logger, "atlas_plan_completed", {"step_count": step_count, "replan_count": replan_count})
+                        except Exception:
+                            pass
                         return {"current_agent": "end", "messages": [AIMessage(content="[Atlas] Всі кроки плану виконано успішно.")]}
             elif last_step_status == "failed":
                  if self.verbose: print(f"🌐 [Atlas] Step failed. Retrying or Replanning...")
+                 try:
+                     trace(self.logger, "atlas_step_failed", {"step_count": step_count, "replan_count": replan_count})
+                 except Exception:
+                     pass
                  # We keep the step. The logic below will likely trigger a replan if the plan is empty, 
                  # but if the plan is NOT empty, we currently just retry the same step.
                  # TODO: Trigger replan logic if needed. For now, Atlas just sees the same step at index 0.
             else:
                  if self.verbose: print(f"🌐 [Atlas] Step status uncertain ({last_step_status}). Continuing current step...")
+                 try:
+                     trace(self.logger, "atlas_step_uncertain", {"step_count": step_count, "replan_count": replan_count})
+                 except Exception:
+                     pass
 
         # 3. Generate New Plan if empty
         if not plan:
             if self.verbose: print("🌐 [Atlas] Generating new plan...")
+            try:
+                trace(self.logger, "atlas_plan_generate_start", {"step_count": step_count, "replan_count": replan_count})
+            except Exception:
+                pass
             
             # Use LLM to generate structured plan
             plan_resp = None
@@ -328,9 +376,12 @@ class TrinityRuntime:
                 raw_plan = json.loads(json_str)
                 if not isinstance(raw_plan, list):
                     raise ValueError("Plan is not a list")
-                    
             except Exception as e:
                 if self.verbose: print(f"⚠️ [Atlas] Smart Planning failed ({e}). Fallback to 1-step.")
+                try:
+                    trace(self.logger, "atlas_plan_generate_error", {"error": str(e)[:200]})
+                except Exception:
+                    pass
                 raw_plan = [{
                     "id": 1, 
                     "type": "execute", 
@@ -340,6 +391,11 @@ class TrinityRuntime:
             
             # Optimize Plan (Adaptive Verification)
             plan = self.verifier.optimize_plan(raw_plan)
+
+            try:
+                trace(self.logger, "atlas_plan_generated", {"steps": len(plan) if isinstance(plan, list) else 0, "step_count": step_count, "replan_count": replan_count})
+            except Exception:
+                pass
             
             if self.verbose:
                 print(f"🌐 [Atlas] Plan Optimized: {len(plan)} steps.")
@@ -351,29 +407,7 @@ class TrinityRuntime:
         
         if not current_step:
             return {"current_agent": "end", "messages": [AIMessage(content="No plan generated.")]}
-
-        # Invoke Atlas Persona with RAG context
-        rag_hint = f"\n\n{rag_context}" if rag_context else ""
-        prompt = get_atlas_prompt(f"The plan is: {current_step['description']}. Announce it.{rag_hint}")
-        content = ""  # Initialize content variable
-        try:
-            if self.on_stream and hasattr(self.llm, "invoke_with_stream"):
-                # Wrap on_stream so the consumer knows which agent is speaking
-                def _delta(piece: str) -> None:
-                    try:
-                        self.on_stream("Atlas", piece)
-                    except Exception:
-                        # Streaming callback failures should not break the agent
-                        pass
-
-                response = self.llm.invoke_with_stream(prompt.format_messages(), on_delta=_delta)
-            else:
-                response = self.llm.invoke(prompt.format_messages())
-            content = response.content
-        except Exception as e:
-            content = f"Error invoking Atlas: {e}"
-            return {"current_agent": "end", "messages": [AIMessage(content=content)]}
-
+        
         # Router Logic based on Plan Step Type
         step_type = current_step.get("type", "execute")
         if step_type == "verify":
@@ -383,6 +417,17 @@ class TrinityRuntime:
             next_agent = "tetyana"
         else:
             next_agent = "tetyana"
+
+        try:
+            trace(self.logger, "atlas_dispatch", {
+                "next_agent": next_agent,
+                "step_type": step_type,
+                "step_count": step_count,
+                "replan_count": replan_count,
+                "description_preview": str(current_step.get("description", ""))[:200],
+            })
+        except Exception:
+            pass
             
         # Update state with the plan and counters
         # Preserve existing messages and add new one
