@@ -1057,13 +1057,13 @@ class TrinityRuntime:
 
         # NEW: Anti-loop protection via uncertain_streak
         current_streak = int(state.get("uncertain_streak") or 0)
-        if step_status == "uncertain":
+        if step_status in {"uncertain", "failed"}:
             current_streak += 1
         else:
-            current_streak = 0  # Reset on definite decision
+            current_streak = 0  # Reset on definite decision (success)
         
         # If 3+ consecutive uncertain decisions, force to success with warning
-        if current_streak >= 3:
+        if step_status == "uncertain" and current_streak >= 3:
             if self.verbose:
                 print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing SUCCESS")
             try:
@@ -1088,16 +1088,15 @@ class TrinityRuntime:
         }
         
         # Determine if we need to increase replan_count
-        # Only trigger full replan after 2+ consecutive uncertainties OR explicit failure
         if next_agent == "atlas" and step_status in {"failed", "uncertain"}:
             current_replan = int(state.get("replan_count") or 0)
             
-            # Only clear plan and increment replan if:
-            # - 2+ consecutive uncertainties (uncertain_streak >= 2), OR
-            # - Explicit failure with streak >= 1
+            # Replan if:
+            # - Failed twice in a row (current_streak >= 2)
+            # - Still uncertain after 2 attempts (will force success on 3rd)
             should_replan = (
-                (step_status == "uncertain" and current_streak >= 2) or
-                (step_status == "failed" and current_streak >= 1)
+                (step_status == "failed" and current_streak >= 2) or
+                (step_status == "uncertain" and current_streak >= 2)
             )
             
             if should_replan:

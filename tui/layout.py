@@ -197,7 +197,6 @@ def build_app(
     log_control = FormattedTextControl(
         safe_get_logs, 
         get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
-        show_cursor=False,
         focusable=True,
     )
     log_control.mouse_handler = make_scroll_handler("log")
@@ -218,7 +217,6 @@ def build_app(
         agent_control = FormattedTextControl(
             safe_get_agent_messages,
             get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
-            show_cursor=False,
             focusable=True,
         )
         agent_control.mouse_handler = make_scroll_handler("agents")
