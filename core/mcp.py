@@ -311,16 +311,29 @@ class MCPToolRegistry:
             if "allow" in sig.parameters and "allow" not in args:
                 args["allow"] = True
             
+            call_kwargs = {}
+            
+            # TUI Tool Convention: If the function explicitly requests 'args', pass the full dictionary
+            if "args" in sig.parameters:
+                call_kwargs["args"] = args
+            
             # Filter args to only those supported by the function, unless it has **kwargs
             has_varkw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
             
             if has_varkw:
                 # If function has **kwargs, pass everything
-                result = func(**args)
+                for k, v in args.items():
+                    # Avoid overwriting the injected 'args' parameter if it exists
+                    if k == "args" and "args" in sig.parameters:
+                        continue
+                    call_kwargs[k] = v
             else:
                 # Filter to supported params
-                supported_args = {k: v for k, v in args.items() if k in sig.parameters}
-                result = func(**supported_args)
+                for k, v in args.items():
+                    if k in sig.parameters:
+                        call_kwargs[k] = v
+            
+            result = func(**call_kwargs)
                 
             return json.dumps(result, indent=2, ensure_ascii=False)
         except Exception as e:
