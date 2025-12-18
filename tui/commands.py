@@ -148,8 +148,13 @@ def handle_input(buff: Any) -> None:
     # Default to trinity task
     handle_command(f"/task {text}")
 
-def handle_command(cmd: str) -> None:
-    """Handle a slash command from the user."""
+def handle_command(cmd: str, wait: bool = False) -> None:
+    """Handle a slash command from the user.
+    
+    Args:
+        cmd: The command string.
+        wait: If True, waits for the command thread to finish (useful for CLI/tools).
+    """
     from tui.render import log, trim_logs_if_needed
     from tui.agents import agent_session, agent_send, run_graph_agent_task
     from tui.cleanup import load_cleanup_config, run_cleanup, find_module, set_module_enabled, perform_install
@@ -225,7 +230,11 @@ def handle_command(cmd: str) -> None:
             finally:
                 state.agent_processing = False
                 trim_logs_if_needed()
-        threading.Thread(target=_run_trinity, daemon=True).start()
+        
+        t = threading.Thread(target=_run_trinity, daemon=not wait)
+        t.start()
+        if wait:
+            t.join()
         return
 
     if command == "/agent-reset":
@@ -254,9 +263,9 @@ def tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": False, "error": "No command provided"}
 
     # This is complex because it captures logs.
-    # For now, let's assume it calls handle_command.
+    # We pass wait=True to ensure it finishes before the tool call returns.
     try:
-        handle_command(cmd)
+        handle_command(cmd, wait=True)
         return {"ok": True}
     except Exception as e:
         return {"ok": False, "error": str(e)}
