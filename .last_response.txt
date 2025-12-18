@@ -1,8 +1,8 @@
 [Atlas] Final report
 
-Task: відкрий гугл у браузері
+Task: відкрий браузер хроміум і зайди в гугл, а в гуглі найди фільм хатіко
 Outcome: completed
-Replans: 2
+Replans: 0
 Last agent: atlas
 
 Last message:
