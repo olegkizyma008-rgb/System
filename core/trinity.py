@@ -377,9 +377,12 @@ class TrinityRuntime:
                 # Construct messages: System Prompt + History + Context/Instruction
                 planning_messages = [SystemMessage(content=ATLAS_PLANNING_PROMPT)]
                 
-                # Add history (excluding the very last one if it's identical to what we'd append, but usually safe)
-                # We want the planner to see the whole conversation to know what was done and what was asked.
-                planning_messages.extend(state.get("messages", []))
+                # Filter/Trim history to avoid plan confusion (keep first prompt and last ~10 msgs)
+                history = state.get("messages", [])
+                if len(history) > 12:
+                    history = [history[0]] + history[-10:]
+                
+                planning_messages.extend(history)
                 
                 # Add a strong reminder of the current objective based on context
                 reminder_msg = f"Проаналізуй історію вище. Поточний стан/контекст: {rag_context + routing_hint}\nЗараз ми на кроці {step_count}. Які наступні кроки згідно з оригінальним запитом? Поверни JSON."
@@ -389,13 +392,40 @@ class TrinityRuntime:
                 
                 import re
                 json_str = plan_resp.content
-                match = re.search(r"\[.*\]", json_str, re.DOTALL)
-                if match:
-                    json_str = match.group(0)
                 
-                raw_plan = json.loads(json_str)
-                if not isinstance(raw_plan, list):
-                    raise ValueError("Plan is not a list")
+                # Robust JSON extraction
+                raw_plan = []
+                try:
+                    # Try to find a list first
+                    match = re.search(r"(\[.*\])", json_str, re.DOTALL)
+                    if match:
+                        raw_plan = json.loads(match.group(1))
+                    else:
+                        # Try to find an object that might contain a "plan" or "steps" key
+                        match = re.search(r"(\{.*\})", json_str, re.DOTALL)
+                        if match:
+                            data = json.loads(match.group(1))
+                            if isinstance(data, list):
+                                raw_plan = data
+                            elif isinstance(data, dict):
+                                raw_plan = data.get("plan") or data.get("steps") or data.get("tasks") or []
+                    
+                    if not isinstance(raw_plan, list) or not raw_plan:
+                        # Fallback for extreme cases where LLM output is messy
+                        try:
+                            maybe_list = json.loads(json_str)
+                            raw_plan = maybe_list if isinstance(maybe_list, list) else []
+                        except:
+                            raw_plan = []
+                except Exception:
+                    # If all regex fails, try direct load
+                    try:
+                        raw_plan = json.loads(json_str)
+                    except:
+                        raise ValueError(f"Could not parse plan JSON: {json_str[:100]}...")
+
+                if not isinstance(raw_plan, list) or not raw_plan:
+                    raise ValueError("Plan is not a list or is empty")
             except Exception as e:
                 if self.verbose: print(f"⚠️ [Atlas] Smart Planning failed ({e}). Fallback to 1-step.")
                 try:

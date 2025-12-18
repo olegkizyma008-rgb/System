@@ -301,15 +301,18 @@ class MCPToolRegistry:
         self.register_tool("get_clipboard", get_clipboard, "Read clipboard content. Args: none")
         self.register_tool("set_clipboard", set_clipboard, "Write to clipboard. Args: text (str)")
 
-        # Browser Tools
-        self.register_tool("browser_open_url", browser_open_url, "Open URL in generic browser. Args: url (str), headless (bool)")
+        # Browser Tools (Local Playwright)
+        self.register_tool("browser_open_url", browser_open_url, "Open URL in local browser. Args: url (str), headless (bool)")
+        self.register_tool("browser_navigate", browser_navigate, "Navigate to URL. Args: url (str), headless (bool)")
         self.register_tool("browser_click_element", browser_click_element, "Click element in browser. Args: selector (str)")
         self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str), press_enter (bool)")
-        self.register_tool("browser_press_key", browser_press_key, "Press a key (Enter, Tab, etc.) in browser. Args: key (str), selector (optional str)")
-        self.register_tool("browser_screenshot", browser_screenshot, "Take a high-quality screenshot of the current browser page. Args: path (optional str)")
-        self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: selector (optional str)")
+        self.register_tool("browser_press_key", browser_press_key, "Press a key in browser. Args: key (str)")
+        self.register_tool("browser_screenshot", browser_screenshot, "Take screenshot of browser. Args: path (optional str)")
+        self.register_tool("browser_snapshot", browser_snapshot, "Accessibility tree snapshot (best for navigation). Args: none")
+        self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: none")
         self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
-        self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready (Playwright installed). Returns setup instructions if not. Args: none")
+        self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready. Args: none")
+        self.register_tool("browser_close", browser_close, "Close browser. Args: none")
 
 
         # Project Structure
@@ -363,8 +366,13 @@ class MCPToolRegistry:
 
     def _register_external_mcp(self):
         """Register external MCP servers (Playwright & PyAutoGUI)."""
+        import platform
+        playwright_args = ["@playwright/mcp@latest"]
+        if platform.system() != "Darwin":
+            playwright_args.append("--no-sandbox")
+
         providers = [
-            ("playwright", "npx", ["@playwright/mcp@latest", "--no-sandbox"]),
+            ("playwright", "npx", playwright_args),
             ("pyautogui", "mcp-pyautogui-server", [])
         ]
         
@@ -396,10 +404,10 @@ class MCPToolRegistry:
             try:
                 provider.connect()
                 for t_name, tool in provider._tools.items():
-                    # Prefix external tools to avoid collisions if needed, 
-                    # but user specifically wants to use these mcp tool names.
-                    self._external_tools_map[t_name] = p_name
-                    lines.append(f"- {t_name}: {tool.description} (via {p_name})")
+                    # Prefix external tools to avoid collisions (e.g. playwright.browser_snapshot)
+                    prefixed_name = f"{p_name}.{t_name}"
+                    self._external_tools_map[prefixed_name] = p_name
+                    lines.append(f"- {prefixed_name}: {tool.description}")
             except Exception as e:
                 lines.append(f"- [Provider Offline] {p_name}: {e}")
                 
@@ -412,7 +420,9 @@ class MCPToolRegistry:
         if provider_name and provider_name in self._external_providers:
             provider = self._external_providers[provider_name]
             try:
-                res = provider.execute(tool_name, args)
+                # Strip prefix if present (e.g. "playwright.browser_navigate" -> "browser_navigate")
+                actual_name = tool_name.split(".", 1)[-1] if "." in tool_name else tool_name
+                res = provider.execute(actual_name, args)
                 return json.dumps(res, indent=2, ensure_ascii=False)
             except Exception as e:
                 return f"Error executing external tool '{tool_name}': {str(e)}"

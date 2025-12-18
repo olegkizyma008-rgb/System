@@ -110,10 +110,20 @@ ATLAS_PLANNING_PROMPT = """Ти — Atlas, стратегічний планув
   {"description": "Перевірити, що відео грає (скріншот, аналіз)", "type": "verify"}
 ]
 
-Приклад Bootstrap: "Створи новий проєкт MyGame"
 [
   {"description": "Створити новий проєкт MyGame з автоматичним continual development налаштуванням", "type": "bootstrap"},
   {"description": "Перевірити, що проєкт успішно створено (перевірити наявність файлів)", "type": "verify"}
+]
+
+Приклад: "Знайди сучасний фільм про AI і включи на весь екран"
+[
+  {"description": "Відкрити браузер і знайти 'сучасні фільми про ШІ 2024 дивитись онлайн' у Google", "type": "execute"},
+  {"description": "Перевірити результати пошуку", "type": "verify"},
+  {"description": "Перейти на сайт з фільмом і знайти плеєр", "type": "execute"},
+  {"description": "Натиснути 'Play' (якщо треба — через analyze_screen + click_mouse)", "type": "execute"},
+  {"description": "Перевірити, що відео запустилося (скріншот)", "type": "verify"},
+  {"description": "Переключити браузер у повноекранний режим (AppleScript або hotkey)", "type": "execute"},
+  {"description": "Підтвердити повноекранний режим", "type": "verify"}
 ]
 
 Твоя відповідь має містити ТІЛЬКИ JSON.

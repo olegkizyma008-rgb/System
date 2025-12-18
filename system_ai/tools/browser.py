@@ -11,6 +11,7 @@ class BrowserManager:
         self.pw = None
         self.browser = None
         self.page: Optional[Page] = None
+        self._last_headless = None
         self.user_data_dir = os.path.expanduser("~/.antigravity/browser_session")
         os.makedirs(self.user_data_dir, exist_ok=True)
 
@@ -21,12 +22,25 @@ class BrowserManager:
         return cls._instance
 
     def get_page(self, headless: bool = True) -> Page:
+        # If already running but in different headless mode, restart
+        if self.pw and self.browser and self._last_headless != headless:
+            self.close()
+
         if not self.pw:
             self.pw = sync_playwright().start()
+            self._last_headless = headless
+            
+            # Chromium args
+            args = ["--disable-blink-features=AutomationControlled"]
+            # Only add sandbox flags if not on macOS (to avoid warning banner)
+            import platform
+            if platform.system() != "Darwin":
+                args.extend(["--no-sandbox", "--disable-setuid-sandbox"])
+            
             self.browser = self.pw.chromium.launch_persistent_context(
                 user_data_dir=self.user_data_dir,
                 headless=headless,
-                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled"],
+                args=args,
                 viewport={"width": 1280, "height": 720}
             )
             self.page = self.browser.pages[0]
@@ -130,6 +144,25 @@ def browser_get_content() -> str:
         }, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
+
+def browser_snapshot() -> str:
+    """Capture accessibility snapshot of the current page (better than screenshot for LLM)."""
+    try:
+        manager = BrowserManager.get_instance()
+        page = manager.get_page()
+        snapshot = page.accessibility.snapshot()
+        return json.dumps({
+            "status": "success",
+            "snapshot": snapshot,
+            "url": page.url,
+            "title": page.title()
+        }, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"status": "error", "error": str(e)})
+
+def browser_navigate(url: str, headless: bool = True) -> str:
+    """Alias for browser_open_url."""
+    return browser_open_url(url, headless=headless)
 
 def browser_close() -> str:
     try:
