@@ -739,11 +739,14 @@ class TrinityRuntime:
                                 "settings_url": res_dict.get("settings_url", "")
                             }
                     except (json.JSONDecodeError, TypeError):
-                        pass
+                            pass
             
             # If we executed tools, append results to content
             if results:
                 content += "\n\nTool Results:\n" + "\n".join(results)
+                # Add explicit success marker if no errors occurred
+                if not had_failure and not pause_info:
+                    content += "\n\n[STEP_COMPLETED] Всі інструменти виконано успішно."
 
             # Save successful action to RAG memory (only if no pause)
             if not pause_info:
@@ -956,30 +959,42 @@ class TrinityRuntime:
         except Exception as e:
             content = f"Error invoking Grisha: {e}"
 
+
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
         lower_content = content.lower()
         step_status = "uncertain"
         next_agent = "atlas"
 
-        # 1. Check for explicit success markers
+        # 1. Check for explicit success markers (including Tetyana's [STEP_COMPLETED])
         explicit_complete_markers = [
-            "[verified]", "[confirmed]", "verification passed", "qa passed", 
+            "[verified]", "[confirmed]", "[step_completed]", "[completed]",
+            "verification passed", "qa passed", 
             "verdict: pass", "верифікація пройдена", "перевірку пройдено", "підтверджую"
         ]
         has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
         
-        # 2. NEW: Check for tool execution errors in context (status: error = FAILED, not uncertain)
+        # 2. Check for tool execution errors in context (status: error = FAILED, not uncertain)
         has_tool_error_in_context = '"status": "error"' in content or '"status":"error"' in content
         
         # 3. Check for test failures
         has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
         
-        # 4. Success / Failure / Indecision
+        # 4. NEW: Check for successful tool results (tool returned data without error = SUCCESS)
+        # This is the key fix: if Tetyana executed tools and got results, that's success!
+        has_successful_tool_result = (
+            "tool results:" in lower_content and 
+            '"status": "success"' in content or
+            '"status":"success"' in content or
+            # Tool returned a JSON array or object with data (not an error)
+            ("result for " in lower_content and not has_tool_error_in_context)
+        )
+        
+        # 5. Success / Failure / Indecision (REORDERED for better priority)
         if has_test_failure:
             step_status = "failed"
             next_agent = "atlas"
         elif has_tool_error_in_context:
-            # NEW: Tool execution error is a clear failure, not uncertain
+            # Tool execution error is a clear failure, not uncertain
             step_status = "failed"
             next_agent = "atlas"
             if self.verbose:
@@ -987,6 +1002,14 @@ class TrinityRuntime:
         elif has_explicit_complete:
             step_status = "success"
             next_agent = "atlas"
+            if self.verbose:
+                print("👁️ [Grisha] Explicit completion marker found → SUCCESS")
+        elif has_successful_tool_result:
+            # NEW: Tool executed successfully with data = SUCCESS (not uncertain!)
+            step_status = "success"
+            next_agent = "atlas"
+            if self.verbose:
+                print("👁️ [Grisha] Tool executed with successful result → SUCCESS")
         elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
             step_status = "success"
             next_agent = "atlas"
