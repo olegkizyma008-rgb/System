@@ -69,11 +69,16 @@ graph TD
 
 Центральний реєстр `MCPToolRegistry` надає агентам доступ до:
 
+### Внутрішні Інструменти (Internal)
 -   **Automation (Unified)**: Уніфікований модуль для Shell, AppleScript, Shortcuts та вводу (миша/клавіатура).
 -   **System Cleanup**: Інструменти для очищення слідів, логів та спуфінгу (Stealth Mode).
 -   **Recorder Control**: Програмне керування записом сесій (Start/Stop/Status).
--   **Playwright MCP**: Контроль браузера (headless/headful).
 -   **Desktop/Vision**: Аналіз екрану, пошук зображень, OCR.
+
+### Зовнішні MCP Сервери (External)
+-   **Playwright MCP**: Повний контроль браузера (headless/headful).
+-   **PyAutoGUI MCP**: Альтернативна емуляція вводу (якщо внутрішня недоступна).
+
 
 ---
 

@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 126
-- **Files Skipped**: 16098
+- **Files Skipped**: 16105
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 05:57:22
+- **Generated**: 2025-12-19 06:00:41
 
 ---
 
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39606 ------------------------------------------
- 1 file changed, 39606 deletions(-)
+ project_structure_final.txt | 39112 ------------------------------------------
+ 1 file changed, 39112 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-e8c7b3b docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
+5020270 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
+afc6358 docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
 2230fa3 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
 4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
 1521780 Fix TUI input frame height to tightly wrap content
-553493a docs: update Atlas workflow definition
 ```
 
 ---
@@ -11780,7 +11780,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### `docs/atlas.md` (6.5 KB)
+### `docs/atlas.md` (6.7 KB)
 
 ```markdown
 ---
@@ -11854,11 +11854,16 @@ graph TD
 
 Центральний реєстр `MCPToolRegistry` надає агентам доступ до:
 
+### Внутрішні Інструменти (Internal)
 -   **Automation (Unified)**: Уніфікований модуль для Shell, AppleScript, Shortcuts та вводу (миша/клавіатура).
 -   **System Cleanup**: Інструменти для очищення слідів, логів та спуфінгу (Stealth Mode).
 -   **Recorder Control**: Програмне керування записом сесій (Start/Stop/Status).
--   **Playwright MCP**: Контроль браузера (headless/headful).
 -   **Desktop/Vision**: Аналіз екрану, пошук зображень, OCR.
+
+### Зовнішні MCP Сервери (External)
+-   **Playwright MCP**: Повний контроль браузера (headless/headful).
+-   **PyAutoGUI MCP**: Альтернативна емуляція вводу (якщо внутрішня недоступна).
+
 
 ---
 
@@ -12282,7 +12287,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (543.5 KB)
+### `project_structure_final.txt` (543.8 KB)
 
 ```text
 # System — Project Structure
@@ -12291,9 +12296,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 126
-- **Files Skipped**: 16098
+- **Files Skipped**: 16105
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 05:57:22
+- **Generated**: 2025-12-19 06:00:41
 
 ---
 
@@ -12435,18 +12440,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39606 ------------------------------------------
- 1 file changed, 39606 deletions(-)
+ project_structure_final.txt | 39112 ------------------------------------------
+ 1 file changed, 39112 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-e8c7b3b docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
+5020270 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
+afc6358 docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
 2230fa3 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
 4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
 1521780 Fix TUI input frame height to tightly wrap content
-553493a docs: update Atlas workflow definition
 ```
 
 ---
@@ -24067,7 +24072,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### `docs/atlas.md` (6.5 KB)
+### `docs/atlas.md` (6.7 KB)
 
 ```markdown
 ---
@@ -24141,11 +24146,16 @@ graph TD
 
 Центральний реєстр `MCPToolRegistry` надає агентам доступ до:
 
+### Внутрішні Інструменти (Internal)
 -   **Automation (Unified)**: Уніфікований модуль для Shell, AppleScript, Shortcuts та вводу (миша/клавіатура).
 -   **System Cleanup**: Інструменти для очищення слідів, логів та спуфінгу (Stealth Mode).
 -   **Recorder Control**: Програмне керування записом сесій (Start/Stop/Status).
--   **Playwright MCP**: Контроль браузера (headless/headful).
 -   **Desktop/Vision**: Аналіз екрану, пошук зображень, OCR.
+
+### Зовнішні MCP Сервери (External)
+-   **Playwright MCP**: Повний контроль браузера (headless/headful).
+-   **PyAutoGUI MCP**: Альтернативна емуляція вводу (якщо внутрішня недоступна).
+
 
 ---
 
@@ -39109,4 +39119,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 126
-- **Skipped**: 16098
+- **Skipped**: 16105
