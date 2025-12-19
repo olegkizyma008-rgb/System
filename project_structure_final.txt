@@ -3,10 +3,10 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 126
-- **Files Skipped**: 16111
+- **Files Included**: 127
+- **Files Skipped**: 16119
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:03:09
+- **Generated**: 2025-12-19 06:08:20
 
 ---
 
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39122 ------------------------------------------
- 1 file changed, 39122 deletions(-)
+ project_structure_final.txt | 39123 ------------------------------------------
+ 1 file changed, 39123 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-cf52abf chore(setup): Ensure dependencies (pyautogui) and verify setup.sh
+447f1e3 feat(core): Integrate Context7 Layer for explicit context management
+2ce5833 chore(setup): Ensure dependencies (pyautogui) and verify setup.sh
 fc453e6 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
 afc6358 docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
 2230fa3 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
-4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
 ```
 
 ---
@@ -205,6 +205,7 @@ System/
 │   │   ├── atlas.py
 │   │   ├── grisha.py
 │   │   └── tetyana.py
+│   ├── context7.py
 │   ├── mcp.py
 │   ├── memory.py
 │   ├── trinity.py
@@ -7873,6 +7874,107 @@ def run_tetyana(llm, state):
     pass
 ```
 
+### `core/context7.py` (3.6 KB)
+
+```python
+"""Context7 Layer
+
+A dedicated context management layer for Trinity Runtime.
+Responsible for context preparation, token budgeting, policy injection, and normalization.
+Acting as the 'Explicit Context Manager' described in the Project Atlas documentation.
+"""
+
+from typing import Dict, Any, List, Optional
+import json
+
+class Context7:
+    """Manages context assembly and policy injection for Trinity agents."""
+
+    def __init__(self, verbose: bool = False):
+        self.verbose = verbose
+        # Simple heuristic token limit safeguards (soft limits)
+        self.MAX_CONTEXT_TOKENS = 32000  # Conservative adjustment space
+        self.CHARS_PER_TOKEN = 4
+
+    def prepare(self, 
+                rag_context: str, 
+                project_structure: str, 
+                meta_config: Dict[str, Any],
+                last_msg: str = "") -> str:
+        """
+        Prepares the final context string for the Atlas planner.
+        
+        Args:
+            rag_context: Raw context retrieved from RAG/Memory.
+            project_structure: Current file structure representation.
+            meta_config: Meta-Planner configuration (strategy, limits, etc).
+            last_msg: The specific user task or trigger message.
+            
+        Returns:
+            Formatted, budgeted, and policy-injected context string.
+        """
+        
+        # 1. Apply Policy (High Priority)
+        policy_block = self._format_policy(meta_config)
+        
+        # 2. Budget Tokens
+        # Priority: Policy > Structure > RAG
+        # We assume Policy is small (~500 chars)
+        # Structure can be large (~5k-10k chars)
+        # RAG acts as the filler up to limit
+        
+        available_chars = self.MAX_CONTEXT_TOKENS * self.CHARS_PER_TOKEN
+        
+        used_chars = len(policy_block) + len(project_structure) + len(last_msg)
+        remaining_chars = available_chars - used_chars
+        
+        final_rag = rag_context
+        if remaining_chars < len(rag_context):
+            if self.verbose:
+                print(f"[Context7] Budgeting RAG context: {len(rag_context)} -> {remaining_chars} chars")
+            final_rag = rag_context[:max(0, remaining_chars)] + "\n...[Context Truncated by Context7]..."
+            
+        # 3. Assemble
+        sections = []
+        
+        # Section: Policy / Strategy
+        sections.append(f"## 🧠 STRATEGIC POLICY (Meta-Planner)\n{policy_block}")
+        
+        # Section: Structural Context
+        if project_structure:
+            sections.append(f"## 📂 PROJECT STRUCTURE\n{project_structure}")
+            
+        # Section: Retrieved Memory / RAG
+        if final_rag:
+            sections.append(f"## 📚 RETRIEVED KNOWLEDGE (RAG)\n{final_rag}")
+            
+        return "\n\n".join(sections)
+
+    def _format_policy(self, config: Dict[str, Any]) -> str:
+        """Formats the meta_config into a readable policy block."""
+        strategy = config.get('strategy', 'linear')
+        rigor = config.get('verification_rigor', 'medium')
+        tool_pref = config.get('tool_preference', 'hybrid')
+        
+        lines = [
+            f"- Strategy Mode: **{strategy.upper()}**",
+            f"- Verification Rigor: **{rigor.upper()}**",
+            f"- Tool Preference: **{tool_pref.upper()}**",
+        ]
+        
+        if config.get("anti_patterns"):
+             lines.append(f"- AVOID PATTERNS: {config['anti_patterns']}")
+             
+        if config.get("focus"):
+            lines.append(f"- FOCUS: {config['focus']}")
+            
+        return "\n".join(lines)
+
+    def stats(self) -> Dict[str, Any]:
+        """Returns stats about context usage (placeholder for future metrics)."""
+        return {"policy": "local_heuristic"}
+```
+
 ### `core/mcp.py` (25.3 KB)
 
 ```python
@@ -8522,7 +8624,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (84.5 KB)
+### `core/trinity.py` (84.8 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8539,6 +8641,7 @@ from core.agents.grisha import get_grisha_prompt
 from providers.copilot import CopilotLLM
 
 from core.mcp import MCPToolRegistry
+from core.context7 import Context7
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory
 from dataclasses import dataclass
@@ -8630,6 +8733,7 @@ class TrinityRuntime:
         self.verbose = verbose
         self.logger = get_logger("system_cli.trinity")
         self.registry = MCPToolRegistry()
+        self.context_layer = Context7(verbose=verbose)
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
         self.permissions = permissions or TrinityPermissions()
@@ -8906,15 +9010,25 @@ class TrinityRuntime:
         if self.verbose: print(f"🔄 [Atlas] Replan #{replan_count}")
         
         from core.agents.atlas import get_atlas_plan_prompt
-        # Context is now provided by Meta-Planner's selective RAG
+        # Context is now provided by Context7 Layer (Explicit Context Management)
         rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
-        routing_hint = f"\nSTRATEGY: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
+        
+        # Determine last user message for Context7 prioritization if needed
+        last_user_msg = last_msg # simplified, ideally specific user request
+        
+        # Prepare context via Context7
+        final_context = self.context_layer.prepare(
+            rag_context=rag_context,
+            project_structure=structure_context,
+            meta_config=meta_config,
+            last_msg=last_user_msg
+        )
         
         prompt = get_atlas_plan_prompt(
             last_msg,
             tools_desc=self.registry.list_tools(),
-            context=rag_context + "\n\n" + structure_context + routing_hint,
+            context=final_context,
             preferred_language=self.preferred_language
         )
         
@@ -12287,7 +12401,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (543.8 KB)
+### `project_structure_final.txt` (547.8 KB)
 
 ```text
 # System — Project Structure
@@ -12295,10 +12409,10 @@ test content
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 126
-- **Files Skipped**: 16111
+- **Files Included**: 127
+- **Files Skipped**: 16119
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:03:09
+- **Generated**: 2025-12-19 06:08:20
 
 ---
 
@@ -12440,18 +12554,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39122 ------------------------------------------
- 1 file changed, 39122 deletions(-)
+ project_structure_final.txt | 39123 ------------------------------------------
+ 1 file changed, 39123 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-cf52abf chore(setup): Ensure dependencies (pyautogui) and verify setup.sh
+447f1e3 feat(core): Integrate Context7 Layer for explicit context management
+2ce5833 chore(setup): Ensure dependencies (pyautogui) and verify setup.sh
 fc453e6 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
 afc6358 docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
 2230fa3 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
-4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
 ```
 
 ---
@@ -12497,6 +12611,7 @@ System/
 │   │   ├── atlas.py
 │   │   ├── grisha.py
 │   │   └── tetyana.py
+│   ├── context7.py
 │   ├── mcp.py
 │   ├── memory.py
 │   ├── trinity.py
@@ -20165,6 +20280,107 @@ def run_tetyana(llm, state):
     pass
 ```
 
+### `core/context7.py` (3.6 KB)
+
+```python
+"""Context7 Layer
+
+A dedicated context management layer for Trinity Runtime.
+Responsible for context preparation, token budgeting, policy injection, and normalization.
+Acting as the 'Explicit Context Manager' described in the Project Atlas documentation.
+"""
+
+from typing import Dict, Any, List, Optional
+import json
+
+class Context7:
+    """Manages context assembly and policy injection for Trinity agents."""
+
+    def __init__(self, verbose: bool = False):
+        self.verbose = verbose
+        # Simple heuristic token limit safeguards (soft limits)
+        self.MAX_CONTEXT_TOKENS = 32000  # Conservative adjustment space
+        self.CHARS_PER_TOKEN = 4
+
+    def prepare(self, 
+                rag_context: str, 
+                project_structure: str, 
+                meta_config: Dict[str, Any],
+                last_msg: str = "") -> str:
+        """
+        Prepares the final context string for the Atlas planner.
+        
+        Args:
+            rag_context: Raw context retrieved from RAG/Memory.
+            project_structure: Current file structure representation.
+            meta_config: Meta-Planner configuration (strategy, limits, etc).
+            last_msg: The specific user task or trigger message.
+            
+        Returns:
+            Formatted, budgeted, and policy-injected context string.
+        """
+        
+        # 1. Apply Policy (High Priority)
+        policy_block = self._format_policy(meta_config)
+        
+        # 2. Budget Tokens
+        # Priority: Policy > Structure > RAG
+        # We assume Policy is small (~500 chars)
+        # Structure can be large (~5k-10k chars)
+        # RAG acts as the filler up to limit
+        
+        available_chars = self.MAX_CONTEXT_TOKENS * self.CHARS_PER_TOKEN
+        
+        used_chars = len(policy_block) + len(project_structure) + len(last_msg)
+        remaining_chars = available_chars - used_chars
+        
+        final_rag = rag_context
+        if remaining_chars < len(rag_context):
+            if self.verbose:
+                print(f"[Context7] Budgeting RAG context: {len(rag_context)} -> {remaining_chars} chars")
+            final_rag = rag_context[:max(0, remaining_chars)] + "\n...[Context Truncated by Context7]..."
+            
+        # 3. Assemble
+        sections = []
+        
+        # Section: Policy / Strategy
+        sections.append(f"## 🧠 STRATEGIC POLICY (Meta-Planner)\n{policy_block}")
+        
+        # Section: Structural Context
+        if project_structure:
+            sections.append(f"## 📂 PROJECT STRUCTURE\n{project_structure}")
+            
+        # Section: Retrieved Memory / RAG
+        if final_rag:
+            sections.append(f"## 📚 RETRIEVED KNOWLEDGE (RAG)\n{final_rag}")
+            
+        return "\n\n".join(sections)
+
+    def _format_policy(self, config: Dict[str, Any]) -> str:
+        """Formats the meta_config into a readable policy block."""
+        strategy = config.get('strategy', 'linear')
+        rigor = config.get('verification_rigor', 'medium')
+        tool_pref = config.get('tool_preference', 'hybrid')
+        
+        lines = [
+            f"- Strategy Mode: **{strategy.upper()}**",
+            f"- Verification Rigor: **{rigor.upper()}**",
+            f"- Tool Preference: **{tool_pref.upper()}**",
+        ]
+        
+        if config.get("anti_patterns"):
+             lines.append(f"- AVOID PATTERNS: {config['anti_patterns']}")
+             
+        if config.get("focus"):
+            lines.append(f"- FOCUS: {config['focus']}")
+            
+        return "\n".join(lines)
+
+    def stats(self) -> Dict[str, Any]:
+        """Returns stats about context usage (placeholder for future metrics)."""
+        return {"policy": "local_heuristic"}
+```
+
 ### `core/mcp.py` (25.3 KB)
 
 ```python
@@ -20814,7 +21030,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (84.5 KB)
+### `core/trinity.py` (84.8 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20831,6 +21047,7 @@ from core.agents.grisha import get_grisha_prompt
 from providers.copilot import CopilotLLM
 
 from core.mcp import MCPToolRegistry
+from core.context7 import Context7
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory
 from dataclasses import dataclass
@@ -20922,6 +21139,7 @@ class TrinityRuntime:
         self.verbose = verbose
         self.logger = get_logger("system_cli.trinity")
         self.registry = MCPToolRegistry()
+        self.context_layer = Context7(verbose=verbose)
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
         self.permissions = permissions or TrinityPermissions()
@@ -21198,15 +21416,25 @@ class TrinityRuntime:
         if self.verbose: print(f"🔄 [Atlas] Replan #{replan_count}")
         
         from core.agents.atlas import get_atlas_plan_prompt
-        # Context is now provided by Meta-Planner's selective RAG
+        # Context is now provided by Context7 Layer (Explicit Context Management)
         rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
-        routing_hint = f"\nSTRATEGY: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
+        
+        # Determine last user message for Context7 prioritization if needed
+        last_user_msg = last_msg # simplified, ideally specific user request
+        
+        # Prepare context via Context7
+        final_context = self.context_layer.prepare(
+            rag_context=rag_context,
+            project_structure=structure_context,
+            meta_config=meta_config,
+            last_msg=last_user_msg
+        )
         
         prompt = get_atlas_plan_prompt(
             last_msg,
             tools_desc=self.registry.list_tools(),
-            context=rag_context + "\n\n" + structure_context + routing_hint,
+            context=final_context,
             preferred_language=self.preferred_language
         )
         
@@ -39119,5 +39347,5 @@ graph TD
 
 ## Summary
 
-- **Total Files**: 126
-- **Skipped**: 16111
+- **Total Files**: 127
+- **Skipped**: 16119

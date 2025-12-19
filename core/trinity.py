@@ -12,6 +12,7 @@ from core.agents.grisha import get_grisha_prompt
 from providers.copilot import CopilotLLM
 
 from core.mcp import MCPToolRegistry
+from core.context7 import Context7
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory
 from dataclasses import dataclass
@@ -103,6 +104,7 @@ class TrinityRuntime:
         self.verbose = verbose
         self.logger = get_logger("system_cli.trinity")
         self.registry = MCPToolRegistry()
+        self.context_layer = Context7(verbose=verbose)
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
         self.permissions = permissions or TrinityPermissions()
@@ -379,15 +381,25 @@ class TrinityRuntime:
         if self.verbose: print(f"🔄 [Atlas] Replan #{replan_count}")
         
         from core.agents.atlas import get_atlas_plan_prompt
-        # Context is now provided by Meta-Planner's selective RAG
+        # Context is now provided by Context7 Layer (Explicit Context Management)
         rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
-        routing_hint = f"\nSTRATEGY: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
+        
+        # Determine last user message for Context7 prioritization if needed
+        last_user_msg = last_msg # simplified, ideally specific user request
+        
+        # Prepare context via Context7
+        final_context = self.context_layer.prepare(
+            rag_context=rag_context,
+            project_structure=structure_context,
+            meta_config=meta_config,
+            last_msg=last_user_msg
+        )
         
         prompt = get_atlas_plan_prompt(
             last_msg,
             tools_desc=self.registry.list_tools(),
-            context=rag_context + "\n\n" + structure_context + routing_hint,
+            context=final_context,
             preferred_language=self.preferred_language
         )
         
