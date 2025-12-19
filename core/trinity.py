@@ -379,6 +379,41 @@ class TrinityRuntime:
                     }
                     return pause_context
         
+        # Check for unknown stalls - when system is stuck without clear reason
+        # This happens when last message contains uncertainty or system is waiting
+        if state.get("vibe_assistant_pause"):
+            # Already paused, no need to intervene again
+            return None
+        
+        # Detect stall conditions
+        last_message = context[-1].content if context else ""
+        last_message_lower = last_message.lower()
+        
+        stall_conditions = [
+            "план порожній",
+            "empty plan",
+            "no steps",
+            "cannot",
+            "не може",
+            "не вдається",
+            "failed to",
+            "немає кроків"
+        ]
+        
+        if any(condition in last_message_lower for condition in stall_conditions):
+            # System is stalled with unclear reason - Doctor Vibe should intervene
+            pause_context = {
+                "reason": "unknown_stall_detected",
+                "message": f"Doctor Vibe: Виявлено невідому зупинку системи. Останнє повідомлення: {last_message[:100]}...",
+                "timestamp": datetime.now().isoformat(),
+                "suggested_action": "Будь ласка, уточніть завдання або перезапустіть систему",
+                "atlas_status": "stalled_unknown_reason",
+                "auto_resume_available": False,
+                "last_message": last_message,
+                "original_task": state.get("original_task")
+            }
+            return pause_context
+        
         return None
     
     def _create_vibe_assistant_pause_state(self, state: TrinityState, pause_reason: str, message: str) -> TrinityState:
@@ -672,7 +707,36 @@ class TrinityRuntime:
         if not meta_config:
             action = "initialize"
         elif not plan:
-            action = "replan" # out of steps
+            # Check if this is a planning failure that needs Doctor Vibe intervention
+            if step_count > 0 and last_step_status == "success":
+                # Empty plan after successful step - this is a planning failure
+                if self.verbose:
+                    self.logger.info("🚨 [Meta-Planner] Empty plan detected after successful step. Activating Doctor Vibe.")
+                
+                # Create pause context for Doctor Vibe
+                pause_context = {
+                    "reason": "empty_plan_after_success",
+                    "message": f"Doctor Vibe: Атлас не може створити план після успішного кроку. Завдання: {original_task}",
+                    "timestamp": datetime.now().isoformat(),
+                    "suggested_action": "Будь ласка, уточніть завдання або розбийте його на простіші кроки",
+                    "atlas_status": "planning_failed",
+                    "auto_resume_available": False,
+                    "original_task": original_task,
+                    "last_successful_step": last_msg
+                }
+                
+                # Notify Doctor Vibe and create pause state
+                self.vibe_assistant.handle_pause_request(pause_context)
+                
+                return {
+                    **state,
+                    "vibe_assistant_pause": pause_context,
+                    "vibe_assistant_context": f"PAUSED: Empty plan after success for task: {original_task}",
+                    "current_agent": "meta_planner",
+                    "messages": list(context) + [AIMessage(content=f"[VOICE] Doctor Vibe: Атлас не може продовжити планування. Будь ласка, уточніть завдання.")]
+                }
+            else:
+                action = "replan" # out of steps
         elif last_step_status == "failed":
             if current_step_fail_count >= 3:
                  action = "replan"
@@ -817,9 +881,41 @@ class TrinityRuntime:
 
         except Exception as e:
             if self.verbose: print(f"⚠️ [Atlas] Error: {e}")
-            # Minimal fallback plan
-            fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana"}]
-            return self._atlas_dispatch(state, fallback, replan_count=replan_count)
+            
+            # Check if this is a planning failure that Doctor Vibe should handle
+            error_str = str(e).lower()
+            if "no steps generated" in error_str or "empty plan" in error_str or "cannot" in error_str:
+                if self.verbose:
+                    print(f"🚨 [Atlas] Planning failure detected. Activating Doctor Vibe intervention.")
+                
+                # Create pause context for Doctor Vibe
+                pause_context = {
+                    "reason": "planning_failure",
+                    "message": f"Doctor Vibe: Атлас не може створити план для завдання: {last_msg}",
+                    "timestamp": datetime.now().isoformat(),
+                    "suggested_action": "Будь ласка, уточніть завдання або розбийте його на простіші кроки",
+                    "atlas_status": "planning_failed",
+                    "auto_resume_available": False,
+                    "original_task": state.get("original_task"),
+                    "current_attempt": last_msg
+                }
+                
+                # Notify Doctor Vibe and create pause state
+                self.vibe_assistant.handle_pause_request(pause_context)
+                
+                return {
+                    **state,
+                    "vibe_assistant_pause": pause_context,
+                    "vibe_assistant_context": f"PAUSED: Planning failure for task: {last_msg}",
+                    "current_agent": "meta_planner",  # Stay in meta_planner to handle pause
+                    "messages": list(context) + [AIMessage(content=f"[VOICE] Doctor Vibe: Виникла проблема з плануванням. Будь ласка, уточніть завдання.")]
+                }
+            else:
+                # Regular fallback for other errors
+                if self.verbose:
+                    print(f"🔄 [Atlas] Using fallback plan due to error: {e}")
+                fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana"}]
+                return self._atlas_dispatch(state, fallback, replan_count=replan_count)
 
     def _atlas_dispatch(self, state, plan, replan_count=None):
         """Internal helper to format the dispatch message and return state."""
