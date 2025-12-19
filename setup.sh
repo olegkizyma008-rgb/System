@@ -64,6 +64,13 @@ else
     npx playwright install chromium
 fi
 
+# 3. Cleanup Scripts Permissions
+if [ -d "cleanup_scripts" ]; then
+    echo "🛡️  Setting permissions for cleanup scripts..."
+    chmod +x cleanup_scripts/*.sh
+    echo "✅ Cleanup scripts are now executable."
+fi
+
 # 3. Patching mcp-pyautogui-server if needed
 # (This is a workaround for the broken site-package version)
 # We can add a more permanent patch logic here if desired.
