@@ -24,48 +24,46 @@ class Context7:
                 last_msg: str = "") -> str:
         """
         Prepares the final context string for the Atlas planner.
-        
-        Args:
-            rag_context: Raw context retrieved from RAG/Memory.
-            project_structure: Current file structure representation.
-            meta_config: Meta-Planner configuration (strategy, limits, etc).
-            last_msg: The specific user task or trigger message.
-            
-        Returns:
-            Formatted, budgeted, and policy-injected context string.
+        Priority: Policy > last_msg > Structure > RAG
         """
         
         # 1. Apply Policy (High Priority)
         policy_block = self._format_policy(meta_config)
         
-        # 2. Budget Tokens
-        # Priority: Policy > Structure > RAG
-        # We assume Policy is small (~500 chars)
-        # Structure can be large (~5k-10k chars)
-        # RAG acts as the filler up to limit
+        # 2. Budget Characters
+        # Conservative token count: 16k tokens -> ~48k chars (using 3 chars/token for safety)
+        TOTAL_BUDGET = 16000 * 3 
         
-        available_chars = self.MAX_CONTEXT_TOKENS * self.CHARS_PER_TOKEN
+        policy_len = len(policy_block)
+        msg_len = len(last_msg)
         
-        used_chars = len(policy_block) + len(project_structure) + len(last_msg)
-        remaining_chars = available_chars - used_chars
+        # Remaining budget for Structure and RAG
+        remaining = TOTAL_BUDGET - (policy_len + msg_len + 500) # 500 for headers/overhead
         
-        final_rag = rag_context
-        if remaining_chars < len(rag_context):
+        # Budget for structure (max 50% of remaining or 20k chars)
+        structure_budget = min(int(remaining * 0.5), 20000)
+        final_structure = project_structure
+        if len(project_structure) > structure_budget:
             if self.verbose:
-                print(f"[Context7] Budgeting RAG context: {len(rag_context)} -> {remaining_chars} chars")
-            final_rag = rag_context[:max(0, remaining_chars)] + "\n...[Context Truncated by Context7]..."
+                 print(f"[Context7] Truncating structure: {len(project_structure)} -> {structure_budget}")
+            final_structure = project_structure[:structure_budget] + "\n...[Structure Truncated]..."
+            
+        remaining -= len(final_structure)
+        
+        # Final budget for RAG
+        final_rag = rag_context
+        if len(rag_context) > remaining:
+            if self.verbose:
+                print(f"[Context7] Budgeting RAG context: {len(rag_context)} -> {max(0, remaining)} chars")
+            final_rag = rag_context[:max(0, remaining)] + "\n...[Context Truncated by Context7]..."
             
         # 3. Assemble
         sections = []
-        
-        # Section: Policy / Strategy
         sections.append(f"## 🧠 STRATEGIC POLICY (Meta-Planner)\n{policy_block}")
         
-        # Section: Structural Context
-        if project_structure:
-            sections.append(f"## 📂 PROJECT STRUCTURE\n{project_structure}")
+        if final_structure:
+            sections.append(f"## 📂 PROJECT STRUCTURE\n{final_structure}")
             
-        # Section: Retrieved Memory / RAG
         if final_rag:
             sections.append(f"## 📚 RETRIEVED KNOWLEDGE (RAG)\n{final_rag}")
             

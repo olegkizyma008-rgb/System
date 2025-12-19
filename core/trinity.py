@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import re
+import time
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
@@ -113,23 +114,42 @@ class TrinityRuntime:
         self.on_stream = on_stream
         self.workflow = self._build_graph()
 
-    def _extract_json_object(self, text: str) -> Optional[Dict[str, Any]]:
-        try:
-            s = str(text or "").strip()
-            if not s:
-                return None
-            # Try direct JSON first.
-            if s.startswith("{") and s.endswith("}"):
-                obj = json.loads(s)
-                return obj if isinstance(obj, dict) else None
-            # Best-effort extraction of the first JSON object.
-            match = re.search(r"\{.*\}", s, re.DOTALL)
-            if not match:
-                return None
-            obj = json.loads(match.group(0))
-            return obj if isinstance(obj, dict) else None
-        except Exception:
+    def _extract_json_object(self, text: str) -> Any:
+        """Helper to extract any JSON object or list from a string."""
+        if not text:
             return None
+        s = str(text).strip()
+        
+        # Try direct JSON first.
+        try:
+            return json.loads(s)
+        except Exception:
+            pass
+
+        # Try cleaning markdown code blocks
+        s_clean = re.sub(r"^```json\s*", "", s, flags=re.IGNORECASE | re.MULTILINE)
+        s_clean = re.sub(r"\s*```$", "", s_clean, flags=re.IGNORECASE | re.MULTILINE)
+        try:
+            return json.loads(s_clean.strip())
+        except Exception:
+            pass
+
+        # Best-effort extraction of the first JSON-like block.
+        # This matches from the first { or [ to the last } or ] (greedy)
+        match = re.search(r"(\{.*\}|\[.*\])", s_clean, re.DOTALL)
+        if match:
+            candidate = match.group(0)
+            try:
+                return json.loads(candidate)
+            except Exception:
+                # If greedy fails (e.g. multiple objects), try non-greedy for the first block
+                match = re.search(r"(\{.*?\}|\[.*?\])", s_clean, re.DOTALL)
+                if match:
+                    try:
+                        return json.loads(match.group(0))
+                    except Exception:
+                        pass
+        return None
 
     def _classify_task_llm(self, task: str) -> Optional[Dict[str, Any]]:
         try:
@@ -219,17 +239,17 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "atlas", 
             self._router, 
-            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "end": END}
+            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "atlas": "atlas", "knowledge": "knowledge", "end": END}
         )
         builder.add_conditional_edges(
             "tetyana", 
             self._router, 
-            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "end": END}
+            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "atlas": "atlas", "knowledge": "knowledge", "end": END}
         )
         builder.add_conditional_edges(
             "grisha", 
             self._router, 
-            {"meta_planner": "meta_planner", "knowledge": "knowledge", "end": END}
+            {"meta_planner": "meta_planner", "knowledge": "knowledge", "atlas": "atlas", "end": END}
         )
         builder.add_conditional_edges(
             "knowledge",
@@ -302,6 +322,9 @@ class TrinityRuntime:
             else:
                  recovery_mode = meta_config.get("recovery_mode", "local_fix")
                  action = "replan" if recovery_mode == "full_replan" else "repair"
+        elif last_step_status == "uncertain":
+            # If we are stuck/uncertain (e.g. CAPTCHA), force a replan to find a new path
+            action = "replan"
         
         # 4. Meta-Reasoning (LLM)
         if action in ["initialize", "replan", "repair"]:
@@ -798,9 +821,10 @@ class TrinityRuntime:
             except Exception:
                 pass
             return {
-                "current_agent": "atlas",
+                "current_agent": "meta_planner",
                 "messages": updated_messages,
-                "pause_info": pause_info
+                "pause_info": pause_info,
+                "last_step_status": "uncertain"
             }
         
         # Preserve existing messages and add new one
@@ -978,7 +1002,7 @@ class TrinityRuntime:
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
         lower_content = content.lower()
         step_status = "uncertain"
-        next_agent = "atlas"
+        next_agent = "meta_planner"
 
         # 1. Check for explicit success markers (including Tetyana's [STEP_COMPLETED])
         explicit_complete_markers = [
@@ -1009,28 +1033,28 @@ class TrinityRuntime:
         
         # 5. Success / Failure / Indecision
         # LLM Markers [VERIFIED] have HIGHEST priority
-        if "[captcha]" in lower_content:
+        if "[captcha]" in lower_content or "captcha" in lower_content or "капча" in lower_content:
             step_status = "uncertain"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_test_failure:
             step_status = "failed"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_tool_error_in_context:
             # Technically, if the LATEST tool failed, it's a failure.
             step_status = "failed"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_explicit_complete:
             step_status = "success"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_successful_tool_result and not has_tool_error_in_context:
             step_status = "success"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
             step_status = "success"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif "[failed]" in lower_content or "critical error" in lower_content or "fatal error" in lower_content:
             step_status = "failed"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         else:
             # NEW: If no tools were used and status is uncertain, force verification
             if not tool_calls:
@@ -1065,7 +1089,7 @@ class TrinityRuntime:
             # If still uncertain after forced verification
             if step_status == "uncertain":
                 step_status = "uncertain"
-                next_agent = "atlas"
+                next_agent = "meta_planner"
 
         # Preserve existing messages and add new one (with potentially enriched content)
         updated_messages = list(context) + [AIMessage(content=content)]
@@ -1146,29 +1170,27 @@ class TrinityRuntime:
             # Check for completion to trigger learning
             # If current is 'end', we check if we should go to 'knowledge' first
             if current == "end":
+                # ANTI-LOOP: If we were already in knowledge, just end
+                # We can check the messages or a specific state flag if we added one.
+                # But simpler: if the last message was from Grisha/Meta and contains success, go to knowledge.
+                # If the last message was from Knowledge, then it's really the end.
+                
+                # Check the message history to see who sent the last message
                 messages = state.get("messages", [])
-                if messages:
-                    last_text = messages[-1].content.lower()
-                    # If it sounds like success, go to learning
-                    if any(x in last_text for x in ["завершена", "готово", "виконано", "completed", "success"]):
-                        return "knowledge"
+                if messages and isinstance(messages[-1], AIMessage):
+                    content = messages[-1].content.lower()
+                    # If it sounds like success AND it's not a message from the knowledge node itself
+                    if any(x in content for x in ["завершена", "готово", "виконано", "completed", "success"]):
+                        # Simple heuristic: if the message doesn't mention "experience stored" (which knowledge node does)
+                        if "experience stored" not in content and "досвід збережено" not in content:
+                            return "knowledge"
 
             trace(self.logger, "router_decision", {"current": current, "next": current})
         except Exception:
             pass
         return current
 
-    def _extract_json_object(self, text: str) -> Any:
-        """Helper to extract the first JSON object or list from a string."""
-        import re
-        import json
-        try:
-            match = re.search(r"(\{.*\}|\[.*\])", text, re.DOTALL)
-            if match:
-                return json.loads(match.group(1))
-        except (json.JSONDecodeError, ValueError, Exception):
-            pass
-        return None
+    # _extract_json_object was moved to the top of the class to avoid duplication.
 
     def _knowledge_node(self, state: TrinityState):
         """Final node to extract and store knowledge (success or failure) from completion."""
@@ -1213,7 +1235,9 @@ class TrinityRuntime:
                 }
             )
             
-            if self.verbose: print(f"🧠 [Learning] {actual_status.upper()} experience stored (conf: {confidence})")
+            if self.verbose: 
+                stored_msg = f"🧠 [Learning] {actual_status.upper()} experience stored (conf: {confidence})"
+                print(stored_msg)
             
             try:
                 trace(self.logger, "knowledge_stored", {"status": actual_status, "confidence": confidence})
@@ -1223,7 +1247,11 @@ class TrinityRuntime:
         except Exception as e:
             if self.verbose: print(f"⚠️ [Learning] Error: {e}")
             
-        return {"current_agent": "end"}
+        final_msg = "[VOICE] Досвід збережено. Завдання завершено." if self.preferred_language == "uk" else "[VOICE] Experience stored. Task completed."
+        return {
+            "current_agent": "end",
+            "messages": context + [AIMessage(content=final_msg)]
+        }
 
     def _get_git_root(self) -> Optional[str]:
         try:
@@ -1250,39 +1278,47 @@ class TrinityRuntime:
             if not os.path.exists(structure_file):
                 return ""
             
+            # Read only first part of file to avoid memory issues with huge files
+            # then process carefully
             with open(structure_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+                # Read up to 100kb of the file
+                content = f.read(100000)
             
-            # Extract key sections for context (Last Response, Git Log, Recent Changes)
+            # Extract key sections for context (Metadata, Program Execution Logs, Project Structure)
             lines = content.split('\n')
             context_lines = []
             current_section = None
             section_count = 0
             
             for line in lines:
-                # Extract Last Response section
-                if '## Last Response' in line:
-                    current_section = 'last_response'
-                    section_count = 0
-                    continue
-                elif '## Git Diff' in line:
-                    current_section = 'git_diff'
-                    section_count = 0
-                    continue
-                elif '## Git Log' in line:
-                    current_section = 'git_log'
-                    section_count = 0
-                    continue
-                elif line.startswith('## ') and current_section:
-                    current_section = None
+                # Each line limited to 500 chars to avoid prompt blowup
+                line = line[:500]
                 
-                # Collect lines from key sections (limit to 50 lines per section)
-                if current_section and section_count < 50:
-                    if line.strip() and not line.startswith('```'):
-                        context_lines.append(line)
-                        section_count += 1
+                # Identify sections
+                lstrip = line.strip()
+                if lstrip.startswith('## Metadata'):
+                    current_section = 'metadata'
+                    section_count = 0
+                elif '## Program Execution Logs' in lstrip:
+                    current_section = 'logs'
+                    section_count = 0
+                elif '## Project Structure' in lstrip:
+                    current_section = 'structure'
+                    section_count = 0
+                elif lstrip.startswith('## ') and current_section:
+                    # If it's a new section we don't care about, stop capturing
+                    if not any(x in lstrip for x in ['Metadata', 'Logs', 'Structure']):
+                        current_section = None
+                
+                # Collect lines (limit per section to avoid bias)
+                if current_section:
+                    if section_count < 30: # Max 30 lines per section
+                         if lstrip and not lstrip.startswith('```'):
+                            context_lines.append(line)
+                            section_count += 1
             
-            return '\n'.join(context_lines[:100])  # Limit to 100 lines total
+            # Final safety cut
+            return '\n'.join(context_lines[:150]) 
             
         except Exception as e:
             if self.verbose:

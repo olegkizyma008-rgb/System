@@ -52,28 +52,64 @@ class AdaptiveVerifier:
             response = self.llm.invoke(prompt.format_messages())
             content = response.content
             
-            # Simple JSON cleanup
-            content = content.replace("```json", "").replace("```", "").strip()
-            
-            # Extract JSON list [ ... ]
-            import re
-            match = re.search(r"\[.*\]", content, re.DOTALL)
-            if match:
-                content = match.group(0)
+            # Use improved extraction logic
+            def extract_json(text):
+                if not text: return None
+                s = text.strip()
+                try: return json.loads(s)
+                except: pass
                 
-            optimized = json.loads(content)
-            
-            # Safety checks
-            if not isinstance(optimized, list):
-                raise ValueError("Optimized plan is not a list")
+                # Match balanced or largest block
+                # First try the whole thing without markdown
+                s_clean = s.replace("```json", "").replace("```", "").strip()
+                try: return json.loads(s_clean)
+                except: pass
                 
+                # Regex fallback
+                match = re.search(r"(\{.*\}|\[.*\])", s_clean, re.DOTALL)
+                if match:
+                    try: return json.loads(match.group(0))
+                    except: pass
+                    
+                match = re.search(r"(\{.*?\}|\[.*?\])", s_clean, re.DOTALL)
+                if match:
+                    try: return json.loads(match.group(0))
+                    except: pass
+                return None
+
+            optimized_raw = extract_json(content)
+            
+            if optimized_raw is None:
+                self.logger.warning(f"[Verifier] No valid JSON found in response.")
+                raise ValueError("No JSON found")
+                
+            # Handle if LLM returned an object instead of a list
+            optimized = []
+            if isinstance(optimized_raw, list):
+                optimized = optimized_raw
+            elif isinstance(optimized_raw, dict):
+                optimized = optimized_raw.get("steps") or optimized_raw.get("plan") or []
+            else:
+                raise ValueError(f"Unexpected optimized plan type: {type(optimized_raw)}")
+
+            # Safety check: ensure it's a list of dicts
+            clean_optimized = []
+            for item in optimized:
+                if isinstance(item, dict):
+                    clean_optimized.append(item)
+                elif isinstance(item, str):
+                    # Convert string step to dict step
+                    clean_optimized.append({"type": "execute", "description": item})
+                else:
+                    self.logger.warning(f"[Verifier] Skipping invalid item in optimized plan: {item}")
+
             # If the optimizer removed steps or returned empty (and raw wasn't), treat as failure
-            if len(optimized) < len(raw_plan):
-                 self.logger.warning(f"[Verifier] Optimization reduced step count ({len(raw_plan)} -> {len(optimized)}). Use raw plan fallback.")
+            if len(clean_optimized) < len(raw_plan) and len(raw_plan) > 0:
+                 self.logger.warning(f"[Verifier] Optimization reduced step count ({len(raw_plan)} -> {len(clean_optimized)}). Use raw plan fallback.")
                  raise ValueError("Optimized plan unexpectedly shorter than raw plan")
 
             # Fallback: if LLM didn't add verify steps, add them manually
-            enhanced = self._ensure_verify_steps(optimized, rigor=rigor)
+            enhanced = self._ensure_verify_steps(clean_optimized, rigor=rigor)
             self.logger.debug(
                 f"[Verifier] Plan optimized (Rigor: {rigor}): {len(raw_plan)} → {len(enhanced)} steps"
             )
@@ -81,7 +117,7 @@ class AdaptiveVerifier:
                 
         except Exception as e:
             self.logger.warning(f"[Verifier] LLM JSON parsing/optimization error: {e}")
-            self.logger.debug(f"[Verifier] Raw response: {content[:200]}...")
+            self.logger.debug(f"[Verifier] Raw response snippet: {str(content)[:200]}...")
             # Fallback: ensure verify steps manually
             enhanced = self._ensure_verify_steps(raw_plan, rigor=rigor)
             self.logger.debug(

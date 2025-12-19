@@ -277,6 +277,7 @@ class MCPToolRegistry:
         
         # Vision/Input
         self.register_tool("take_screenshot", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
+        self.register_tool("capture_screen", take_screenshot, "Capture current screen state for verification. Args: app_name (optional)")
         self.register_tool("take_burst_screenshot", take_burst_screenshot, "Take multiple screenshots in a burst. Args: app_name (optional), count (int), interval (float)")
         self.register_tool("capture_screen_region", capture_screen_region, "Capture screenshot of screen region. Args: x,y,width,height")
         self.register_tool("vision_analyze", analyze_with_copilot, "Analyze screen with AI to get coordinates and text. Args: image_path (optional), prompt (str)")
