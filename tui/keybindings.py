@@ -232,6 +232,29 @@ def build_keybindings(
             if w:
                 event.app.layout.focus(w)
 
+    @kb.add("c-k")
+    def _(event):
+        """Copy active panel content to clipboard (Mac pbcopy)."""
+        target = str(getattr(state, "ui_scroll_target", "log") or "log")
+        import subprocess
+        try:
+            content = ""
+            if target == "log":
+                from tui.render import get_logs
+                logs = get_logs()
+                content = "".join(str(t or "") for _, t in logs)
+            else:
+                from tui.render import get_agent_messages
+                msgs = get_agent_messages()
+                content = "".join(str(t or "") for _, t in msgs)
+            
+            if content:
+                process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
+                process.communicate(input=content.encode('utf-8'))
+                log(f"Скопійовано {len(content)} символів з панелі {target.upper()}", "action")
+        except Exception as e:
+            log(f"Помилка копіювання: {e}", "error")
+
     @kb.add("c-l")
     def _(event):
         """Focus the input field."""

@@ -24,7 +24,7 @@ _logs_lock = threading.RLock()
 _logs_need_trim: bool = False
 _thread_log_override = threading.local()
 
-_agent_messages_buffer = MessageBuffer(max_messages=200)
+_agent_messages_buffer = MessageBuffer(max_messages=1000)
 _agent_messages_lock = threading.RLock()
 
 # Render caches
@@ -216,8 +216,8 @@ def trim_logs_if_needed() -> None:
             return
         if getattr(state, "agent_processing", False):
             return
-        if len(state.logs) > 500:
-            state.logs = state.logs[-400:]
+        if len(state.logs) > 2000:
+            state.logs = state.logs[-1500:]
         _logs_need_trim = False
 
 
@@ -235,11 +235,11 @@ def log_reserve_line(category: str = "info") -> int:
     global _logs_need_trim
     with _logs_lock:
         state.logs.append((STYLE_MAP.get(category, "class:log.info"), "\n"))
-        if len(state.logs) > 500:
+        if len(state.logs) > 2000:
             if getattr(state, "agent_processing", False):
                 _logs_need_trim = True
             else:
-                state.logs = state.logs[-400:]
+                state.logs = state.logs[-1500:]
         return max(0, len(state.logs) - 1)
 
 
@@ -264,11 +264,11 @@ def log(text: str, category: str = "info") -> None:
         return
     with _logs_lock:
         state.logs.append((STYLE_MAP.get(category, "class:log.info"), f"{text}\n"))
-        if len(state.logs) > 500:
+        if len(state.logs) > 2000:
             if getattr(state, "agent_processing", False):
                 _logs_need_trim = True
             else:
-                state.logs = state.logs[-400:]
+                state.logs = state.logs[-1500:]
 
 
 def log_agent_message(agent: AgentType, text: str) -> None:

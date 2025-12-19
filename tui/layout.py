@@ -167,14 +167,15 @@ def build_app(
     def make_scroll_handler(name: str):
         def _handler(mouse_event: Any):
             from prompt_toolkit.mouse_events import MouseEventType
-            # Scroll multiple lines for better UX
+            # Scroll faster and more reliably
+            scroll_delta = 5 # Lines per scroll
+            
             if mouse_event.event_type == MouseEventType.SCROLL_UP:
                 from prompt_toolkit.application.current import get_app
                 app = get_app()
                 for w in app.layout.find_all_windows():
                     if getattr(w, "name", None) == name:
-                        w.vertical_scroll = max(0, w.vertical_scroll - 3)
-                force_ui_update()
+                        w.vertical_scroll = max(0, w.vertical_scroll - scroll_delta)
                 return None # Handled
             elif mouse_event.event_type == MouseEventType.SCROLL_DOWN:
                 from prompt_toolkit.application.current import get_app
@@ -184,11 +185,9 @@ def build_app(
                         info = w.render_info
                         if info:
                             max_scroll = max(0, info.content_height - info.window_height)
-                            w.vertical_scroll = min(max_scroll, w.vertical_scroll + 3)
+                            w.vertical_scroll = min(max_scroll, w.vertical_scroll + scroll_delta)
                         else:
-                            # Fallback if no render info yet
-                            w.vertical_scroll += 3
-                force_ui_update()
+                            w.vertical_scroll += scroll_delta
                 return None # Handled
             return NotImplemented
         return _handler
