@@ -207,26 +207,27 @@ def build_keybindings(
             state.menu_index = 0
             state.ui_scroll_target = "agents"
         elif state.menu_level in {
-            MenuLevel.CUSTOM_TASKS,
-            MenuLevel.CLEANUP_EDITORS,
-            MenuLevel.MODULE_EDITORS,
-            MenuLevel.MODULE_LIST,
-            MenuLevel.INSTALL_EDITORS,
-            MenuLevel.LOCALES,
-            MenuLevel.MONITORING,
-            MenuLevel.MONITOR_TARGETS,
-            MenuLevel.MONITOR_CONTROL,
-            MenuLevel.SETTINGS,
-            MenuLevel.UNSAFE_MODE,
-            MenuLevel.AUTOMATION_PERMISSIONS,
-            MenuLevel.LLM_SETTINGS,
-            MenuLevel.AGENT_SETTINGS,
-            MenuLevel.APPEARANCE,
-            MenuLevel.LANGUAGE,
-            MenuLevel.LAYOUT,
-            MenuLevel.DEV_SETTINGS,
+            MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS
+        }:
+            state.menu_level = MenuLevel.LLM_SETTINGS
+            state.menu_index = 0
+        elif state.menu_level in {
+            MenuLevel.LLM_SETTINGS, MenuLevel.AGENT_SETTINGS, MenuLevel.APPEARANCE, MenuLevel.LANGUAGE, MenuLevel.LAYOUT, MenuLevel.UNSAFE_MODE,
+            MenuLevel.AUTOMATION_PERMISSIONS, MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES
+        }:
+            state.menu_level = MenuLevel.SETTINGS
+            state.menu_index = 0
+        elif state.menu_level in {
+            MenuLevel.SETTINGS, MenuLevel.CUSTOM_TASKS, MenuLevel.MONITORING, MenuLevel.CLEANUP_EDITORS,
+            MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS
         }:
             state.menu_level = MenuLevel.MAIN
+            state.menu_index = 0
+        elif state.menu_level == MenuLevel.MODULE_LIST:
+            state.menu_level = MenuLevel.MODULE_EDITORS
+            state.menu_index = 0
+        elif state.menu_level == MenuLevel.MONITOR_CONTROL or state.menu_level == MenuLevel.MONITOR_TARGETS:
+            state.menu_level = MenuLevel.MONITORING
             state.menu_index = 0
         else:
             # Not in menu, focus the input field
@@ -414,6 +415,7 @@ def build_keybindings(
             elif state.menu_level == MenuLevel.LLM_TETYANA: section = "tetyana"
             elif state.menu_level == MenuLevel.LLM_GRISHA: section = "grisha"
             elif state.menu_level == MenuLevel.LLM_VISION: section = "vision"
+            elif state.menu_level == MenuLevel.LLM_DEFAULTS: section = "defaults"
             
             from tui.tools import tool_llm_set, tool_llm_status
             
@@ -424,13 +426,24 @@ def build_keybindings(
                 next_prov = provs[(provs.index(cur_prov) + 1) % len(provs)] if cur_prov in provs else "copilot"
                 tool_llm_set({"section": section, "provider": next_prov})
                 log(f"Provider set to: {next_prov}", "action")
-            elif key == "model":
+            elif key == "model" or key == "main_model":
                 start_status = tool_llm_status({"section": section})
-                cur_mod = start_status.get("model", "")
+                # Check for model or main_model key
+                cur_mod = start_status.get("model") or start_status.get("main_model") or ""
                 models = ["gpt-4o", "gpt-4", "claude-3-5-sonnet-latest", "gemini-1.5-pro-002", "mistral-large-latest"]
                 next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
-                tool_llm_set({"section": section, "model": next_mod})
+                if section == "defaults":
+                    tool_llm_set({"main_model": next_mod})
+                else:
+                    tool_llm_set({"section": section, "model": next_mod})
                 log(f"Model set to: {next_mod}", "action")
+            elif key == "vision_model":
+                start_status = tool_llm_status({"section": section})
+                cur_mod = start_status.get("vision_model", "")
+                models = ["gpt-4.1-vision", "gpt-4o", "claude-3-opus", "gemini-1.5-flash"]
+                next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
+                tool_llm_set({"vision_model": next_mod})
+                log(f"Vision model set to: {next_mod}", "action")
 
     @kb.add("s", filter=show_menu)
     def _(event):
