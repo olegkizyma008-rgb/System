@@ -4,16 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 126
-- **Files Skipped**: 15932
+- **Files Skipped**: 15945
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 03:37:36
+- **Generated**: 2025-12-19 03:45:24
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:35:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
 2025-12-19 02:35:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9164}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Очікую завдання. [VERIFIED]"}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
@@ -113,6 +112,7 @@
 2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 03:23:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 03:41:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
 ```
 
 ---
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39621 +-----------------------------------------
- 1 file changed, 102 insertions(+), 39519 deletions(-)
+ project_structure_final.txt | 38981 +-----------------------------------------
+ 1 file changed, 3 insertions(+), 38978 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-01fcb2e feat(meta): implement advanced meta-planning architecture and authoritative documentation rebase
+c3e77a1 feat(cognitive): implement selective RAG, knowledge extraction node, and continuous learning cycle
+f1e271c feat(meta): implement advanced meta-planning architecture and authoritative documentation rebase
 d5edc6c Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 2c4de4a Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 43e4d01 feat: enhance TUI scrolling by increasing speed and adding state management for log and agent panel follow behavior.
-e881661 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 ```
 
 ---
@@ -353,6 +353,8 @@ Atlas — це не просто автоматизатор, а **автоном
     Використання скріншотів та Computer Vision як основного джерела істини (Ground Truth) для підтвердження результатів, особливо в умовах блокувань або відсутності API.
 4.  **Конфіденційність та Стелс-режим (Privacy & Stealth)**  
     Потужна система очищення слідів перебування ШІ на macOS, підміна ідентифікаторів (`spoofing`) та режим "Fresh Install" для безпечної роботи.
+5.  **Постійне Навчання (Continuous Learning)**  
+    Після завершення кожного успішного завдання система витягує досвід та зберігає його у векторну пам'ять (Knowledge Base) для майбутнього використання.
 
 ---
 
@@ -363,25 +365,26 @@ Atlas — це не просто автоматизатор, а **автоном
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег/Контролер]
-    MP -->|потрібен план| A[atlas<br/>Архітектор Плану]
+    MP -->|Selective RAG| A[atlas<br/>Архітектор Плану]
     MP -->|план готовий| T[tetyana<br/>Виконавець]
     MP -->|план готовий| G[grisha<br/>Верифікатор]
     A --> MP
     T --> G
     G --> MP
-    MP -->|завершено| END((END))
+    MP -->|завершено| K[knowledge<br/>Екстрактор Досвіду]
+    K --> END((END))
 ```
 
 ### 2.1 Trinity Agents
 
--   **Meta-Planner** (`_meta_planner_node`): Встановлює **Execution Policy** (стратегічне обґрунтування через `reasoning`). Вирішує, чи ми рухаємося далі, чи потрібне локальне виправлення (`repair`), чи глобальне перепланування. Також відповідає за:
-    -   **Summarization**: Кожні 3 кроки стискає історію в `summary`.
-    -   **Step Consumption**: Видаляє виконані кроки з плану після успіху Grisha.
-    -   **Tool Preference**: Визначає пріоритет інструментів (native/gui/hybrid).
-    -   **Limit Checks**: Контролює ліміти (50 кроків, 10 перепланувань).
--   **Atlas** (`_atlas_node`): Перетворює політику на кроки. Включає фазу **Self-Review** (перевірка плану на цикли та безпеку перед видачею). Активує **Adaptive Verifier**.
--   **Tetyana** (`_tetyana_node`): Виконує команди. Має механізм анти-циклів та Hybrid Fallback.
--   **Grisha** (`_grisha_node`): Валідатор. Читає екран, аналізує UI та дає вердикт: `success`, `failed` або `uncertain`.
+-   **Meta-Planner** (`_meta_planner_node`): Встановлює **Execution Policy**. Виконує **Selective RAG** (вирішує, чи потрібен пошук у пам'яті). Також відповідає за:
+    -   **Strategic Reasoning**: Обґрунтування вибору стратегії.
+    -   **Summarization**: Кожні 3 кроки стискає історію.
+    -   **Step Consumption**: Маркування виконаних кроків.
+-   **Atlas** (`_atlas_node`): Перетворює політику та **отриманий контекст** на кроки. Включає фазу **Self-Review**.
+-   **Tetyana** (`_tetyana_node`): Виконавець команд.
+-   **Grisha** (`_grisha_node`): Валідатор (success/failed/uncertain).
+-   **Knowledge** (`_knowledge_node`): Витягує структурований досвід після успіху та зберігає у `knowledge_base` з тегами.
 
 ---
 
@@ -7681,7 +7684,7 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (9.5 KB)
+### `core/agents/atlas.py` (9.4 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -7761,35 +7764,33 @@ def get_atlas_prompt(task_description: str):
 
 
 META_PLANNER_PROMPT = """Ти — Meta-Planner, стратегічний контролер системи Trinity.
-Твоя роль: Визначити оптимальну політику виконання (Execution Policy) для поточної ситуації.
+Твоя роль: Визначити оптимальну політику виконання (Execution Policy) та необхідність залучення пам'яті (Selective RAG).
 
 Твої обов'язки:
 1. Аналізуй успіх/проввал останнього кроку.
-2. Встановлюй рівень верифікації (rigor):
-   - 'high': якщо крок критичний або були помилки.
-   - 'low': для рутинних, перевірених дій.
-3. Вибирай Recovery Strategy:
-   - 'local_fix': спробувати виправити конкретний крок.
-   - 'full_replan': якщо стратегія застаріла або змінилися умови.
-4. Визначай Tool Preference: (native, gui, hybrid).
+2. Встановлюй рівень верифікації (rigor).
+3. Вибирай Recovery Strategy.
+4. Selective RAG: Якщо задача вимагає досвіду, якого немає в поточному контексті, встанови стратегію 'rag_heavy' для активації пошуку в знаннях.
 
-Обґрунтуй своє рішення у полі 'reasoning'.
+Обґрунтуй рішення в 'reasoning'.
 """
 
 ATLAS_PLANNING_PROMPT = """Ти — Atlas, стратегічний планувальник.
 Твоє завдання: Розбити запит користувача на послідовні, логічні кроки.
 
 🧠 ЕТАПИ МИСЛЕННЯ:
-1. Аналіз цілі та контексту.
+1. Аналіз цілі та наданого контексту (RAG/Knowledge).
 2. Формування Meta-Config (Політика).
-3. Побудова кроків.
-4. SELF-REVIEW: Чи безпечний цей план? Чи не веде він до циклу? Чи достатньо верифікації?
+3. Побудова конкретних кроків (Tools calls).
+4. SELF-REVIEW: Перевір план на:
+   - Відсутність нескінченних циклів.
+   - Достатність кроків верифікації.
+   - Відповідність наміру користувача.
 
 Правила планування:
-1. Кроки мають бути ДІЄВИМИ (Tools calls).
-2. КАТЕГОРИЧНО ЗАБОРОНЕНО: Умовні переходи "якщо" в описі.
-3. ПРІОРИТЕТ: На google.com без результатів -> першим кроком ПОШУК.
-4. ОБОВ'ЯЗКОВО: Після критичного кроку — крок "verify" для Grisha.
+1. Кроки мають бути ДІЄВИМИ. Жодної води.
+2. ЗАБОРОНЕНО: Умовні переходи "якщо" в тексті кроків.
+3. ОБОВ'ЯЗКОВО: Після критичних дій — крок "verify" для Grisha.
 
 ⚠️ ПРАВИЛО АНТИ-ЦИКЛ (BLOCK/CAPTCHA):
 Якщо бачиш **[CAPTCHA]**: План має містити: `analyze_screen` -> `pyautogui.move_mouse` -> `pyautogui.click_mouse`.
@@ -8389,7 +8390,7 @@ class MCPToolRegistry:
             return f"Error executing '{tool_name}': {str(e)}"
 ```
 
-### `core/memory.py` (4.0 KB)
+### `core/memory.py` (4.5 KB)
 
 ```python
 import os
@@ -8414,11 +8415,12 @@ class AtlasMemory:
         self.ui_patterns = self.client.get_or_create_collection(name="ui_patterns")
         self.strategies = self.client.get_or_create_collection(name="strategies")
         self.user_habits = self.client.get_or_create_collection(name="user_habits")
+        self.knowledge_base = self.client.get_or_create_collection(name="knowledge_base")
         
     def add_memory(self, category: str, content: str, metadata: Dict[str, Any] = None):
         """
-        Saves a memory fragment.
-        category: 'ui_patterns', 'strategies', 'user_habits'
+        Saves a memory fragment with metadata tagging.
+        category: 'ui_patterns', 'strategies', 'user_habits', 'knowledge_base'
         """
         collection = self._get_collection(category)
         if not collection:
@@ -8426,10 +8428,19 @@ class AtlasMemory:
             
         memory_id = f"{category}_{int(time.time())}"
         
+        # Ensure metadata is clean
+        clean_meta = {}
+        if metadata:
+            for k, v in metadata.items():
+                if isinstance(v, (str, int, float, bool)):
+                    clean_meta[k] = v
+                else:
+                    clean_meta[k] = str(v)
+        
         try:
             collection.add(
                 documents=[content],
-                metadatas=[metadata or {}],
+                metadatas=[clean_meta],
                 ids=[memory_id]
             )
             return {"status": "success", "id": memory_id}
@@ -8469,6 +8480,7 @@ class AtlasMemory:
         if category == "ui_patterns": return self.ui_patterns
         if category == "strategies": return self.strategies
         if category == "user_habits": return self.user_habits
+        if category == "knowledge_base": return self.knowledge_base
         return None
 
 # Global Instance
@@ -8513,7 +8525,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (78.8 KB)
+### `core/trinity.py` (81.5 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8567,7 +8579,8 @@ class TrinityState(TypedDict):
     last_step_status: Optional[str] # success|failed|uncertain
     uncertain_streak: Optional[int]  # Count of consecutive uncertain decisions (anti-loop)
     current_step_fail_count: Optional[int]  # Count of consecutive failures on the same step
-    meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode
+    meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode, tool_preference, reasoning
+    retrieved_context: Optional[str]  # Structured findings from RAG
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -8720,6 +8733,7 @@ class TrinityRuntime:
         builder.add_node("atlas", self._atlas_node)
         builder.add_node("tetyana", self._tetyana_node)
         builder.add_node("grisha", self._grisha_node)
+        builder.add_node("knowledge", self._knowledge_node)
 
         builder.set_entry_point("meta_planner")
         
@@ -8741,7 +8755,12 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "grisha", 
             self._router, 
-            {"meta_planner": "meta_planner", "end": END}
+            {"meta_planner": "meta_planner", "knowledge": "knowledge", "end": END}
+        )
+        builder.add_conditional_edges(
+            "knowledge",
+            self._router,
+            {"end": END}
         )
 
         return builder.compile()
@@ -8819,6 +8838,16 @@ class TrinityRuntime:
                 data = self._extract_json_object(resp.content)
                 if data and "meta_config" in data:
                     meta_config.update(data["meta_config"])
+                    # Selective RAG: If Meta-Planner decides context is needed
+                    if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan"]:
+                        if self.verbose: print("🧠 [Meta-Planner] Selective RAG lookup...")
+                        mem_res = self.memory.query_memory("knowledge_base", last_msg)
+                        if not mem_res:
+                            # fallback to strategies
+                            mem_res = self.memory.query_memory("strategies", last_msg)
+                        
+                        state["retrieved_context"] = "\n".join([r.get("content", "") for r in mem_res])
+                    
                     if self.verbose: print(f"🧠 [Meta-Planner] Reasoning: {meta_config.get('reasoning')}")
                     if self.verbose: print(f"🧠 [Meta-Planner] Updated policy: {meta_config.get('strategy')}, rigor={meta_config.get('verification_rigor')}")
             except Exception as e:
@@ -8830,7 +8859,8 @@ class TrinityRuntime:
                 "meta_config": meta_config,
                 "plan": None if action == "replan" else plan,
                 "current_step_fail_count": current_step_fail_count,
-                "summary": summary
+                "summary": summary,
+                "retrieved_context": state.get("retrieved_context")
             }
 
         # 5. Default flow
@@ -8857,7 +8887,8 @@ class TrinityRuntime:
         if self.verbose: print(f"🔄 [Atlas] Replan #{replan_count}")
         
         from core.agents.atlas import get_atlas_plan_prompt
-        rag_context = self.memory.query_memory("strategies", last_msg)
+        # Context is now provided by Meta-Planner's selective RAG
+        rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
         routing_hint = f"\nСТРАТЕГІЯ: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
@@ -9599,7 +9630,14 @@ class TrinityRuntime:
     def _router(self, state: TrinityState):
         current = state["current_agent"]
         try:
-            trace(self.logger, "router_decision", {"current": current, "next": current})  # Router typically just returns current agent for StateGraph? No, state graph edge logic uses this.
+            # Check for completion to trigger learning
+            if current == "end":
+                # If we're coming from meta_planner and it says end, we could go to knowledge
+                messages = state.get("messages", [])
+                if messages and "завершена" in messages[-1].content.lower():
+                     return "knowledge"
+
+            trace(self.logger, "router_decision", {"current": current, "next": current})
         except Exception:
             pass
         return current
@@ -9615,6 +9653,40 @@ class TrinityRuntime:
         except (json.JSONDecodeError, ValueError, Exception):
             pass
         return None
+
+    def _knowledge_node(self, state: TrinityState):
+        """Final node to extract and store knowledge from successful completion."""
+        if self.verbose: print("🧠 [Learning] Extracting structured experience...")
+        context = state.get("messages", [])
+        plan = state.get("plan") or []
+        summary = state.get("summary", "")
+        
+        try:
+            # Create a structured memory entry
+            experience = f"Task: {summary}\nSteps Taken: {len(plan)}\nOutcome: Success\n"
+            if plan:
+                experience += "Plan Summary:\n" + "\n".join([f"- {s.get('description')}" for s in plan])
+            
+            # Save to knowledge_base
+            self.memory.add_memory(
+                category="knowledge_base",
+                content=experience,
+                metadata={
+                    "type": "successful_strategy",
+                    "timestamp": int(time.time()),
+                    "complexity": len(plan)
+                }
+            )
+            
+            try:
+                trace(self.logger, "knowledge_stored", {"plan_len": len(plan)})
+            except Exception:
+                pass
+                
+        except Exception as e:
+            if self.verbose: print(f"⚠️ [Learning] Error: {e}")
+            
+        return {"current_agent": "end"}
 
     def _get_git_root(self) -> Optional[str]:
         try:
@@ -12041,7 +12113,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (552.1 KB)
+### `project_structure_final.txt` (555.0 KB)
 
 ```text
 # System — Project Structure
@@ -12050,16 +12122,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 126
-- **Files Skipped**: 15932
+- **Files Skipped**: 15945
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 03:37:36
+- **Generated**: 2025-12-19 03:45:24
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:35:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
 2025-12-19 02:35:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9164}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Очікую завдання. [VERIFIED]"}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
@@ -12159,6 +12230,7 @@ test content
 2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 03:23:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 03:41:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
 ```
 
 ---
@@ -12194,18 +12266,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39621 +-----------------------------------------
- 1 file changed, 102 insertions(+), 39519 deletions(-)
+ project_structure_final.txt | 38981 +-----------------------------------------
+ 1 file changed, 3 insertions(+), 38978 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-01fcb2e feat(meta): implement advanced meta-planning architecture and authoritative documentation rebase
+c3e77a1 feat(cognitive): implement selective RAG, knowledge extraction node, and continuous learning cycle
+f1e271c feat(meta): implement advanced meta-planning architecture and authoritative documentation rebase
 d5edc6c Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 2c4de4a Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 43e4d01 feat: enhance TUI scrolling by increasing speed and adding state management for log and agent panel follow behavior.
-e881661 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 ```
 
 ---
@@ -12399,6 +12471,8 @@ Atlas — це не просто автоматизатор, а **автоном
     Використання скріншотів та Computer Vision як основного джерела істини (Ground Truth) для підтвердження результатів, особливо в умовах блокувань або відсутності API.
 4.  **Конфіденційність та Стелс-режим (Privacy & Stealth)**  
     Потужна система очищення слідів перебування ШІ на macOS, підміна ідентифікаторів (`spoofing`) та режим "Fresh Install" для безпечної роботи.
+5.  **Постійне Навчання (Continuous Learning)**  
+    Після завершення кожного успішного завдання система витягує досвід та зберігає його у векторну пам'ять (Knowledge Base) для майбутнього використання.
 
 ---
 
@@ -12409,25 +12483,26 @@ Atlas — це не просто автоматизатор, а **автоном
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег/Контролер]
-    MP -->|потрібен план| A[atlas<br/>Архітектор Плану]
+    MP -->|Selective RAG| A[atlas<br/>Архітектор Плану]
     MP -->|план готовий| T[tetyana<br/>Виконавець]
     MP -->|план готовий| G[grisha<br/>Верифікатор]
     A --> MP
     T --> G
     G --> MP
-    MP -->|завершено| END((END))
+    MP -->|завершено| K[knowledge<br/>Екстрактор Досвіду]
+    K --> END((END))
 ```
 
 ### 2.1 Trinity Agents
 
--   **Meta-Planner** (`_meta_planner_node`): Встановлює **Execution Policy** (стратегічне обґрунтування через `reasoning`). Вирішує, чи ми рухаємося далі, чи потрібне локальне виправлення (`repair`), чи глобальне перепланування. Також відповідає за:
-    -   **Summarization**: Кожні 3 кроки стискає історію в `summary`.
-    -   **Step Consumption**: Видаляє виконані кроки з плану після успіху Grisha.
-    -   **Tool Preference**: Визначає пріоритет інструментів (native/gui/hybrid).
-    -   **Limit Checks**: Контролює ліміти (50 кроків, 10 перепланувань).
--   **Atlas** (`_atlas_node`): Перетворює політику на кроки. Включає фазу **Self-Review** (перевірка плану на цикли та безпеку перед видачею). Активує **Adaptive Verifier**.
--   **Tetyana** (`_tetyana_node`): Виконує команди. Має механізм анти-циклів та Hybrid Fallback.
--   **Grisha** (`_grisha_node`): Валідатор. Читає екран, аналізує UI та дає вердикт: `success`, `failed` або `uncertain`.
+-   **Meta-Planner** (`_meta_planner_node`): Встановлює **Execution Policy**. Виконує **Selective RAG** (вирішує, чи потрібен пошук у пам'яті). Також відповідає за:
+    -   **Strategic Reasoning**: Обґрунтування вибору стратегії.
+    -   **Summarization**: Кожні 3 кроки стискає історію.
+    -   **Step Consumption**: Маркування виконаних кроків.
+-   **Atlas** (`_atlas_node`): Перетворює політику та **отриманий контекст** на кроки. Включає фазу **Self-Review**.
+-   **Tetyana** (`_tetyana_node`): Виконавець команд.
+-   **Grisha** (`_grisha_node`): Валідатор (success/failed/uncertain).
+-   **Knowledge** (`_knowledge_node`): Витягує структурований досвід після успіху та зберігає у `knowledge_base` з тегами.
 
 ---
 
@@ -19727,7 +19802,7 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (9.5 KB)
+### `core/agents/atlas.py` (9.4 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
@@ -19807,35 +19882,33 @@ def get_atlas_prompt(task_description: str):
 
 
 META_PLANNER_PROMPT = """Ти — Meta-Planner, стратегічний контролер системи Trinity.
-Твоя роль: Визначити оптимальну політику виконання (Execution Policy) для поточної ситуації.
+Твоя роль: Визначити оптимальну політику виконання (Execution Policy) та необхідність залучення пам'яті (Selective RAG).
 
 Твої обов'язки:
 1. Аналізуй успіх/проввал останнього кроку.
-2. Встановлюй рівень верифікації (rigor):
-   - 'high': якщо крок критичний або були помилки.
-   - 'low': для рутинних, перевірених дій.
-3. Вибирай Recovery Strategy:
-   - 'local_fix': спробувати виправити конкретний крок.
-   - 'full_replan': якщо стратегія застаріла або змінилися умови.
-4. Визначай Tool Preference: (native, gui, hybrid).
+2. Встановлюй рівень верифікації (rigor).
+3. Вибирай Recovery Strategy.
+4. Selective RAG: Якщо задача вимагає досвіду, якого немає в поточному контексті, встанови стратегію 'rag_heavy' для активації пошуку в знаннях.
 
-Обґрунтуй своє рішення у полі 'reasoning'.
+Обґрунтуй рішення в 'reasoning'.
 """
 
 ATLAS_PLANNING_PROMPT = """Ти — Atlas, стратегічний планувальник.
 Твоє завдання: Розбити запит користувача на послідовні, логічні кроки.
 
 🧠 ЕТАПИ МИСЛЕННЯ:
-1. Аналіз цілі та контексту.
+1. Аналіз цілі та наданого контексту (RAG/Knowledge).
 2. Формування Meta-Config (Політика).
-3. Побудова кроків.
-4. SELF-REVIEW: Чи безпечний цей план? Чи не веде він до циклу? Чи достатньо верифікації?
+3. Побудова конкретних кроків (Tools calls).
+4. SELF-REVIEW: Перевір план на:
+   - Відсутність нескінченних циклів.
+   - Достатність кроків верифікації.
+   - Відповідність наміру користувача.
 
 Правила планування:
-1. Кроки мають бути ДІЄВИМИ (Tools calls).
-2. КАТЕГОРИЧНО ЗАБОРОНЕНО: Умовні переходи "якщо" в описі.
-3. ПРІОРИТЕТ: На google.com без результатів -> першим кроком ПОШУК.
-4. ОБОВ'ЯЗКОВО: Після критичного кроку — крок "verify" для Grisha.
+1. Кроки мають бути ДІЄВИМИ. Жодної води.
+2. ЗАБОРОНЕНО: Умовні переходи "якщо" в тексті кроків.
+3. ОБОВ'ЯЗКОВО: Після критичних дій — крок "verify" для Grisha.
 
 ⚠️ ПРАВИЛО АНТИ-ЦИКЛ (BLOCK/CAPTCHA):
 Якщо бачиш **[CAPTCHA]**: План має містити: `analyze_screen` -> `pyautogui.move_mouse` -> `pyautogui.click_mouse`.
@@ -20435,7 +20508,7 @@ class MCPToolRegistry:
             return f"Error executing '{tool_name}': {str(e)}"
 ```
 
-### `core/memory.py` (4.0 KB)
+### `core/memory.py` (4.5 KB)
 
 ```python
 import os
@@ -20460,11 +20533,12 @@ class AtlasMemory:
         self.ui_patterns = self.client.get_or_create_collection(name="ui_patterns")
         self.strategies = self.client.get_or_create_collection(name="strategies")
         self.user_habits = self.client.get_or_create_collection(name="user_habits")
+        self.knowledge_base = self.client.get_or_create_collection(name="knowledge_base")
         
     def add_memory(self, category: str, content: str, metadata: Dict[str, Any] = None):
         """
-        Saves a memory fragment.
-        category: 'ui_patterns', 'strategies', 'user_habits'
+        Saves a memory fragment with metadata tagging.
+        category: 'ui_patterns', 'strategies', 'user_habits', 'knowledge_base'
         """
         collection = self._get_collection(category)
         if not collection:
@@ -20472,10 +20546,19 @@ class AtlasMemory:
             
         memory_id = f"{category}_{int(time.time())}"
         
+        # Ensure metadata is clean
+        clean_meta = {}
+        if metadata:
+            for k, v in metadata.items():
+                if isinstance(v, (str, int, float, bool)):
+                    clean_meta[k] = v
+                else:
+                    clean_meta[k] = str(v)
+        
         try:
             collection.add(
                 documents=[content],
-                metadatas=[metadata or {}],
+                metadatas=[clean_meta],
                 ids=[memory_id]
             )
             return {"status": "success", "id": memory_id}
@@ -20515,6 +20598,7 @@ class AtlasMemory:
         if category == "ui_patterns": return self.ui_patterns
         if category == "strategies": return self.strategies
         if category == "user_habits": return self.user_habits
+        if category == "knowledge_base": return self.knowledge_base
         return None
 
 # Global Instance
@@ -20559,7 +20643,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (78.8 KB)
+### `core/trinity.py` (81.5 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -20613,7 +20697,8 @@ class TrinityState(TypedDict):
     last_step_status: Optional[str] # success|failed|uncertain
     uncertain_streak: Optional[int]  # Count of consecutive uncertain decisions (anti-loop)
     current_step_fail_count: Optional[int]  # Count of consecutive failures on the same step
-    meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode
+    meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode, tool_preference, reasoning
+    retrieved_context: Optional[str]  # Structured findings from RAG
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -20766,6 +20851,7 @@ class TrinityRuntime:
         builder.add_node("atlas", self._atlas_node)
         builder.add_node("tetyana", self._tetyana_node)
         builder.add_node("grisha", self._grisha_node)
+        builder.add_node("knowledge", self._knowledge_node)
 
         builder.set_entry_point("meta_planner")
         
@@ -20787,7 +20873,12 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "grisha", 
             self._router, 
-            {"meta_planner": "meta_planner", "end": END}
+            {"meta_planner": "meta_planner", "knowledge": "knowledge", "end": END}
+        )
+        builder.add_conditional_edges(
+            "knowledge",
+            self._router,
+            {"end": END}
         )
 
         return builder.compile()
@@ -20865,6 +20956,16 @@ class TrinityRuntime:
                 data = self._extract_json_object(resp.content)
                 if data and "meta_config" in data:
                     meta_config.update(data["meta_config"])
+                    # Selective RAG: If Meta-Planner decides context is needed
+                    if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan"]:
+                        if self.verbose: print("🧠 [Meta-Planner] Selective RAG lookup...")
+                        mem_res = self.memory.query_memory("knowledge_base", last_msg)
+                        if not mem_res:
+                            # fallback to strategies
+                            mem_res = self.memory.query_memory("strategies", last_msg)
+                        
+                        state["retrieved_context"] = "\n".join([r.get("content", "") for r in mem_res])
+                    
                     if self.verbose: print(f"🧠 [Meta-Planner] Reasoning: {meta_config.get('reasoning')}")
                     if self.verbose: print(f"🧠 [Meta-Planner] Updated policy: {meta_config.get('strategy')}, rigor={meta_config.get('verification_rigor')}")
             except Exception as e:
@@ -20876,7 +20977,8 @@ class TrinityRuntime:
                 "meta_config": meta_config,
                 "plan": None if action == "replan" else plan,
                 "current_step_fail_count": current_step_fail_count,
-                "summary": summary
+                "summary": summary,
+                "retrieved_context": state.get("retrieved_context")
             }
 
         # 5. Default flow
@@ -20903,7 +21005,8 @@ class TrinityRuntime:
         if self.verbose: print(f"🔄 [Atlas] Replan #{replan_count}")
         
         from core.agents.atlas import get_atlas_plan_prompt
-        rag_context = self.memory.query_memory("strategies", last_msg)
+        # Context is now provided by Meta-Planner's selective RAG
+        rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
         routing_hint = f"\nСТРАТЕГІЯ: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
@@ -21645,7 +21748,14 @@ class TrinityRuntime:
     def _router(self, state: TrinityState):
         current = state["current_agent"]
         try:
-            trace(self.logger, "router_decision", {"current": current, "next": current})  # Router typically just returns current agent for StateGraph? No, state graph edge logic uses this.
+            # Check for completion to trigger learning
+            if current == "end":
+                # If we're coming from meta_planner and it says end, we could go to knowledge
+                messages = state.get("messages", [])
+                if messages and "завершена" in messages[-1].content.lower():
+                     return "knowledge"
+
+            trace(self.logger, "router_decision", {"current": current, "next": current})
         except Exception:
             pass
         return current
@@ -21661,6 +21771,40 @@ class TrinityRuntime:
         except (json.JSONDecodeError, ValueError, Exception):
             pass
         return None
+
+    def _knowledge_node(self, state: TrinityState):
+        """Final node to extract and store knowledge from successful completion."""
+        if self.verbose: print("🧠 [Learning] Extracting structured experience...")
+        context = state.get("messages", [])
+        plan = state.get("plan") or []
+        summary = state.get("summary", "")
+        
+        try:
+            # Create a structured memory entry
+            experience = f"Task: {summary}\nSteps Taken: {len(plan)}\nOutcome: Success\n"
+            if plan:
+                experience += "Plan Summary:\n" + "\n".join([f"- {s.get('description')}" for s in plan])
+            
+            # Save to knowledge_base
+            self.memory.add_memory(
+                category="knowledge_base",
+                content=experience,
+                metadata={
+                    "type": "successful_strategy",
+                    "timestamp": int(time.time()),
+                    "complexity": len(plan)
+                }
+            )
+            
+            try:
+                trace(self.logger, "knowledge_stored", {"plan_len": len(plan)})
+            except Exception:
+                pass
+                
+        except Exception as e:
+            if self.verbose: print(f"⚠️ [Learning] Error: {e}")
+            
+        return {"current_agent": "end"}
 
     def _get_git_root(self) -> Optional[str]:
         try:
@@ -39087,4 +39231,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 126
-- **Skipped**: 15932
+- **Skipped**: 15945

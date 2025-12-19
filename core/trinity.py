@@ -49,7 +49,8 @@ class TrinityState(TypedDict):
     last_step_status: Optional[str] # success|failed|uncertain
     uncertain_streak: Optional[int]  # Count of consecutive uncertain decisions (anti-loop)
     current_step_fail_count: Optional[int]  # Count of consecutive failures on the same step
-    meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode
+    meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode, tool_preference, reasoning
+    retrieved_context: Optional[str]  # Structured findings from RAG
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -202,6 +203,7 @@ class TrinityRuntime:
         builder.add_node("atlas", self._atlas_node)
         builder.add_node("tetyana", self._tetyana_node)
         builder.add_node("grisha", self._grisha_node)
+        builder.add_node("knowledge", self._knowledge_node)
 
         builder.set_entry_point("meta_planner")
         
@@ -223,7 +225,12 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "grisha", 
             self._router, 
-            {"meta_planner": "meta_planner", "end": END}
+            {"meta_planner": "meta_planner", "knowledge": "knowledge", "end": END}
+        )
+        builder.add_conditional_edges(
+            "knowledge",
+            self._router,
+            {"end": END}
         )
 
         return builder.compile()
@@ -301,6 +308,16 @@ class TrinityRuntime:
                 data = self._extract_json_object(resp.content)
                 if data and "meta_config" in data:
                     meta_config.update(data["meta_config"])
+                    # Selective RAG: If Meta-Planner decides context is needed
+                    if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan"]:
+                        if self.verbose: print("🧠 [Meta-Planner] Selective RAG lookup...")
+                        mem_res = self.memory.query_memory("knowledge_base", last_msg)
+                        if not mem_res:
+                            # fallback to strategies
+                            mem_res = self.memory.query_memory("strategies", last_msg)
+                        
+                        state["retrieved_context"] = "\n".join([r.get("content", "") for r in mem_res])
+                    
                     if self.verbose: print(f"🧠 [Meta-Planner] Reasoning: {meta_config.get('reasoning')}")
                     if self.verbose: print(f"🧠 [Meta-Planner] Updated policy: {meta_config.get('strategy')}, rigor={meta_config.get('verification_rigor')}")
             except Exception as e:
@@ -312,7 +329,8 @@ class TrinityRuntime:
                 "meta_config": meta_config,
                 "plan": None if action == "replan" else plan,
                 "current_step_fail_count": current_step_fail_count,
-                "summary": summary
+                "summary": summary,
+                "retrieved_context": state.get("retrieved_context")
             }
 
         # 5. Default flow
@@ -339,7 +357,8 @@ class TrinityRuntime:
         if self.verbose: print(f"🔄 [Atlas] Replan #{replan_count}")
         
         from core.agents.atlas import get_atlas_plan_prompt
-        rag_context = self.memory.query_memory("strategies", last_msg)
+        # Context is now provided by Meta-Planner's selective RAG
+        rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
         routing_hint = f"\nСТРАТЕГІЯ: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
@@ -1081,7 +1100,14 @@ class TrinityRuntime:
     def _router(self, state: TrinityState):
         current = state["current_agent"]
         try:
-            trace(self.logger, "router_decision", {"current": current, "next": current})  # Router typically just returns current agent for StateGraph? No, state graph edge logic uses this.
+            # Check for completion to trigger learning
+            if current == "end":
+                # If we're coming from meta_planner and it says end, we could go to knowledge
+                messages = state.get("messages", [])
+                if messages and "завершена" in messages[-1].content.lower():
+                     return "knowledge"
+
+            trace(self.logger, "router_decision", {"current": current, "next": current})
         except Exception:
             pass
         return current
@@ -1097,6 +1123,40 @@ class TrinityRuntime:
         except (json.JSONDecodeError, ValueError, Exception):
             pass
         return None
+
+    def _knowledge_node(self, state: TrinityState):
+        """Final node to extract and store knowledge from successful completion."""
+        if self.verbose: print("🧠 [Learning] Extracting structured experience...")
+        context = state.get("messages", [])
+        plan = state.get("plan") or []
+        summary = state.get("summary", "")
+        
+        try:
+            # Create a structured memory entry
+            experience = f"Task: {summary}\nSteps Taken: {len(plan)}\nOutcome: Success\n"
+            if plan:
+                experience += "Plan Summary:\n" + "\n".join([f"- {s.get('description')}" for s in plan])
+            
+            # Save to knowledge_base
+            self.memory.add_memory(
+                category="knowledge_base",
+                content=experience,
+                metadata={
+                    "type": "successful_strategy",
+                    "timestamp": int(time.time()),
+                    "complexity": len(plan)
+                }
+            )
+            
+            try:
+                trace(self.logger, "knowledge_stored", {"plan_len": len(plan)})
+            except Exception:
+                pass
+                
+        except Exception as e:
+            if self.verbose: print(f"⚠️ [Learning] Error: {e}")
+            
+        return {"current_agent": "end"}
 
     def _get_git_root(self) -> Optional[str]:
         try:

@@ -20,11 +20,12 @@ class AtlasMemory:
         self.ui_patterns = self.client.get_or_create_collection(name="ui_patterns")
         self.strategies = self.client.get_or_create_collection(name="strategies")
         self.user_habits = self.client.get_or_create_collection(name="user_habits")
+        self.knowledge_base = self.client.get_or_create_collection(name="knowledge_base")
         
     def add_memory(self, category: str, content: str, metadata: Dict[str, Any] = None):
         """
-        Saves a memory fragment.
-        category: 'ui_patterns', 'strategies', 'user_habits'
+        Saves a memory fragment with metadata tagging.
+        category: 'ui_patterns', 'strategies', 'user_habits', 'knowledge_base'
         """
         collection = self._get_collection(category)
         if not collection:
@@ -32,10 +33,19 @@ class AtlasMemory:
             
         memory_id = f"{category}_{int(time.time())}"
         
+        # Ensure metadata is clean
+        clean_meta = {}
+        if metadata:
+            for k, v in metadata.items():
+                if isinstance(v, (str, int, float, bool)):
+                    clean_meta[k] = v
+                else:
+                    clean_meta[k] = str(v)
+        
         try:
             collection.add(
                 documents=[content],
-                metadatas=[metadata or {}],
+                metadatas=[clean_meta],
                 ids=[memory_id]
             )
             return {"status": "success", "id": memory_id}
@@ -75,6 +85,7 @@ class AtlasMemory:
         if category == "ui_patterns": return self.ui_patterns
         if category == "strategies": return self.strategies
         if category == "user_habits": return self.user_habits
+        if category == "knowledge_base": return self.knowledge_base
         return None
 
 # Global Instance
