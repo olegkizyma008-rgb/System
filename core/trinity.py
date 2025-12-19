@@ -210,7 +210,7 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "meta_planner",
             self._router,
-            {"atlas": "atlas", "tetyana": "tetyana", "end": END}
+            {"atlas": "atlas", "tetyana": "tetyana", "knowledge": "knowledge", "end": END}
         )
         builder.add_conditional_edges(
             "atlas", 
@@ -309,14 +309,31 @@ class TrinityRuntime:
                 if data and "meta_config" in data:
                     meta_config.update(data["meta_config"])
                     # Selective RAG: If Meta-Planner decides context is needed
-                    if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan"]:
-                        if self.verbose: print("🧠 [Meta-Planner] Selective RAG lookup...")
-                        mem_res = self.memory.query_memory("knowledge_base", last_msg)
-                        if not mem_res:
-                            # fallback to strategies
-                            mem_res = self.memory.query_memory("strategies", last_msg)
+                    if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan", "repair"]:
+                        query = meta_config.get("retrieval_query", last_msg)
+                        limit = int(meta_config.get("n_results", 3))
                         
-                        state["retrieved_context"] = "\n".join([r.get("content", "") for r in mem_res])
+                        if self.verbose: print(f"🧠 [Meta-Planner] Selective RAG lookup: '{query}' (top {limit})...")
+                        mem_res = self.memory.query_memory("knowledge_base", query, n_results=limit)
+                        
+                        # Filter memories: Prioritize high confidence, be wary of 'failed' ones
+                        relevant_context = []
+                        for r in mem_res:
+                            m = r.get("metadata", {})
+                            status = m.get("status", "success")
+                            conf = float(m.get("confidence", 1.0))
+                            
+                            if status == "success" and conf > 0.3:
+                                relevant_context.append(f"[SUCCESS] {r.get('content')}")
+                            elif status == "failed":
+                                relevant_context.append(f"[WARNING: FAILED PREVIOUSLY] Avoid this: {r.get('content')}")
+                        
+                        if not relevant_context:
+                            # fallback to strategies
+                            mem_res = self.memory.query_memory("strategies", query, n_results=limit)
+                            relevant_context = [r.get("content", "") for r in mem_res]
+                        
+                        state["retrieved_context"] = "\n".join(relevant_context)
                     
                     if self.verbose: print(f"🧠 [Meta-Planner] Reasoning: {meta_config.get('reasoning')}")
                     if self.verbose: print(f"🧠 [Meta-Planner] Updated policy: {meta_config.get('strategy')}, rigor={meta_config.get('verification_rigor')}")
@@ -1101,11 +1118,14 @@ class TrinityRuntime:
         current = state["current_agent"]
         try:
             # Check for completion to trigger learning
+            # If current is 'end', we check if we should go to 'knowledge' first
             if current == "end":
-                # If we're coming from meta_planner and it says end, we could go to knowledge
                 messages = state.get("messages", [])
-                if messages and "завершена" in messages[-1].content.lower():
-                     return "knowledge"
+                if messages:
+                    last_text = messages[-1].content.lower()
+                    # If it sounds like success, go to learning
+                    if any(x in last_text for x in ["завершена", "готово", "виконано", "completed", "success"]):
+                        return "knowledge"
 
             trace(self.logger, "router_decision", {"current": current, "next": current})
         except Exception:
@@ -1125,15 +1145,31 @@ class TrinityRuntime:
         return None
 
     def _knowledge_node(self, state: TrinityState):
-        """Final node to extract and store knowledge from successful completion."""
+        """Final node to extract and store knowledge (success or failure) from completion."""
         if self.verbose: print("🧠 [Learning] Extracting structured experience...")
         context = state.get("messages", [])
         plan = state.get("plan") or []
         summary = state.get("summary", "")
+        replan_count = state.get("replan_count", 0)
+        last_status = state.get("last_step_status", "success")
+        
+        # Determine status: if we are here via 'success' tags, it's a win.
+        # But we should also be able to learn from failures.
+        actual_status = "success"
+        if last_status == "failed" or (context and "failed" in context[-1].content.lower()):
+            actual_status = "failed"
+            
+        # Self-evaluation of confidence
+        if actual_status == "success":
+            confidence = 1.0 - (min(replan_count, 5) * 0.1) - (min(len(plan), 10) * 0.02)
+        else:
+            confidence = 0.5 # Failures have neutral confidence (they are certain warnings)
+            
+        confidence = max(0.1, round(confidence, 2))
         
         try:
             # Create a structured memory entry
-            experience = f"Task: {summary}\nSteps Taken: {len(plan)}\nOutcome: Success\n"
+            experience = f"Task: {summary}\nStatus: {actual_status}\nSteps: {len(plan)}\n"
             if plan:
                 experience += "Plan Summary:\n" + "\n".join([f"- {s.get('description')}" for s in plan])
             
@@ -1142,14 +1178,19 @@ class TrinityRuntime:
                 category="knowledge_base",
                 content=experience,
                 metadata={
-                    "type": "successful_strategy",
+                    "type": "experience_log",
+                    "status": actual_status,
+                    "source": "trinity_runtime",
                     "timestamp": int(time.time()),
-                    "complexity": len(plan)
+                    "confidence": confidence,
+                    "replan_count": replan_count
                 }
             )
             
+            if self.verbose: print(f"🧠 [Learning] {actual_status.upper()} experience stored (conf: {confidence})")
+            
             try:
-                trace(self.logger, "knowledge_stored", {"plan_len": len(plan)})
+                trace(self.logger, "knowledge_stored", {"status": actual_status, "confidence": confidence})
             except Exception:
                 pass
                 
