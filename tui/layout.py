@@ -268,6 +268,7 @@ def build_app(
         style="class:input",
         wrap_lines=True, # Ensure long pastes are visible
         height=Dimension(min=1, preferred=1, max=10), # Dynamic height
+        dont_extend_height=True,
     )
     setattr(input_window, "name", "input")
 
@@ -278,6 +279,8 @@ def build_app(
                 width=lambda: get_prompt_width(),
                 style="class:input",
                 dont_extend_width=True,
+                dont_extend_height=True,
+                height=1,
             ),
             input_window,
         ],
