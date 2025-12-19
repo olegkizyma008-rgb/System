@@ -9,27 +9,7 @@ Last message:
 [VOICE] Не вдалося створити план.
 
 Changed files:
-- movie_task_v2.out
-- movie_task_v3.out
-- movie_task_v4.out
-- movie_task_v5.out
-- movie_task_v6.out
-- movie_task_v7.out
-- tui/keybindings.py
-- tui/layout.py
-- tui/render.py
-
-Diff stat:
-movie_task_v2.out  |   8 -
- movie_task_v3.out  |   0
- movie_task_v4.out  | 436 -----------------------------------------------------
- movie_task_v5.out  | 143 ------------------
- movie_task_v6.out  |  22 ---
- movie_task_v7.out  |  40 -----
- tui/keybindings.py |  23 +++
- tui/layout.py      |  13 +-
- tui/render.py      |  14 +-
- 9 files changed, 36 insertions(+), 663 deletions(-)
+- (no uncommitted changes detected)
 
 Verification:
 - status: failed (heuristic)
