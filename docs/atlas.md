@@ -46,7 +46,7 @@ graph TD
 ### 2.1 Trinity Agents
 
 -   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади (пріоритезує успіхи, враховує анти-патерни).
--   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Використовує контекст від Meta-Planner для формування кроків.
+-   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує повний список доступних інструментів динамічно та використовує контекст від Meta-Planner для формування кроків.
 -   **Tetyana** (`_tetyana_node`): Виконавець (Native/GUI/Playwright).
 -   **Grisha** (`_grisha_node`): Верифікатор. У разі успіху або критичного провалу ініціює перехід до навчання.
 -   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`), додаючи метадані про джерело (`source`) та впевненість (`confidence`).
@@ -67,9 +67,13 @@ graph TD
 
 ## 4. MCP Фондація (Інструменти)
 
--   **Playwright MCP**: Контроль браузера.
--   **PyAutoGUI MCP**: Емуляція миші/клавіатури.
--   **Native macOS MCP**: Shell, AppleScript, File System.
+Центральний реєстр `MCPToolRegistry` надає агентам доступ до:
+
+-   **Automation (Unified)**: Уніфікований модуль для Shell, AppleScript, Shortcuts та вводу (миша/клавіатура).
+-   **System Cleanup**: Інструменти для очищення слідів, логів та спуфінгу (Stealth Mode).
+-   **Recorder Control**: Програмне керування записом сесій (Start/Stop/Status).
+-   **Playwright MCP**: Контроль браузера (headless/headful).
+-   **Desktop/Vision**: Аналіз екрану, пошук зображень, OCR.
 
 ---
 

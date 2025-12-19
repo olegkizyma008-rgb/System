@@ -374,6 +374,33 @@ class PermissionsManager:
 """
 
 
+def open_system_settings_privacy(permission: str) -> Dict[str, Any]:
+    """Open System Settings to the privacy pane for a specific permission
+    
+    Args:
+        permission: Permission name (accessibility, screen_recording, etc.)
+        
+    Returns:
+        Dict with status and url
+    """
+    perm = str(permission or "").strip().lower() or "accessibility"
+    pm = PermissionsManager()
+    url = pm.PRIVACY_URLS.get(perm) or pm.PRIVACY_URLS["accessibility"]
+    
+    try:
+        proc = subprocess.run(["open", url], capture_output=True, text=True)
+        if proc.returncode != 0:
+            return {
+                "tool": "open_system_settings_privacy", 
+                "status": "error", 
+                "permission": perm, 
+                "error": (proc.stderr or "").strip() or "Failed to open System Settings",
+                "url": url
+            }
+        return {"tool": "open_system_settings_privacy", "status": "success", "permission": perm, "url": url}
+    except Exception as e:
+        return {"tool": "open_system_settings_privacy", "status": "error", "permission": perm, "error": str(e), "url": url}
+
 def create_permissions_manager() -> PermissionsManager:
     """Factory function to create a permissions manager
     

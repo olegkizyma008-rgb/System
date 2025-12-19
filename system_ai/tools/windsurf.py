@@ -6,7 +6,7 @@ import subprocess
 import urllib.parse
 from typing import Dict, Any
 
-from system_ai.tools.executor import run_applescript
+from system_ai.tools.automation import run_applescript
 
 logger = logging.getLogger(__name__)
 

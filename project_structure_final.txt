@@ -3,10 +3,10 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 128
-- **Files Skipped**: 16084
+- **Files Included**: 126
+- **Files Skipped**: 16098
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 05:50:01
+- **Generated**: 2025-12-19 05:57:22
 
 ---
 
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39477 ------------------------------------------
- 1 file changed, 39477 deletions(-)
+ project_structure_final.txt | 39606 ------------------------------------------
+ 1 file changed, 39606 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-c522354 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
+e8c7b3b docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
+2230fa3 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
 4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
 1521780 Fix TUI input frame height to tightly wrap content
 553493a docs: update Atlas workflow definition
-26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
 ```
 
 ---
@@ -231,13 +231,11 @@ System/
 │   │   └── rag_pipeline.py
 │   ├── tools/
 │   │   ├── __init__.py
+│   │   ├── automation.py
 │   │   ├── browser.py
 │   │   ├── cleanup.py
 │   │   ├── desktop.py
-│   │   ├── executor.py
 │   │   ├── filesystem.py
-│   │   ├── input.py
-│   │   ├── macos_commands.py
 │   │   ├── macos_native_automation.py
 │   │   ├── permissions_manager.py
 │   │   ├── screenshot.py
@@ -7875,7 +7873,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/mcp.py` (24.9 KB)
+### `core/mcp.py` (25.3 KB)
 
 ```python
 import json
@@ -7889,9 +7887,12 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 # Import all tools
-from system_ai.tools.executor import run_shell, open_app, run_applescript, run_shortcut
-from system_ai.tools.executor import open_system_settings_privacy
-from system_ai.tools.screenshot import take_screenshot
+from system_ai.tools.automation import (
+    run_shell, open_app, run_applescript, run_shortcut,
+    click, type_text, press_key, move_mouse, click_mouse, activate_app
+)
+from system_ai.tools.permissions_manager import create_permissions_manager, open_system_settings_privacy
+from system_ai.tools.screenshot import take_screenshot, capture_screen_region, take_burst_screenshot
 from system_ai.tools.filesystem import read_file, write_file, list_files, copy_file
 from system_ai.tools.windsurf import (
     send_to_windsurf,
@@ -7900,14 +7901,9 @@ from system_ai.tools.windsurf import (
     get_windsurf_current_project_path,
     open_project_in_windsurf,
 )
-from system_ai.tools.input import click, type_text, press_key, move_mouse, click_mouse
-from system_ai.tools.screenshot import take_screenshot, capture_screen_region, take_burst_screenshot
 from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen, compare_images
 from core.memory import save_memory_tool, query_memory_tool
-
-from system_ai.tools.permissions_manager import create_permissions_manager
 from system_ai.tools.macos_native_automation import create_automation_executor
-from system_ai.tools.macos_commands import create_command_executor
 from system_ai.tools.system import list_processes, kill_process, get_system_stats
 from system_ai.tools.desktop import get_monitors_info, get_open_windows, get_clipboard, set_clipboard
 from system_ai.tools.browser import (
@@ -8084,14 +8080,18 @@ class MCPToolRegistry:
         # Overwrite foundation tools with recorder-aware wrappers.
         self.register_tool("run_shell", _run_shell_wrapped, "Execute shell command. Args: command (str), allow=True")
         self.register_tool("open_app", _open_app_wrapped, "Open MacOS Application. Args: name (str)")
-        self.register_tool("run_applescript", _run_applescript_wrapped, "Run AppleScript. Args: script (str)")
+        # run_applescript in automation.py already handles recording via driver, so direct registration is fine
+        # BUT we previously wrapped it for safety/logging in mcp.py.
+        # Let's keep using _run_applescript_wrapped to maintain consistent 'automation' event_type logging in recorder
+        # even if it means potential double logging (one 'automation' event from wrapper, one low-level from driver).
+        # Actually, double logging is noisy. automation.run_applescript(record=True) is sufficient.
+        self.register_tool("run_applescript", lambda script, allow=True: run_applescript(script=script, allow=allow), "Run AppleScript. Args: script (str)")
         self.register_tool("run_shortcut", _run_shortcut_wrapped, "Run Shortcuts automation. Args: name (str), allow=True")
 
         def _native() -> Any:
             return create_automation_executor(recorder_service=_get_recorder_service())
 
-        def _native_cmd() -> Any:
-            return create_command_executor(_native())
+        # Removed _native_cmd as macos_commands is deprecated
 
         # Native macOS automation (AppleScript-based)
         self.register_tool(
@@ -8123,12 +8123,12 @@ class MCPToolRegistry:
         # High-level commands (wrappers)
         self.register_tool(
             "native_open_app",
-            lambda name: _native_cmd().open_app(str(name or "")),
+            lambda name: open_app(str(name or "")),
             "Open application (native). Args: name (str)",
         )
         self.register_tool(
             "native_activate_app",
-            lambda name: _native_cmd().activate_app(str(name or "")),
+            lambda name: activate_app(str(name or "")),
             "Activate application (native). Args: name (str)",
         )
         
@@ -11780,7 +11780,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### `docs/atlas.md` (5.9 KB)
+### `docs/atlas.md` (6.5 KB)
 
 ```markdown
 ---
@@ -11831,7 +11831,7 @@ graph TD
 ### 2.1 Trinity Agents
 
 -   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади (пріоритезує успіхи, враховує анти-патерни).
--   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Використовує контекст від Meta-Planner для формування кроків.
+-   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує повний список доступних інструментів динамічно та використовує контекст від Meta-Planner для формування кроків.
 -   **Tetyana** (`_tetyana_node`): Виконавець (Native/GUI/Playwright).
 -   **Grisha** (`_grisha_node`): Верифікатор. У разі успіху або критичного провалу ініціює перехід до навчання.
 -   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`), додаючи метадані про джерело (`source`) та впевненість (`confidence`).
@@ -11852,9 +11852,13 @@ graph TD
 
 ## 4. MCP Фондація (Інструменти)
 
--   **Playwright MCP**: Контроль браузера.
--   **PyAutoGUI MCP**: Емуляція миші/клавіатури.
--   **Native macOS MCP**: Shell, AppleScript, File System.
+Центральний реєстр `MCPToolRegistry` надає агентам доступ до:
+
+-   **Automation (Unified)**: Уніфікований модуль для Shell, AppleScript, Shortcuts та вводу (миша/клавіатура).
+-   **System Cleanup**: Інструменти для очищення слідів, логів та спуфінгу (Stealth Mode).
+-   **Recorder Control**: Програмне керування записом сесій (Start/Stop/Status).
+-   **Playwright MCP**: Контроль браузера (headless/headful).
+-   **Desktop/Vision**: Аналіз екрану, пошук зображень, OCR.
 
 ---
 
@@ -12278,7 +12282,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (542.6 KB)
+### `project_structure_final.txt` (543.5 KB)
 
 ```text
 # System — Project Structure
@@ -12286,10 +12290,10 @@ test content
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 128
-- **Files Skipped**: 16084
+- **Files Included**: 126
+- **Files Skipped**: 16098
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 05:50:01
+- **Generated**: 2025-12-19 05:57:22
 
 ---
 
@@ -12431,18 +12435,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39477 ------------------------------------------
- 1 file changed, 39477 deletions(-)
+ project_structure_final.txt | 39606 ------------------------------------------
+ 1 file changed, 39606 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-c522354 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
+e8c7b3b docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
+2230fa3 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
 4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
 1521780 Fix TUI input frame height to tightly wrap content
 553493a docs: update Atlas workflow definition
-26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
 ```
 
 ---
@@ -12514,13 +12518,11 @@ System/
 │   │   └── rag_pipeline.py
 │   ├── tools/
 │   │   ├── __init__.py
+│   │   ├── automation.py
 │   │   ├── browser.py
 │   │   ├── cleanup.py
 │   │   ├── desktop.py
-│   │   ├── executor.py
 │   │   ├── filesystem.py
-│   │   ├── input.py
-│   │   ├── macos_commands.py
 │   │   ├── macos_native_automation.py
 │   │   ├── permissions_manager.py
 │   │   ├── screenshot.py
@@ -20158,7 +20160,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/mcp.py` (24.9 KB)
+### `core/mcp.py` (25.3 KB)
 
 ```python
 import json
@@ -20172,9 +20174,12 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 # Import all tools
-from system_ai.tools.executor import run_shell, open_app, run_applescript, run_shortcut
-from system_ai.tools.executor import open_system_settings_privacy
-from system_ai.tools.screenshot import take_screenshot
+from system_ai.tools.automation import (
+    run_shell, open_app, run_applescript, run_shortcut,
+    click, type_text, press_key, move_mouse, click_mouse, activate_app
+)
+from system_ai.tools.permissions_manager import create_permissions_manager, open_system_settings_privacy
+from system_ai.tools.screenshot import take_screenshot, capture_screen_region, take_burst_screenshot
 from system_ai.tools.filesystem import read_file, write_file, list_files, copy_file
 from system_ai.tools.windsurf import (
     send_to_windsurf,
@@ -20183,14 +20188,9 @@ from system_ai.tools.windsurf import (
     get_windsurf_current_project_path,
     open_project_in_windsurf,
 )
-from system_ai.tools.input import click, type_text, press_key, move_mouse, click_mouse
-from system_ai.tools.screenshot import take_screenshot, capture_screen_region, take_burst_screenshot
 from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen, compare_images
 from core.memory import save_memory_tool, query_memory_tool
-
-from system_ai.tools.permissions_manager import create_permissions_manager
 from system_ai.tools.macos_native_automation import create_automation_executor
-from system_ai.tools.macos_commands import create_command_executor
 from system_ai.tools.system import list_processes, kill_process, get_system_stats
 from system_ai.tools.desktop import get_monitors_info, get_open_windows, get_clipboard, set_clipboard
 from system_ai.tools.browser import (
@@ -20367,14 +20367,18 @@ class MCPToolRegistry:
         # Overwrite foundation tools with recorder-aware wrappers.
         self.register_tool("run_shell", _run_shell_wrapped, "Execute shell command. Args: command (str), allow=True")
         self.register_tool("open_app", _open_app_wrapped, "Open MacOS Application. Args: name (str)")
-        self.register_tool("run_applescript", _run_applescript_wrapped, "Run AppleScript. Args: script (str)")
+        # run_applescript in automation.py already handles recording via driver, so direct registration is fine
+        # BUT we previously wrapped it for safety/logging in mcp.py.
+        # Let's keep using _run_applescript_wrapped to maintain consistent 'automation' event_type logging in recorder
+        # even if it means potential double logging (one 'automation' event from wrapper, one low-level from driver).
+        # Actually, double logging is noisy. automation.run_applescript(record=True) is sufficient.
+        self.register_tool("run_applescript", lambda script, allow=True: run_applescript(script=script, allow=allow), "Run AppleScript. Args: script (str)")
         self.register_tool("run_shortcut", _run_shortcut_wrapped, "Run Shortcuts automation. Args: name (str), allow=True")
 
         def _native() -> Any:
             return create_automation_executor(recorder_service=_get_recorder_service())
 
-        def _native_cmd() -> Any:
-            return create_command_executor(_native())
+        # Removed _native_cmd as macos_commands is deprecated
 
         # Native macOS automation (AppleScript-based)
         self.register_tool(
@@ -20406,12 +20410,12 @@ class MCPToolRegistry:
         # High-level commands (wrappers)
         self.register_tool(
             "native_open_app",
-            lambda name: _native_cmd().open_app(str(name or "")),
+            lambda name: open_app(str(name or "")),
             "Open application (native). Args: name (str)",
         )
         self.register_tool(
             "native_activate_app",
-            lambda name: _native_cmd().activate_app(str(name or "")),
+            lambda name: activate_app(str(name or "")),
             "Activate application (native). Args: name (str)",
         )
         
@@ -24063,7 +24067,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### `docs/atlas.md` (5.9 KB)
+### `docs/atlas.md` (6.5 KB)
 
 ```markdown
 ---
@@ -24114,7 +24118,7 @@ graph TD
 ### 2.1 Trinity Agents
 
 -   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади (пріоритезує успіхи, враховує анти-патерни).
--   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Використовує контекст від Meta-Planner для формування кроків.
+-   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує повний список доступних інструментів динамічно та використовує контекст від Meta-Planner для формування кроків.
 -   **Tetyana** (`_tetyana_node`): Виконавець (Native/GUI/Playwright).
 -   **Grisha** (`_grisha_node`): Верифікатор. У разі успіху або критичного провалу ініціює перехід до навчання.
 -   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`), додаючи метадані про джерело (`source`) та впевненість (`confidence`).
@@ -24135,9 +24139,13 @@ graph TD
 
 ## 4. MCP Фондація (Інструменти)
 
--   **Playwright MCP**: Контроль браузера.
--   **PyAutoGUI MCP**: Емуляція миші/клавіатури.
--   **Native macOS MCP**: Shell, AppleScript, File System.
+Центральний реєстр `MCPToolRegistry` надає агентам доступ до:
+
+-   **Automation (Unified)**: Уніфікований модуль для Shell, AppleScript, Shortcuts та вводу (миша/клавіатура).
+-   **System Cleanup**: Інструменти для очищення слідів, логів та спуфінгу (Stealth Mode).
+-   **Recorder Control**: Програмне керування записом сесій (Start/Stop/Status).
+-   **Playwright MCP**: Контроль браузера (headless/headful).
+-   **Desktop/Vision**: Аналіз екрану, пошук зображень, OCR.
 
 ---
 
@@ -26189,6 +26197,217 @@ Tools are designed to be callable from an LLM-driven runtime.
 """
 ```
 
+### `system_ai/tools/automation.py` (7.6 KB)
+
+```python
+"""Unified Automation Module
+
+Consolidates shell, AppleScript, shortcuts, and input automation tools across the system.
+Uses `MacOSNativeAutomation` as the primary driver for AppleScript/Input recording.
+"""
+
+import os
+import time
+import subprocess
+from typing import Dict, Any, Optional, List
+
+from system_ai.tools.macos_native_automation import create_automation_executor, MacOSNativeAutomation
+
+# Initialize default automation driver with recording if available
+def _get_driver() -> MacOSNativeAutomation:
+    # Try to hook into the global recorder if available via standard location
+    try:
+        from tui.cli import _get_recorder_service
+        return create_automation_executor(recorder_service=_get_recorder_service())
+    except ImportError:
+        return create_automation_executor(recorder_service=None)
+
+# --- Shell & System Tools ---
+
+_DEFAULT_FORBIDDEN_TOKENS = [
+    "rm -rf",
+    " shutdown",
+    "reboot",
+    "halt",
+    "diskutil erase",
+    "mkfs",
+    ":(){ :|:& };:",
+]
+
+def run_shell(command: str, *, allow: bool, cwd: Optional[str] = None) -> Dict[str, Any]:
+    if not allow:
+        return {"tool": "run_shell", "status": "error", "error": "Confirmation required"}
+
+    lower_cmd = command.lower()
+    for token in _DEFAULT_FORBIDDEN_TOKENS:
+        if token in lower_cmd:
+            return {"tool": "run_shell", "status": "error", "error": "Command blocked by safety filter", "command": command}
+
+    try:
+        proc = subprocess.run(
+            command,
+            shell=True,
+            cwd=cwd or os.getcwd(),
+            capture_output=True,
+            text=True,
+        )
+        
+        if proc.returncode != 0:
+            # We can reuse the detection logic or inline it. For now let's keep it simple or recreate it if executor is gone.
+            # Inline detection for robustness since we are deleting executor.py
+            perm_issue = None
+            err_lower = (proc.stderr or "").lower()
+            if "operation not permitted" in err_lower:
+                perm_issue = {"error_type": "permission_required", "permission": "full_disk_access"}
+            elif "permission denied" in err_lower:
+                perm_issue = {"error_type": "permission_required", "permission": "files_and_folders"}
+            
+            res = {
+                "tool": "run_shell",
+                "status": "error",
+                "command": command,
+                "returncode": proc.returncode,
+                "stdout": (proc.stdout or "")[-8000:],
+                "stderr": (proc.stderr or "")[-8000:],
+            }
+            if perm_issue:
+                res.update(perm_issue)
+            return res
+            
+        return {
+            "tool": "run_shell",
+            "status": "success",
+            "command": command,
+            "returncode": proc.returncode,
+            "stdout": (proc.stdout or "")[-8000:],
+            "stderr": (proc.stderr or "")[-8000:],
+        }
+    except Exception as e:
+        return {"tool": "run_shell", "status": "error", "command": command, "error": str(e)}
+
+def run_applescript(script: str, *, allow: bool) -> Dict[str, Any]:
+    if not allow:
+        return {"tool": "run_applescript", "status": "error", "error": "Confirmation required"}
+    
+    # Use native driver for recording support
+    driver = _get_driver()
+    return driver.execute_applescript(script, record=True)
+
+def run_shortcut(name: str, *, allow: bool) -> Dict[str, Any]:
+    if not allow:
+        return {"tool": "run_shortcut", "status": "error", "error": "Confirmation required"}
+    
+    n = str(name or "").strip()
+    try:
+        proc = subprocess.run(["shortcuts", "run", n], capture_output=True, text=True)
+        return {
+            "tool": "run_shortcut",
+            "status": "success" if proc.returncode == 0 else "error",
+            "name": n,
+            "returncode": proc.returncode,
+            "stdout": (proc.stdout or "")[-8000:],
+            "stderr": (proc.stderr or "")[-8000:],
+        }
+    except Exception as e:
+        return {"tool": "run_shortcut", "status": "error", "name": n, "error": str(e)}
+
+
+def open_app(name: str) -> Dict[str, Any]:
+    try:
+        driver = _get_driver()
+        # Use simple 'open' via driver or subprocess? 
+        # Executor used 'open -a', MacOSCommands used 'open -a' via AppleScript.
+        # Let's stick to subprocess for speed and simplicity for just opening, but record if possible.
+        
+        proc = subprocess.run(["open", "-a", name], capture_output=True, text=True)
+        if proc.returncode != 0:
+             return {"tool": "open_app", "status": "error", "error": (proc.stderr or "").strip(), "app": name}
+        time.sleep(1.0)
+        return {"tool": "open_app", "status": "success", "app": name}
+    except Exception as e:
+        return {"tool": "open_app", "status": "error", "error": str(e)}
+
+def activate_app(name: str) -> Dict[str, Any]:
+    driver = _get_driver()
+    script = f'tell application "{name}" to activate'
+    return driver.execute_applescript(script, record=True)
+
+# --- Input & UI Tools ---
+
+def move_mouse(x: int, y: int) -> Dict[str, Any]:
+    driver = _get_driver()
+    # Try PyAutoGUI first if available for smoothness, else AppleScript
+    try:
+        import pyautogui
+        pyautogui.moveTo(x, y)
+        return {"tool": "move_mouse", "status": "success", "x": x, "y": y}
+    except (ImportError, Exception):
+        # Fallback to AppleScript driver
+        script = f'tell application "System Events" to set mouse location to {{{x}, {y}}}'
+        return driver.execute_applescript(script, record=True)
+
+def click_mouse(button: str = "left", x: Optional[int] = None, y: Optional[int] = None) -> Dict[str, Any]:
+    driver = _get_driver()
+    try:
+        import pyautogui
+        if x is not None and y is not None:
+            pyautogui.moveTo(x, y)
+        
+        btn = button.lower()
+        if btn == "double":
+            pyautogui.click(clicks=2)
+        else:
+            pyautogui.click(button=btn)
+            
+        return {"tool": "click_mouse", "status": "success", "button": button}
+    except (ImportError, Exception):
+        if x is not None and y is not None:
+            move_mouse(x, y) # AppleScript move
+        
+        # Native click via AppleScript
+        btn_code = 1
+        if button == "right": btn_code = 2
+        
+        script = f'tell application "System Events" to click mouse button {btn_code}'
+        return driver.execute_applescript(script, record=True)
+
+def click(x: int, y: int) -> Dict[str, Any]:
+    return click_mouse("left", x, y)
+
+def type_text(text: str) -> Dict[str, Any]:
+    driver = _get_driver()
+    # Prefer AppleScript for typing as PyAutoGUI can be flaky with layouts on macOS
+    return driver.type_text(text, record=True)
+
+def press_key(key: str, command: bool = False, shift: bool = False, option: bool = False, control: bool = False) -> Dict[str, Any]:
+    driver = _get_driver()
+    modifiers = []
+    if command: modifiers.append("command down")
+    if shift: modifiers.append("shift down")
+    if option: modifiers.append("option down")
+    if control: modifiers.append("control down")
+    
+    return driver.press_key(key, modifiers, record=True)
+
+# --- High Level UI Tools (from macos_commands) ---
+
+def find_and_click_menu(app_name: str, menu_path: List[str]) -> Dict[str, Any]:
+    driver = _get_driver()
+    if not menu_path:
+        return {"status": "error", "error": "Empty menu path"}
+    
+    menu_str = " of ".join([f'menu item "{item}"' for item in reversed(menu_path)])
+    script = f'''
+        tell application "{app_name}"
+            activate
+            tell application "System Events"
+                click {menu_str}
+            end tell
+        end tell
+    '''
+    return driver.execute_applescript(script, record=True)
+```
+
 ### `system_ai/tools/browser.py` (6.3 KB)
 
 ```python
@@ -26560,302 +26779,6 @@ def set_clipboard(text: str) -> Dict[str, Any]:
         }
 ```
 
-### `system_ai/tools/executor.py` (10.3 KB)
-
-```python
-import os
-import subprocess
-import time
-from typing import Any, Dict, Optional
-
-
-_DEFAULT_FORBIDDEN_TOKENS = [
-    "rm -rf",
-    " shutdown",
-    "reboot",
-    "halt",
-    "diskutil erase",
-    "mkfs",
-    ":(){ :|:& };:",
-]
-
-
-_PRIVACY_URLS: Dict[str, str] = {
-    "accessibility": "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
-    "automation": "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
-    "full_disk_access": "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles",
-    "screen_recording": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
-    "microphone": "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone",
-    "files_and_folders": "x-apple.systempreferences:com.apple.preference.security?Privacy_FilesAndFolders",
-}
-
-
-def _detect_applescript_permission_issue(stderr: str) -> Optional[Dict[str, Any]]:
-    s = (stderr or "").strip()
-    if not s:
-        return None
-    lower = s.lower()
-
-    if "assistive access" in lower or "not allowed assistive" in lower or "not permitted" in lower:
-        return {
-            "error_type": "permission_required",
-            "permission": "accessibility",
-            "settings_url": _PRIVACY_URLS["accessibility"],
-        }
-
-    if "not authorized to send apple events" in lower or "not authorised to send apple events" in lower:
-        return {
-            "error_type": "permission_required",
-            "permission": "automation",
-            "settings_url": _PRIVACY_URLS["automation"],
-        }
-
-    return None
-
-
-def _detect_shell_permission_issue(command: str, stderr: str) -> Optional[Dict[str, Any]]:
-    s = (stderr or "").strip()
-    if not s:
-        return None
-    lower = s.lower()
-
-    if "operation not permitted" in lower:
-        return {
-            "error_type": "permission_required",
-            "permission": "full_disk_access",
-            "settings_url": _PRIVACY_URLS["full_disk_access"],
-        }
-
-    if "permission denied" in lower:
-        return {
-            "error_type": "permission_required",
-            "permission": "files_and_folders",
-            "settings_url": _PRIVACY_URLS["files_and_folders"],
-        }
-
-    if "screen recording" in lower:
-        return {
-            "error_type": "permission_required",
-            "permission": "screen_recording",
-            "settings_url": _PRIVACY_URLS["screen_recording"],
-        }
-
-    if "microphone" in lower and "not" in lower and "permit" in lower:
-        return {
-            "error_type": "permission_required",
-            "permission": "microphone",
-            "settings_url": _PRIVACY_URLS["microphone"],
-        }
-
-    _ = command
-    return None
-
-
-def open_system_settings_privacy(permission: str) -> Dict[str, Any]:
-    perm = str(permission or "").strip() or "accessibility"
-    url = _PRIVACY_URLS.get(perm) or _PRIVACY_URLS["accessibility"]
-    try:
-        proc = subprocess.run(["open", url], capture_output=True, text=True)
-        if proc.returncode != 0:
-            return {
-                "tool": "open_system_settings_privacy",
-                "status": "error",
-                "permission": perm,
-                "error": (proc.stderr or "").strip() or "Failed to open System Settings",
-                "url": url,
-            }
-        return {"tool": "open_system_settings_privacy", "status": "success", "permission": perm, "url": url}
-    except Exception as e:
-        return {"tool": "open_system_settings_privacy", "status": "error", "permission": perm, "error": str(e), "url": url}
-
-
-def open_app(name: str) -> Dict[str, Any]:
-    try:
-        raw = str(name or "").strip()
-        n = raw
-        key = " ".join(raw.lower().replace("_", " ").split())
-        app_aliases = {
-            "chrome": "Google Chrome",
-            "google chrome": "Google Chrome",
-            "гугл хром": "Google Chrome",
-            "гуглхром": "Google Chrome",
-            "хром": "Google Chrome",
-            "chrom": "Google Chrome",
-            "сафари": "Safari",
-            "сафарі": "Safari",
-            "safari": "Safari",
-            "finder": "Finder",
-            "файндер": "Finder",
-            "фіндер": "Finder",
-            "термінал": "Terminal",
-            "терминал": "Terminal",
-            "terminal": "Terminal",
-            "shortcuts": "Shortcuts",
-            "ярлики": "Shortcuts",
-            "шорткати": "Shortcuts",
-            "команди": "Shortcuts",
-            "settings": "System Settings",
-            "system settings": "System Settings",
-            "налаштування": "System Settings",
-            "настройки": "System Settings",
-        }
-        n = app_aliases.get(key, n)
-
-        proc = subprocess.run(
-            ["open", "-a", n],
-            capture_output=True,
-            text=True,
-        )
-        if proc.returncode != 0:
-            return {"tool": "open_app", "status": "error", "error": (proc.stderr or "").strip(), "app": n, "input": raw}
-        time.sleep(1.5)
-        return {"tool": "open_app", "status": "success", "app": n, "input": raw}
-    except Exception as e:
-        return {"tool": "open_app", "status": "error", "error": str(e)}
-
-
-def open_url(url: str) -> Dict[str, Any]:
-    u = str(url or "").strip()
-    if not u:
-        return {"tool": "open_url", "status": "error", "error": "Missing url"}
-    try:
-        proc = subprocess.run(
-            ["open", u],
-            capture_output=True,
-            text=True,
-        )
-        if proc.returncode != 0:
-            return {"tool": "open_url", "status": "error", "error": (proc.stderr or "").strip(), "url": u}
-        time.sleep(0.8)
-        return {"tool": "open_url", "status": "success", "url": u}
-    except Exception as e:
-        return {"tool": "open_url", "status": "error", "error": str(e), "url": u}
-
-
-def run_shell(command: str, *, allow: bool, cwd: Optional[str] = None) -> Dict[str, Any]:
-    if not allow:
-        return {"tool": "run_shell", "status": "error", "error": "Confirmation required"}
-
-    lower_cmd = command.lower()
-    for token in _DEFAULT_FORBIDDEN_TOKENS:
-        if token in lower_cmd:
-            return {"tool": "run_shell", "status": "error", "error": "Command blocked by safety filter", "command": command}
-
-    try:
-        proc = subprocess.run(
-            command,
-            shell=True,
-            cwd=cwd or os.getcwd(),
-            capture_output=True,
-            text=True,
-        )
-        if proc.returncode != 0:
-            perm_issue = _detect_shell_permission_issue(command, proc.stderr or "")
-            if perm_issue:
-                return {
-                    "tool": "run_shell",
-                    "status": "error",
-                    "command": command,
-                    "returncode": proc.returncode,
-                    "stdout": (proc.stdout or "")[-8000:],
-                    "stderr": (proc.stderr or "")[-8000:],
-                    **perm_issue,
-                }
-        return {
-            "tool": "run_shell",
-            "status": "success" if proc.returncode == 0 else "error",
-            "command": command,
-            "returncode": proc.returncode,
-            "stdout": (proc.stdout or "")[-8000:],
-            "stderr": (proc.stderr or "")[-8000:],
-        }
-    except Exception as e:
-        return {"tool": "run_shell", "status": "error", "command": command, "error": str(e)}
-
-
-def run_applescript(script: str, *, allow: bool) -> Dict[str, Any]:
-    if not allow:
-        return {"tool": "run_applescript", "status": "error", "error": "Confirmation required"}
-
-    try:
-        proc = subprocess.run(
-            ["osascript", "-e", script],
-            capture_output=True,
-            text=True,
-        )
-        if proc.returncode != 0:
-            perm_issue = _detect_applescript_permission_issue(proc.stderr or "")
-            if perm_issue:
-                return {
-                    "tool": "run_applescript",
-                    "status": "error",
-                    "error": (proc.stderr or "").strip(),
-                    "script_preview": (script[:120] + "...") if len(script) > 120 else script,
-                    **perm_issue,
-                }
-            return {
-                "tool": "run_applescript",
-                "status": "error",
-                "error": (proc.stderr or "").strip(),
-                "script_preview": (script[:120] + "...") if len(script) > 120 else script,
-            }
-        return {"tool": "run_applescript", "status": "success", "output": (proc.stdout or "").strip()}
-    except Exception as e:
-        return {"tool": "run_applescript", "status": "error", "error": str(e)}
-
-
-def run_shortcut(name: str, *, allow: bool) -> Dict[str, Any]:
-    if not allow:
-        return {"tool": "run_shortcut", "status": "error", "error": "Confirmation required"}
-
-    n = str(name or "").strip()
-    if not n:
-        return {"tool": "run_shortcut", "status": "error", "error": "Missing name"}
-
-    try:
-        proc = subprocess.run(
-            ["shortcuts", "run", n],
-            capture_output=True,
-            text=True,
-        )
-        return {
-            "tool": "run_shortcut",
-            "status": "success" if proc.returncode == 0 else "error",
-            "name": n,
-            "returncode": proc.returncode,
-            "stdout": (proc.stdout or "")[-8000:],
-            "stderr": (proc.stderr or "")[-8000:],
-        }
-    except Exception as e:
-        return {"tool": "run_shortcut", "status": "error", "name": n, "error": str(e)}
-
-
-def run_automator(workflow_path: str, *, allow: bool) -> Dict[str, Any]:
-    if not allow:
-        return {"tool": "run_automator", "status": "error", "error": "Confirmation required"}
-
-    w = str(workflow_path or "").strip()
-    if not w:
-        return {"tool": "run_automator", "status": "error", "error": "Missing workflow path"}
-
-    try:
-        proc = subprocess.run(
-            ["automator", "-i", "", w],
-            capture_output=True,
-            text=True,
-        )
-        return {
-            "tool": "run_automator",
-            "status": "success" if proc.returncode == 0 else "error",
-            "workflow": w,
-            "returncode": proc.returncode,
-            "stdout": (proc.stdout or "")[-8000:],
-            "stderr": (proc.stderr or "")[-8000:],
-        }
-    except Exception as e:
-        return {"tool": "run_automator", "status": "error", "workflow": w, "error": str(e)}
-```
-
 ### `system_ai/tools/filesystem.py` (6.9 KB)
 
 ```python
@@ -27056,450 +26979,6 @@ def copy_file(src: str, dst: str, overwrite: bool = True) -> Dict[str, Any]:
         }
     except Exception as e:
         return {"tool": "copy_file", "status": "error", "src": str(src or ""), "dst": str(dst or ""), "error": str(e)}
-```
-
-### `system_ai/tools/input.py` (4.1 KB)
-
-```python
-import time
-from typing import Dict, Any, Optional
-import subprocess
-
-# Try to import pyautogui, but don't fail if missing (use fallback or error)
-try:
-    import pyautogui
-    PYAUTOGUI_AVAILABLE = True
-    # Fail-safe
-    pyautogui.FAILSAFE = True
-except ImportError:
-    PYAUTOGUI_AVAILABLE = False
-
-
-def move_mouse(x: int, y: int) -> Dict[str, Any]:
-    if not PYAUTOGUI_AVAILABLE:
-        return {"tool": "move_mouse", "status": "error", "error": "pyautogui not installed"}
-    try:
-        pyautogui.moveTo(x=x, y=y)
-        return {"tool": "move_mouse", "status": "success", "x": x, "y": y}
-    except Exception as e:
-        return {"tool": "move_mouse", "status": "error", "error": str(e)}
-
-
-def click_mouse(button: str = "left", x: Optional[int] = None, y: Optional[int] = None) -> Dict[str, Any]:
-    if not PYAUTOGUI_AVAILABLE:
-        return {"tool": "click_mouse", "status": "error", "error": "pyautogui not installed"}
-
-    btn = str(button or "left").strip().lower()
-    if btn not in {"left", "right", "double"}:
-        return {"tool": "click_mouse", "status": "error", "error": "Invalid button"}
-
-    try:
-        if x is not None and y is not None:
-            pyautogui.moveTo(x=x, y=y)
-
-        if btn == "double":
-            pyautogui.click(button="left", clicks=2)
-        else:
-            pyautogui.click(button=btn)
-
-        return {"tool": "click_mouse", "status": "success", "button": btn, "x": x, "y": y}
-    except Exception as e:
-        return {"tool": "click_mouse", "status": "error", "error": str(e)}
-
-def click(x: int, y: int) -> Dict[str, Any]:
-    """Clicks at the specified coordinates (x, y)."""
-    if not PYAUTOGUI_AVAILABLE:
-        # Fallback to cliclick if installed, or AppleScript (limited)
-        # For now, return error if no pyautogui
-        return {"tool": "click", "status": "error", "error": "pyautogui not installed"}
-    
-    try:
-        pyautogui.click(x=x, y=y)
-        return {"tool": "click", "status": "success", "x": x, "y": y}
-    except Exception as e:
-        return {"tool": "click", "status": "error", "error": str(e)}
-
-def type_text(text: str) -> Dict[str, Any]:
-    """Types text using keyboard simulation."""
-    if not text:
-        return {"tool": "type_text", "status": "error", "error": "No text provided"}
-
-    # Use AppleScript for typing as it's often more reliable for large chunks on macOS 
-    # and handles keyboard layouts slightly better for standard English
-    safe_text = text.replace('"', '\\"').replace('\\', '\\\\')
-    script = f'tell application "System Events" to keystroke "{safe_text}"'
-    
-    try:
-        proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-        if proc.returncode == 0:
-            return {"tool": "type_text", "status": "success", "text_length": len(text)}
-        
-        # Fallback to pyautogui if AppleScript fails
-        if PYAUTOGUI_AVAILABLE:
-            pyautogui.write(text)
-            return {"tool": "type_text", "status": "success", "text_length": len(text), "method": "pyautogui"}
-            
-        return {"tool": "type_text", "status": "error", "error": proc.stderr}
-    except Exception as e:
-        return {"tool": "type_text", "status": "error", "error": str(e)}
-
-def press_key(key: str, command: bool = False, shift: bool = False, option: bool = False, control: bool = False) -> Dict[str, Any]:
-    """Presses a specific key with optional modifiers."""
-    modifiers = []
-    if command: modifiers.append("command down")
-    if shift: modifiers.append("shift down")
-    if option: modifiers.append("option down")
-    if control: modifiers.append("control down")
-    
-    mod_str = ""
-    if modifiers:
-        mod_str = " using {" + ", ".join(modifiers) + "}"
-        
-    script = f'tell application "System Events" to keystroke "{key}"{mod_str}'
-    
-    try:
-        proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
-        if proc.returncode == 0:
-            return {"tool": "press_key", "status": "success", "key": key, "modifiers": modifiers}
-        return {"tool": "press_key", "status": "error", "error": proc.stderr}
-    except Exception as e:
-        return {"tool": "press_key", "status": "error", "error": str(e)}
-```
-
-### `system_ai/tools/macos_commands.py` (9.8 KB)
-
-```python
-"""macOS Native Commands Module
-
-Provides high-level commands for macOS automation that can be executed
-through the Trinity system with recording support.
-"""
-
-from typing import Dict, Any, Optional, List
-from system_ai.tools.macos_native_automation import MacOSNativeAutomation
-
-
-class MacOSCommandExecutor:
-    """High-level command executor for macOS automation"""
-    
-    def __init__(self, automation: MacOSNativeAutomation):
-        self.automation = automation
-    
-    def open_app(self, app_name: str) -> Dict[str, Any]:
-        """Open an application by name
-        
-        Args:
-            app_name: Name of the application (e.g., "ClearVPN", "Safari")
-            
-        Returns:
-            Dict with status and result
-        """
-        script = f'open -a "{app_name}"'
-        result = self.automation.execute_applescript(
-            f'do shell script "{script}"',
-            record=True
-        )
-        return {
-            "tool": "open_app",
-            "status": result["status"],
-            "app": app_name,
-            "error": result.get("error")
-        }
-    
-    def activate_app(self, app_name: str) -> Dict[str, Any]:
-        """Activate (bring to foreground) an application
-        
-        Args:
-            app_name: Name of the application
-            
-        Returns:
-            Dict with status
-        """
-        script = f"""
-tell application "{app_name}"
-    activate
-end tell
-"""
-        result = self.automation.execute_applescript(script, record=True)
-        return {
-            "tool": "activate_app",
-            "status": result["status"],
-            "app": app_name,
-            "error": result.get("error")
-        }
-    
-    def find_and_click_button(self, app_name: str, button_name: str) -> Dict[str, Any]:
-        """Find and click a button in an application
-        
-        Args:
-            app_name: Name of the application
-            button_name: Name or text of the button
-            
-        Returns:
-            Dict with status
-        """
-        script = f"""
-tell application "{app_name}"
-    activate
-    tell application "System Events"
-        click button "{button_name}" of window 1
-    end tell
-end tell
-"""
-        result = self.automation.execute_applescript(script, record=True)
-        return {
-            "tool": "find_and_click_button",
-            "status": result["status"],
-            "app": app_name,
-            "button": button_name,
-            "error": result.get("error")
-        }
-    
-    def find_and_click_menu_item(self, app_name: str, menu_path: List[str]) -> Dict[str, Any]:
-        """Find and click a menu item
-        
-        Args:
-            app_name: Name of the application
-            menu_path: Path to menu item (e.g., ["File", "Open"])
-            
-        Returns:
-            Dict with status
-        """
-        if not menu_path:
-            return {"tool": "find_and_click_menu_item", "status": "error", "error": "Empty menu path"}
-        
-        menu_script = " of ".join([f'menu item "{item}"' for item in reversed(menu_path)])
-        
-        script = f"""
-tell application "{app_name}"
-    activate
-    tell application "System Events"
-        click {menu_script}
-    end tell
-end tell
-"""
-        result = self.automation.execute_applescript(script, record=True)
-        return {
-            "tool": "find_and_click_menu_item",
-            "status": result["status"],
-            "app": app_name,
-            "menu_path": menu_path,
-            "error": result.get("error")
-        }
-    
-    def get_ui_element_value(self, app_name: str, element_path: str) -> Dict[str, Any]:
-        """Get the value of a UI element
-        
-        Args:
-            app_name: Name of the application
-            element_path: Path to the element
-            
-        Returns:
-            Dict with status and value
-        """
-        script = f"""
-tell application "{app_name}"
-    tell application "System Events"
-        value of {element_path}
-    end tell
-end tell
-"""
-        result = self.automation.execute_applescript(script, record=False)
-        return {
-            "tool": "get_ui_element_value",
-            "status": result["status"],
-            "app": app_name,
-            "value": result.get("output") if result["status"] == "success" else None,
-            "error": result.get("error")
-        }
-    
-    def list_ui_elements(self, app_name: str, element_type: str = "button") -> Dict[str, Any]:
-        """List UI elements of a specific type in an application
-        
-        Args:
-            app_name: Name of the application
-            element_type: Type of element (e.g., "button", "text field")
-            
-        Returns:
-            Dict with status and list of elements
-        """
-        script = f"""
-tell application "{app_name}"
-    tell application "System Events"
-        name of every {element_type} of window 1
-    end tell
-end tell
-"""
-        result = self.automation.execute_applescript(script, record=False)
-        
-        elements = []
-        if result["status"] == "success" and result.get("output"):
-            elements = [e.strip() for e in result["output"].split(",")]
-        
-        return {
-            "tool": "list_ui_elements",
-            "status": result["status"],
-            "app": app_name,
-            "element_type": element_type,
-            "elements": elements,
-            "error": result.get("error")
-        }
-    
-    def take_screenshot(self, output_path: Optional[str] = None) -> Dict[str, Any]:
-        """Take a screenshot
-        
-        Args:
-            output_path: Optional path to save screenshot
-            
-        Returns:
-            Dict with status and path
-        """
-        if output_path is None:
-            output_path = "/tmp/screenshot.png"
-        
-        script = f'screencapture -x "{output_path}"'
-        result = self.automation.execute_applescript(
-            f'do shell script "{script}"',
-            record=True
-        )
-        
-        return {
-            "tool": "take_screenshot",
-            "status": result["status"],
-            "path": output_path if result["status"] == "success" else None,
-            "error": result.get("error")
-        }
-    
-    def get_mouse_position(self) -> Dict[str, Any]:
-        """Get current mouse position
-        
-        Returns:
-            Dict with x, y coordinates
-        """
-        script = """
-tell application "System Events"
-    get position of mouse
-end tell
-"""
-        result = self.automation.execute_applescript(script, record=False)
-        
-        if result["status"] == "success":
-            try:
-                coords = result["output"].strip().split(", ")
-                return {
-                    "tool": "get_mouse_position",
-                    "status": "success",
-                    "x": int(coords[0]),
-                    "y": int(coords[1])
-                }
-            except (ValueError, IndexError):
-                pass
-        
-        return {
-            "tool": "get_mouse_position",
-            "status": "error",
-            "error": result.get("error")
-        }
-    
-    def move_mouse(self, x: int, y: int) -> Dict[str, Any]:
-        """Move mouse to coordinates
-        
-        Args:
-            x: X coordinate
-            y: Y coordinate
-            
-        Returns:
-            Dict with status
-        """
-        script = f"""
-tell application "System Events"
-    set mouse location to {{{x}, {y}}}
-end tell
-"""
-        result = self.automation.execute_applescript(script, record=True)
-        return {
-            "tool": "move_mouse",
-            "status": result["status"],
-            "x": x,
-            "y": y,
-            "error": result.get("error")
-        }
-    
-    def click_mouse(self, x: int = None, y: int = None, button: str = "left") -> Dict[str, Any]:
-        """Click mouse at coordinates
-        
-        Args:
-            x: X coordinate (uses current position if None)
-            y: Y coordinate (uses current position if None)
-            button: Mouse button ("left", "right", "middle")
-            
-        Returns:
-            Dict with status
-        """
-        if x is not None and y is not None:
-            self.move_mouse(x, y)
-        
-        button_map = {"left": 1, "right": 2, "middle": 3}
-        button_code = button_map.get(button.lower(), 1)
-        
-        script = f"""
-tell application "System Events"
-    click mouse button {button_code}
-end tell
-"""
-        result = self.automation.execute_applescript(script, record=True)
-        return {
-            "tool": "click_mouse",
-            "status": result["status"],
-            "button": button,
-            "x": x,
-            "y": y,
-            "error": result.get("error")
-        }
-    
-    def type_text_with_delay(self, text: str, delay_ms: int = 50) -> Dict[str, Any]:
-        """Type text with delay between characters
-        
-        Args:
-            text: Text to type
-            delay_ms: Delay between characters in milliseconds
-            
-        Returns:
-            Dict with status
-        """
-        script = f"""
-tell application "System Events"
-    set delay_value to {delay_ms / 1000}
-"""
-        for char in text:
-            if char == '"':
-                script += f'\n    keystroke "\\""\n'
-            else:
-                script += f'\n    keystroke "{char}"\n'
-                script += f'    delay delay_value\n'
-        
-        script += "end tell"
-        
-        result = self.automation.execute_applescript(script, record=True)
-        return {
-            "tool": "type_text_with_delay",
-            "status": result["status"],
-            "text_length": len(text),
-            "delay_ms": delay_ms,
-            "error": result.get("error")
-        }
-
-
-def create_command_executor(automation: MacOSNativeAutomation) -> MacOSCommandExecutor:
-    """Factory function to create a command executor
-    
-    Args:
-        automation: MacOSNativeAutomation instance
-        
-    Returns:
-        MacOSCommandExecutor instance
-    """
-    return MacOSCommandExecutor(automation)
 ```
 
 ### `system_ai/tools/macos_native_automation.py` (8.8 KB)
@@ -27806,7 +27285,7 @@ def create_automation_executor(recorder_service=None) -> MacOSNativeAutomation:
     return MacOSNativeAutomation(recorder_service)
 ```
 
-### `system_ai/tools/permissions_manager.py` (13.6 KB)
+### `system_ai/tools/permissions_manager.py` (14.7 KB)
 
 ```python
 """macOS Permissions Manager
@@ -28184,6 +27663,33 @@ class PermissionsManager:
    • Check if the app is blocked by Gatekeeper
 """
 
+
+def open_system_settings_privacy(permission: str) -> Dict[str, Any]:
+    """Open System Settings to the privacy pane for a specific permission
+    
+    Args:
+        permission: Permission name (accessibility, screen_recording, etc.)
+        
+    Returns:
+        Dict with status and url
+    """
+    perm = str(permission or "").strip().lower() or "accessibility"
+    pm = PermissionsManager()
+    url = pm.PRIVACY_URLS.get(perm) or pm.PRIVACY_URLS["accessibility"]
+    
+    try:
+        proc = subprocess.run(["open", url], capture_output=True, text=True)
+        if proc.returncode != 0:
+            return {
+                "tool": "open_system_settings_privacy", 
+                "status": "error", 
+                "permission": perm, 
+                "error": (proc.stderr or "").strip() or "Failed to open System Settings",
+                "url": url
+            }
+        return {"tool": "open_system_settings_privacy", "status": "success", "permission": perm, "url": url}
+    except Exception as e:
+        return {"tool": "open_system_settings_privacy", "status": "error", "permission": perm, "error": str(e), "url": url}
 
 def create_permissions_manager() -> PermissionsManager:
     """Factory function to create a permissions manager
@@ -28769,7 +28275,7 @@ import subprocess
 import urllib.parse
 from typing import Dict, Any
 
-from system_ai.tools.executor import run_applescript
+from system_ai.tools.automation import run_applescript
 
 logger = logging.getLogger(__name__)
 
@@ -39602,5 +39108,5 @@ graph TD
 
 ## Summary
 
-- **Total Files**: 128
-- **Skipped**: 16084
+- **Total Files**: 126
+- **Skipped**: 16098

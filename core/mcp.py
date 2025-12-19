@@ -9,9 +9,12 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 # Import all tools
-from system_ai.tools.executor import run_shell, open_app, run_applescript, run_shortcut
-from system_ai.tools.executor import open_system_settings_privacy
-from system_ai.tools.screenshot import take_screenshot
+from system_ai.tools.automation import (
+    run_shell, open_app, run_applescript, run_shortcut,
+    click, type_text, press_key, move_mouse, click_mouse, activate_app
+)
+from system_ai.tools.permissions_manager import create_permissions_manager, open_system_settings_privacy
+from system_ai.tools.screenshot import take_screenshot, capture_screen_region, take_burst_screenshot
 from system_ai.tools.filesystem import read_file, write_file, list_files, copy_file
 from system_ai.tools.windsurf import (
     send_to_windsurf,
@@ -20,14 +23,9 @@ from system_ai.tools.windsurf import (
     get_windsurf_current_project_path,
     open_project_in_windsurf,
 )
-from system_ai.tools.input import click, type_text, press_key, move_mouse, click_mouse
-from system_ai.tools.screenshot import take_screenshot, capture_screen_region, take_burst_screenshot
 from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen, compare_images
 from core.memory import save_memory_tool, query_memory_tool
-
-from system_ai.tools.permissions_manager import create_permissions_manager
 from system_ai.tools.macos_native_automation import create_automation_executor
-from system_ai.tools.macos_commands import create_command_executor
 from system_ai.tools.system import list_processes, kill_process, get_system_stats
 from system_ai.tools.desktop import get_monitors_info, get_open_windows, get_clipboard, set_clipboard
 from system_ai.tools.browser import (
@@ -204,14 +202,18 @@ class MCPToolRegistry:
         # Overwrite foundation tools with recorder-aware wrappers.
         self.register_tool("run_shell", _run_shell_wrapped, "Execute shell command. Args: command (str), allow=True")
         self.register_tool("open_app", _open_app_wrapped, "Open MacOS Application. Args: name (str)")
-        self.register_tool("run_applescript", _run_applescript_wrapped, "Run AppleScript. Args: script (str)")
+        # run_applescript in automation.py already handles recording via driver, so direct registration is fine
+        # BUT we previously wrapped it for safety/logging in mcp.py.
+        # Let's keep using _run_applescript_wrapped to maintain consistent 'automation' event_type logging in recorder
+        # even if it means potential double logging (one 'automation' event from wrapper, one low-level from driver).
+        # Actually, double logging is noisy. automation.run_applescript(record=True) is sufficient.
+        self.register_tool("run_applescript", lambda script, allow=True: run_applescript(script=script, allow=allow), "Run AppleScript. Args: script (str)")
         self.register_tool("run_shortcut", _run_shortcut_wrapped, "Run Shortcuts automation. Args: name (str), allow=True")
 
         def _native() -> Any:
             return create_automation_executor(recorder_service=_get_recorder_service())
 
-        def _native_cmd() -> Any:
-            return create_command_executor(_native())
+        # Removed _native_cmd as macos_commands is deprecated
 
         # Native macOS automation (AppleScript-based)
         self.register_tool(
@@ -243,12 +245,12 @@ class MCPToolRegistry:
         # High-level commands (wrappers)
         self.register_tool(
             "native_open_app",
-            lambda name: _native_cmd().open_app(str(name or "")),
+            lambda name: open_app(str(name or "")),
             "Open application (native). Args: name (str)",
         )
         self.register_tool(
             "native_activate_app",
-            lambda name: _native_cmd().activate_app(str(name or "")),
+            lambda name: activate_app(str(name or "")),
             "Activate application (native). Args: name (str)",
         )
         
