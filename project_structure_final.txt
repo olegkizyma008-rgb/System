@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16225
+- **Files Skipped**: 16231
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 07:56:18
+- **Generated**: 2025-12-19 08:00:33
 
 ---
 
@@ -121,7 +121,7 @@
 
 ## My Last Response
 
-Docs: Add Continue CLI to supported integrations
+README: Add integrations section
 
 
 ---
@@ -129,26 +129,26 @@ Docs: Add Continue CLI to supported integrations
 ## Git Diff (Recent Changes)
 
 ```
- .agent/workflows/atlas.md   |    21 +-
- README.md                   |    10 +
+ .agent/workflows/atlas.md   |    28 +-
+ README.md                   |    12 +
  cleanup_modules.json        |    17 +
  cli.py                      |    14 +
  docs/atlas.md               |    28 +-
- project_structure_final.txt | 39648 +-----------------------------------------
+ project_structure_final.txt | 39518 +-----------------------------------------
  providers/copilot.py        |    32 +-
  tui/cleanup.py              |     2 +
  tui/tools.py                |    13 +
- 9 files changed, 136 insertions(+), 39649 deletions(-)
+ 9 files changed, 142 insertions(+), 39522 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-f7d53a0 Update: Add latest response
+382c88b Update: Add latest response
+2d9fb8d Update: Add latest response
 6cbcd4c Update: Add latest response
 d3a3eed Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 5daa143 Update: Add latest response
-2747d12 Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
 ```
 
 ---
@@ -318,7 +318,7 @@ System/
 
 ## File Contents
 
-### `.agent/workflows/atlas.md` (7.9 KB)
+### `.agent/workflows/atlas.md` (9.1 KB)
 
 ```markdown
 ---
@@ -446,15 +446,22 @@ graph TD
 
 ### 8.1 Режим Розробника (Dev Mode)
 Atlas може працювати в розширеному режимі (Dev Mode), що дозволяє:
--   **Direct Code Editing**: Агент може читати та змінювати код власної системи.
--   **Shell Execution**: Виконання термінальних команд.
--   **Unsafe Tools**: Доступ до AppleScript, Mouse Control.
+-   **Direct Code Editing**: Агент може читати та змінювати код власної системи (через `multi_replace_file_content`).
+-   **Shell Execution**: Виконання термінальних команд (включаючи `git`, `npm`, `python`).
+-   **Unsafe Tools**: Доступ до потенційно небезпечних інструментів (AppleScript, Mouse Control) за умови підтвердження користувачем (`confirm users`) або в режимі `--unsafe`.
 
-### 8.2 Self-Healing (Самолікування)
-Система автоматично виявляє помилки (через `Grisha`) та ініціює перепланування. Це дозволяє виправляти runtime помилки, проблеми з селекторами або логічні тупики без втручання користувача.
+### 8.2 Чи може Atlas "лікувати" себе? (Self-Healing)
+**Так.** Це закладено в архітектуру Trinity Runtime:
+1.  **Detection**: Агент-верифікатор (`Grisha`) аналізує результат виконання кожного кроку.
+2.  **Correction**: Якщо виявлено помилку (наприклад, `JSON parsing error` або `Element not found`), система ініціює `Replanning Loop`.
+3.  **Strategy Shift**: Meta-Planner може змінити стратегію (наприклад, перейти з Native Mode на GUI Mode), якщо попередній підхід не спрацював.
+4.  **Limits**: Система має ліміт на кількість спроб (`MAX_REPLANS`), щоб уникнути нескінченних циклів.
 
-### 8.3 Чат та Інтерактивність
-Агенти спілкуються з користувачем через TUI, використовуючи `[VOICE]` повідомлення. Користувач може втручатися в процес, надаючи нові інструкції через CLI.
+### 8.3 Інтерактивність (Chat & Response)
+Atlas працює в напівавтономному режимі через TUI (`cli.py`):
+-   **User -> Agent**: Ви можете писати команди або уточнення прямо в чат TUI.
+-   **Agent -> User**: Агенти використовують тег `[VOICE]` для відправки повідомлень користувачу, які відображаються в інтерфейсі.
+-   **Feedback Loop**: Хоча агент фокусується на завданні, він може "чути" нові вхідні дані від користувача під час пауз між кроками, якщо це реалізовано через режим `interactive`.
 
 ---
 
@@ -573,7 +580,7 @@ kinotavr.md
 ```text
 ## My Last Response
 
-Docs: Add Continue CLI to supported integrations
+README: Add integrations section
 ```
 
 ### `.windsurf/rules/logs.md` (1.3 KB)
@@ -630,7 +637,7 @@ cat ~/.system_cli/logs/debug.log
 - When you want to save progress with logs
 ```
 
-### `README.md` (3.5 KB)
+### `README.md` (3.6 KB)
 
 ```markdown
 # Project Atlas: Cognitive 2.0 Identity
@@ -676,6 +683,8 @@ Atlas accesses the world through the **Model Context Protocol (MCP)** registry:
 -   **External MCPs**:
     -   **Playwright**: Full browser automation.
     -   **PyAutoGUI**: Fallback input emulation.
+-   **Integrations**:
+    -   **AI-IDE Support**: Windsurf, Antigravity, Cursor, Continue CLI.
 
 ---
 
@@ -12624,7 +12633,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (575.2 KB)
+### `project_structure_final.txt` (576.4 KB)
 
 ```text
 # System — Project Structure
@@ -12633,9 +12642,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16225
+- **Files Skipped**: 16231
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 07:56:18
+- **Generated**: 2025-12-19 08:00:33
 
 ---
 
@@ -12750,7 +12759,7 @@ test content
 
 ## My Last Response
 
-Docs: Add Continue CLI to supported integrations
+README: Add integrations section
 
 
 ---
@@ -12758,26 +12767,26 @@ Docs: Add Continue CLI to supported integrations
 ## Git Diff (Recent Changes)
 
 ```
- .agent/workflows/atlas.md   |    21 +-
- README.md                   |    10 +
+ .agent/workflows/atlas.md   |    28 +-
+ README.md                   |    12 +
  cleanup_modules.json        |    17 +
  cli.py                      |    14 +
  docs/atlas.md               |    28 +-
- project_structure_final.txt | 39648 +-----------------------------------------
+ project_structure_final.txt | 39518 +-----------------------------------------
  providers/copilot.py        |    32 +-
  tui/cleanup.py              |     2 +
  tui/tools.py                |    13 +
- 9 files changed, 136 insertions(+), 39649 deletions(-)
+ 9 files changed, 142 insertions(+), 39522 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-f7d53a0 Update: Add latest response
+382c88b Update: Add latest response
+2d9fb8d Update: Add latest response
 6cbcd4c Update: Add latest response
 d3a3eed Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 5daa143 Update: Add latest response
-2747d12 Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
 ```
 
 ---
@@ -12947,7 +12956,7 @@ System/
 
 ## File Contents
 
-### `.agent/workflows/atlas.md` (7.9 KB)
+### `.agent/workflows/atlas.md` (9.1 KB)
 
 ```markdown
 ---
@@ -13075,15 +13084,22 @@ graph TD
 
 ### 8.1 Режим Розробника (Dev Mode)
 Atlas може працювати в розширеному режимі (Dev Mode), що дозволяє:
--   **Direct Code Editing**: Агент може читати та змінювати код власної системи.
--   **Shell Execution**: Виконання термінальних команд.
--   **Unsafe Tools**: Доступ до AppleScript, Mouse Control.
+-   **Direct Code Editing**: Агент може читати та змінювати код власної системи (через `multi_replace_file_content`).
+-   **Shell Execution**: Виконання термінальних команд (включаючи `git`, `npm`, `python`).
+-   **Unsafe Tools**: Доступ до потенційно небезпечних інструментів (AppleScript, Mouse Control) за умови підтвердження користувачем (`confirm users`) або в режимі `--unsafe`.
 
-### 8.2 Self-Healing (Самолікування)
-Система автоматично виявляє помилки (через `Grisha`) та ініціює перепланування. Це дозволяє виправляти runtime помилки, проблеми з селекторами або логічні тупики без втручання користувача.
+### 8.2 Чи може Atlas "лікувати" себе? (Self-Healing)
+**Так.** Це закладено в архітектуру Trinity Runtime:
+1.  **Detection**: Агент-верифікатор (`Grisha`) аналізує результат виконання кожного кроку.
+2.  **Correction**: Якщо виявлено помилку (наприклад, `JSON parsing error` або `Element not found`), система ініціює `Replanning Loop`.
+3.  **Strategy Shift**: Meta-Planner може змінити стратегію (наприклад, перейти з Native Mode на GUI Mode), якщо попередній підхід не спрацював.
+4.  **Limits**: Система має ліміт на кількість спроб (`MAX_REPLANS`), щоб уникнути нескінченних циклів.
 
-### 8.3 Чат та Інтерактивність
-Агенти спілкуються з користувачем через TUI, використовуючи `[VOICE]` повідомлення. Користувач може втручатися в процес, надаючи нові інструкції через CLI.
+### 8.3 Інтерактивність (Chat & Response)
+Atlas працює в напівавтономному режимі через TUI (`cli.py`):
+-   **User -> Agent**: Ви можете писати команди або уточнення прямо в чат TUI.
+-   **Agent -> User**: Агенти використовують тег `[VOICE]` для відправки повідомлень користувачу, які відображаються в інтерфейсі.
+-   **Feedback Loop**: Хоча агент фокусується на завданні, він може "чути" нові вхідні дані від користувача під час пауз між кроками, якщо це реалізовано через режим `interactive`.
 
 ---
 
@@ -13202,7 +13218,7 @@ kinotavr.md
 ```text
 ## My Last Response
 
-Docs: Add Continue CLI to supported integrations
+README: Add integrations section
 ```
 
 ### `.windsurf/rules/logs.md` (1.3 KB)
@@ -13259,7 +13275,7 @@ cat ~/.system_cli/logs/debug.log
 - When you want to save progress with logs
 ```
 
-### `README.md` (3.5 KB)
+### `README.md` (3.6 KB)
 
 ```markdown
 # Project Atlas: Cognitive 2.0 Identity
@@ -13305,6 +13321,8 @@ Atlas accesses the world through the **Model Context Protocol (MCP)** registry:
 -   **External MCPs**:
     -   **Playwright**: Full browser automation.
     -   **PyAutoGUI**: Fallback input emulation.
+-   **Integrations**:
+    -   **AI-IDE Support**: Windsurf, Antigravity, Cursor, Continue CLI.
 
 ---
 
@@ -39626,4 +39644,4 @@ if __name__ == "__main__":
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 16225
+- **Skipped**: 16231
