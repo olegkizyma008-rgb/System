@@ -214,7 +214,35 @@ class TrinityRuntime:
         # So we try to find the last valid brace/bracket.
         
         candidate = s[start_idx:]
-        # Try iterative trimming from the end
+        
+        # Optimization: Try full candidate first
+        try:
+            return json.loads(candidate)
+        except Exception:
+            pass
+            
+        # Optimization: Try regex to find the matching closing brace/bracket
+        # This is heuristics based, not a full parser, but faster than iterative slicing for large texts
+        try:
+            if candidate.startswith('{'):
+                # Simple balanced brace counter
+                count = 0
+                for i, char in enumerate(candidate):
+                    if char == '{': count += 1
+                    elif char == '}': count -= 1
+                    if count == 0:
+                        return json.loads(candidate[:i+1])
+            elif candidate.startswith('['):
+                count = 0
+                for i, char in enumerate(candidate):
+                    if char == '[': count += 1
+                    elif char == ']': count -= 1
+                    if count == 0:
+                        return json.loads(candidate[:i+1])
+        except Exception:
+            pass
+
+        # Fallback to iterative trimming from the end if regex failed
         for i in range(len(candidate), 0, -1):
             try:
                 # Potential optimization: only try if candidate[i-1] is } or ]
@@ -725,32 +753,10 @@ class TrinityRuntime:
         elif not plan:
             # Check if this is a planning failure that needs Doctor Vibe intervention
             if step_count > 0 and last_step_status == "success":
-                # Empty plan after successful step - this is a planning failure
+                # Empty plan after successful step - just replan
                 if self.verbose:
-                    self.logger.info("🚨 [Meta-Planner] Empty plan detected after successful step. Activating Doctor Vibe.")
-                
-                # Create pause context for Doctor Vibe
-                pause_context = {
-                    "reason": "empty_plan_after_success",
-                    "message": f"Doctor Vibe: Атлас не може створити план після успішного кроку. Завдання: {original_task}",
-                    "timestamp": datetime.now().isoformat(),
-                    "suggested_action": "Будь ласка, уточніть завдання або розбийте його на простіші кроки",
-                    "atlas_status": "planning_failed",
-                    "auto_resume_available": False,
-                    "original_task": original_task,
-                    "last_successful_step": last_msg
-                }
-                
-                # Notify Doctor Vibe and create pause state
-                self.vibe_assistant.handle_pause_request(pause_context)
-                
-                return {
-                    **state,
-                    "vibe_assistant_pause": pause_context,
-                    "vibe_assistant_context": f"PAUSED: Empty plan after success for task: {original_task}",
-                    "current_agent": "meta_planner",
-                    "messages": list(context) + [AIMessage(content=f"[VOICE] Doctor Vibe: Атлас не може продовжити планування. Будь ласка, уточніть завдання.")]
-                }
+                    self.logger.info("Plan completed. Triggering replan for next steps.")
+                action = "replan"
             else:
                 action = "replan" # out of steps
         elif last_step_status == "failed":
@@ -1343,12 +1349,6 @@ class TrinityRuntime:
             last_msg = last_msg[:45000] + "\n\n[... TRUNCATED DUE TO SIZE ...]\n\n" + last_msg[-5000:]
         tool_calls = [] # Initialize for scope safety
         
-        # 0. Meta-verification detection: REMOVED to prevent false positives.
-        # We want Grisha to ALWAYS verify with tools or explicit reasoning, 
-        # not just trust the previous agent's self-report.
-        # is_meta_verify = ... (removed)
-
-
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
         execution_mode = str(state.get("execution_mode") or "native").strip().lower()
 
@@ -1421,6 +1421,8 @@ class TrinityRuntime:
         prompt = get_grisha_prompt(verify_context, tools_desc=tools_list)
         
         content = ""  # Initialize content variable
+        executed_tools_results = [] # Keep track of results for verdict phase
+
         try:
             trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
             # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
@@ -1441,7 +1443,6 @@ class TrinityRuntime:
                 pass
             
             # Execute Tools
-            results = []
             if tool_calls:
                  for tool in tool_calls:
                      name = tool.get("name")
@@ -1453,19 +1454,24 @@ class TrinityRuntime:
 
                      # Execute via MCP Registry
                      res = self.registry.execute(name, args)
-                     results.append(f"Result for {name}: {res}")
+                     res_str = f"Result for {name}: {res}"
+                     executed_tools_results.append(res_str)
             
-            if results:
-                content += "\n\nVerification Tools Results:\n" + "\n".join(results)
+            if executed_tools_results:
+                content += "\n\nVerification Tools Results:\n" + "\n".join(executed_tools_results)
             
             # Append test results if any
             if test_results:
                 content += test_results
+                executed_tools_results.append(test_results)
 
             # Deterministic verification hook: capture + analyze for GUI OR Browser tasks.
             is_browser_task = "browser_" in content.lower() or "браузер" in content.lower()
+            forced_verification_run = False
+            
             if (gui_mode in {"auto", "on"} and execution_mode == "gui") or is_browser_task:
                 # NEW: Prefer browser_screenshot if browser tools were used
+                snap = ""
                 if is_browser_task:
                     snap = self.registry.execute("browser_screenshot", {})
                     if '"status": "error"' in snap:
@@ -1474,7 +1480,11 @@ class TrinityRuntime:
                 else:
                     snap = self.registry.execute("capture_screen", {"app_name": None})
                 
-                content += "\n\n[GUI_BROWSER_VERIFY] capture_screen:\n" + str(snap)
+                snap_res = f"\n[GUI_BROWSER_VERIFY] capture_screen:\n{snap}"
+                content += snap_res
+                executed_tools_results.append(snap_res)
+                forced_verification_run = True
+
                 try:
                     snap_dict = json.loads(snap)
                     img_path = snap_dict.get("path") if isinstance(snap_dict, dict) else None
@@ -1486,17 +1496,53 @@ class TrinityRuntime:
                         "analyze_screen",
                         {"image_path": img_path, "prompt": "Verify the UI state. Describe what changed and whether the goal seems achieved. Check for errors or typos."},
                     )
-                    content += "\n\n[GUI_VERIFY] analyze_screen:\n" + str(analysis)
+                    analysis_res = f"\n[GUI_VERIFY] analyze_screen:\n{analysis}"
+                    content += analysis_res
+                    executed_tools_results.append(analysis_res)
 
         except Exception as e:
             content = f"Error invoking Grisha: {e}"
+            executed_tools_results.append(f"Error: {e}")
+
+        # --- VERDICT PHASE ---
+        # If tools were executed (voluntarily or forced), we must ask Grisha to ANALYZE the results.
+        # Otherwise, he often ignores them or assumes uncertainty.
+        
+        has_tools_run = bool(executed_tools_results)
+        verdict_content = content
+        
+        if has_tools_run:
+            if self.verbose: print(f"👁️ [Grisha] Analyzing {len(executed_tools_results)} tool results for Verdict...")
+            
+            verdict_prompt_txt = (
+                "Here are the verification results obtained from the tools:\n" + 
+                "\n".join(executed_tools_results) + 
+                "\n\nBased on these results and the global goal, what is your FINAL verdict?\n"
+                "You must respond with explicitly one of these markers at the end:\n"
+                "- [VERIFIED] (if goal is achieved)\n"
+                "- [FAILED] (if goal failed or error found)\n"
+                "- [UNCERTAIN] (only if results are truly inconclusive)\n\n"
+                "Explain your reasoning briefly before the marker."
+            )
+            
+            verdict_msgs = [
+                SystemMessage(content="You are Grisha, analyzing verification data."),
+                HumanMessage(content=verdict_prompt_txt)
+            ]
+            
+            # We don't stream the verdict, just get it
+            try:
+                verdict_resp = self.llm.invoke(verdict_msgs)
+                verdict_content += "\n\n[VERDICT ANALYSIS]\n" + verdict_resp.content
+            except Exception as e:
+                verdict_content += f"\n\n[VERDICT ERROR] Could not get verdict: {e}"
 
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
-        lower_content = content.lower()
+        lower_content = verdict_content.lower()
         step_status = "uncertain"
         next_agent = "meta_planner"
 
-        # 1. Check for explicit success markers (including Tetyana's [STEP_COMPLETED])
+        # 1. Check for explicit success markers
         explicit_complete_markers = [
             "[verified]", "[confirmed]", "[step_completed]", "[completed]",
             "verification passed", "qa passed", "verdict: pass", "перевірку пройдено", "підтверджую"
@@ -1504,137 +1550,76 @@ class TrinityRuntime:
         has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
         
         # 2. Check for tool execution errors in context
-        # ONLY look at the latest verification results, ignore history errors
-        latest_tools_result = ""
-        if "Verification Tools Results:" in content:
-            latest_tools_result = content.split("Verification Tools Results:")[-1]
-            
+        latest_tools_result = "\n".join(executed_tools_results).lower()
         has_tool_error_in_context = '"status": "error"' in latest_tools_result
         
         # 3. Check for test failures
         has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
         
-        # 4. Successful tool results (technical success)
-        has_successful_tool_result = (
-            "tool results:" in lower_content and 
-            (
-                '"status": "success"' in latest_tools_result or
-                ('"result for "' in lower_content and not has_tool_error_in_context)
-            )
-        )
-        
-        # 5. Success / Failure / Indecision
-        # LLM Markers [VERIFIED] have HIGHEST priority
+        # 4. Markers analysis
         if has_explicit_complete:
             step_status = "success"
             next_agent = "meta_planner"
-        elif "[captcha]" in lower_content or "captcha detected" in lower_content or "found captcha" in lower_content:
+        elif "[captcha]" in lower_content or "captcha detected" in lower_content:
             step_status = "uncertain"
             next_agent = "meta_planner"
         elif has_test_failure:
             step_status = "failed"
             next_agent = "meta_planner"
-        elif has_tool_error_in_context:
-            # Technically, if the LATEST tool failed, it's a failure.
-            step_status = "failed"
-            next_agent = "meta_planner"
-
-        elif has_successful_tool_result and not has_tool_error_in_context:
-            step_status = "success"
-            next_agent = "meta_planner"
-        elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
-            step_status = "success"
-            next_agent = "meta_planner"
         elif "[failed]" in lower_content or "critical error" in lower_content or "fatal error" in lower_content:
             step_status = "failed"
             next_agent = "meta_planner"
-        else:
-            # NEW: If no tools were used and status is uncertain, force verification
-            if not tool_calls:
-                if self.verbose:
-                    print("👁️ [Grisha] No tools used and uncertain → forcing capture_screen verification")
-                try:
-                    trace(self.logger, "grisha_forcing_verification", {"reason": "no_tools_uncertain"})
-                    snap = self.registry.execute("capture_screen", {"app_name": None})
-                    content += "\n\n[FORCED_VERIFY] capture_screen:\n" + str(snap)
-                    # Try to extract image path for analysis
-                    try:
-                        snap_dict = json.loads(snap)
-                        img_path = snap_dict.get("path") if isinstance(snap_dict, dict) else None
-                    except Exception:
-                        img_path = None
-                    if img_path:
-                        analysis = self.registry.execute(
-                            "analyze_screen",
-                            {"image_path": img_path, "prompt": "Describe what you see. Focus on finding errors or success indicators. If no obvious error, say [QA_PASSED]."},
-                        )
-                        content += "\n\n[FORCED_VERIFY] analyze_screen:\n" + str(analysis)
-                        # Check analysis result for success/failure indicators
-                        analysis_lower = str(analysis).lower()
-                        if "[qa_passed]" in analysis_lower or any(kw in analysis_lower for kw in ["success", "done", "completed", "expected evidence found"]):
-                            step_status = "success"
-                        elif "[failed]" in analysis_lower or any(kw in analysis_lower for kw in ["critical error", "blocked", "forbidden", "page not found"]):
-                            step_status = "failed"
-                except Exception as ve:
-                    if self.verbose:
-                        print(f"👁️ [Grisha] Forced verification failed: {ve}")
-            
-            # If still uncertain after forced verification
-            if step_status == "uncertain":
-                step_status = "uncertain"
-                next_agent = "meta_planner"
-
-        # Preserve existing messages and add new one (with potentially enriched content)
-        updated_messages = list(context) + [AIMessage(content=content)]
+        elif has_tool_error_in_context:
+            # If the tool failed and Grisha didn't explicitly say [VERIFIED] despite it (rare), assume fail.
+            step_status = "failed"
+            next_agent = "meta_planner"
+        elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
+            # Fallback soft markers
+            step_status = "success"
+            next_agent = "meta_planner"
 
         # NEW: Anti-loop protection via uncertain_streak
         current_streak = int(state.get("uncertain_streak") or 0)
+        
+        # If still uncertain and no tools were run (and we haven't forced them yet)
+        if step_status == "uncertain" and not has_tools_run:
+             # Force verification if we haven't already
+             pass # We can't easily force it here without recursion or complex logic. 
+                  # Ideally the first prompt should have triggered tools. 
+                  # If we are here, Grisha produced text without tools and without a verdict.
+        
         if step_status in {"uncertain", "failed"}:
             current_streak += 1
         else:
             current_streak = 0  # Reset on definite decision (success)
         
         # If 3+ consecutive uncertain decisions, consider forcing completion
-        # CRITICAL: Do NOT force success if CAPTCHA is active or if vision shows failure!
-        # Check if vision analysis indicates objective failure (no video playing, etc.)
         vision_shows_failure = any(kw in lower_content for kw in [
             "no video playing", "no video in fullscreen", "не відтворюється", "відео не грає",
             "page is empty", "сторінка порожня", "about:blank", "not found", "404",
             "error loading", "помилка завантаження", "the task was not completed",
             "завдання не виконано", "goal not achieved",
-            "no movie playing", "not playing", "nothing playing",
-            "in windowed mode", "not in fullscreen", "not in full-screen",
-            "no active video", "відео не знайдено", "немає відео",
-            "no video is playing", "no movie is playing", 
+            "not playing", "nothing playing",
+            "not in fullscreen", "not in full-screen",
+            "no active video",
             "no evidence of", "does not show",
-            "no clear indication", "google search"
         ])
         
-        if step_status == "uncertain" and current_streak >= 3 and "[captcha]" not in lower_content:
-            if vision_shows_failure:
-                # Don't force success - trigger replan instead
+        if step_status == "uncertain" and current_streak >= 3:
+            if vision_shows_failure or "[failed]" in lower_content:
                 if self.verbose:
-                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) but vision shows failure → triggering REPLAN")
-                try:
-                    trace(self.logger, "grisha_uncertainty_limit_replan", {"streak": current_streak, "forced": "replan", "vision_failure": True})
-                except Exception:
-                    pass
+                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) but failure detected → triggering REPLAN")
                 step_status = "failed"
-                updated_messages.append(AIMessage(content="[VOICE] Після кількох спроб перевірки, бачу що завдання не виконано. Потрібне перепланування."))
+                # Add explainer
+                verdict_content += "\n\n[SYSTEM] Uncertainty limit reached with negative evidence. Marking as FAILED."
                 current_streak = 0
             else:
-                # If still uncertain after limit, force FAILURE to trigger replan/repair.
-                # Forcing success is dangerous as we might skip actual work.
+                # If ambiguous but no obvious failure, force FAIL to be safe (replan is safer than fake success)
                 if self.verbose:
-                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing FAILED (verification inconclusive)")
-                try:
-                    trace(self.logger, "grisha_uncertainty_limit", {"streak": current_streak, "forced": "failed"})
-                except Exception:
-                    pass
+                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing FAILED (conclusive verification failed)")
                 step_status = "failed"
-                updated_messages.append(AIMessage(content="[VOICE] Перевірка не дала чіткого результату після кількох спроб. Вважаю крок невиконаним. [FAILED]"))
+                verdict_content += "\n\n[SYSTEM] Uncertainty limit reached. Consistency check failed. Marking as FAILED."
                 current_streak = 0
-
 
         try:
             trace(self.logger, "grisha_decision", {"next_agent": next_agent, "last_step_status": step_status, "uncertain_streak": current_streak})
@@ -1643,7 +1628,7 @@ class TrinityRuntime:
 
         out = {
             "current_agent": next_agent, 
-            "messages": updated_messages,
+            "messages": list(context) + [AIMessage(content=verdict_content)],
             "last_step_status": step_status,
             "uncertain_streak": current_streak,
             "plan": state.get("plan"),  # Always preserve plan in state

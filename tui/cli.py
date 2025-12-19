@@ -331,33 +331,7 @@ def _trim_logs_if_needed() -> None:
 
 
 def _is_complex_task(text: str) -> bool:
-    t = str(text or "").strip()
-    if not t:
-        return False
-    if t.startswith("/"):
-        return False
-    # Heuristics: long, multi-sentence, multi-line, or multi-step language.
-    if "\n" in t:
-        return True
-    if len(t) >= 240:
-        return True
-    if t.count(".") + t.count("!") + t.count("?") >= 3:
-        return True
-    lower = t.lower()
-    keywords = [
-        "потім",
-        "далі",
-        "крок",
-        "steps",
-        "step",
-        "і потім",
-        "спочатку",
-        "зроби",
-        "налаштуй",
-        "автоматиз",
-        "перевір",
-    ]
-    return sum(1 for k in keywords if k in lower) >= 2
+    return _is_complex_task_new(text)
 
 
 def _is_greeting(text: str) -> bool:
@@ -2688,6 +2662,23 @@ def cli_main(argv: List[str]) -> None:
             if _is_greeting(msg):
                 logger.debug("Greeting detected")
                 print("Привіт! Чим можу допомогти?")
+                raise SystemExit(0)
+
+            # Check for complex task execution
+            if _is_complex_task(msg):
+                logger.info("Complex task detected, delegating to Trinity Graph Agent...")
+                # Enable full permissions for CLI "run" mode
+                from tui.agents import run_graph_agent_task
+                run_graph_agent_task(
+                    msg,
+                    allow_file_write=True,
+                    allow_shell=True,
+                    allow_applescript=True,
+                    allow_gui=True, # Assuming CLI user wants action
+                    allow_shortcuts=True,
+                    gui_mode="auto"
+                )
+                logger.info("Graph task completed")
                 raise SystemExit(0)
 
             logger.info("Sending message to agent")

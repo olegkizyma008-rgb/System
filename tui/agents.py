@@ -167,6 +167,17 @@ def is_complex_task(text: str) -> bool:
         "налаштуй",
         "автоматиз",
         "перевір",
+        "знайди",
+        "відкрий",
+        "запусти",
+        "включи",
+        "після",
+        "пересвідчись",
+        "гугл",
+        "google",
+        "youtube",
+        "онлайн",
+        "фільм",
     ]
     return sum(1 for k in keywords if k in lower) >= 2
 

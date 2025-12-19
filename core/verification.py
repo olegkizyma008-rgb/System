@@ -57,25 +57,38 @@ class AdaptiveVerifier:
             def extract_json(text):
                 if not text: return None
                 s = text.strip()
+                # Try direct load
                 try: return json.loads(s)
                 except: pass
                 
-                # Match balanced or largest block
-                # First try the whole thing without markdown
-                s_clean = s.replace("```json", "").replace("```", "").strip()
+                # Try handling Python dict syntax (single quotes)
+                try: 
+                    import ast
+                    return ast.literal_eval(s)
+                except: pass
+
+                # Remove markdown code blocks
+                s_clean = re.sub(r"^```(?:json)?\s*", "", s, flags=re.IGNORECASE | re.MULTILINE)
+                s_clean = re.sub(r"\s*```$", "", s_clean, flags=re.IGNORECASE | re.MULTILINE)
+                s_clean = s_clean.strip()
+                
                 try: return json.loads(s_clean)
                 except: pass
                 
-                # Regex fallback
-                match = re.search(r"(\{.*\}|\[.*\])", s_clean, re.DOTALL)
-                if match:
-                    try: return json.loads(match.group(0))
-                    except: pass
-                    
-                match = re.search(r"(\{.*?\}|\[.*?\])", s_clean, re.DOTALL)
-                if match:
-                    try: return json.loads(match.group(0))
-                    except: pass
+                # Regex search for JSON object or list
+                # We specifically look for the largest outer block
+                for pattern in [r"(\{.*\})", r"(\[.*\])"]:
+                    match = re.search(pattern, s_clean, re.DOTALL)
+                    if match:
+                        candidate = match.group(0)
+                        try: return json.loads(candidate)
+                        except: pass
+                        # Try ast.literal_eval for single-quote dicts found via regex
+                        try: 
+                            import ast
+                            return ast.literal_eval(candidate)
+                        except: pass
+
                 return None
 
             optimized_raw = extract_json(content)
