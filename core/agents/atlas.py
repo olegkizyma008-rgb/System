@@ -79,8 +79,9 @@ AVAILABLE TOOLS:
 {tools_desc}
 
 🚀 YOUR TASKS:
-1. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
-2. Decomposition: Break the global goal into atomic actions for Tetyana.
+1. **ALIGN WITH GLOBAL GOAL**: Always check if the current steps serve the "Global Goal". If the goal is "Find movie", don't just "Open Google" and stop.
+2. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
+3. Decomposition: Break the global goal into atomic actions for Tetyana.
 3. Experience: Use provided context (RAG) to avoid errors.
 4. SELF-REVIEW: Ensure the plan covers all stages until full verification.
 5. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.

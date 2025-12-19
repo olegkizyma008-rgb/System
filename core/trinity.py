@@ -53,6 +53,7 @@ class TrinityState(TypedDict):
     current_step_fail_count: Optional[int]  # Count of consecutive failures on the same step
     meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode, tool_preference, reasoning
     retrieved_context: Optional[str]  # Structured findings from RAG
+    original_task: Optional[str]  # The original user request (Golden Goal)
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -282,6 +283,7 @@ class TrinityRuntime:
         if self.verbose: print("🧠 [Meta-Planner] Analyzing strategy...")
         context = state.get("messages", [])
         last_msg = context[-1].content if context else "Start"
+        original_task = state.get("original_task") or "Unknown"
         step_count = state.get("step_count", 0)
         replan_count = state.get("replan_count", 0)
         last_step_status = state.get("last_step_status", "success")
@@ -354,7 +356,7 @@ class TrinityRuntime:
         if action in ["initialize", "replan", "repair"]:
             from core.agents.atlas import get_meta_planner_prompt
             
-            task_context = f"Task: {last_msg}\nStep: {step_count}\nStatus: {last_step_status}\nCurrent config: {meta_config}\nPlan (remaining): {len(plan)} steps."
+            task_context = f"Global Goal: {original_task}\nCurrent Request: {last_msg}\nStep: {step_count}\nStatus: {last_step_status}\nCurrent config: {meta_config}\nPlan (remaining): {len(plan)} steps."
             prompt = get_meta_planner_prompt(task_context, preferred_language=self.preferred_language)
             
             try:
@@ -444,7 +446,7 @@ class TrinityRuntime:
         )
         
         prompt = get_atlas_plan_prompt(
-            last_msg,
+            f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}",
             tools_desc=self.registry.list_tools(),
             context=final_context,
             preferred_language=self.preferred_language
@@ -518,6 +520,7 @@ class TrinityRuntime:
         if not context:
             return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для виконання.")]}
         last_msg = context[-1].content
+        original_task = state.get("original_task") or ""
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
         execution_mode = str(state.get("execution_mode") or "native").strip().lower()
@@ -557,7 +560,10 @@ class TrinityRuntime:
         # Inject available tools into Tetyana's prompt.
         # If we are in GUI mode, we still list all tools, but the prompt instructs to prefer GUI primitives.
         tools_list = self.registry.list_tools()
-        prompt = get_tetyana_prompt(str(last_msg or "") + routing_hint + retry_context, tools_desc=tools_list)
+        
+        # Combined context: Goal + immediate request + hints + retry
+        full_context = f"Global Goal: {original_task}\nRequest: {last_msg}{routing_hint}{retry_context}"
+        prompt = get_tetyana_prompt(full_context, tools_desc=tools_list)
         
         # Bind tools to LLM for structured tool_calls output.
         tool_defs = self.registry.get_all_tool_definitions()
@@ -959,7 +965,10 @@ class TrinityRuntime:
         
         # Inject available tools (Vision priority)
         tools_list = self.registry.list_tools()
-        prompt = get_grisha_prompt(last_msg, tools_desc=tools_list)
+        
+        original_task = state.get("original_task") or ""
+        verify_context = f"Global Goal: {original_task}\nVerify result of: {last_msg}"
+        prompt = get_grisha_prompt(verify_context, tools_desc=tools_list)
         
         content = ""  # Initialize content variable
         try:
@@ -1745,6 +1754,7 @@ class TrinityRuntime:
             "requires_windsurf": bool(requires_windsurf),
             "dev_edit_mode": "cli", # User Preference: Continue CLI priority
             "intent_reason": intent_reason,
+            "original_task": input_text,
         }
 
         last_node_name: str = ""
