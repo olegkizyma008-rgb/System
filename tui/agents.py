@@ -677,11 +677,9 @@ def run_graph_agent_task(
                     msg = pause_info.get("message", "Permission required")
                     set_agent_pause(pending_text=user_text, permission=perm, message=msg)
                     log(f"[{tag}] ⚠️ PAUSED: {msg}", "error")
-                    tail_active.clear()
                     return
                 
     except Exception as e:
-        tail_active.clear()
         err_msg = traceback.format_exc()
         print(f"DEBUG ERROR: {e}")
         print(err_msg)
@@ -692,7 +690,6 @@ def run_graph_agent_task(
         log(f"Traceback: {err_msg.splitlines()[-1]}", "info")
         return
 
-    tail_active.clear()
     log("[TRINITY] ✓ Task completed.", "action")
     trim_logs_if_needed()
 

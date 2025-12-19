@@ -377,10 +377,11 @@ class TrinityRuntime:
                 # Construct messages: System Prompt + History + Context/Instruction
                 planning_messages = [SystemMessage(content=ATLAS_PLANNING_PROMPT)]
                 
-                # Filter/Trim history to avoid plan confusion (keep first prompt and last ~10 msgs)
+                # Filter/Trim history: Keep system prompt, initial user request, and last 8 messages.
+                # This prevents old 'success' messages or failures from polluting current state.
                 history = state.get("messages", [])
-                if len(history) > 12:
-                    history = [history[0]] + history[-10:]
+                if len(history) > 10:
+                    history = [history[0], history[1]] + history[-8:]
                 
                 planning_messages.extend(history)
                 
@@ -424,18 +425,43 @@ class TrinityRuntime:
                     except:
                         raise ValueError(f"Could not parse plan JSON: {json_str[:100]}...")
 
-                if not isinstance(raw_plan, list) or not raw_plan:
-                    raise ValueError("Plan is not a list or is empty")
+                # New check: Did Atlas say we are done in JSON format?
+                if isinstance(raw_plan, list) and len(raw_plan) == 1:
+                    status = raw_plan[0].get("status")
+                    if status == "completed":
+                        msg = raw_plan[0].get("message", "Задача виконана.")
+                        return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
+
             except Exception as e:
+                # Log raw response for debugging
+                try:
+                    raw_content = str(plan_resp.content)[:1000] if 'plan_resp' in locals() else "N/A"
+                    print(f"DEBUG: Atlas raw plan generation failed or signal caught. Content: {raw_content}")
+                    trace(self.logger, "atlas_plan_raw_response", {"content": raw_content})
+                except Exception:
+                    pass
+
+                # HEURISTIC: Did Atlas use natural language to say it's done?
+                raw_content = str(plan_resp.content).lower() if 'plan_resp' in locals() else ""
+                success_keywords = ["виконано", "запущено", "готово", "done", "success", "film is playing", "фільм грає"]
+                if any(k in raw_content for k in success_keywords) and len(raw_content) < 300:
+                    if self.verbose: print(f"✅ [Atlas] Heuristic completion detected: {raw_content[:50]}...")
+                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {raw_content}")]}
+
                 if self.verbose: print(f"⚠️ [Atlas] Smart Planning failed ({e}). Fallback to 1-step.")
                 try:
                     trace(self.logger, "atlas_plan_generate_error", {"error": str(e)[:200]})
                 except Exception:
                     pass
+                # Improved fallback: if captcha detected, force captcha solve instructions
+                fallback_desc = last_msg
+                if "[captcha]" in str(last_msg).lower():
+                    fallback_desc = "Виявлено CAPTCHA! Використовуй 'browser_open_url' з 'headless=False' та 'vision_analyze' для вирішення через Hybrid Physical Solver."
+                
                 raw_plan = [{
                     "id": 1, 
                     "type": "execute", 
-                    "description": last_msg,
+                    "description": fallback_desc,
                     "agent": "tetyana"
                 }]
             

@@ -146,16 +146,24 @@ def browser_get_content() -> str:
         return json.dumps({"status": "error", "error": str(e)})
 
 def browser_snapshot() -> str:
-    """Capture accessibility snapshot of the current page (legacy)."""
+    """Capture accessibility snapshot of the current page.
+    Note: Full A11y tree snapshot was removed in v1.50+. 
+    This tool now returns a simplified view with content, url, and title.
+    """
     try:
         manager = BrowserManager.get_instance()
         page = manager.get_page()
-        # accessibility.snapshot() was removed in v1.50+ 
+        content = page.content()
+        
+        # Basic CAPTCHA check
+        has_captcha = "sorry" in content.lower() or "captcha" in content.lower() or "robot" in content.lower()
+        
         return json.dumps({
             "status": "success",
             "url": page.url,
             "title": page.title(),
-            "note": "A11y snapshot is not available in v1.50+. Use browser_get_content."
+            "has_captcha": has_captcha,
+            "content_preview": content[:10000] # Return more content for verification
         }, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
