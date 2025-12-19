@@ -2,10 +2,6 @@
 description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 meta-planning logic, Active Retrieval, and the continuous learning principles of the Trinity Graph runtime.
 ---
 
----
-description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 meta-planning logic, Active Retrieval, and the continuous learning principles of the Trinity Graph runtime.
----
-
 # Project Atlas: Архітектура, Workflow та Основні Принципи  
 **Актуальний стан на грудень 2025 року (Cognitive 2.0)**
 
