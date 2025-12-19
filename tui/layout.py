@@ -337,7 +337,7 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
+            Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12)), # Dynamic area height
             status_window,
         ]
     )
