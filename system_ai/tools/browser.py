@@ -62,7 +62,18 @@ def browser_open_url(url: str, headless: bool = True) -> str:
         page.goto(url, wait_until="domcontentloaded", timeout=60000)
         
         content = page.content().lower()
-        has_captcha = "sorry" in content or "captcha" in content or "robot" in content
+        # Refined detection: avoid false positives on 'robot' or 'sorry' in footer/about pages
+        captcha_markers = [
+            "g-recaptcha", "hcaptcha", "cloudflare-turnstile",
+            "verify you are human", "solving this captcha",
+            "unusual traffic from your computer network",
+            "check if you are a robot"
+        ]
+        has_captcha = any(marker in content for marker in captcha_markers)
+        
+        # If very suspicious but not explicitly matched, log it but don't force 'uncertain' automatically
+        if not has_captcha and ("sorry" in content and "unusual traffic" in content):
+            has_captcha = True
         
         return json.dumps({
             "status": "success",
@@ -155,8 +166,17 @@ def browser_snapshot() -> str:
         page = manager.get_page()
         content = page.content()
         
+        content_lower = content.lower()
         # Basic CAPTCHA check
-        has_captcha = "sorry" in content.lower() or "captcha" in content.lower() or "robot" in content.lower()
+        captcha_markers = [
+            "g-recaptcha", "hcaptcha", "cloudflare-turnstile",
+            "verify you are human", "solving this captcha",
+            "unusual traffic from your computer network",
+            "check if you are a robot"
+        ]
+        has_captcha = any(marker in content_lower for marker in captcha_markers)
+        if not has_captcha and ("sorry" in content_lower and "unusual traffic" in content_lower):
+            has_captcha = True
         
         return json.dumps({
             "status": "success",

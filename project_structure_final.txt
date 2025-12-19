@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16164
+- **Files Skipped**: 16172
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:37:10
+- **Generated**: 2025-12-19 06:41:03
 
 ---
 
@@ -148,18 +148,20 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39085 +-----------------------------------------
- 1 file changed, 24 insertions(+), 39061 deletions(-)
+ core/trinity.py             |    34 +-
+ core/verification.py        |     7 +-
+ project_structure_final.txt | 39039 +-----------------------------------------
+ 3 files changed, 26 insertions(+), 39054 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-002f27d docs: update Atlas workflow documentation
+4b4c970 fix(browser): Refine CAPTCHA detection to avoid false positives on Google search results
+026cf98 docs: update Atlas workflow documentation
 e9ec6d9 docs: Restore Context7 as Explicit Context Manager in architecture
 172cc81 docs: Hide Context7 implementation details from architecture overview
 3d9d437 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
-ef6f4d4 chore(setup): Auto-fix permissions for cleanup_scripts in setup.sh
 ```
 
 ---
@@ -8656,7 +8658,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (84.8 KB)
+### `core/trinity.py` (85.2 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -8880,17 +8882,17 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "atlas", 
             self._router, 
-            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "end": END}
+            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "atlas": "atlas", "end": END}
         )
         builder.add_conditional_edges(
             "tetyana", 
             self._router, 
-            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "end": END}
+            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "atlas": "atlas", "end": END}
         )
         builder.add_conditional_edges(
             "grisha", 
             self._router, 
-            {"meta_planner": "meta_planner", "knowledge": "knowledge", "end": END}
+            {"meta_planner": "meta_planner", "knowledge": "knowledge", "atlas": "atlas", "end": END}
         )
         builder.add_conditional_edges(
             "knowledge",
@@ -8963,6 +8965,9 @@ class TrinityRuntime:
             else:
                  recovery_mode = meta_config.get("recovery_mode", "local_fix")
                  action = "replan" if recovery_mode == "full_replan" else "repair"
+        elif last_step_status == "uncertain":
+            # If we are stuck/uncertain (e.g. CAPTCHA), force a replan to find a new path
+            action = "replan"
         
         # 4. Meta-Reasoning (LLM)
         if action in ["initialize", "replan", "repair"]:
@@ -9459,9 +9464,10 @@ class TrinityRuntime:
             except Exception:
                 pass
             return {
-                "current_agent": "atlas",
+                "current_agent": "meta_planner",
                 "messages": updated_messages,
-                "pause_info": pause_info
+                "pause_info": pause_info,
+                "last_step_status": "uncertain"
             }
         
         # Preserve existing messages and add new one
@@ -9639,7 +9645,7 @@ class TrinityRuntime:
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
         lower_content = content.lower()
         step_status = "uncertain"
-        next_agent = "atlas"
+        next_agent = "meta_planner"
 
         # 1. Check for explicit success markers (including Tetyana's [STEP_COMPLETED])
         explicit_complete_markers = [
@@ -9670,28 +9676,28 @@ class TrinityRuntime:
         
         # 5. Success / Failure / Indecision
         # LLM Markers [VERIFIED] have HIGHEST priority
-        if "[captcha]" in lower_content:
+        if "[captcha]" in lower_content or "captcha" in lower_content or "капча" in lower_content:
             step_status = "uncertain"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_test_failure:
             step_status = "failed"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_tool_error_in_context:
             # Technically, if the LATEST tool failed, it's a failure.
             step_status = "failed"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_explicit_complete:
             step_status = "success"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_successful_tool_result and not has_tool_error_in_context:
             step_status = "success"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
             step_status = "success"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif "[failed]" in lower_content or "critical error" in lower_content or "fatal error" in lower_content:
             step_status = "failed"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         else:
             # NEW: If no tools were used and status is uncertain, force verification
             if not tool_calls:
@@ -9726,7 +9732,7 @@ class TrinityRuntime:
             # If still uncertain after forced verification
             if step_status == "uncertain":
                 step_status = "uncertain"
-                next_agent = "atlas"
+                next_agent = "meta_planner"
 
         # Preserve existing messages and add new one (with potentially enriched content)
         updated_messages = list(context) + [AIMessage(content=content)]
@@ -10545,7 +10551,7 @@ class TrinityRuntime:
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
 ```
 
-### `core/verification.py` (8.3 KB)
+### `core/verification.py` (8.4 KB)
 
 ```python
 from typing import List, Dict, Any, Optional
@@ -10607,9 +10613,12 @@ class AdaptiveVerifier:
             
             # Extract JSON list [ ... ]
             import re
-            match = re.search(r"\[.*\]", content, re.DOTALL)
+            match = re.search(r"(\[.*\])", content, re.DOTALL)
             if match:
-                content = match.group(0)
+                content = match.group(1)
+            else:
+                self.logger.warning(f"[Verifier] No JSON array found in response: {content[:100]}")
+                raise ValueError("No JSON array found")
                 
             optimized = json.loads(content)
             
@@ -12435,7 +12444,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (553.4 KB)
+### `project_structure_final.txt` (554.0 KB)
 
 ```text
 # System — Project Structure
@@ -12444,9 +12453,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 125
-- **Files Skipped**: 16164
+- **Files Skipped**: 16172
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:37:10
+- **Generated**: 2025-12-19 06:41:03
 
 ---
 
@@ -12588,18 +12597,20 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39085 +-----------------------------------------
- 1 file changed, 24 insertions(+), 39061 deletions(-)
+ core/trinity.py             |    34 +-
+ core/verification.py        |     7 +-
+ project_structure_final.txt | 39039 +-----------------------------------------
+ 3 files changed, 26 insertions(+), 39054 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-002f27d docs: update Atlas workflow documentation
+4b4c970 fix(browser): Refine CAPTCHA detection to avoid false positives on Google search results
+026cf98 docs: update Atlas workflow documentation
 e9ec6d9 docs: Restore Context7 as Explicit Context Manager in architecture
 172cc81 docs: Hide Context7 implementation details from architecture overview
 3d9d437 docs: Update README.md to reflect Cognitive 2.0 architecture and Context7
-ef6f4d4 chore(setup): Auto-fix permissions for cleanup_scripts in setup.sh
 ```
 
 ---
@@ -21096,7 +21107,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (84.8 KB)
+### `core/trinity.py` (85.2 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -21320,17 +21331,17 @@ class TrinityRuntime:
         builder.add_conditional_edges(
             "atlas", 
             self._router, 
-            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "end": END}
+            {"tetyana": "tetyana", "grisha": "grisha", "meta_planner": "meta_planner", "atlas": "atlas", "end": END}
         )
         builder.add_conditional_edges(
             "tetyana", 
             self._router, 
-            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "end": END}
+            {"grisha": "grisha", "meta_planner": "meta_planner", "tetyana": "tetyana", "atlas": "atlas", "end": END}
         )
         builder.add_conditional_edges(
             "grisha", 
             self._router, 
-            {"meta_planner": "meta_planner", "knowledge": "knowledge", "end": END}
+            {"meta_planner": "meta_planner", "knowledge": "knowledge", "atlas": "atlas", "end": END}
         )
         builder.add_conditional_edges(
             "knowledge",
@@ -21403,6 +21414,9 @@ class TrinityRuntime:
             else:
                  recovery_mode = meta_config.get("recovery_mode", "local_fix")
                  action = "replan" if recovery_mode == "full_replan" else "repair"
+        elif last_step_status == "uncertain":
+            # If we are stuck/uncertain (e.g. CAPTCHA), force a replan to find a new path
+            action = "replan"
         
         # 4. Meta-Reasoning (LLM)
         if action in ["initialize", "replan", "repair"]:
@@ -21899,9 +21913,10 @@ class TrinityRuntime:
             except Exception:
                 pass
             return {
-                "current_agent": "atlas",
+                "current_agent": "meta_planner",
                 "messages": updated_messages,
-                "pause_info": pause_info
+                "pause_info": pause_info,
+                "last_step_status": "uncertain"
             }
         
         # Preserve existing messages and add new one
@@ -22079,7 +22094,7 @@ class TrinityRuntime:
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
         lower_content = content.lower()
         step_status = "uncertain"
-        next_agent = "atlas"
+        next_agent = "meta_planner"
 
         # 1. Check for explicit success markers (including Tetyana's [STEP_COMPLETED])
         explicit_complete_markers = [
@@ -22110,28 +22125,28 @@ class TrinityRuntime:
         
         # 5. Success / Failure / Indecision
         # LLM Markers [VERIFIED] have HIGHEST priority
-        if "[captcha]" in lower_content:
+        if "[captcha]" in lower_content or "captcha" in lower_content or "капча" in lower_content:
             step_status = "uncertain"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_test_failure:
             step_status = "failed"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_tool_error_in_context:
             # Technically, if the LATEST tool failed, it's a failure.
             step_status = "failed"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_explicit_complete:
             step_status = "success"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif has_successful_tool_result and not has_tool_error_in_context:
             step_status = "success"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
             step_status = "success"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         elif "[failed]" in lower_content or "critical error" in lower_content or "fatal error" in lower_content:
             step_status = "failed"
-            next_agent = "atlas"
+            next_agent = "meta_planner"
         else:
             # NEW: If no tools were used and status is uncertain, force verification
             if not tool_calls:
@@ -22166,7 +22181,7 @@ class TrinityRuntime:
             # If still uncertain after forced verification
             if step_status == "uncertain":
                 step_status = "uncertain"
-                next_agent = "atlas"
+                next_agent = "meta_planner"
 
         # Preserve existing messages and add new one (with potentially enriched content)
         updated_messages = list(context) + [AIMessage(content=content)]
@@ -22985,7 +23000,7 @@ class TrinityRuntime:
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
 ```
 
-### `core/verification.py` (8.3 KB)
+### `core/verification.py` (8.4 KB)
 
 ```python
 from typing import List, Dict, Any, Optional
@@ -23047,9 +23062,12 @@ class AdaptiveVerifier:
             
             # Extract JSON list [ ... ]
             import re
-            match = re.search(r"\[.*\]", content, re.DOTALL)
+            match = re.search(r"(\[.*\])", content, re.DOTALL)
             if match:
-                content = match.group(0)
+                content = match.group(1)
+            else:
+                self.logger.warning(f"[Verifier] No JSON array found in response: {content[:100]}")
+                raise ValueError("No JSON array found")
                 
             optimized = json.loads(content)
             
@@ -26722,7 +26740,7 @@ def find_and_click_menu(app_name: str, menu_path: List[str]) -> Dict[str, Any]:
     return driver.execute_applescript(script, record=True)
 ```
 
-### `system_ai/tools/browser.py` (6.3 KB)
+### `system_ai/tools/browser.py` (7.2 KB)
 
 ```python
 import os
@@ -26789,7 +26807,18 @@ def browser_open_url(url: str, headless: bool = True) -> str:
         page.goto(url, wait_until="domcontentloaded", timeout=60000)
         
         content = page.content().lower()
-        has_captcha = "sorry" in content or "captcha" in content or "robot" in content
+        # Refined detection: avoid false positives on 'robot' or 'sorry' in footer/about pages
+        captcha_markers = [
+            "g-recaptcha", "hcaptcha", "cloudflare-turnstile",
+            "verify you are human", "solving this captcha",
+            "unusual traffic from your computer network",
+            "check if you are a robot"
+        ]
+        has_captcha = any(marker in content for marker in captcha_markers)
+        
+        # If very suspicious but not explicitly matched, log it but don't force 'uncertain' automatically
+        if not has_captcha and ("sorry" in content and "unusual traffic" in content):
+            has_captcha = True
         
         return json.dumps({
             "status": "success",
@@ -26882,8 +26911,17 @@ def browser_snapshot() -> str:
         page = manager.get_page()
         content = page.content()
         
+        content_lower = content.lower()
         # Basic CAPTCHA check
-        has_captcha = "sorry" in content.lower() or "captcha" in content.lower() or "robot" in content.lower()
+        captcha_markers = [
+            "g-recaptcha", "hcaptcha", "cloudflare-turnstile",
+            "verify you are human", "solving this captcha",
+            "unusual traffic from your computer network",
+            "check if you are a robot"
+        ]
+        has_captcha = any(marker in content_lower for marker in captcha_markers)
+        if not has_captcha and ("sorry" in content_lower and "unusual traffic" in content_lower):
+            has_captcha = True
         
         return json.dumps({
             "status": "success",
@@ -39147,4 +39185,4 @@ _tool_ui_theme_set = tool_ui_theme_set
 ## Summary
 
 - **Total Files**: 125
-- **Skipped**: 16164
+- **Skipped**: 16172
