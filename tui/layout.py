@@ -285,7 +285,6 @@ def build_app(
             input_window,
         ],
         height=Dimension(min=1, preferred=1, max=10),
-        dont_extend_height=True,
     )
 
     def get_status_text() -> AnyFormattedText:
@@ -341,11 +340,7 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            HSplit(
-                [Frame(input_area, style="class:frame.border")],
-                height=Dimension(min=3, preferred=3, max=12),
-                dont_extend_height=True
-            ), # Dynamic area height, glued to bottom, expands upwards
+            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height, glued to bottom, expands upwards
             status_window,
         ]
     )

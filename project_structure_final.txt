@@ -4,69 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16046
+- **Files Skipped**: 16053
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:52:32
+- **Generated**: 2025-12-19 04:54:01
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 04:41:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:43:27 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:43:28 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:43:28 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:43:28 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:43:28 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 340, in build_app
-    Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:43:28 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 340, in build_app
-    Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:43:31 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:43:31 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:43:31 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:43:31 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 340, in build_app
-    Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:43:31 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 340, in build_app
     Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
@@ -101,6 +47,60 @@ Traceback (most recent call last):
                  ^^^^^^^
 TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
 2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:38 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:52:38 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:52:38 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:52:38 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:38 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:45 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:52:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:52:45 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:52:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
     cli_main(sys.argv[1:])
@@ -149,18 +149,18 @@ Tests:
 
 ```
  .agent/workflows/atlas.md   |     2 +-
- project_structure_final.txt | 39385 +-----------------------------------------
- 2 files changed, 39 insertions(+), 39348 deletions(-)
+ project_structure_final.txt | 39457 ------------------------------------------
+ 2 files changed, 1 insertion(+), 39458 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-bce4e99 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
+718a275 fix(tui): remove invalid dont_extend_height from containers to fix crash
+de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
 c0a8dbd fix(tui): strictly force single-line height for input area when empty
 2f7f8b2 fix(tui): glue input to bottom and enable upward expansion
 ee6c2be fix(tui): remove invalid dont_extend_height argument from Frame
-ca712b4 fix(tui): strict control over input field height at startup
 ```
 
 ---
@@ -12233,7 +12233,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (541.3 KB)
+### `project_structure_final.txt` (540.6 KB)
 
 ```text
 # System — Project Structure
@@ -12242,69 +12242,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16046
+- **Files Skipped**: 16053
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:52:32
+- **Generated**: 2025-12-19 04:54:01
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 04:41:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:43:27 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:43:28 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:43:28 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:43:28 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:43:28 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 340, in build_app
-    Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:43:28 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 340, in build_app
-    Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:43:31 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:43:31 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:43:31 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:43:31 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 340, in build_app
-    Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:43:31 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
-Traceback (most recent call last):
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
-    cli_main(sys.argv[1:])
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
-    run_tui()
-  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
-    app = build_app(
-          ^^^^^^^^^^
-  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 340, in build_app
     Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
@@ -12339,6 +12285,60 @@ Traceback (most recent call last):
                  ^^^^^^^
 TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
 2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:38 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:52:38 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:52:38 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:52:38 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:38 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:45 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:52:45 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:52:45 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:52:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:45 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
 Traceback (most recent call last):
   File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
     cli_main(sys.argv[1:])
@@ -12387,18 +12387,18 @@ Tests:
 
 ```
  .agent/workflows/atlas.md   |     2 +-
- project_structure_final.txt | 39385 +-----------------------------------------
- 2 files changed, 39 insertions(+), 39348 deletions(-)
+ project_structure_final.txt | 39457 ------------------------------------------
+ 2 files changed, 1 insertion(+), 39458 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-bce4e99 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
+718a275 fix(tui): remove invalid dont_extend_height from containers to fix crash
+de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
 c0a8dbd fix(tui): strictly force single-line height for input area when empty
 2f7f8b2 fix(tui): glue input to bottom and enable upward expansion
 ee6c2be fix(tui): remove invalid dont_extend_height argument from Frame
-ca712b4 fix(tui): strict control over input field height at startup
 ```
 
 ---
@@ -35105,7 +35105,7 @@ def build_keybindings(
     return kb, handle_menu_enter
 ```
 
-### `tui/layout.py` (14.0 KB)
+### `tui/layout.py` (13.9 KB)
 
 ```python
 from __future__ import annotations
@@ -35395,7 +35395,6 @@ def build_app(
             input_window,
         ],
         height=Dimension(min=1, preferred=1, max=10),
-        dont_extend_height=True,
     )
 
     def get_status_text() -> AnyFormattedText:
@@ -35451,11 +35450,7 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            HSplit(
-                [Frame(input_area, style="class:frame.border")],
-                height=Dimension(min=3, preferred=3, max=12),
-                dont_extend_height=True
-            ), # Dynamic area height, glued to bottom, expands upwards
+            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height, glued to bottom, expands upwards
             status_window,
         ]
     )
@@ -39454,4 +39449,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 16046
+- **Skipped**: 16053
