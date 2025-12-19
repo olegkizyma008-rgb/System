@@ -3,73 +3,16 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 125
-- **Files Skipped**: 16194
+- **Files Included**: 127
+- **Files Skipped**: 16200
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 07:08:10
+- **Generated**: 2025-12-19 07:21:56
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 6, "replan_count": 2}
-2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 3, "last_msg_preview": "[VOICE] Tetyana, Запустити фільм на сторінці..\n\n[Atlas Debug] Step: Запустити фільм на сторінці.. Next: tetyana"}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 6, "replan_count": 2, "plan_len": 3, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.click_mouse: {\n  \"tool\": \"click_mouse\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Mouse clicked at current position\\\"}\",\n  \"raw\": \""}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10247}
-2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The tool executed successfully, and the mouse was clicked at its current position.\n\n[VERIFIED]"}
-2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
-2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 7, "replan_count": 2}
-2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 2, "last_msg_preview": "[VOICE] Tetyana, Переключити відео у повноекранний режим..\n\n[Atlas Debug] Step: Переключити відео у повноекранний режим.. Next: tetyana"}
-2025-12-19 06:48:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 7, "replan_count": 2, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.hotkey: {\n  \"tool\": \"hotkey\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Pressed hotkey combination: f\\\"}\",\n  \"raw\": \"meta=None cont"}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10225}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The hotkey combination \"f\" was successfully pressed.\n\n[VERIFIED]"}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 8, "replan_count": 2}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 1, "last_msg_preview": "[VOICE] Tetyana, Перевірити, що фільм запущений і відображається на весь екран..\n\n[Atlas Debug] Step: Перевірити, що фільм запущений і відображається на весь екран.. Next: tetyana"}
-2025-12-19 06:48:15 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 06:48:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 2, "content_preview": ""}
-2025-12-19 06:54:53 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: ['--help']
-2025-12-19 07:00:35 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 07:00:35 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 07:00:35 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 07:00:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
-2025-12-19 07:00:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 07:00:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-19 07:00:59 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:119 | [Verifier] LLM JSON parsing/optimization error: '"type"'
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:120 | [Verifier] Raw response snippet: ...
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:123 | [Verifier] Plan fallback: 5 → 5 steps (added 0 verify steps)
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 5, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Відкрити Google і ввести запит 'сучасний фільм про штучний інтелект онлайн'..\n\n[Atlas Debug] Step: [VOICE] Відкрити Google і ввести запит 'сучасний фільм про штучний інтелект "}
-2025-12-19 07:01:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 5, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": false}\"\n\n[STEP_COMPLETED] Всі інструменти виконано"}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/context7.py", "core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9924}
-2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\". There is no CAPTCHA present.\n\n[VERIFIED]"}
-2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "uncertain", "uncertain_streak": 1}
-2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
-2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "uncertain", "step_count": null, "replan_count": 1}
 2025-12-19 07:01:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
 2025-12-19 07:01:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 1}
 2025-12-19 07:01:12 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:119 | [Verifier] LLM JSON parsing/optimization error: '"type"'
@@ -113,11 +56,74 @@
 2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
 2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "knowledge", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 2}
 2025-12-19 07:01:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "knowledge", "replan_count": 2}
+2025-12-19 07:18:15 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 07:18:17 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 07:18:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 07:18:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 07:18:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
+2025-12-19 07:18:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:18:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-19 07:18:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:114 | [Verifier] Plan optimized (Rigor: HIGH): 6 → 12 steps
+2025-12-19 07:18:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:18:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
+2025-12-19 07:18:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 12, "last_msg_preview": "[VOICE] Tetyana, Відкрити Google у браузері для пошуку сучасного фільму про штучний інтелект..\n\n[Atlas Debug] Step: Відкрити Google у браузері для пошуку сучасного фільму про штучний інтелект.. Next: "}
+2025-12-19 07:18:52 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 12, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": false}\"\n\n[STEP_COMPLETED] Всі інструменти виконано"}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10056}
+2025-12-19 07:18:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\" and no CAPTCHA detected.\n\n[VERIFIED]"}
+2025-12-19 07:18:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "uncertain", "uncertain_streak": 1}
+2025-12-19 07:18:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:18:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "uncertain", "step_count": null, "replan_count": 1}
+2025-12-19 07:18:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:18:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 1}
+2025-12-19 07:19:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:114 | [Verifier] Plan optimized (Rigor: HIGH): 2 → 4 steps
+2025-12-19 07:19:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:19:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 2, "replan_count": 2}
+2025-12-19 07:19:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 4, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Браузер успішно відкрив URL \"https://www.google.com/\" з заголовком \"Google\". CAPTCHA не виявлено..\n\n[Atlas Debug] Step: [VOICE] Браузер успішно відкрив URL \"https://www.google"}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 0, "content_preview": "Браузер успішно відкрив URL \"https://www.google.com/\" з заголовком \"Google\". CAPTCHA не виявлено."}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 2, "replan_count": 2, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "Браузер успішно відкрив URL \"https://www.google.com/\" з заголовком \"Google\". CAPTCHA не виявлено."}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9925}
+2025-12-19 07:19:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:19:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "uncertain", "uncertain_streak": 2}
+2025-12-19 07:19:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:19:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "uncertain", "step_count": null, "replan_count": 2}
+2025-12-19 07:19:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:19:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 2}
+2025-12-19 07:19:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:114 | [Verifier] Plan optimized (Rigor: HIGH): 2 → 4 steps
+2025-12-19 07:19:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:19:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 3, "replan_count": 3}
+2025-12-19 07:19:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 4, "last_msg_preview": "[VOICE] Tetyana, Зробити знімок екрана для перевірки стану браузера..\n\n[Atlas Debug] Step: Зробити знімок екрана для перевірки стану браузера.. Next: tetyana"}
+2025-12-19 07:19:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 3}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 3, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for capture_screen: {\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/snap_1766121564.jpg\",\n  \"mode\": \"initial\",\n  \"focus\": \""}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10127}
+2025-12-19 07:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] A screenshot has been successfully captured and saved at the specified path. The focus was on the browser application, and no differences were detected in the bounding box.\n\n[VERIFIED]"}
+2025-12-19 07:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 07:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 3}
+2025-12-19 07:19:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
 ```
 
 ---
 
 ## Last Response
+
+## My Last Response
+
+Fix: Bind external MCP tools to LLM for native calling
+
+---
 
 [Atlas] Final report
 
@@ -154,18 +160,20 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39277 +-----------------------------------------
- 1 file changed, 102 insertions(+), 39175 deletions(-)
+ core/mcp.py                 |    27 +
+ core/trinity.py             |     5 +-
+ project_structure_final.txt | 39345 +-----------------------------------------
+ 3 files changed, 88 insertions(+), 39289 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-9b8d9bb Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
+149c099 Update: Add latest response
+2747d12 Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
 3f65976 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 abed17a fix(browser): Refine CAPTCHA detection to avoid false positives on Google search results
 026cf98 docs: update Atlas workflow documentation
-e9ec6d9 docs: Restore Context7 as Explicit Context Manager in architecture
 ```
 
 ---
@@ -307,6 +315,7 @@ System/
 ├── debug_movie_task.out
 ├── debug_task.out
 ├── debug_task.py
+├── debug_tools.py
 ├── debug_trinity.py
 ├── generate_structure.py
 ├── i18n.py
@@ -326,7 +335,8 @@ System/
 ├── style.css
 ├── test_integration.txt
 ├── test_playwright_mcp.py
-└── test_vision.py
+├── test_vision.py
+└── verify_fix.py
 ```
 
 ---
@@ -564,9 +574,15 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (1.0 KB)
+### `.last_response.txt` (1.1 KB)
 
 ```text
+## My Last Response
+
+Fix: Bind external MCP tools to LLM for native calling
+
+---
+
 [Atlas] Final report
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
@@ -8017,7 +8033,7 @@ class Context7:
         return {"policy": "local_heuristic"}
 ```
 
-### `core/mcp.py` (25.6 KB)
+### `core/mcp.py` (26.6 KB)
 
 ```python
 import json
@@ -8475,6 +8491,33 @@ class MCPToolRegistry:
                 
         return "\n".join(lines)
 
+    def get_all_tool_definitions(self) -> List[Dict[str, str]]:
+        """Returns a list of tool definitions for LLM binding."""
+        defs = []
+        
+        # Local tools
+        for name, desc in self._descriptions.items():
+            defs.append({"name": name, "description": desc})
+            
+        # External tools
+        for p_name, provider in self._external_providers.items():
+            try:
+                # Ensure connected to get tools
+                if not provider._connected:
+                    provider.connect()
+                
+                for t_name, tool in provider._tools.items():
+                    prefixed_name = f"{p_name}.{t_name}"
+                    # Use schema if available, otherwise just description
+                    defs.append({
+                        "name": prefixed_name,
+                        "description": tool.description
+                    })
+            except Exception as e:
+                print(f"[MCP] Failed to get tools from provider {p_name}: {e}")
+                
+        return defs
+
     def execute(self, tool_name: str, args: Dict[str, Any]) -> str:
         """Executes a tool safely and returns a string result."""
         # Check external tools first
@@ -8668,7 +8711,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (87.2 KB)
+### `core/trinity.py` (87.0 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -9203,10 +9246,7 @@ class TrinityRuntime:
         prompt = get_tetyana_prompt(str(last_msg or "") + routing_hint, tools_desc=tools_list)
         
         # Bind tools to LLM for structured tool_calls output.
-        tool_defs = []
-        for name, func in self.registry._tools.items():
-            desc = self.registry._descriptions.get(name, "")
-            tool_defs.append({"name": name, "description": desc})
+        tool_defs = self.registry.get_all_tool_definitions()
         
         bound_llm = self.llm.bind_tools(tool_defs)
         
@@ -11950,6 +11990,40 @@ def main():
         print(f"❌ Error during execution: {e}")
         import traceback
         traceback.print_exc()
+
+if __name__ == "__main__":
+    main()
+```
+
+### `debug_tools.py` (0.8 KB)
+
+```python
+import sys
+import os
+import asyncio
+
+# Add current directory to path so we can import core
+sys.path.append(os.getcwd())
+
+from core.mcp import MCPToolRegistry
+
+def main():
+    print("Initializing MCPToolRegistry...")
+    registry = MCPToolRegistry()
+    
+    print("\nListing all registered tools:")
+    # list_tools() involves async connection in background threads/loops within the ExternalMCPProvider
+    # but the method itself is synchronous (waiting on futures).
+    tools_list = registry.list_tools()
+    print(tools_list)
+    
+    print("\n--- Check Complete ---")
+    
+    # Check for offline providers
+    if "[Provider Offline]" in tools_list:
+        print("WARNING: Some providers are offline!")
+    else:
+        print("SUCCESS: All providers seem online.")
 
 if __name__ == "__main__":
     main()
@@ -12520,7 +12594,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (572.6 KB)
+### `project_structure_final.txt` (574.4 KB)
 
 ```text
 # System — Project Structure
@@ -12528,73 +12602,16 @@ test content
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 125
-- **Files Skipped**: 16194
+- **Files Included**: 127
+- **Files Skipped**: 16200
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 07:08:10
+- **Generated**: 2025-12-19 07:21:56
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 6, "replan_count": 2}
-2025-12-19 06:48:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 3, "last_msg_preview": "[VOICE] Tetyana, Запустити фільм на сторінці..\n\n[Atlas Debug] Step: Запустити фільм на сторінці.. Next: tetyana"}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 6, "replan_count": 2, "plan_len": 3, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.click_mouse: {\n  \"tool\": \"click_mouse\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Mouse clicked at current position\\\"}\",\n  \"raw\": \""}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
-2025-12-19 06:48:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10247}
-2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The tool executed successfully, and the mouse was clicked at its current position.\n\n[VERIFIED]"}
-2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
-2025-12-19 06:48:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 7, "replan_count": 2}
-2025-12-19 06:48:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 2, "last_msg_preview": "[VOICE] Tetyana, Переключити відео у повноекранний режим..\n\n[Atlas Debug] Step: Переключити відео у повноекранний режим.. Next: tetyana"}
-2025-12-19 06:48:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "gui", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 7, "replan_count": 2, "plan_len": 2, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "gui", "last_msg_preview": "\n\nTool Results:\nResult for pyautogui.hotkey: {\n  \"tool\": \"hotkey\",\n  \"status\": \"success\",\n  \"output\": \"{\\\"status\\\":\\\"success\\\",\\\"message\\\":\\\"Pressed hotkey combination: f\\\"}\",\n  \"raw\": \"meta=None cont"}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
-2025-12-19 06:48:11 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10225}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The hotkey combination \"f\" was successfully pressed.\n\n[VERIFIED]"}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 2}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "tetyana", "last_step_status": null, "step_count": 8, "replan_count": 2}
-2025-12-19 06:48:13 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "gui", "gui_mode": "auto", "gui_fallback_attempted": true, "plan_len": 1, "last_msg_preview": "[VOICE] Tetyana, Перевірити, що фільм запущений і відображається на весь екран..\n\n[Atlas Debug] Step: Перевірити, що фільм запущений і відображається на весь екран.. Next: tetyana"}
-2025-12-19 06:48:15 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 06:48:15 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 2, "content_preview": ""}
-2025-12-19 06:54:53 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: ['--help']
-2025-12-19 07:00:35 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 07:00:35 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 07:00:35 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 07:00:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
-2025-12-19 07:00:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 07:00:53 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
-2025-12-19 07:00:59 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:119 | [Verifier] LLM JSON parsing/optimization error: '"type"'
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:120 | [Verifier] Raw response snippet: ...
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:123 | [Verifier] Plan fallback: 5 → 5 steps (added 0 verify steps)
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
-2025-12-19 07:00:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 5, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Відкрити Google і ввести запит 'сучасний фільм про штучний інтелект онлайн'..\n\n[Atlas Debug] Step: [VOICE] Відкрити Google і ввести запит 'сучасний фільм про штучний інтелект "}
-2025-12-19 07:01:01 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 5, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": false}\"\n\n[STEP_COMPLETED] Всі інструменти виконано"}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["core/context7.py", "core/mcp.py", "core/trinity.py", "core/verification.py"], "skip": true}
-2025-12-19 07:01:03 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9924}
-2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\". There is no CAPTCHA present.\n\n[VERIFIED]"}
-2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "uncertain", "uncertain_streak": 1}
-2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
-2025-12-19 07:01:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "uncertain", "step_count": null, "replan_count": 1}
 2025-12-19 07:01:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
 2025-12-19 07:01:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 1}
 2025-12-19 07:01:12 | WARNING  | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:119 | [Verifier] LLM JSON parsing/optimization error: '"type"'
@@ -12638,11 +12655,74 @@ test content
 2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
 2025-12-19 07:01:25 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "knowledge", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 2}
 2025-12-19 07:01:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "knowledge", "replan_count": 2}
+2025-12-19 07:18:15 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 07:18:17 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 07:18:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 07:18:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 07:18:34 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_start", "task_type": "GENERAL", "requires_windsurf": false, "gui_mode": "auto", "execution_mode": "native", "recursion_limit": 500, "input_preview": "Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран."}
+2025-12-19 07:18:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:18:37 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 0}
+2025-12-19 07:18:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:114 | [Verifier] Plan optimized (Rigor: HIGH): 6 → 12 steps
+2025-12-19 07:18:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:18:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 1, "replan_count": 1}
+2025-12-19 07:18:50 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 12, "last_msg_preview": "[VOICE] Tetyana, Відкрити Google у браузері для пошуку сучасного фільму про штучний інтелект..\n\n[Atlas Debug] Step: Відкрити Google у браузері для пошуку сучасного фільму про штучний інтелект.. Next: "}
+2025-12-19 07:18:52 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 1}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 1, "replan_count": 1, "plan_len": 12, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for browser_open_url: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"https://www.google.com/\\\", \\\"title\\\": \\\"Google\\\", \\\"has_captcha\\\": false}\"\n\n[STEP_COMPLETED] Всі інструменти виконано"}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-19 07:18:54 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10056}
+2025-12-19 07:18:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] The browser successfully opened the URL \"https://www.google.com/\" with the title \"Google\" and no CAPTCHA detected.\n\n[VERIFIED]"}
+2025-12-19 07:18:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "uncertain", "uncertain_streak": 1}
+2025-12-19 07:18:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:18:56 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "uncertain", "step_count": null, "replan_count": 1}
+2025-12-19 07:18:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:18:59 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 1}
+2025-12-19 07:19:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:114 | [Verifier] Plan optimized (Rigor: HIGH): 2 → 4 steps
+2025-12-19 07:19:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:19:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 2, "replan_count": 2}
+2025-12-19 07:19:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 4, "last_msg_preview": "[VOICE] Tetyana, [VOICE] Браузер успішно відкрив URL \"https://www.google.com/\" з заголовком \"Google\". CAPTCHA не виявлено..\n\n[Atlas Debug] Step: [VOICE] Браузер успішно відкрив URL \"https://www.google"}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 0, "content_preview": "Браузер успішно відкрив URL \"https://www.google.com/\" з заголовком \"Google\". CAPTCHA не виявлено."}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 2}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 2, "replan_count": 2, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "Браузер успішно відкрив URL \"https://www.google.com/\" з заголовком \"Google\". CAPTCHA не виявлено."}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-19 07:19:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9925}
+2025-12-19 07:19:09 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:19:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "uncertain", "uncertain_streak": 2}
+2025-12-19 07:19:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:19:10 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "uncertain", "step_count": null, "replan_count": 2}
+2025-12-19 07:19:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
+2025-12-19 07:19:14 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "meta_planner", "current_agent": "atlas", "last_step_status": null, "step_count": null, "replan_count": 2}
+2025-12-19 07:19:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:114 | [Verifier] Plan optimized (Rigor: HIGH): 2 → 4 steps
+2025-12-19 07:19:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "tetyana", "next": "tetyana"}
+2025-12-19 07:19:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "tetyana", "last_step_status": null, "step_count": 3, "replan_count": 3}
+2025-12-19 07:19:19 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_enter", "task_type": "GENERAL", "requires_windsurf": false, "dev_edit_mode": "cli", "execution_mode": "native", "gui_mode": "auto", "gui_fallback_attempted": false, "plan_len": 4, "last_msg_preview": "[VOICE] Tetyana, Зробити знімок екрана для перевірки стану браузера..\n\n[Atlas Debug] Step: Зробити знімок екрана для перевірки стану браузера.. Next: tetyana"}
+2025-12-19 07:19:21 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_llm", "tool_calls": 1, "content_preview": ""}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "tetyana_exit", "next_agent": "grisha", "last_step_status": "success", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli"}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "tetyana", "current_agent": "grisha", "last_step_status": "success", "step_count": null, "replan_count": 3}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 3, "plan_len": 4, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "\n\nTool Results:\nResult for capture_screen: {\n  \"tool\": \"take_screenshot\",\n  \"status\": \"success\",\n  \"path\": \"/Users/dev/.antigravity/vision_cache/snap_1766121564.jpg\",\n  \"mode\": \"initial\",\n  \"focus\": \""}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": false, "changed_files": [], "skip": true}
+2025-12-19 07:19:24 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 10127}
+2025-12-19 07:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] A screenshot has been successfully captured and saved at the specified path. The focus was on the browser application, and no differences were detected in the bounding box.\n\n[VERIFIED]"}
+2025-12-19 07:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "meta_planner", "last_step_status": "success", "uncertain_streak": 0}
+2025-12-19 07:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "meta_planner", "next": "meta_planner"}
+2025-12-19 07:19:26 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "meta_planner", "last_step_status": "success", "step_count": null, "replan_count": 3}
+2025-12-19 07:19:27 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
 ```
 
 ---
 
 ## Last Response
+
+## My Last Response
+
+Fix: Bind external MCP tools to LLM for native calling
+
+---
 
 [Atlas] Final report
 
@@ -12679,18 +12759,20 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39277 +-----------------------------------------
- 1 file changed, 102 insertions(+), 39175 deletions(-)
+ core/mcp.py                 |    27 +
+ core/trinity.py             |     5 +-
+ project_structure_final.txt | 39345 +-----------------------------------------
+ 3 files changed, 88 insertions(+), 39289 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-9b8d9bb Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
+149c099 Update: Add latest response
+2747d12 Fix KeyError in Verifier radiation and register missing analyze_screen tool alias
 3f65976 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
 abed17a fix(browser): Refine CAPTCHA detection to avoid false positives on Google search results
 026cf98 docs: update Atlas workflow documentation
-e9ec6d9 docs: Restore Context7 as Explicit Context Manager in architecture
 ```
 
 ---
@@ -12832,6 +12914,7 @@ System/
 ├── debug_movie_task.out
 ├── debug_task.out
 ├── debug_task.py
+├── debug_tools.py
 ├── debug_trinity.py
 ├── generate_structure.py
 ├── i18n.py
@@ -12851,7 +12934,8 @@ System/
 ├── style.css
 ├── test_integration.txt
 ├── test_playwright_mcp.py
-└── test_vision.py
+├── test_vision.py
+└── verify_fix.py
 ```
 
 ---
@@ -13089,9 +13173,15 @@ Windsurf*.app/
 kinotavr.md
 ```
 
-### `.last_response.txt` (1.0 KB)
+### `.last_response.txt` (1.1 KB)
 
 ```text
+## My Last Response
+
+Fix: Bind external MCP tools to LLM for native calling
+
+---
+
 [Atlas] Final report
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
@@ -20542,7 +20632,7 @@ class Context7:
         return {"policy": "local_heuristic"}
 ```
 
-### `core/mcp.py` (25.6 KB)
+### `core/mcp.py` (26.6 KB)
 
 ```python
 import json
@@ -21000,6 +21090,33 @@ class MCPToolRegistry:
                 
         return "\n".join(lines)
 
+    def get_all_tool_definitions(self) -> List[Dict[str, str]]:
+        """Returns a list of tool definitions for LLM binding."""
+        defs = []
+        
+        # Local tools
+        for name, desc in self._descriptions.items():
+            defs.append({"name": name, "description": desc})
+            
+        # External tools
+        for p_name, provider in self._external_providers.items():
+            try:
+                # Ensure connected to get tools
+                if not provider._connected:
+                    provider.connect()
+                
+                for t_name, tool in provider._tools.items():
+                    prefixed_name = f"{p_name}.{t_name}"
+                    # Use schema if available, otherwise just description
+                    defs.append({
+                        "name": prefixed_name,
+                        "description": tool.description
+                    })
+            except Exception as e:
+                print(f"[MCP] Failed to get tools from provider {p_name}: {e}")
+                
+        return defs
+
     def execute(self, tool_name: str, args: Dict[str, Any]) -> str:
         """Executes a tool safely and returns a string result."""
         # Check external tools first
@@ -21193,7 +21310,7 @@ def query_memory_tool(category: str, query: str) -> Dict[str, Any]:
     return {"status": "success", "results": results}
 ```
 
-### `core/trinity.py` (87.2 KB)
+### `core/trinity.py` (87.0 KB)
 
 ```python
 from typing import Annotated, TypedDict, Literal, List, Dict, Any, Optional, Callable
@@ -21728,10 +21845,7 @@ class TrinityRuntime:
         prompt = get_tetyana_prompt(str(last_msg or "") + routing_hint, tools_desc=tools_list)
         
         # Bind tools to LLM for structured tool_calls output.
-        tool_defs = []
-        for name, func in self.registry._tools.items():
-            desc = self.registry._descriptions.get(name, "")
-            tool_defs.append({"name": name, "description": desc})
+        tool_defs = self.registry.get_all_tool_definitions()
         
         bound_llm = self.llm.bind_tools(tool_defs)
         
@@ -24475,6 +24589,40 @@ def main():
         print(f"❌ Error during execution: {e}")
         import traceback
         traceback.print_exc()
+
+if __name__ == "__main__":
+    main()
+```
+
+### `debug_tools.py` (0.8 KB)
+
+```python
+import sys
+import os
+import asyncio
+
+# Add current directory to path so we can import core
+sys.path.append(os.getcwd())
+
+from core.mcp import MCPToolRegistry
+
+def main():
+    print("Initializing MCPToolRegistry...")
+    registry = MCPToolRegistry()
+    
+    print("\nListing all registered tools:")
+    # list_tools() involves async connection in background threads/loops within the ExternalMCPProvider
+    # but the method itself is synchronous (waiting on futures).
+    tools_list = registry.list_tools()
+    print(tools_list)
+    
+    print("\n--- Check Complete ---")
+    
+    # Check for offline providers
+    if "[Provider Offline]" in tools_list:
+        print("WARNING: Some providers are offline!")
+    else:
+        print("SUCCESS: All providers seem online.")
 
 if __name__ == "__main__":
     main()
@@ -39332,9 +39480,49 @@ _tool_ui_theme_status = tool_ui_theme_status
 _tool_ui_theme_set = tool_ui_theme_set
 ```
 
+### `verify_fix.py` (1.0 KB)
+
+```python
+import sys
+import os
+import asyncio
+
+# Add current directory to path so we can import core
+sys.path.append(os.getcwd())
+
+from core.mcp import MCPToolRegistry
+
+def main():
+    print("Initializing MCPToolRegistry...")
+    registry = MCPToolRegistry()
+    
+    print("\nGetting ALL tool definitions (Local + External)...")
+    try:
+        defs = registry.get_all_tool_definitions()
+        print(f"Total tools found: {len(defs)}")
+        
+        external_found = False
+        for d in defs:
+            name = d['name']
+            if name.startswith("playwright.") or name.startswith("pyautogui."):
+                print(f"✅ Found external tool: {name}")
+                external_found = True
+        
+        if external_found:
+            print("\nSUCCESS: External tools are now correctly exposed for binding!")
+        else:
+            print("\nFAILURE: No external tools found in definitions.")
+            
+    except Exception as e:
+        print(f"\nERROR: {e}")
+
+if __name__ == "__main__":
+    main()
+```
+
 ---
 
 ## Summary
 
-- **Total Files**: 125
-- **Skipped**: 16194
+- **Total Files**: 127
+- **Skipped**: 16200
