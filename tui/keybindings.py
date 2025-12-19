@@ -304,12 +304,18 @@ def build_keybindings(
             max_idx = 0
         elif state.menu_level == MenuLevel.LLM_SETTINGS:
             max_idx = max(0, len(get_llm_menu_items()) - 1)
+        elif state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
+            max_idx = max(0, len(get_llm_sub_menu_items(state.menu_level)) - 1)
         elif state.menu_level == MenuLevel.AGENT_SETTINGS:
             max_idx = max(0, len(get_agent_menu_items()) - 1)
         elif state.menu_level == MenuLevel.APPEARANCE:
             max_idx = max(0, len(THEME_NAMES) - 1)
         elif state.menu_level == MenuLevel.LANGUAGE:
             max_idx = 1
+        elif state.menu_level == MenuLevel.LAYOUT:
+            max_idx = 0
+        elif state.menu_level == MenuLevel.DEV_SETTINGS:
+            max_idx = 0
 
         state.menu_index = min(max_idx, state.menu_index + 1)
 
