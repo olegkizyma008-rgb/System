@@ -9,11 +9,16 @@ Last message:
 [VOICE] План порожній.
 
 Changed files:
+- core/self_healing.py
 - core/trinity.py
+- core/vibe_assistant.py
+- tests/test_doctor_vibe_auto_repair.py
 
 Diff stat:
-core/trinity.py | 104 +++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 100 insertions(+), 4 deletions(-)
+core/self_healing.py   | 256 +++++++++++++++++++++++++++++++++++++++++++++++++
+ core/trinity.py        |  59 +++++++++++-
+ core/vibe_assistant.py | 152 ++++++++++++++++++++++++++++-
+ 3 files changed, 463 insertions(+), 4 deletions(-)
 
 Verification:
 - status: unknown (no explicit signal)

@@ -900,3 +900,259 @@ Output your repair plan as JSON with this structure:
         """
         self._stream("Triggering immediate error scan", "info")
         return self.detect_errors()
+    
+    # =========================================================================
+    # QUICK REPAIR (Doctor Vibe Integration)
+    # =========================================================================
+    
+    def quick_repair(
+        self,
+        error_type: str,
+        file_path: str,
+        message: str,
+        line_number: Optional[int] = None
+    ) -> bool:
+        """
+        Attempt a quick repair for a specific error.
+        
+        This is a streamlined repair path for Doctor Vibe integration.
+        It attempts common fixes without full LLM-based planning.
+        
+        Args:
+            error_type: Type of error (e.g., "syntax_error", "import_error")
+            file_path: Path to the file with the error
+            message: Error message
+            line_number: Optional line number of the error
+            
+        Returns:
+            True if repair was successful
+        """
+        self._stream(f"Quick repair attempt: {error_type} in {file_path}")
+        
+        # Try common quick fixes based on error type
+        try:
+            if error_type == "import_error" or error_type == "missing_module":
+                return self._quick_fix_import(file_path, message)
+            
+            if error_type == "indentation_error":
+                return self._quick_fix_indentation(file_path, line_number)
+            
+            if error_type == "syntax_error":
+                return self._quick_fix_syntax(file_path, line_number, message)
+            
+            if error_type == "name_error" or "is not defined" in message.lower():
+                return self._quick_fix_undefined_name(file_path, line_number, message)
+            
+            # For other errors, try full repair pipeline
+            issue = CodeIssue(
+                issue_type=IssueType.RUNTIME_ERROR,
+                severity=IssueSeverity.MEDIUM,
+                file_path=file_path,
+                line_number=line_number,
+                message=message
+            )
+            plan = self.plan_repair(issue)
+            if plan:
+                return self.execute_repair(plan)
+            
+            return False
+            
+        except Exception as e:
+            self._stream(f"Quick repair failed: {e}", "error")
+            return False
+    
+    def quick_repair_from_message(self, error_message: str) -> bool:
+        """
+        Attempt quick repair based on an error message string.
+        
+        This method parses the error message to extract file/line info
+        and attempts appropriate fixes.
+        
+        Args:
+            error_message: Full error message string
+            
+        Returns:
+            True if repair was successful
+        """
+        self._stream(f"Parsing error message for quick repair: {error_message[:100]}...")
+        
+        try:
+            # Extract file and line from common Python error formats
+            file_match = re.search(r'File "([^"]+)", line (\d+)', error_message)
+            file_path = file_match.group(1) if file_match else None
+            line_number = int(file_match.group(2)) if file_match else None
+            
+            # Detect error type
+            error_type = "unknown"
+            if "SyntaxError" in error_message:
+                error_type = "syntax_error"
+            elif "IndentationError" in error_message:
+                error_type = "indentation_error"
+            elif "ImportError" in error_message or "ModuleNotFoundError" in error_message:
+                error_type = "import_error"
+            elif "NameError" in error_message or "is not defined" in error_message:
+                error_type = "name_error"
+            elif "TypeError" in error_message:
+                error_type = "type_error"
+            elif "AttributeError" in error_message:
+                error_type = "attribute_error"
+            
+            if file_path and error_type != "unknown":
+                return self.quick_repair(error_type, file_path, error_message, line_number)
+            
+            return False
+            
+        except Exception as e:
+            self._stream(f"Error parsing message for quick repair: {e}", "error")
+            return False
+    
+    def _quick_fix_import(self, file_path: str, message: str) -> bool:
+        """Fix missing import by adding it to the file."""
+        # Extract module name from error
+        match = re.search(r"No module named '([^']+)'", message)
+        if not match:
+            match = re.search(r"cannot import name '([^']+)'", message)
+        
+        if not match:
+            return False
+        
+        module = match.group(1)
+        self._stream(f"Attempting to fix import for: {module}")
+        
+        # Check if this is a pip-installable package
+        common_packages = {
+            "requests": "requests",
+            "numpy": "numpy",
+            "pandas": "pandas",
+            "flask": "flask",
+            "django": "django",
+        }
+        
+        if module.lower() in common_packages:
+            try:
+                subprocess.run(
+                    ["pip", "install", common_packages[module.lower()]],
+                    capture_output=True,
+                    timeout=60
+                )
+                self._stream(f"Installed missing package: {module}")
+                return True
+            except Exception:
+                pass
+        
+        return False
+    
+    def _quick_fix_indentation(self, file_path: str, line_number: Optional[int]) -> bool:
+        """Fix indentation error by normalizing whitespace."""
+        if not line_number:
+            return False
+        
+        full_path = os.path.join(self.project_root, file_path) if not os.path.isabs(file_path) else file_path
+        
+        try:
+            with open(full_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            
+            if line_number > len(lines):
+                return False
+            
+            # Get the problematic line
+            idx = line_number - 1
+            line = lines[idx]
+            
+            # Convert tabs to spaces
+            if "\t" in line:
+                lines[idx] = line.expandtabs(4)
+                with open(full_path, "w", encoding="utf-8") as f:
+                    f.writelines(lines)
+                self._stream(f"Fixed tabs in {file_path}:{line_number}")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            self._stream(f"Indentation fix failed: {e}", "error")
+            return False
+    
+    def _quick_fix_syntax(self, file_path: str, line_number: Optional[int], message: str) -> bool:
+        """Attempt common syntax fixes."""
+        # Common syntax issues
+        if "expected ':'" in message.lower():
+            return self._add_colon(file_path, line_number)
+        elif "unmatched" in message.lower() or "unexpected" in message.lower():
+            # These usually require manual fixes
+            return False
+        return False
+    
+    def _quick_fix_undefined_name(self, file_path: str, line_number: Optional[int], message: str) -> bool:
+        """Fix undefined name errors."""
+        # Extract the undefined name
+        match = re.search(r"name '([^']+)' is not defined", message)
+        if not match:
+            return False
+        
+        undefined_name = match.group(1)
+        self._stream(f"Attempting to fix undefined name: {undefined_name}")
+        
+        # Common fixes
+        if undefined_name == "context":
+            # This is likely a variable reference error - suggest 'messages' instead
+            return self._replace_variable(file_path, line_number, "context", "state.get(\"messages\", [])")
+        
+        return False
+    
+    def _add_colon(self, file_path: str, line_number: Optional[int]) -> bool:
+        """Add missing colon at end of line."""
+        if not line_number:
+            return False
+        
+        full_path = os.path.join(self.project_root, file_path) if not os.path.isabs(file_path) else file_path
+        
+        try:
+            with open(full_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            
+            idx = line_number - 1
+            if idx >= len(lines):
+                return False
+            
+            line = lines[idx].rstrip()
+            if not line.endswith(":"):
+                lines[idx] = line + ":\n"
+                with open(full_path, "w", encoding="utf-8") as f:
+                    f.writelines(lines)
+                self._stream(f"Added missing colon at {file_path}:{line_number}")
+                return True
+            
+            return False
+            
+        except Exception:
+            return False
+    
+    def _replace_variable(self, file_path: str, line_number: Optional[int], old_name: str, new_name: str) -> bool:
+        """Replace a variable name in a specific line."""
+        if not line_number:
+            return False
+        
+        full_path = os.path.join(self.project_root, file_path) if not os.path.isabs(file_path) else file_path
+        
+        try:
+            with open(full_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            
+            idx = line_number - 1
+            if idx >= len(lines):
+                return False
+            
+            line = lines[idx]
+            if old_name in line:
+                lines[idx] = line.replace(old_name, new_name)
+                with open(full_path, "w", encoding="utf-8") as f:
+                    f.writelines(lines)
+                self._stream(f"Replaced '{old_name}' with '{new_name}' at {file_path}:{line_number}")
+                return True
+            
+            return False
+            
+        except Exception:
+            return False

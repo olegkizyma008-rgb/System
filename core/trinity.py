@@ -153,11 +153,25 @@ class TrinityRuntime:
             # Start background monitoring
             self.self_healing_thread = self.self_healer.start_background_monitoring(interval=60.0)
             
+            # Connect Vibe Assistant to Self-Healer for auto-repair
+            if hasattr(self, 'vibe_assistant'):
+                self.vibe_assistant.set_self_healer(
+                    self.self_healer,
+                    on_repair_complete=self._on_auto_repair_complete
+                )
+            
             if self.verbose:
                 self.logger.info("Self-healing module initialized and monitoring started")
         except Exception as e:
             self.logger.error(f"Failed to initialize self-healing: {e}")
             self.self_healing_enabled = False
+    
+    def _on_auto_repair_complete(self, result: dict) -> None:
+        """Callback when Doctor Vibe auto-repair completes."""
+        if result.get("success"):
+            self.logger.info(f"Auto-repair successful: {result.get('repairs_successful', 0)} fixes applied")
+        else:
+            self.logger.warning(f"Auto-repair failed: {result.get('message', 'unknown')}")
     
     def _extract_json_object(self, text: str) -> Any:
         """Helper to extract any JSON object or list from a string."""
@@ -1641,16 +1655,55 @@ class TrinityRuntime:
         
         # Check for Vibe CLI Assistant pause state
         if state.get("vibe_assistant_pause"):
-            # If we're paused, stay in the current agent but don't proceed
-            # This allows the system to wait for human intervention
+            pause_info = state["vibe_assistant_pause"]
+            
+            # Try auto-repair if enabled
+            if self.vibe_assistant.should_attempt_auto_repair(pause_info):
+                if self.verbose:
+                    self.logger.info("🔧 Doctor Vibe: Attempting auto-repair...")
+                
+                repair_result = self.vibe_assistant.attempt_auto_repair(pause_info)
+                
+                if repair_result.get("success"):
+                    # Auto-repair succeeded - clear pause and continue
+                    if self.verbose:
+                        self.logger.info(f"✅ Doctor Vibe: Auto-repair successful! Resuming execution.")
+                    
+                    # Clear pause state in vibe_assistant (already done by attempt_auto_repair)
+                    # Update state to remove pause
+                    state["vibe_assistant_pause"] = None
+                    state["vibe_assistant_context"] = f"AUTO-REPAIRED: {repair_result.get('message', 'Fixed')}"
+                    
+                    # Reset failure counters to give system fresh start
+                    state["current_step_fail_count"] = 0
+                    state["uncertain_streak"] = 0
+                    
+                    # Return to meta_planner for fresh planning after repair
+                    return "meta_planner"
+                else:
+                    # Auto-repair failed - keep paused, wait for human
+                    if self.verbose:
+                        self.logger.warning(f"⚠️ Doctor Vibe: Auto-repair failed. Waiting for human intervention.")
+                    return current
+            
+            # No auto-repair - stay paused
             if self.verbose:
-                pause_info = state["vibe_assistant_pause"]
                 self.logger.info(f"Vibe CLI Assistant PAUSE: {pause_info.get('message', 'No reason provided')}")
             return current
         
         # Check if Vibe CLI Assistant intervention is needed
         pause_context = self._check_for_vibe_assistant_intervention(state)
         if pause_context:
+            # Check if we should try auto-repair first
+            if pause_context.get("auto_resume_available", False) or pause_context.get("background_mode", False):
+                if self.vibe_assistant.should_attempt_auto_repair(pause_context):
+                    repair_result = self.vibe_assistant.attempt_auto_repair(pause_context)
+                    if repair_result.get("success"):
+                        # Fixed before even creating pause - continue normally
+                        if self.verbose:
+                            self.logger.info("🔧 Doctor Vibe: Pre-emptive repair successful!")
+                        return current  # Continue without pause
+            
             # Create pause state and return to current agent
             new_state = self._create_vibe_assistant_pause_state(state, 
                                                                pause_context["reason"], 
