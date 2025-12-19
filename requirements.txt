@@ -17,4 +17,5 @@ pyobjc-framework-Quartz>=10.0
 mcp>=0.1.0
 # MCP Servers
 mcp-pyautogui-server>=0.1.2
+pyautogui>=0.9.50
 # Note: playwright-mcp is a Node.js project, managed via npx @playwright/mcp@latest

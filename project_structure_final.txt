@@ -4,9 +4,9 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 126
-- **Files Skipped**: 16105
+- **Files Skipped**: 16111
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:00:41
+- **Generated**: 2025-12-19 06:03:09
 
 ---
 
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39112 ------------------------------------------
- 1 file changed, 39112 deletions(-)
+ project_structure_final.txt | 39122 ------------------------------------------
+ 1 file changed, 39122 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-5020270 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
+cf52abf chore(setup): Ensure dependencies (pyautogui) and verify setup.sh
+fc453e6 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
 afc6358 docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
 2230fa3 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
 4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
-1521780 Fix TUI input frame height to tightly wrap content
 ```
 
 ---
@@ -12296,9 +12296,9 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 126
-- **Files Skipped**: 16105
+- **Files Skipped**: 16111
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 06:00:41
+- **Generated**: 2025-12-19 06:03:09
 
 ---
 
@@ -12440,18 +12440,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39112 ------------------------------------------
- 1 file changed, 39112 deletions(-)
+ project_structure_final.txt | 39122 ------------------------------------------
+ 1 file changed, 39122 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-5020270 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
+cf52abf chore(setup): Ensure dependencies (pyautogui) and verify setup.sh
+fc453e6 docs(atlas): Explicitly list external MCP servers (PyAutoGUI, Playwright)
 afc6358 docs(atlas): Update tools section to reflect new architecture (Automation, Cleanup, Recorder)
 2230fa3 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
 4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
-1521780 Fix TUI input frame height to tightly wrap content
 ```
 
 ---
@@ -25035,6 +25035,7 @@ pyobjc-framework-Quartz>=10.0
 mcp>=0.1.0
 # MCP Servers
 mcp-pyautogui-server>=0.1.2
+pyautogui>=0.9.50
 # Note: playwright-mcp is a Node.js project, managed via npx @playwright/mcp@latest
 ```
 
@@ -39119,4 +39120,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 126
-- **Skipped**: 16105
+- **Skipped**: 16111
