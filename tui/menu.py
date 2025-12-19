@@ -114,7 +114,8 @@ def build_menu(
 
         if state.menu_level == MenuLevel.MAIN:
             result.append(("class:menu.title", f" {tr('menu.main.title', state.ui_lang)}\n\n"))
-            for i, (name, _) in enumerate(MAIN_MENU_ITEMS):
+            for i, item in enumerate(MAIN_MENU_ITEMS):
+                name, _ = item[0], item[1]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -126,7 +127,8 @@ def build_menu(
             result.append(("class:menu.title", f" {tr('menu.custom_tasks.title', state.ui_lang)}\n\n"))
             items = get_custom_tasks_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, _) in enumerate(items):
+            for i, itm in enumerate(items):
+                label = itm[0]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -138,7 +140,8 @@ def build_menu(
             result.append(("class:menu.title", f" {tr('menu.monitoring.title', state.ui_lang)}\n\n"))
             items = get_monitoring_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, _) in enumerate(items):
+            for i, itm in enumerate(items):
+                label = itm[0]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 result.append((style_cls, f"{prefix}{tr(label, state.ui_lang)}\n"))
@@ -168,7 +171,8 @@ def build_menu(
                 result.append(("class:menu.item", " (no items)\n"))
                 return result
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, _) in enumerate(items):
+            for i, itm in enumerate(items):
+                label = itm[0]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -181,7 +185,8 @@ def build_menu(
             result.append(("class:menu.title", f" {tr('menu.llm.title', state.ui_lang)}: {section}\n\n"))
             items = get_llm_sub_menu_items(state.menu_level)
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, val) in enumerate(items):
+            for i, item in enumerate(items):
+                label = item[0]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -197,7 +202,8 @@ def build_menu(
                 result.append(("class:menu.item", " (no items)\n"))
                 return result
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, _) in enumerate(items):
+            for i, itm in enumerate(items):
+                label = itm[0]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -227,7 +233,8 @@ def build_menu(
                 (f"Chat: {state.chat_lang} - {lang_name(state.chat_lang)}", "chat")
             ]
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, _k) in enumerate(items):
+            for i, item in enumerate(items):
+                label = item[0]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -251,7 +258,8 @@ def build_menu(
             result.append(("class:menu.title", f" {tr('menu.automation_permissions.title', state.ui_lang)}\n\n"))
             items = get_automation_permissions_menu_items()
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, key) in enumerate(items):
+            for i, itm in enumerate(items):
+                label, key = itm[0], itm[1]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -274,7 +282,8 @@ def build_menu(
                 (tr("menu.layout.left_panel_ratio", state.ui_lang), "ratio"),
             ]
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            for i, (label, key) in enumerate(items):
+            for i, itm in enumerate(items):
+                label, key = itm[0], itm[1]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -354,7 +363,8 @@ def build_menu(
             add_back_btn(result)
             result.append(("class:menu.title", " RUN CLEANUP (Enter: Run, D: Dry-run, Q/Esc: Back)\n\n"))
             editors = get_editors_list()
-            for i, (key, label) in enumerate(editors):
+            for i, itm in enumerate(editors):
+                key, label = itm[0], itm[1]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -365,7 +375,8 @@ def build_menu(
             add_back_btn(result)
             result.append(("class:menu.title", " MODULES: CHOOSE EDITOR (Enter: Select, Q/Esc: Back)\n\n"))
             editors = get_editors_list()
-            for i, (key, label) in enumerate(editors):
+            for i, itm in enumerate(editors):
+                key, label = itm[0], itm[1]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
@@ -403,7 +414,8 @@ def build_menu(
             add_back_btn(result)
             result.append(("class:menu.title", " INSTALL (Enter: Open installer, Q/Esc: Back)\n\n"))
             editors = get_editors_list()
-            for i, (key, label) in enumerate(editors):
+            for i, itm in enumerate(editors):
+                key, label = itm[0], itm[1]
                 prefix = " > " if i == state.menu_index else "   "
                 style_cls = "class:menu.selected" if i == state.menu_index else "class:menu.item"
                 handler = make_click(i)
