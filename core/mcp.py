@@ -303,6 +303,40 @@ class MCPToolRegistry:
         self.register_tool("get_clipboard", get_clipboard, "Read clipboard content. Args: none")
         self.register_tool("set_clipboard", set_clipboard, "Write to clipboard. Args: text (str)")
 
+        # Cleanup & Privacy (System Extensions)
+        from system_ai.tools.cleanup import (
+            system_cleanup_stealth,
+            system_cleanup_windsurf,
+            system_spoof_hardware,
+            system_check_identifiers
+        )
+        self.register_tool("system_cleanup_stealth", system_cleanup_stealth, "Run stealth cleanup (logs, caches). Args: allow=True")
+        self.register_tool("system_cleanup_windsurf", system_cleanup_windsurf, "Run deep Windsurf cleanup. Args: allow=True")
+        self.register_tool("system_spoof_hardware", system_spoof_hardware, "Spoof MAC/Hostname. Args: allow=True")
+        self.register_tool("system_check_identifiers", system_check_identifiers, "Check system identifiers. Args: none")
+
+        # Recorder Control
+        def _recorder_action(action: str) -> Any:
+            svc = _get_recorder_service()
+            if not svc:
+                return {"status": "error", "error": "Recorder service not available"}
+            
+            if action == "start":
+                success, msg = svc.start()
+                return {"status": "success" if success else "error", "message": msg}
+            elif action == "stop":
+                success, msg, path = svc.stop()
+                return {"status": "success" if success else "error", "message": msg, "path": path}
+            elif action == "status":
+                st = svc.get_status()
+                return {"status": "success", "running": st.running, "session_id": st.session_id, "events": st.events_count}
+            return {"status": "error", "error": "Unknown action"}
+
+        self.register_tool("recorder_start", lambda: _recorder_action("start"), "Start screen/event recording. Args: none")
+        self.register_tool("recorder_stop", lambda: _recorder_action("stop"), "Stop recording and save. Args: none")
+        self.register_tool("recorder_status", lambda: _recorder_action("status"), "Get recorder status. Args: none")
+
+
         # Browser Tools (Local Playwright)
         self.register_tool("browser_open_url", browser_open_url, "Open URL in local browser. Args: url (str), headless (bool)")
         self.register_tool("browser_navigate", browser_navigate, "Navigate to URL. Args: url (str), headless (bool)")

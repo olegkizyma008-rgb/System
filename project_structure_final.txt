@@ -3,10 +3,10 @@
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 127
-- **Files Skipped**: 16074
+- **Files Included**: 128
+- **Files Skipped**: 16084
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 05:47:20
+- **Generated**: 2025-12-19 05:50:01
 
 ---
 
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39455 ------------------------------------------
- 1 file changed, 39455 deletions(-)
+ project_structure_final.txt | 39477 ------------------------------------------
+ 1 file changed, 39477 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-4c01cb3 feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
+c522354 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
+4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
 1521780 Fix TUI input frame height to tightly wrap content
 553493a docs: update Atlas workflow definition
 26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
-de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
 ```
 
 ---
@@ -232,6 +232,7 @@ System/
 │   ├── tools/
 │   │   ├── __init__.py
 │   │   ├── browser.py
+│   │   ├── cleanup.py
 │   │   ├── desktop.py
 │   │   ├── executor.py
 │   │   ├── filesystem.py
@@ -7874,7 +7875,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/mcp.py` (23.0 KB)
+### `core/mcp.py` (24.9 KB)
 
 ```python
 import json
@@ -8181,6 +8182,40 @@ class MCPToolRegistry:
         self.register_tool("get_open_windows", get_open_windows, "List open windows. Args: on_screen_only (bool)")
         self.register_tool("get_clipboard", get_clipboard, "Read clipboard content. Args: none")
         self.register_tool("set_clipboard", set_clipboard, "Write to clipboard. Args: text (str)")
+
+        # Cleanup & Privacy (System Extensions)
+        from system_ai.tools.cleanup import (
+            system_cleanup_stealth,
+            system_cleanup_windsurf,
+            system_spoof_hardware,
+            system_check_identifiers
+        )
+        self.register_tool("system_cleanup_stealth", system_cleanup_stealth, "Run stealth cleanup (logs, caches). Args: allow=True")
+        self.register_tool("system_cleanup_windsurf", system_cleanup_windsurf, "Run deep Windsurf cleanup. Args: allow=True")
+        self.register_tool("system_spoof_hardware", system_spoof_hardware, "Spoof MAC/Hostname. Args: allow=True")
+        self.register_tool("system_check_identifiers", system_check_identifiers, "Check system identifiers. Args: none")
+
+        # Recorder Control
+        def _recorder_action(action: str) -> Any:
+            svc = _get_recorder_service()
+            if not svc:
+                return {"status": "error", "error": "Recorder service not available"}
+            
+            if action == "start":
+                success, msg = svc.start()
+                return {"status": "success" if success else "error", "message": msg}
+            elif action == "stop":
+                success, msg, path = svc.stop()
+                return {"status": "success" if success else "error", "message": msg, "path": path}
+            elif action == "status":
+                st = svc.get_status()
+                return {"status": "success", "running": st.running, "session_id": st.session_id, "events": st.events_count}
+            return {"status": "error", "error": "Unknown action"}
+
+        self.register_tool("recorder_start", lambda: _recorder_action("start"), "Start screen/event recording. Args: none")
+        self.register_tool("recorder_stop", lambda: _recorder_action("stop"), "Stop recording and save. Args: none")
+        self.register_tool("recorder_status", lambda: _recorder_action("status"), "Get recorder status. Args: none")
+
 
         # Browser Tools (Local Playwright)
         self.register_tool("browser_open_url", browser_open_url, "Open URL in local browser. Args: url (str), headless (bool)")
@@ -12243,7 +12278,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (540.7 KB)
+### `project_structure_final.txt` (542.6 KB)
 
 ```text
 # System — Project Structure
@@ -12251,10 +12286,10 @@ test content
 ## Metadata
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
-- **Files Included**: 127
-- **Files Skipped**: 16074
+- **Files Included**: 128
+- **Files Skipped**: 16084
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 05:47:20
+- **Generated**: 2025-12-19 05:50:01
 
 ---
 
@@ -12396,18 +12431,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39455 ------------------------------------------
- 1 file changed, 39455 deletions(-)
+ project_structure_final.txt | 39477 ------------------------------------------
+ 1 file changed, 39477 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-4c01cb3 feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
+c522354 feat(system): Register additional tools (Cleanup & Recorder) to MCP registry
+4b85b4b feat(core): Expose complete MCP tool registry to Atlas planner for better tactical planning
 1521780 Fix TUI input frame height to tightly wrap content
 553493a docs: update Atlas workflow definition
 26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
-de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
 ```
 
 ---
@@ -12480,6 +12515,7 @@ System/
 │   ├── tools/
 │   │   ├── __init__.py
 │   │   ├── browser.py
+│   │   ├── cleanup.py
 │   │   ├── desktop.py
 │   │   ├── executor.py
 │   │   ├── filesystem.py
@@ -20122,7 +20158,7 @@ def run_tetyana(llm, state):
     pass
 ```
 
-### `core/mcp.py` (23.0 KB)
+### `core/mcp.py` (24.9 KB)
 
 ```python
 import json
@@ -20429,6 +20465,40 @@ class MCPToolRegistry:
         self.register_tool("get_open_windows", get_open_windows, "List open windows. Args: on_screen_only (bool)")
         self.register_tool("get_clipboard", get_clipboard, "Read clipboard content. Args: none")
         self.register_tool("set_clipboard", set_clipboard, "Write to clipboard. Args: text (str)")
+
+        # Cleanup & Privacy (System Extensions)
+        from system_ai.tools.cleanup import (
+            system_cleanup_stealth,
+            system_cleanup_windsurf,
+            system_spoof_hardware,
+            system_check_identifiers
+        )
+        self.register_tool("system_cleanup_stealth", system_cleanup_stealth, "Run stealth cleanup (logs, caches). Args: allow=True")
+        self.register_tool("system_cleanup_windsurf", system_cleanup_windsurf, "Run deep Windsurf cleanup. Args: allow=True")
+        self.register_tool("system_spoof_hardware", system_spoof_hardware, "Spoof MAC/Hostname. Args: allow=True")
+        self.register_tool("system_check_identifiers", system_check_identifiers, "Check system identifiers. Args: none")
+
+        # Recorder Control
+        def _recorder_action(action: str) -> Any:
+            svc = _get_recorder_service()
+            if not svc:
+                return {"status": "error", "error": "Recorder service not available"}
+            
+            if action == "start":
+                success, msg = svc.start()
+                return {"status": "success" if success else "error", "message": msg}
+            elif action == "stop":
+                success, msg, path = svc.stop()
+                return {"status": "success" if success else "error", "message": msg, "path": path}
+            elif action == "status":
+                st = svc.get_status()
+                return {"status": "success", "running": st.running, "session_id": st.session_id, "events": st.events_count}
+            return {"status": "error", "error": "Unknown action"}
+
+        self.register_tool("recorder_start", lambda: _recorder_action("start"), "Start screen/event recording. Args: none")
+        self.register_tool("recorder_stop", lambda: _recorder_action("stop"), "Stop recording and save. Args: none")
+        self.register_tool("recorder_status", lambda: _recorder_action("status"), "Get recorder status. Args: none")
+
 
         # Browser Tools (Local Playwright)
         self.register_tool("browser_open_url", browser_open_url, "Open URL in local browser. Args: url (str), headless (bool)")
@@ -26302,6 +26372,65 @@ def browser_close() -> str:
         return json.dumps({"status": "success"})
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
+```
+
+### `system_ai/tools/cleanup.py` (2.2 KB)
+
+```python
+
+import os
+import subprocess
+from typing import Any, Dict
+
+def _get_script_path(script_name: str) -> str:
+    # Assume cleanup_scripts is in the project root
+    # We can find it relative to this file: system_ai/tools/cleanup.py -> ../../cleanup_scripts
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    return os.path.join(base_dir, "cleanup_scripts", script_name)
+
+def _run_cleanup_script(script_name: str, allow: bool = True) -> Dict[str, Any]:
+    if not allow:
+        return {"tool": script_name, "status": "error", "error": "Confirmation required"}
+    
+    script_path = _get_script_path(script_name)
+    if not os.path.exists(script_path):
+        return {"tool": script_name, "status": "error", "error": f"Script not found: {script_path}"}
+    
+    try:
+        # Make executable if needed
+        subprocess.run(["chmod", "+x", script_path], check=False)
+        
+        proc = subprocess.run(
+            [script_path],
+            capture_output=True,
+            text=True
+        )
+        
+        return {
+            "tool": script_name,
+            "status": "success" if proc.returncode == 0 else "error",
+            "returncode": proc.returncode,
+            "stdout": (proc.stdout or "").strip()[-5000:],
+            "stderr": (proc.stderr or "").strip()[-5000:]
+        }
+    except Exception as e:
+        return {"tool": script_name, "status": "error", "error": str(e)}
+
+def system_cleanup_stealth(allow: bool = True) -> Dict[str, Any]:
+    """Run stealth cleanup (logs, caches)."""
+    return _run_cleanup_script("stealth_cleanup.sh", allow=allow)
+
+def system_cleanup_windsurf(allow: bool = True) -> Dict[str, Any]:
+    """Run deep Windsurf cleanup (removes traces)."""
+    return _run_cleanup_script("deep_windsurf_cleanup.sh", allow=allow)
+
+def system_spoof_hardware(allow: bool = True) -> Dict[str, Any]:
+    """Run hardware spoofing (MAC address, hostname). WARNING: May disconnect network."""
+    return _run_cleanup_script("hardware_spoof.sh", allow=allow)
+
+def system_check_identifiers() -> Dict[str, Any]:
+    """Check current system identifiers."""
+    return _run_cleanup_script("check_identifier_cleanup.sh", allow=True)
 ```
 
 ### `system_ai/tools/desktop.py` (3.6 KB)
@@ -39473,5 +39602,5 @@ graph TD
 
 ## Summary
 
-- **Total Files**: 127
-- **Skipped**: 16074
+- **Total Files**: 128
+- **Skipped**: 16084
