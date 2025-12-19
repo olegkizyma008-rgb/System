@@ -406,31 +406,31 @@ def build_keybindings(
             items = get_llm_sub_menu_items(state.menu_level)
             if not items: return
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            _, key = items[state.menu_index]
+            itm = items[state.menu_index]
+            key = itm[1] if len(itm) > 1 else ""
+            
+            section = ""
+            if state.menu_level == MenuLevel.LLM_ATLAS: section = "atlas"
+            elif state.menu_level == MenuLevel.LLM_TETYANA: section = "tetyana"
+            elif state.menu_level == MenuLevel.LLM_GRISHA: section = "grisha"
+            elif state.menu_level == MenuLevel.LLM_VISION: section = "vision"
+            
+            from tui.tools import tool_llm_set, tool_llm_status
             
             if key == "provider":
-                # Cycle providers
-                # Get current section
-                section = ""
-                if state.menu_level == MenuLevel.LLM_ATLAS: section = "atlas"
-                elif state.menu_level == MenuLevel.LLM_TETYANA: section = "tetyana"
-                elif state.menu_level == MenuLevel.LLM_GRISHA: section = "grisha"
-                elif state.menu_level == MenuLevel.LLM_VISION: section = "vision"
-                
-                # Determine next provider
-                from tui.tools import tool_llm_set, tool_llm_status
                 start_status = tool_llm_status({"section": section})
                 cur_prov = start_status.get("provider", "copilot")
-                
-                # Prov list
                 provs = ["copilot", "openai", "anthropic", "gemini"]
-                if cur_prov in provs:
-                    next_prov = provs[(provs.index(cur_prov) + 1) % len(provs)]
-                else:
-                    next_prov = "copilot"
-                    
+                next_prov = provs[(provs.index(cur_prov) + 1) % len(provs)] if cur_prov in provs else "copilot"
                 tool_llm_set({"section": section, "provider": next_prov})
                 log(f"Provider set to: {next_prov}", "action")
+            elif key == "model":
+                start_status = tool_llm_status({"section": section})
+                cur_mod = start_status.get("model", "")
+                models = ["gpt-4o", "gpt-4", "claude-3-5-sonnet-latest", "gemini-1.5-pro-002", "mistral-large-latest"]
+                next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
+                tool_llm_set({"section": section, "model": next_mod})
+                log(f"Model set to: {next_mod}", "action")
 
     @kb.add("s", filter=show_menu)
     def _(event):
@@ -460,7 +460,8 @@ def build_keybindings(
     @kb.add("enter", filter=show_menu)
     def handle_menu_enter(event=None):
         if state.menu_level == MenuLevel.MAIN:
-            _, lvl = MAIN_MENU_ITEMS[state.menu_index]
+            itm = MAIN_MENU_ITEMS[state.menu_index]
+            lvl = itm[1]
             state.menu_level = lvl
             state.menu_index = 0
             return
@@ -470,7 +471,8 @@ def build_keybindings(
             if not items:
                 return
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            _label, action = items[state.menu_index]
+            itm = items[state.menu_index]
+            _label, action = itm[0], itm[1]
             try:
                 if not callable(action):
                     return
@@ -485,7 +487,8 @@ def build_keybindings(
             if not items:
                 return
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            _, lvl = items[state.menu_index]
+            itm = items[state.menu_index]
+            _, lvl = itm[0], itm[1]
             state.menu_level = lvl
             state.menu_index = 0
             return
@@ -529,7 +532,8 @@ def build_keybindings(
             if not items:
                 return
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            _, perm_key = items[state.menu_index]
+            itm = items[state.menu_index]
+            _, perm_key = itm[0], itm[1]
             if perm_key == "ui_execution_mode":
                 cur = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
                 state.ui_execution_mode = "gui" if cur == "native" else "native"
