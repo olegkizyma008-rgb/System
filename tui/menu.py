@@ -109,7 +109,9 @@ def build_menu(
                     state.menu_index = 0
                     force_ui_update()
             
-            res.append(("class:menu.selected", " [ < " + tr("menu.back", state.ui_lang).upper() + " ] ", _back_handler))
+            # Back button is informational/mouse-clickable but not yet selectable via keys 0-N
+            # so we use a neutral style.
+            res.append(("class:menu.item", " [ < " + tr("menu.back", state.ui_lang).upper() + " ] ", _back_handler))
             res.append(("", "\n\n"))
 
         if state.menu_level == MenuLevel.MAIN:
@@ -179,10 +181,11 @@ def build_menu(
                 result.append((style_cls, f"{prefix}{label}\n", handler))
             return result
 
-        if state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION}:
+        if state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
             add_back_btn(result)
-            section = state.menu_level.value.replace("llm_", "").upper()
-            result.append(("class:menu.title", f" {tr('menu.llm.title', state.ui_lang)}: {section}\n\n"))
+            section_key = state.menu_level.value.replace("llm_", "")
+            section_label = section_key.upper() if section_key != "defaults" else "GLOBAL DEFAULTS"
+            result.append(("class:menu.title", f" {tr('menu.llm.title', state.ui_lang)}: {section_label}\n\n"))
             items = get_llm_sub_menu_items(state.menu_level)
             state.menu_index = max(0, min(state.menu_index, len(items) - 1))
             for i, item in enumerate(items):

@@ -50,6 +50,7 @@ def build_keybindings(
     monitor_service: Any,
     fs_usage_service: Any,
     opensnoop_service: Any,
+    force_ui_update: Callable[[], None],
 ) -> KeyBindings:
     kb = KeyBindings()
 
@@ -274,6 +275,7 @@ def build_keybindings(
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
             items = get_monitor_menu_items()
             normalize_menu_index(items)
+        force_ui_update()
 
     @kb.add("down", filter=show_menu)
     def _(event):
@@ -326,6 +328,8 @@ def build_keybindings(
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
             items = get_monitor_menu_items()
             normalize_menu_index(items)
+            
+        force_ui_update()
 
     @kb.add("left", filter=show_menu)
     def _(event):
@@ -408,6 +412,7 @@ def build_keybindings(
             else:
                 state.monitor_targets.add(it.key)
                 log(f"Monitor: ON {it.label}", "action")
+            force_ui_update()
 
         elif state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
             items = get_llm_sub_menu_items(state.menu_level)
@@ -432,6 +437,7 @@ def build_keybindings(
                 next_prov = provs[(provs.index(cur_prov) + 1) % len(provs)] if cur_prov in provs else "copilot"
                 tool_llm_set({"section": section, "provider": next_prov})
                 log(f"Provider set to: {next_prov}", "action")
+                force_ui_update()
             elif key == "model" or key == "main_model":
                 start_status = tool_llm_status({"section": section})
                 # Check for model or main_model key
@@ -443,6 +449,7 @@ def build_keybindings(
                 else:
                     tool_llm_set({"section": section, "model": next_mod})
                 log(f"Model set to: {next_mod}", "action")
+                force_ui_update()
             elif key == "vision_model":
                 start_status = tool_llm_status({"section": section})
                 cur_mod = start_status.get("vision_model", "")
@@ -450,6 +457,7 @@ def build_keybindings(
                 next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
                 tool_llm_set({"vision_model": next_mod})
                 log(f"Vision model set to: {next_mod}", "action")
+                force_ui_update()
 
     @kb.add("s", filter=show_menu)
     def _(event):

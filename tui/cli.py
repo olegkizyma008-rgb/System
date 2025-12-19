@@ -1660,7 +1660,7 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
     # Determine section from level
     section = ""
     if level == MenuLevel.LLM_DEFAULTS:
-        section = ""
+        section = "defaults"
     elif level == MenuLevel.LLM_ATLAS:
         section = "atlas"
     elif level == MenuLevel.LLM_TETYANA:
@@ -1777,6 +1777,7 @@ def run_tui() -> None:
         monitor_service=monitor_service,
         fs_usage_service=fs_usage_service,
         opensnoop_service=opensnoop_service,
+        force_ui_update=force_ui_update,
     )
 
     show_menu, get_menu_content = build_menu(
