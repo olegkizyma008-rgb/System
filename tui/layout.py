@@ -268,7 +268,6 @@ def build_app(
         style="class:input",
         wrap_lines=True, # Ensure long pastes are visible
         height=Dimension(min=1, preferred=1, max=10), # Dynamic height
-        dont_extend_height=True,
     )
     setattr(input_window, "name", "input")
 
@@ -281,7 +280,8 @@ def build_app(
                 dont_extend_width=True,
             ),
             input_window,
-        ]
+        ],
+        height=Dimension(min=1, preferred=1, max=10),
     )
 
     def get_status_text() -> AnyFormattedText:
@@ -337,7 +337,7 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12)), # Dynamic area height
+            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height
             status_window,
         ]
     )

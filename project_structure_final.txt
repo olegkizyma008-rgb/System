@@ -4,18 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16025
+- **Files Skipped**: 16032
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:44:33
+- **Generated**: 2025-12-19 04:48:31
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 3, "replan_count": 0}
-2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 0, "plan_len": 15, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що сторінка Google завантажена.\n\n[Atlas Debug] Plan: 15 steps. Current: Перевірити, що сторінка Google завантажена. Next: grisha"}
 2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["tui/themes.py"], "skip": true}
 2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9279}
 2025-12-19 02:41:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
@@ -113,6 +110,9 @@ Traceback (most recent call last):
     Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:45:21 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:45:21 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:45:21 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -148,18 +148,19 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39446 +-----------------------------------------
- 1 file changed, 57 insertions(+), 39389 deletions(-)
+ .agent/workflows/atlas.md   |     2 +-
+ project_structure_final.txt | 39342 +-----------------------------------------
+ 2 files changed, 6 insertions(+), 39338 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-c79e128 fix(tui): remove invalid dont_extend_height argument from Frame
+86673f2 fix(tui): glue input to bottom and enable upward expansion
+ee6c2be fix(tui): remove invalid dont_extend_height argument from Frame
 ca712b4 fix(tui): strict control over input field height at startup
 acddfde feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
 a95df1f feat(i18n): transition system internals to English with localized user output
-e377006 feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
 ```
 
 ---
@@ -12232,7 +12233,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (544.6 KB)
+### `project_structure_final.txt` (544.0 KB)
 
 ```text
 # System — Project Structure
@@ -12241,18 +12242,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16025
+- **Files Skipped**: 16032
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:44:33
+- **Generated**: 2025-12-19 04:48:31
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "grisha", "next": "grisha"}
-2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "grisha", "last_step_status": null, "step_count": 3, "replan_count": 0}
-2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_enter", "step_count": 3, "replan_count": 0, "plan_len": 15, "task_type": "GENERAL", "gui_mode": "auto", "execution_mode": "native", "last_msg_preview": "[VOICE] Гріша, перевір: Перевірити, що сторінка Google завантажена.\n\n[Atlas Debug] Plan: 15 steps. Current: Перевірити, що сторінка Google завантажена. Next: grisha"}
 2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_verification_check", "task_type": "GENERAL", "critical_changes": true, "changed_files": ["tui/themes.py"], "skip": true}
 2025-12-19 02:41:42 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9279}
 2025-12-19 02:41:44 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 1, "content_preview": ""}
@@ -12350,6 +12348,9 @@ Traceback (most recent call last):
     Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:45:21 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:45:21 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:45:21 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -12385,18 +12386,19 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39446 +-----------------------------------------
- 1 file changed, 57 insertions(+), 39389 deletions(-)
+ .agent/workflows/atlas.md   |     2 +-
+ project_structure_final.txt | 39342 +-----------------------------------------
+ 2 files changed, 6 insertions(+), 39338 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-c79e128 fix(tui): remove invalid dont_extend_height argument from Frame
+86673f2 fix(tui): glue input to bottom and enable upward expansion
+ee6c2be fix(tui): remove invalid dont_extend_height argument from Frame
 ca712b4 fix(tui): strict control over input field height at startup
 acddfde feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
 a95df1f feat(i18n): transition system internals to English with localized user output
-e377006 feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
 ```
 
 ---
@@ -35376,7 +35378,6 @@ def build_app(
         style="class:input",
         wrap_lines=True, # Ensure long pastes are visible
         height=Dimension(min=1, preferred=1, max=10), # Dynamic height
-        dont_extend_height=True,
     )
     setattr(input_window, "name", "input")
 
@@ -35389,7 +35390,8 @@ def build_app(
                 dont_extend_width=True,
             ),
             input_window,
-        ]
+        ],
+        height=Dimension(min=1, preferred=1, max=10),
     )
 
     def get_status_text() -> AnyFormattedText:
@@ -35445,7 +35447,7 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12)), # Dynamic area height
+            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height
             status_window,
         ]
     )
@@ -39444,4 +39446,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 16025
+- **Skipped**: 16032
