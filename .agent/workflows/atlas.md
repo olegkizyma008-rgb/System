@@ -75,7 +75,7 @@ graph TD
 -   **Automation (Unified)**: Уніфікований модуль для Shell, AppleScript, Shortcuts та вводу (миша/клавіатура).
 -   **System Cleanup**: Інструменти для очищення слідів, логів та спуфінгу (Stealth Mode).
 -   **Recorder Control**: Програмне керування записом сесій (Start/Stop/Status).
--   **Desktop/Vision**: Аналіз екрану, пошук зображень, OCR.
+-   **Desktop/Vision**: Аналіз екрану, пошук зображень, OCR. Підтримує **Dynamic Focus** (автоматична активація цільового вікна перед знімком).
 
 ### Зовнішні MCP Сервери (External)
 -   **Playwright MCP**: Повний контроль браузера (headless/headful).
