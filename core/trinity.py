@@ -865,15 +865,11 @@ class TrinityRuntime:
             last_msg = last_msg[:45000] + "\n\n[... TRUNCATED DUE TO SIZE ...]\n\n" + last_msg[-5000:]
         tool_calls = [] # Initialize for scope safety
         
-        # 0. Meta-verification detection: If step is just confirming previous success, auto-pass if history is OK.
-        is_meta_verify = any(kw in last_msg.lower() for kw in ["була успішно перевірена", "was successfully verified", "confirm the previous step", "перевірити, що а"])
-        if is_meta_verify and state.get("last_step_status") == "success":
-            if self.verbose: print("👁️ [Grisha] Meta-verification detected on successful state -> Auto-pass.")
-            return {
-                "current_agent": "meta_planner",
-                "messages": list(context) + [AIMessage(content="[VOICE] Підтверджую успішність попередньої дії. [VERIFIED]")],
-                "last_step_status": "success",
-            }
+        # 0. Meta-verification detection: REMOVED to prevent false positives.
+        # We want Grisha to ALWAYS verify with tools or explicit reasoning, 
+        # not just trust the previous agent's self-report.
+        # is_meta_verify = ... (removed)
+
 
         gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
         execution_mode = str(state.get("execution_mode") or "native").strip().lower()
