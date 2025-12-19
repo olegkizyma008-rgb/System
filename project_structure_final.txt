@@ -4,51 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16039
+- **Files Skipped**: 16046
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:50:09
+- **Generated**: 2025-12-19 04:52:32
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain", "streak": 2}
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "uncertain", "step_count": null, "replan_count": 1}
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 4, "replan_count": 1, "last_step_status": "uncertain", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "\n\nVerification Tools Results:\nResult for browser_snapshot: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"about:blank\\\", \\\"title\\\": \\\"\\\", \\\"has_captcha\\\": false, \\\"content_preview\\\": \\\"<html><head></head><body"}
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 4, "replan_count": 1}
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:76 | [Verifier] Plan optimized: 0 → 0 steps (added 0 verify steps)
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 0, "step_count": 4, "replan_count": 1}
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 1}
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 1}
-2025-12-19 03:23:01 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 03:23:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 03:41:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:12:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:19:10 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:19:13 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:19:13 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:19:13 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:27:29 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:37:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:41:24 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:41:26 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:41:26 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:41:26 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:41:34 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:41:36 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:41:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:41:36 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:41:45 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:41:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 2025-12-19 04:43:27 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
@@ -113,6 +77,42 @@ TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_heig
 2025-12-19 04:49:00 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:49:00 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:49:00 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:50:22 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:50:23 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:50:23 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:50:23 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:51:34 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:51:36 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:51:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:51:36 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:51:54 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:52:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
 ```
 
 ---
@@ -149,18 +149,18 @@ Tests:
 
 ```
  .agent/workflows/atlas.md   |     2 +-
- project_structure_final.txt | 39346 +-----------------------------------------
- 2 files changed, 7 insertions(+), 39341 deletions(-)
+ project_structure_final.txt | 39385 +-----------------------------------------
+ 2 files changed, 39 insertions(+), 39348 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-990df55 fix(tui): strictly force single-line height for input area when empty
+bce4e99 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
+c0a8dbd fix(tui): strictly force single-line height for input area when empty
 2f7f8b2 fix(tui): glue input to bottom and enable upward expansion
 ee6c2be fix(tui): remove invalid dont_extend_height argument from Frame
 ca712b4 fix(tui): strict control over input field height at startup
-acddfde feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
 ```
 
 ---
@@ -12233,7 +12233,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (543.7 KB)
+### `project_structure_final.txt` (541.3 KB)
 
 ```text
 # System — Project Structure
@@ -12242,51 +12242,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16039
+- **Files Skipped**: 16046
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:50:09
+- **Generated**: 2025-12-19 04:52:32
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "replan_triggered", "replan_count": 1, "status": "uncertain", "streak": 2}
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "uncertain", "step_count": null, "replan_count": 1}
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 4, "replan_count": 1, "last_step_status": "uncertain", "plan_len": 0, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "\n\nVerification Tools Results:\nResult for browser_snapshot: \"{\\\"status\\\": \\\"success\\\", \\\"url\\\": \\\"about:blank\\\", \\\"title\\\": \\\"\\\", \\\"has_captcha\\\": false, \\\"content_preview\\\": \\\"<html><head></head><body"}
-2025-12-19 02:41:45 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generate_start", "step_count": 4, "replan_count": 1}
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.verifier | optimize_plan:76 | [Verifier] Plan optimized: 0 → 0 steps (added 0 verify steps)
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_plan_generated", "steps": 0, "step_count": 4, "replan_count": 1}
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "end", "next": "end"}
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "atlas", "current_agent": "end", "last_step_status": null, "step_count": null, "replan_count": 1}
-2025-12-19 02:41:51 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_run_end", "outcome": "completed", "last_agent": "atlas", "replan_count": 1}
-2025-12-19 03:23:01 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 03:23:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 03:41:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:12:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:19:10 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:19:13 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:19:13 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:19:13 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:27:29 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:37:40 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:37:40 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:41:24 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:41:26 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:41:26 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:41:26 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:41:34 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:41:36 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:41:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:41:36 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:41:45 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:41:47 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:41:47 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 2025-12-19 04:43:27 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
@@ -12351,6 +12315,42 @@ TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_heig
 2025-12-19 04:49:00 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:49:00 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:49:00 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:50:22 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:50:23 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:50:23 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:50:23 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:51:34 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:51:36 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:51:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:51:36 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:51:54 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:52:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in TUI mode
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:52:17 | ERROR    | MainThread | system_cli.cli | log_exception:193 | Exception occurred in main()
+Traceback (most recent call last):
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2637, in main
+    cli_main(sys.argv[1:])
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 2475, in cli_main
+    run_tui()
+  File "/Users/dev/Documents/GitHub/System/tui/cli.py", line 1706, in run_tui
+    app = build_app(
+          ^^^^^^^^^^
+  File "/Users/dev/Documents/GitHub/System/tui/layout.py", line 275, in build_app
+    input_area = VSplit(
+                 ^^^^^^^
+TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
 ```
 
 ---
@@ -12387,18 +12387,18 @@ Tests:
 
 ```
  .agent/workflows/atlas.md   |     2 +-
- project_structure_final.txt | 39346 +-----------------------------------------
- 2 files changed, 7 insertions(+), 39341 deletions(-)
+ project_structure_final.txt | 39385 +-----------------------------------------
+ 2 files changed, 39 insertions(+), 39348 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-990df55 fix(tui): strictly force single-line height for input area when empty
+bce4e99 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
+c0a8dbd fix(tui): strictly force single-line height for input area when empty
 2f7f8b2 fix(tui): glue input to bottom and enable upward expansion
 ee6c2be fix(tui): remove invalid dont_extend_height argument from Frame
 ca712b4 fix(tui): strict control over input field height at startup
-acddfde feat(tui): refine UX with auto-expanding input, balanced layout, and restored streaming
 ```
 
 ---
@@ -35105,7 +35105,7 @@ def build_keybindings(
     return kb, handle_menu_enter
 ```
 
-### `tui/layout.py` (13.8 KB)
+### `tui/layout.py` (14.0 KB)
 
 ```python
 from __future__ import annotations
@@ -35395,6 +35395,7 @@ def build_app(
             input_window,
         ],
         height=Dimension(min=1, preferred=1, max=10),
+        dont_extend_height=True,
     )
 
     def get_status_text() -> AnyFormattedText:
@@ -35450,7 +35451,11 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height
+            HSplit(
+                [Frame(input_area, style="class:frame.border")],
+                height=Dimension(min=3, preferred=3, max=12),
+                dont_extend_height=True
+            ), # Dynamic area height, glued to bottom, expands upwards
             status_window,
         ]
     )
@@ -39449,4 +39454,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 16039
+- **Skipped**: 16046
