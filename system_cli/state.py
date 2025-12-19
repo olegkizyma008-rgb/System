@@ -25,6 +25,7 @@ class MenuLevel(Enum):
     LANGUAGE = "language"
     AUTOMATION_PERMISSIONS = "automation_permissions"
     LAYOUT = "layout"
+    DEV_SETTINGS = "dev_settings"
 
 
 @dataclass
@@ -64,6 +65,7 @@ class AppState:
     ui_panel_min_width: int = 40
     ui_panel_max_width: int = 120
     ui_left_panel_ratio: float = 0.6
+    ui_dev_code_provider: str = "vibe-cli"  # vibe-cli | continue
 
 
 state = AppState()

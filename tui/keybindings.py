@@ -223,6 +223,7 @@ def build_keybindings(
             MenuLevel.APPEARANCE,
             MenuLevel.LANGUAGE,
             MenuLevel.LAYOUT,
+            MenuLevel.DEV_SETTINGS,
         }:
             state.menu_level = MenuLevel.MAIN
             state.menu_index = 0
@@ -492,6 +493,14 @@ def build_keybindings(
                 state.automation_allow_shortcuts = not bool(getattr(state, "automation_allow_shortcuts", False))
                 log(f"Shortcuts: {'ON' if state.automation_allow_shortcuts else 'OFF'}", "action")
             save_ui_settings()
+            return
+
+        if state.menu_level == MenuLevel.DEV_SETTINGS:
+            # Toggle between vibe-cli and continue
+            cur = str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower()
+            state.ui_dev_code_provider = "continue" if cur == "vibe-cli" else "vibe-cli"
+            save_ui_settings()
+            log(f"Dev code provider: {state.ui_dev_code_provider.upper()}", "action")
             return
 
         if state.menu_level == MenuLevel.APPEARANCE:

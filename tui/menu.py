@@ -272,6 +272,21 @@ def build_menu(
             result.append(("class:menu.item", f"\n {tr('menu.layout.hint', state.ui_lang)}\n"))
             return result
 
+        if state.menu_level == MenuLevel.DEV_SETTINGS:
+            add_back_btn(result)
+            result.append(("class:menu.title", f" {tr('menu.dev_settings.title', state.ui_lang)}\n\n"))
+            provider = str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower()
+            provider_label = "VIBE-CLI" if provider == "vibe-cli" else "CONTINUE"
+            prefix = " > "
+            handler = make_click(0)
+            result.append(("class:menu.selected", f"{prefix}{tr('menu.dev_settings.provider_label', state.ui_lang)}: ", handler))
+            style = "class:toggle.on" if provider == "vibe-cli" else "class:toggle.off"
+            result.append((style, f" {provider_label} "))
+            result.append(("", "\n\n"))
+            result.append(("class:menu.item", " Enter: Toggle between VIBE-CLI / CONTINUE\n"))
+            return result
+
+
         if state.menu_level == MenuLevel.MONITOR_CONTROL:
             add_back_btn(result)
             result.append(("class:menu.title", " MONITORING (Enter: Start/Stop, S: Source, U: Sudo, Q/Esc: Back)\n"))

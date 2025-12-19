@@ -625,6 +625,10 @@ def _load_ui_settings() -> None:
         if isinstance(agents_follow, bool):
             state.ui_agents_follow = agents_follow
 
+        dev_code_provider = str(data.get("dev_code_provider") or "").strip().lower()
+        if dev_code_provider in {"vibe-cli", "continue"}:
+            state.ui_dev_code_provider = dev_code_provider
+
         env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_UNSAFE_MODE"))
         if env_unsafe is None:
             env_unsafe = _env_bool(os.getenv("SYSTEM_CLI_AUTO_CONFIRM"))
@@ -650,6 +654,7 @@ def _save_ui_settings() -> bool:
             "scroll_target": str(getattr(state, "ui_scroll_target", "log")),
             "log_follow": bool(getattr(state, "ui_log_follow", True)),
             "agents_follow": bool(getattr(state, "ui_agents_follow", True)),
+            "dev_code_provider": str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower() or "vibe-cli",
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -1573,6 +1578,8 @@ def _get_settings_menu_items() -> List[Tuple[str, Any]]:
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS),
         ("menu.settings.section.automation", None, "section"),
         ("menu.settings.automation_permissions", MenuLevel.AUTOMATION_PERMISSIONS),
+        ("menu.settings.section.dev", None, "section"),
+        ("menu.settings.dev_code_provider", MenuLevel.DEV_SETTINGS),
         ("menu.settings.section.experimental", None, "section"),
         ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE),
     ]
@@ -1595,6 +1602,15 @@ def _get_automation_permissions_menu_items() -> List[Tuple[str, Any]]:
     return [
         (f"Execution mode: {exec_label}", "ui_execution_mode"),
         (f"Shortcuts: {shortcuts}", "automation_allow_shortcuts"),
+    ]
+
+
+def _get_dev_settings_menu_items() -> List[Tuple[str, Any]]:
+    """Return dev settings menu items for code provider selection."""
+    provider = str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower()
+    provider_label = "VIBE-CLI" if provider == "vibe-cli" else "CONTINUE"
+    return [
+        (f"Code Provider: {provider_label}", "ui_dev_code_provider"),
     ]
 
 

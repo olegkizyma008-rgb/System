@@ -89,4 +89,48 @@ fi
 # (This is a workaround for the broken site-package version)
 # We can add a more permanent patch logic here if desired.
 
+# 5. Continue CLI Installation (npm)
+echo "📦 Installing Continue CLI..."
+if command -v npm >/dev/null 2>&1; then
+    npm i -g @continuedev/cli cn 2>/dev/null && echo "✅ Continue CLI installed" || echo "⚠️ Continue CLI installation failed (non-critical)"
+else
+    echo "⚠️ npm not found, skipping Continue CLI"
+fi
+
+# 6. Mistral Vibe CLI Installation (pip)
+echo "🎵 Installing Mistral Vibe CLI..."
+# Install in the activated venv
+pip install mistral-vibe 2>/dev/null && echo "✅ Vibe CLI installed" || echo "⚠️ Vibe CLI installation failed (non-critical)"
+
+# 7. Vibe CLI Configuration
+VIBE_HOME="${HOME}/.vibe"
+if [ ! -d "$VIBE_HOME" ]; then
+    mkdir -p "$VIBE_HOME"
+    echo "✅ Created Vibe config directory: $VIBE_HOME"
+fi
+
+# 8. API Key Validation
+echo "🔑 Checking API keys..."
+if [ -f ".env" ]; then
+    if grep -q "^MISTRAL_API_KEY=" .env; then
+        # Check if key is not empty
+        MISTRAL_KEY=$(grep "^MISTRAL_API_KEY=" .env | cut -d'=' -f2)
+        if [ -n "$MISTRAL_KEY" ] && [ "$MISTRAL_KEY" != "your_key_here" ]; then
+            echo "✅ MISTRAL_API_KEY found in .env"
+            # Copy to Vibe config if not exists
+            if [ ! -f "$VIBE_HOME/.env" ]; then
+                echo "MISTRAL_API_KEY=$MISTRAL_KEY" > "$VIBE_HOME/.env"
+                echo "✅ Copied MISTRAL_API_KEY to $VIBE_HOME/.env"
+            fi
+        else
+            echo "⚠️ MISTRAL_API_KEY is empty or placeholder in .env - Vibe CLI requires this"
+        fi
+    else
+        echo "⚠️ MISTRAL_API_KEY not found in .env - Vibe CLI requires this"
+    fi
+else
+    echo "⚠️ .env file not found - Create it and add MISTRAL_API_KEY for Vibe CLI"
+fi
+
 echo "✅ Setup complete! You can now run the system using ./cli.sh"
+
