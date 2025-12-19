@@ -97,6 +97,7 @@ class TrinityRuntime:
         verbose: bool = True,
         permissions: TrinityPermissions = None,
         on_stream: Optional[Callable[[str, str], None]] = None,
+        preferred_language: str = "en"
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
@@ -105,6 +106,7 @@ class TrinityRuntime:
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
         self.permissions = permissions or TrinityPermissions()
+        self.preferred_language = preferred_language
         # Callback for streaming deltas: (agent_name, text_delta)
         self.on_stream = on_stream
         self.workflow = self._build_graph()
@@ -252,8 +254,8 @@ class TrinityRuntime:
         if len(context) > 6 and step_count % 3 == 0:
              try:
                 summary_prompt = [
-                    SystemMessage(content="Ти — архіваріус Trinity. Створи стислий підсумок (2-3 речення) поточного стану задачі. Що зроблено? Що залишилось?"),
-                    HumanMessage(content=f"Поточний підсумок: {summary}\n\nОстанні події:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
+                    SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in English. What has been done? What remains? However, ensure any specific instructions for user reporting remain compatible with {self.preferred_language}."),
+                    HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
                 ]
                 sum_resp = self.llm.invoke(summary_prompt)
                 summary = sum_resp.content
@@ -263,9 +265,9 @@ class TrinityRuntime:
 
         # 1b. Check Master Limits
         if step_count >= self.MAX_STEPS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Досягнуто ліміту кроків ({self.MAX_STEPS}).")]}
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Step limit reached ({self.MAX_STEPS}).")]}
         if replan_count >= self.MAX_REPLANS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Досягнуто ліміту перепланувань ({self.MAX_REPLANS}).")]}
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Replan limit reached ({self.MAX_REPLANS}).")]}
 
         # 2. Plan Maintenance (Consumption)
         if plan:
@@ -274,7 +276,7 @@ class TrinityRuntime:
                 current_step_fail_count = 0
                 if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded. Remaining: {len(plan)}")
                 if not plan:
-                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content="[VOICE] Всі кроки плану виконано успішно. Задача завершена.")]}
+                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] All plan steps completed successfully in {self.preferred_language}.")]}
             elif last_step_status == "failed":
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
@@ -300,8 +302,8 @@ class TrinityRuntime:
         if action in ["initialize", "replan", "repair"]:
             from core.agents.atlas import get_meta_planner_prompt
             
-            task_context = f"Задача: {last_msg}\nКрок: {step_count}\nСтатус: {last_step_status}\nПоточний конфіг: {meta_config}\nПлан (залишок): {len(plan)} кроків."
-            prompt = get_meta_planner_prompt(task_context)
+            task_context = f"Task: {last_msg}\nStep: {step_count}\nStatus: {last_step_status}\nCurrent config: {meta_config}\nPlan (remaining): {len(plan)} steps."
+            prompt = get_meta_planner_prompt(task_context, preferred_language=self.preferred_language)
             
             try:
                 resp = self.llm.invoke(prompt.format_messages())
@@ -377,9 +379,9 @@ class TrinityRuntime:
         # Context is now provided by Meta-Planner's selective RAG
         rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
-        routing_hint = f"\nСТРАТЕГІЯ: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
+        routing_hint = f"\nSTRATEGY: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
-        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint)
+        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint, preferred_language=self.preferred_language)
         
         try:
             plan_resp = self.llm.invoke(prompt.format_messages())
@@ -389,7 +391,7 @@ class TrinityRuntime:
             if isinstance(data, list): raw_plan = data
             elif isinstance(data, dict):
                 if data.get("status") == "completed":
-                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Готово.')}")]}
+                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Done.')}")]}
                 raw_plan = data.get("steps") or data.get("plan") or []
                 if data.get("meta_config"):
                     meta_config.update(data["meta_config"])

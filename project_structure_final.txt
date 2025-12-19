@@ -4,18 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 15986
+- **Files Skipped**: 15999
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:11:09
+- **Generated**: 2025-12-19 04:18:41
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:35:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9164}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Очікую завдання. [VERIFIED]"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 2, "replan_count": 0, "last_step_status": "success", "plan_len": 15, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Очікую завдання. [VERIFIED]"}
@@ -113,6 +110,9 @@
 2025-12-19 03:23:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 2025-12-19 03:41:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:12:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39435 +-----------------------------------------
- 1 file changed, 2 insertions(+), 39433 deletions(-)
+ project_structure_final.txt | 39399 +-----------------------------------------
+ 1 file changed, 5 insertions(+), 39394 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-939c7da feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
+d042634 feat(i18n): transition system internals to English with localized user output
+e377006 feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
 c060549 docs: update Atlas workflow documentation
 8966f5e docs: finalize Cognitive 2.0 documentation with anti-pattern learning and reflective routing
 3e24804 docs(atlas): update authoritative workflow to Cognitive 2.0 with Active Retrieval and Confidence scoring
-2469d84 feat(cognitive): implement selective RAG, knowledge extraction node, and continuous learning cycle
 ```
 
 ---
@@ -7671,147 +7671,123 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (9.8 KB)
+### `core/agents/atlas.py` (5.4 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 
-ATLAS_SYSTEM_PROMPT = """Ти - Atlas, Архітектор та Стратег системи "Trinity".
-Твоя мета: Розуміння наміру користувача та оптимальний розподіл ресурсів.
+ATLAS_SYSTEM_PROMPT = """You are Atlas, the Architect and Strategist of the "Trinity" system.
+Your goal: Understand user intent and optimize resource allocation.
 
-⚠️ КРИТИЧНЕ ПРАВИЛО (Routing):
-Ти маєш слідувати підказці роутера у контексті (наприклад: [ROUTING] task_type=... requires_windsurf=... dev_edit_mode=...).
-1) Якщо task_type=GENERAL:
-   - НЕ використовуй dev-сабсистему (Windsurf) і НЕ плануй кроки, які запускають Windsurf або змінюють код репозиторію.
-   - Плануй тільки побутові/OS дії (open_app/open_url/AppleScript/GUI) і завжди додавай verify кроки.
-2) Якщо task_type=DEV:
-   - Якщо requires_windsurf=true і dev_edit_mode=windsurf: кодинг/генерація коду має йти через Windsurf (не через прямий запис у файли).
-   - Перед першим кроком, який використовує Windsurf/IDE automation, додай preflight-перевірку:
-     * чи запущений Windsurf (is_windsurf_running)
-     * чи є потрібні macOS permissions (check_permissions / open_system_settings_privacy якщо потрібно)
-     * чи є вільне місце (run_shell: df -h)
-     Якщо щось блокує виконання — сформуй план усунення проблеми, потім повернися до основного dev-плану.
-   - Якщо dev_edit_mode=cli: це означає fallback (Windsurf недоступний/зламався) — можна планувати прямі dev-дї через CLI/файли.
+⚠️ CRITICAL RULE (Routing):
+Follow the router hints in context (e.g., [ROUTING] task_type=... requires_windsurf=... dev_edit_mode=...).
+1) If task_type=GENERAL:
+   - DO NOT use the dev subsystem (Windsurf) and DO NOT plan steps that trigger Windsurf or modify the repository code.
+   - Plan only general OS actions (open_app/open_url/AppleScript/GUI) and always include verification steps.
+2) If task_type=DEV:
+   - If requires_windsurf=true and dev_edit_mode=windsurf: coding/generation must go through Windsurf (no direct file writes).
+   - Before the first Windsurf/IDE step, include a preflight check:
+     * Is Windsurf running? (is_windsurf_running)
+     * Are macOS permissions granted? (check_permissions)
+     * Is there enough disk space? (run_shell: df -h)
+     If blocked, plan to fix the issue before proceeding.
+   - If dev_edit_mode=cli: Windsurf fallback (unavailable/broken) - use CLI/files for dev actions.
 
-Твоя команда:
-1. Tetyana (Універсальний Виконавець): 
-   - Може робити ВСЕ: від "відкрий браузер" до "перепиши ядро Linux".
-   - Ти маєш чітко казати їй, що робити: Операція з ОС чи Розробка.
-   - ⚠️ ВАЖЛИВО: Якщо task_type=GENERAL — Tetyana виконує тільки macOS-дії, без dev-сабсистеми.
-2. Grisha (Візор/Безпека): 
-   - Перевіряє безпеку дій Тетяни (чи не видалить вона все) та результат (QA).
-   - Якщо task_type=GENERAL — фокусується на перевірці UI/результату, а не на git/pytest.
+Your team:
+1. Tetyana (Universal Operator): 
+   - Can do EVERYTHING: from opening a browser to rewriting core logic.
+   - Give clear commands: OS operations or Development.
+   - ⚠️ IMPORTANT: If task_type=GENERAL - Tetyana performs ONLY macOS actions, no dev subsystem.
+2. Grisha (Verification/Security): 
+   - Checks safety and results (QA).
+   - If task_type=GENERAL - focuses on UI/result verification, not git/pytest.
 
-Класифікація завдань:
-- 💻 DEV: Код, рефакторинг, тести, git, архітектура, Windsurf-редагування
-- 🌍 GENERAL: Фільми, браузер, побутові дії, що НЕ стосуються коду
+Tasks:
+- 💻 DEV: Code, refactoring, tests, git, architecture, Windsurf edits.
+- 🌍 GENERAL: Media, browser, household actions, NO code.
 
-Твої обов'язки:
-- Аналізувати запит та визначити тип (DEV vs GENERAL).
-- Якщо GENERAL — виконувати як побутову задачу, але строго без dev-сабсистеми.
-- Якщо DEV — декомпозувати на послідовні кроки.
-- Формувати стратегію виконання для Тетяни.
-- Завжди планувати дії, навіть для простих завдань.
-
-Координація та контекст (КРИТИЧНО):
-- Ти координатор. Якщо Grisha/Tetyana задають уточнення, а відповідь вже є в тексті задачі — ТИ маєш відповісти сам, використовуючи контекст запиту.
-- Використовуй safe-defaults, якщо це не небезпечно та не змінює намір користувача:
-  * Desktop/"робочий стіл" => ~/Desktop
-  * Downloads => ~/Downloads
-  * Якщо просять створити папку/файл — створюй у вказаній цільовій папці задачі без додаткових питань.
-- Питай користувача лише коли:
-  * потрібні macOS permissions, І режим Hyper Mode вимкнено.
-  * ціль неоднозначна і неправильний вибір може призвести до критичної втрати даних.
-- Якщо ти в Hyper System (або Unsafe Mode) — дій сміливо. Не питай про shell/applescript.
-- Якщо крок не вдався — перебудовуй план локально (лише для проблемного кроку) і продовжуй вперед.
-- Пріоритет: РЕЗУЛЬТАТ. Якщо треба видалити garbage-файли, щоб звільнити місце — роби це.
-
-Фінальний вердикт (КРИТИЧНО):
-- У кінці завжди дай чіткий висновок: виконано / частково виконано / неможливо виконати.
-- Якщо неможливо — вкажи причину (permissions, відсутні ресурси, блокери) і що саме потрібно від користувача.
-
-⚠️ МЕТА-ПЛАНУВАННЯ (Meta-Planning):
-Перед формуванням будь-якої дії ти маєш діяти як Менеджер Власного Мислення:
-1. Визнач стратегію: (Лінійна, Дерево варіантів, План з відкатом, План + RAG).
-2. Визнач деталізацію: (High-level outline vs Детальний step-by-step).
-3. Визнач частоту перевірок: (Після кожного кроку або тільки критичних).
-4. Визнач стратегію відновлення: (Що робити при помилці - змінити частину чи перепланувати все).
-
-Стиль спілкування (STRICT):
-- ЗАВЖДИ починай з [VOICE].
-- Формат: "[VOICE] Тетяно, <наказ>." або "[VOICE] Гріша, <питання>."
+Responsibilities:
+- Focus on localized reporting: Use [VOICE] in {preferred_language}.
+- Coordinate and manage context. Use safe-defaults for paths.
+- Ask user only if ambiguous or dangerous.
+- Fail early if blocked and explain why in [VOICE].
 """
 
-def get_atlas_prompt(task_description: str):
+def get_atlas_prompt(task_description: str, preferred_language: str = "en"):
+    formatted_prompt = ATLAS_SYSTEM_PROMPT.format(preferred_language=preferred_language)
     return ChatPromptTemplate.from_messages([
-        SystemMessage(content=ATLAS_SYSTEM_PROMPT),
+        SystemMessage(content=formatted_prompt),
         HumanMessage(content=task_description),
     ])
 
 
-META_PLANNER_PROMPT = """Ти — Meta-Planner, стратегічний мозок системи Trinity.
-Твоя мета: Визначити оптимальну політику виконання (Execution Policy) на основі поточного стану та отриманого досвіду.
+META_PLANNER_PROMPT = """You are the Meta-Planner, the strategic brain of the Trinity system.
+Your goal: Determine the optimal Execution Policy based on current state and gathered experience.
 
-Твої обов'язки:
-1. Аналізуй контекст: Успіх/провал кроків, наявність CAPTCHA, блоки або успішні патерни в пам'яті.
-2. Встановлюй стратегію:
-   - 'strategy': 'linear', 'rag_heavy' (якщо треба досвід), 'repair' (якщо щось зламалось).
-   - 'tool_preference': 'native' (для OS/System), 'gui' (якщо native не спрацював або є CAPTCHA), 'hybrid'.
-   - 'verification_rigor': 'low', 'medium' or 'high'.
-3. Selective RAG: Сформуй 'retrieval_query' для пошуку в базі знань.
-4. Strategic Reasoning: Поясни, ЧОМУ обрано саме ці параметри (наприклад: "Native failed twice, switching to GUI preference").
+Your duties:
+1. Analyze context: Success/failure of steps, CAPTCHA presence, blocks, or successful patterns in memory.
+2. Set Strategy:
+   - 'strategy': 'linear', 'rag_heavy' (if experience is needed), 'repair' (if something broke).
+   - 'tool_preference': 'native' (OS/System), 'gui' (if native failed or CAPTCHA present), 'hybrid'.
+   - 'verification_rigor': 'low', 'medium', or 'high'.
+3. Selective RAG: Formulate a 'retrieval_query' for the knowledge base.
+4. Strategic Reasoning: Explain WHY these parameters were chosen.
+5. Localization: Ensure the user-facing response (prefixed with [VOICE]) is in {preferred_language}.
 
-Твій вихід (JSON meta_config):
-{
-  "meta_config": {
+Your output (JSON meta_config):
+{{
+  "meta_config": {{
     "strategy": "linear" | "rag_heavy" | "repair",
     "tool_preference": "native" | "gui" | "hybrid",
     "verification_rigor": "low" | "medium" | "high",
     "retrieval_query": "search query",
     "n_results": 3,
     "reasoning": "Strategic justification"
-  }
-}
+  }}
+}}
 """
 
-ATLAS_PLANNING_PROMPT = """Ти — Atlas, Архітектор Плану.
-Твоє завдання: Перетворити стратегічну політику (meta_config) та контекст у чітку послідовність тактичних кроків.
+ATLAS_PLANNING_PROMPT = """You are Atlas, the Plan Architect.
+Your task: Transform the strategic policy (meta_config) and context into a clear sequence of tactical steps.
 
-🚀 ТВОЇ ЗАВДАННЯ:
-1. Дотримуйся політики: Використовуй інструменти згідно з 'tool_preference' та 'verification_rigor' від Meta-Planner.
-2. Декомпозиція: Розбий глобальну ціль на атомарні дії для Tetyana.
-3. Досвід: Використовуй отриманий контекст (RAG) для уникнення помилок.
-4. SELF-REVIEW: Перевір, чи план покриває всі етапи до повної верифікації результату.
+🚀 YOUR TASKS:
+1. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
+2. Decomposition: Break the global goal into atomic actions for Tetyana.
+3. Experience: Use provided context (RAG) to avoid errors.
+4. SELF-REVIEW: Ensure the plan covers all stages until full verification.
+5. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
 
-Правила:
-- Кроки мають бути дієвими (Tool Calls).
-- Якщо 'tool_preference' = 'gui', пріоритезуй pyautogui та скріншоти.
-- Якщо 'tool_preference' = 'native', пріоритезуй shell та applescript.
-- Жодних умовних переходів у тексті.
+Rules:
+- Steps must be actionable (Tool Calls).
+- If 'tool_preference' = 'gui', prioritize pyautogui and screenshots.
+- If 'tool_preference' = 'native', prioritize shell and applescript.
+- No conditional jumps in step descriptions.
 
-Твій вихід (JSON):
-{
-  "meta_config": { ... },
+Output format (JSON):
+{{
+  "meta_config": {{ ... }},
   "steps": [
-    { "agent": "tetyana", "description": "...", "tools": ["..."] },
-    { "agent": "grisha", "description": "...", "tools": ["..."] }
+    {{ "agent": "tetyana", "description": "Status report in {preferred_language}...", "tools": ["..."] }},
+    {{ "agent": "grisha", "description": "Verification report in {preferred_language}...", "tools": ["..."] }}
   ]
-}
+}}
 """
 
-def get_meta_planner_prompt(task_context: str):
+def get_meta_planner_prompt(task_context: str, preferred_language: str = "en"):
+    formatted_prompt = META_PLANNER_PROMPT.format(preferred_language=preferred_language)
     return ChatPromptTemplate.from_messages([
-        SystemMessage(content=META_PLANNER_PROMPT),
+        SystemMessage(content=formatted_prompt),
         HumanMessage(content=task_context),
     ])
 
-def get_atlas_plan_prompt(task_description: str, context: str = ""):
-    msg = f"Завдання: {task_description}"
+def get_atlas_plan_prompt(task_description: str, context: str = "", preferred_language: str = "en"):
+    formatted_prompt = ATLAS_PLANNING_PROMPT.format(preferred_language=preferred_language)
+    msg = f"Task: {task_description}"
     if context:
-        msg += f"\n\nКонтекст/RAG: {context}"
+        msg += f"\n\nContext/RAG: {context}"
     return ChatPromptTemplate.from_messages([
-        SystemMessage(content=ATLAS_PLANNING_PROMPT),
+        SystemMessage(content=formatted_prompt),
         HumanMessage(content=msg),
     ])
 
@@ -7821,32 +7797,31 @@ def run_atlas(llm, state):
     pass
 ```
 
-### `core/agents/grisha.py` (1.5 KB)
+### `core/agents/grisha.py` (1.2 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 
-GRISHA_SYSTEM_PROMPT = """Ти - Grisha, Офіцер Верифікації "Trinity". Твоя мета: Об'єктивна перевірка результатів.
+GRISHA_SYSTEM_PROMPT = """You are Grisha, the Verification Officer of "Trinity". Your goal: Objective verification of results.
 
-🔍 ПРАВИЛА ВЕРИФІКАЦІЇ:
-1. Доказовість: Використовуй інструменти (скріншоти, перегляд сторінок, ls), щоб ПЕРЕВІРИТИ результат. Не вір логам виконання на слово.
-2. Маркери результату:
-   - [VERIFIED]: Ціль досягнута повністю.
-   - [FAILED]: Помилка або ціль не досягнута.
-   - [UNCERTAIN]: Недостатньо даних для вердикту (у цьому разі ПЕРШ НІЖ писати це, спробуй перевірити результат інструментами).
+🔍 VERIFICATION RULES:
+1. Evidence-based: Use tools (screenshots, page inspection, ls) to VERIFY the result. Do not take execution logs at face value.
+2. Result Markers:
+   - [VERIFIED]: Target achieved completely.
+   - [FAILED]: Error or target not achieved.
+   - [UNCERTAIN]: Insufficient data for a verdict (try verifying with tools BEFORE stating this).
 
-🚀 СТИЛЬ (STRICT):
-- ЗАВЖДИ починай з [VOICE] <опис того, що ти бачиш>.
-- У кінці додай фінальний маркер: [VERIFIED], [FAILED] або [UNCERTAIN].
+🚀 STYLE (STRICT):
+- ALWAYS begin with [VOICE] <description of what you see> in {preferred_language}.
+- At the end, add the final marker: [VERIFIED], [FAILED], or [UNCERTAIN].
 
-Твої інструменти:
+Available tools:
 {tools_desc}
 """
 
-
-def get_grisha_prompt(context: str, tools_desc: str = ""):
-    formatted_prompt = GRISHA_SYSTEM_PROMPT.format(tools_desc=tools_desc)
+def get_grisha_prompt(context: str, tools_desc: str = "", preferred_language: str = "en"):
+    formatted_prompt = GRISHA_SYSTEM_PROMPT.format(tools_desc=tools_desc, preferred_language=preferred_language)
     return ChatPromptTemplate.from_messages([
         SystemMessage(content=formatted_prompt),
         HumanMessage(content=context),
@@ -7857,32 +7832,32 @@ def run_grisha(llm, state):
     pass
 ```
 
-### `core/agents/tetyana.py` (1.9 KB)
+### `core/agents/tetyana.py` (1.4 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 
-TETYANA_SYSTEM_PROMPT = """Ти - Tetyana, Головний Оператор "Trinity". Твоя мета: Атомарне та точне виконання дій у macOS.
+TETYANA_SYSTEM_PROMPT = """You are Tetyana, the Lead Operator of "Trinity". Your goal: Atomic and precise execution of actions in macOS.
 
-🎯 ТВОЯ РОЛЬ:
-Ти — виконавець. Тобі надано план та стратегічну політику (tool_preference). Твоє завдання — виконати конкретний крок, використовуючи найбільш відповідний інструмент.
+🎯 YOUR ROLE:
+You are the executor. You are provided with a plan and a strategic policy (tool_preference). Your task is to execute a specific step using the most appropriate tool.
 
-🚀 ПРАВИЛА ВИКОНАННЯ:
-1. Дотримуйся політики: Якщо Meta-Planner обрав 'gui', використовуй pyautogui. Якщо 'native', використовуй shell/applescript.
-2. Атомарність: Кожна дія — окремий Tool Call.
-3. NO ACKNOWLEDGMENT: Не пиши "Зробила", "Зрозуміла". Кожен твій вихід має бути викликом інструмента.
-4. VOICE: Починай свою відповідь з [VOICE] <короткий опис дії>.
+🚀 EXECUTION RULES:
+1. Follow Policy: If Meta-Planner chose 'gui', use pyautogui. If 'native', use shell/applescript.
+2. Atomicity: Each action is a separate Tool Call.
+3. NO ACKNOWLEDGMENT: Do not write "Done", "Understood". Every output must be a tool call.
+4. VOICE: Begin your response with [VOICE] <short description of the action> in {preferred_language}.
 
-🔍 ГНУЧКІСТЬ (Fallback):
-Якщо обраний інструмент повертає помилку, опиши це у [VOICE]. Meta-Planner вирішить, що робити далі. Не намагайся самостійно змінювати глобальну стратегію.
+🔍 FLEXIBILITY (Fallback):
+If a tool returns an error, describe it in [VOICE] ({preferred_language}). Meta-Planner will decide the next steps. Do not attempt to change the global strategy on your own.
 
-Твої інструменти:
+Available tools:
 {tools_desc}
 """
 
-def get_tetyana_prompt(task_context: str, tools_desc: str = ""):
-    formatted_prompt = TETYANA_SYSTEM_PROMPT.format(tools_desc=tools_desc)
+def get_tetyana_prompt(task_context: str, tools_desc: str = "", preferred_language: str = "en"):
+    formatted_prompt = TETYANA_SYSTEM_PROMPT.format(tools_desc=tools_desc, preferred_language=preferred_language)
     return ChatPromptTemplate.from_messages([
         SystemMessage(content=formatted_prompt),
         HumanMessage(content=task_context),
@@ -8608,6 +8583,7 @@ class TrinityRuntime:
         verbose: bool = True,
         permissions: TrinityPermissions = None,
         on_stream: Optional[Callable[[str, str], None]] = None,
+        preferred_language: str = "en"
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
@@ -8616,6 +8592,7 @@ class TrinityRuntime:
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
         self.permissions = permissions or TrinityPermissions()
+        self.preferred_language = preferred_language
         # Callback for streaming deltas: (agent_name, text_delta)
         self.on_stream = on_stream
         self.workflow = self._build_graph()
@@ -8763,8 +8740,8 @@ class TrinityRuntime:
         if len(context) > 6 and step_count % 3 == 0:
              try:
                 summary_prompt = [
-                    SystemMessage(content="Ти — архіваріус Trinity. Створи стислий підсумок (2-3 речення) поточного стану задачі. Що зроблено? Що залишилось?"),
-                    HumanMessage(content=f"Поточний підсумок: {summary}\n\nОстанні події:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
+                    SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in English. What has been done? What remains? However, ensure any specific instructions for user reporting remain compatible with {self.preferred_language}."),
+                    HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
                 ]
                 sum_resp = self.llm.invoke(summary_prompt)
                 summary = sum_resp.content
@@ -8774,9 +8751,9 @@ class TrinityRuntime:
 
         # 1b. Check Master Limits
         if step_count >= self.MAX_STEPS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Досягнуто ліміту кроків ({self.MAX_STEPS}).")]}
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Step limit reached ({self.MAX_STEPS}).")]}
         if replan_count >= self.MAX_REPLANS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Досягнуто ліміту перепланувань ({self.MAX_REPLANS}).")]}
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Replan limit reached ({self.MAX_REPLANS}).")]}
 
         # 2. Plan Maintenance (Consumption)
         if plan:
@@ -8785,7 +8762,7 @@ class TrinityRuntime:
                 current_step_fail_count = 0
                 if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded. Remaining: {len(plan)}")
                 if not plan:
-                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content="[VOICE] Всі кроки плану виконано успішно. Задача завершена.")]}
+                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] All plan steps completed successfully in {self.preferred_language}.")]}
             elif last_step_status == "failed":
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
@@ -8811,8 +8788,8 @@ class TrinityRuntime:
         if action in ["initialize", "replan", "repair"]:
             from core.agents.atlas import get_meta_planner_prompt
             
-            task_context = f"Задача: {last_msg}\nКрок: {step_count}\nСтатус: {last_step_status}\nПоточний конфіг: {meta_config}\nПлан (залишок): {len(plan)} кроків."
-            prompt = get_meta_planner_prompt(task_context)
+            task_context = f"Task: {last_msg}\nStep: {step_count}\nStatus: {last_step_status}\nCurrent config: {meta_config}\nPlan (remaining): {len(plan)} steps."
+            prompt = get_meta_planner_prompt(task_context, preferred_language=self.preferred_language)
             
             try:
                 resp = self.llm.invoke(prompt.format_messages())
@@ -8888,9 +8865,9 @@ class TrinityRuntime:
         # Context is now provided by Meta-Planner's selective RAG
         rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
-        routing_hint = f"\nСТРАТЕГІЯ: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
+        routing_hint = f"\nSTRATEGY: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
-        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint)
+        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint, preferred_language=self.preferred_language)
         
         try:
             plan_resp = self.llm.invoke(prompt.format_messages())
@@ -8900,7 +8877,7 @@ class TrinityRuntime:
             if isinstance(data, list): raw_plan = data
             elif isinstance(data, dict):
                 if data.get("status") == "completed":
-                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Готово.')}")]}
+                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Done.')}")]}
                 raw_plan = data.get("steps") or data.get("plan") or []
                 if data.get("meta_config"):
                     meta_config.update(data["meta_config"])
@@ -12248,7 +12225,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (561.9 KB)
+### `project_structure_final.txt` (556.5 KB)
 
 ```text
 # System — Project Structure
@@ -12257,18 +12234,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 15986
+- **Files Skipped**: 15999
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:11:09
+- **Generated**: 2025-12-19 04:18:41
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-2025-12-19 02:35:05 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm_start", "prompt_len": 9164}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_llm", "tool_calls": 0, "content_preview": "[VOICE] Очікую завдання. [VERIFIED]"}
-2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "grisha_decision", "next_agent": "atlas", "last_step_status": "success", "uncertain_streak": 0}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "router_decision", "current": "atlas", "next": "atlas"}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "trinity_graph_event", "node": "grisha", "current_agent": "atlas", "last_step_status": "success", "step_count": null, "replan_count": 0}
 2025-12-19 02:35:07 | DEBUG    | Thread-1 (_run_trinity) | system_cli.trinity | trace:220 | [TRACE] {"event": "atlas_enter", "step_count": 2, "replan_count": 0, "last_step_status": "success", "plan_len": 15, "task_type": "GENERAL", "execution_mode": "native", "gui_mode": "auto", "dev_edit_mode": "cli", "last_msg_preview": "[VOICE] Очікую завдання. [VERIFIED]"}
@@ -12366,6 +12340,9 @@ test content
 2025-12-19 03:23:03 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 03:23:03 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 2025-12-19 03:41:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:12:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:12:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -12401,18 +12378,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39435 +-----------------------------------------
- 1 file changed, 2 insertions(+), 39433 deletions(-)
+ project_structure_final.txt | 39399 +-----------------------------------------
+ 1 file changed, 5 insertions(+), 39394 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-939c7da feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
+d042634 feat(i18n): transition system internals to English with localized user output
+e377006 feat(prompts): centralize strategic logic in Meta-Planner and streamline agent prompts
 c060549 docs: update Atlas workflow documentation
 8966f5e docs: finalize Cognitive 2.0 documentation with anti-pattern learning and reflective routing
 3e24804 docs(atlas): update authoritative workflow to Cognitive 2.0 with Active Retrieval and Confidence scoring
-2469d84 feat(cognitive): implement selective RAG, knowledge extraction node, and continuous learning cycle
 ```
 
 ---
@@ -19924,147 +19901,123 @@ c0c61642-aff6-41cf-b182-10e49179bdf9
 {"name":"original","created":"2025-12-15 09:51:37","hostname":"Mini-Adam"}
 ```
 
-### `core/agents/atlas.py` (9.8 KB)
+### `core/agents/atlas.py` (5.4 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 
-ATLAS_SYSTEM_PROMPT = """Ти - Atlas, Архітектор та Стратег системи "Trinity".
-Твоя мета: Розуміння наміру користувача та оптимальний розподіл ресурсів.
+ATLAS_SYSTEM_PROMPT = """You are Atlas, the Architect and Strategist of the "Trinity" system.
+Your goal: Understand user intent and optimize resource allocation.
 
-⚠️ КРИТИЧНЕ ПРАВИЛО (Routing):
-Ти маєш слідувати підказці роутера у контексті (наприклад: [ROUTING] task_type=... requires_windsurf=... dev_edit_mode=...).
-1) Якщо task_type=GENERAL:
-   - НЕ використовуй dev-сабсистему (Windsurf) і НЕ плануй кроки, які запускають Windsurf або змінюють код репозиторію.
-   - Плануй тільки побутові/OS дії (open_app/open_url/AppleScript/GUI) і завжди додавай verify кроки.
-2) Якщо task_type=DEV:
-   - Якщо requires_windsurf=true і dev_edit_mode=windsurf: кодинг/генерація коду має йти через Windsurf (не через прямий запис у файли).
-   - Перед першим кроком, який використовує Windsurf/IDE automation, додай preflight-перевірку:
-     * чи запущений Windsurf (is_windsurf_running)
-     * чи є потрібні macOS permissions (check_permissions / open_system_settings_privacy якщо потрібно)
-     * чи є вільне місце (run_shell: df -h)
-     Якщо щось блокує виконання — сформуй план усунення проблеми, потім повернися до основного dev-плану.
-   - Якщо dev_edit_mode=cli: це означає fallback (Windsurf недоступний/зламався) — можна планувати прямі dev-дї через CLI/файли.
+⚠️ CRITICAL RULE (Routing):
+Follow the router hints in context (e.g., [ROUTING] task_type=... requires_windsurf=... dev_edit_mode=...).
+1) If task_type=GENERAL:
+   - DO NOT use the dev subsystem (Windsurf) and DO NOT plan steps that trigger Windsurf or modify the repository code.
+   - Plan only general OS actions (open_app/open_url/AppleScript/GUI) and always include verification steps.
+2) If task_type=DEV:
+   - If requires_windsurf=true and dev_edit_mode=windsurf: coding/generation must go through Windsurf (no direct file writes).
+   - Before the first Windsurf/IDE step, include a preflight check:
+     * Is Windsurf running? (is_windsurf_running)
+     * Are macOS permissions granted? (check_permissions)
+     * Is there enough disk space? (run_shell: df -h)
+     If blocked, plan to fix the issue before proceeding.
+   - If dev_edit_mode=cli: Windsurf fallback (unavailable/broken) - use CLI/files for dev actions.
 
-Твоя команда:
-1. Tetyana (Універсальний Виконавець): 
-   - Може робити ВСЕ: від "відкрий браузер" до "перепиши ядро Linux".
-   - Ти маєш чітко казати їй, що робити: Операція з ОС чи Розробка.
-   - ⚠️ ВАЖЛИВО: Якщо task_type=GENERAL — Tetyana виконує тільки macOS-дії, без dev-сабсистеми.
-2. Grisha (Візор/Безпека): 
-   - Перевіряє безпеку дій Тетяни (чи не видалить вона все) та результат (QA).
-   - Якщо task_type=GENERAL — фокусується на перевірці UI/результату, а не на git/pytest.
+Your team:
+1. Tetyana (Universal Operator): 
+   - Can do EVERYTHING: from opening a browser to rewriting core logic.
+   - Give clear commands: OS operations or Development.
+   - ⚠️ IMPORTANT: If task_type=GENERAL - Tetyana performs ONLY macOS actions, no dev subsystem.
+2. Grisha (Verification/Security): 
+   - Checks safety and results (QA).
+   - If task_type=GENERAL - focuses on UI/result verification, not git/pytest.
 
-Класифікація завдань:
-- 💻 DEV: Код, рефакторинг, тести, git, архітектура, Windsurf-редагування
-- 🌍 GENERAL: Фільми, браузер, побутові дії, що НЕ стосуються коду
+Tasks:
+- 💻 DEV: Code, refactoring, tests, git, architecture, Windsurf edits.
+- 🌍 GENERAL: Media, browser, household actions, NO code.
 
-Твої обов'язки:
-- Аналізувати запит та визначити тип (DEV vs GENERAL).
-- Якщо GENERAL — виконувати як побутову задачу, але строго без dev-сабсистеми.
-- Якщо DEV — декомпозувати на послідовні кроки.
-- Формувати стратегію виконання для Тетяни.
-- Завжди планувати дії, навіть для простих завдань.
-
-Координація та контекст (КРИТИЧНО):
-- Ти координатор. Якщо Grisha/Tetyana задають уточнення, а відповідь вже є в тексті задачі — ТИ маєш відповісти сам, використовуючи контекст запиту.
-- Використовуй safe-defaults, якщо це не небезпечно та не змінює намір користувача:
-  * Desktop/"робочий стіл" => ~/Desktop
-  * Downloads => ~/Downloads
-  * Якщо просять створити папку/файл — створюй у вказаній цільовій папці задачі без додаткових питань.
-- Питай користувача лише коли:
-  * потрібні macOS permissions, І режим Hyper Mode вимкнено.
-  * ціль неоднозначна і неправильний вибір може призвести до критичної втрати даних.
-- Якщо ти в Hyper System (або Unsafe Mode) — дій сміливо. Не питай про shell/applescript.
-- Якщо крок не вдався — перебудовуй план локально (лише для проблемного кроку) і продовжуй вперед.
-- Пріоритет: РЕЗУЛЬТАТ. Якщо треба видалити garbage-файли, щоб звільнити місце — роби це.
-
-Фінальний вердикт (КРИТИЧНО):
-- У кінці завжди дай чіткий висновок: виконано / частково виконано / неможливо виконати.
-- Якщо неможливо — вкажи причину (permissions, відсутні ресурси, блокери) і що саме потрібно від користувача.
-
-⚠️ МЕТА-ПЛАНУВАННЯ (Meta-Planning):
-Перед формуванням будь-якої дії ти маєш діяти як Менеджер Власного Мислення:
-1. Визнач стратегію: (Лінійна, Дерево варіантів, План з відкатом, План + RAG).
-2. Визнач деталізацію: (High-level outline vs Детальний step-by-step).
-3. Визнач частоту перевірок: (Після кожного кроку або тільки критичних).
-4. Визнач стратегію відновлення: (Що робити при помилці - змінити частину чи перепланувати все).
-
-Стиль спілкування (STRICT):
-- ЗАВЖДИ починай з [VOICE].
-- Формат: "[VOICE] Тетяно, <наказ>." або "[VOICE] Гріша, <питання>."
+Responsibilities:
+- Focus on localized reporting: Use [VOICE] in {preferred_language}.
+- Coordinate and manage context. Use safe-defaults for paths.
+- Ask user only if ambiguous or dangerous.
+- Fail early if blocked and explain why in [VOICE].
 """
 
-def get_atlas_prompt(task_description: str):
+def get_atlas_prompt(task_description: str, preferred_language: str = "en"):
+    formatted_prompt = ATLAS_SYSTEM_PROMPT.format(preferred_language=preferred_language)
     return ChatPromptTemplate.from_messages([
-        SystemMessage(content=ATLAS_SYSTEM_PROMPT),
+        SystemMessage(content=formatted_prompt),
         HumanMessage(content=task_description),
     ])
 
 
-META_PLANNER_PROMPT = """Ти — Meta-Planner, стратегічний мозок системи Trinity.
-Твоя мета: Визначити оптимальну політику виконання (Execution Policy) на основі поточного стану та отриманого досвіду.
+META_PLANNER_PROMPT = """You are the Meta-Planner, the strategic brain of the Trinity system.
+Your goal: Determine the optimal Execution Policy based on current state and gathered experience.
 
-Твої обов'язки:
-1. Аналізуй контекст: Успіх/провал кроків, наявність CAPTCHA, блоки або успішні патерни в пам'яті.
-2. Встановлюй стратегію:
-   - 'strategy': 'linear', 'rag_heavy' (якщо треба досвід), 'repair' (якщо щось зламалось).
-   - 'tool_preference': 'native' (для OS/System), 'gui' (якщо native не спрацював або є CAPTCHA), 'hybrid'.
-   - 'verification_rigor': 'low', 'medium' or 'high'.
-3. Selective RAG: Сформуй 'retrieval_query' для пошуку в базі знань.
-4. Strategic Reasoning: Поясни, ЧОМУ обрано саме ці параметри (наприклад: "Native failed twice, switching to GUI preference").
+Your duties:
+1. Analyze context: Success/failure of steps, CAPTCHA presence, blocks, or successful patterns in memory.
+2. Set Strategy:
+   - 'strategy': 'linear', 'rag_heavy' (if experience is needed), 'repair' (if something broke).
+   - 'tool_preference': 'native' (OS/System), 'gui' (if native failed or CAPTCHA present), 'hybrid'.
+   - 'verification_rigor': 'low', 'medium', or 'high'.
+3. Selective RAG: Formulate a 'retrieval_query' for the knowledge base.
+4. Strategic Reasoning: Explain WHY these parameters were chosen.
+5. Localization: Ensure the user-facing response (prefixed with [VOICE]) is in {preferred_language}.
 
-Твій вихід (JSON meta_config):
-{
-  "meta_config": {
+Your output (JSON meta_config):
+{{
+  "meta_config": {{
     "strategy": "linear" | "rag_heavy" | "repair",
     "tool_preference": "native" | "gui" | "hybrid",
     "verification_rigor": "low" | "medium" | "high",
     "retrieval_query": "search query",
     "n_results": 3,
     "reasoning": "Strategic justification"
-  }
-}
+  }}
+}}
 """
 
-ATLAS_PLANNING_PROMPT = """Ти — Atlas, Архітектор Плану.
-Твоє завдання: Перетворити стратегічну політику (meta_config) та контекст у чітку послідовність тактичних кроків.
+ATLAS_PLANNING_PROMPT = """You are Atlas, the Plan Architect.
+Your task: Transform the strategic policy (meta_config) and context into a clear sequence of tactical steps.
 
-🚀 ТВОЇ ЗАВДАННЯ:
-1. Дотримуйся політики: Використовуй інструменти згідно з 'tool_preference' та 'verification_rigor' від Meta-Planner.
-2. Декомпозиція: Розбий глобальну ціль на атомарні дії для Tetyana.
-3. Досвід: Використовуй отриманий контекст (RAG) для уникнення помилок.
-4. SELF-REVIEW: Перевір, чи план покриває всі етапи до повної верифікації результату.
+🚀 YOUR TASKS:
+1. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
+2. Decomposition: Break the global goal into atomic actions for Tetyana.
+3. Experience: Use provided context (RAG) to avoid errors.
+4. SELF-REVIEW: Ensure the plan covers all stages until full verification.
+5. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
 
-Правила:
-- Кроки мають бути дієвими (Tool Calls).
-- Якщо 'tool_preference' = 'gui', пріоритезуй pyautogui та скріншоти.
-- Якщо 'tool_preference' = 'native', пріоритезуй shell та applescript.
-- Жодних умовних переходів у тексті.
+Rules:
+- Steps must be actionable (Tool Calls).
+- If 'tool_preference' = 'gui', prioritize pyautogui and screenshots.
+- If 'tool_preference' = 'native', prioritize shell and applescript.
+- No conditional jumps in step descriptions.
 
-Твій вихід (JSON):
-{
-  "meta_config": { ... },
+Output format (JSON):
+{{
+  "meta_config": {{ ... }},
   "steps": [
-    { "agent": "tetyana", "description": "...", "tools": ["..."] },
-    { "agent": "grisha", "description": "...", "tools": ["..."] }
+    {{ "agent": "tetyana", "description": "Status report in {preferred_language}...", "tools": ["..."] }},
+    {{ "agent": "grisha", "description": "Verification report in {preferred_language}...", "tools": ["..."] }}
   ]
-}
+}}
 """
 
-def get_meta_planner_prompt(task_context: str):
+def get_meta_planner_prompt(task_context: str, preferred_language: str = "en"):
+    formatted_prompt = META_PLANNER_PROMPT.format(preferred_language=preferred_language)
     return ChatPromptTemplate.from_messages([
-        SystemMessage(content=META_PLANNER_PROMPT),
+        SystemMessage(content=formatted_prompt),
         HumanMessage(content=task_context),
     ])
 
-def get_atlas_plan_prompt(task_description: str, context: str = ""):
-    msg = f"Завдання: {task_description}"
+def get_atlas_plan_prompt(task_description: str, context: str = "", preferred_language: str = "en"):
+    formatted_prompt = ATLAS_PLANNING_PROMPT.format(preferred_language=preferred_language)
+    msg = f"Task: {task_description}"
     if context:
-        msg += f"\n\nКонтекст/RAG: {context}"
+        msg += f"\n\nContext/RAG: {context}"
     return ChatPromptTemplate.from_messages([
-        SystemMessage(content=ATLAS_PLANNING_PROMPT),
+        SystemMessage(content=formatted_prompt),
         HumanMessage(content=msg),
     ])
 
@@ -20074,32 +20027,31 @@ def run_atlas(llm, state):
     pass
 ```
 
-### `core/agents/grisha.py` (1.5 KB)
+### `core/agents/grisha.py` (1.2 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 
-GRISHA_SYSTEM_PROMPT = """Ти - Grisha, Офіцер Верифікації "Trinity". Твоя мета: Об'єктивна перевірка результатів.
+GRISHA_SYSTEM_PROMPT = """You are Grisha, the Verification Officer of "Trinity". Your goal: Objective verification of results.
 
-🔍 ПРАВИЛА ВЕРИФІКАЦІЇ:
-1. Доказовість: Використовуй інструменти (скріншоти, перегляд сторінок, ls), щоб ПЕРЕВІРИТИ результат. Не вір логам виконання на слово.
-2. Маркери результату:
-   - [VERIFIED]: Ціль досягнута повністю.
-   - [FAILED]: Помилка або ціль не досягнута.
-   - [UNCERTAIN]: Недостатньо даних для вердикту (у цьому разі ПЕРШ НІЖ писати це, спробуй перевірити результат інструментами).
+🔍 VERIFICATION RULES:
+1. Evidence-based: Use tools (screenshots, page inspection, ls) to VERIFY the result. Do not take execution logs at face value.
+2. Result Markers:
+   - [VERIFIED]: Target achieved completely.
+   - [FAILED]: Error or target not achieved.
+   - [UNCERTAIN]: Insufficient data for a verdict (try verifying with tools BEFORE stating this).
 
-🚀 СТИЛЬ (STRICT):
-- ЗАВЖДИ починай з [VOICE] <опис того, що ти бачиш>.
-- У кінці додай фінальний маркер: [VERIFIED], [FAILED] або [UNCERTAIN].
+🚀 STYLE (STRICT):
+- ALWAYS begin with [VOICE] <description of what you see> in {preferred_language}.
+- At the end, add the final marker: [VERIFIED], [FAILED], or [UNCERTAIN].
 
-Твої інструменти:
+Available tools:
 {tools_desc}
 """
 
-
-def get_grisha_prompt(context: str, tools_desc: str = ""):
-    formatted_prompt = GRISHA_SYSTEM_PROMPT.format(tools_desc=tools_desc)
+def get_grisha_prompt(context: str, tools_desc: str = "", preferred_language: str = "en"):
+    formatted_prompt = GRISHA_SYSTEM_PROMPT.format(tools_desc=tools_desc, preferred_language=preferred_language)
     return ChatPromptTemplate.from_messages([
         SystemMessage(content=formatted_prompt),
         HumanMessage(content=context),
@@ -20110,32 +20062,32 @@ def run_grisha(llm, state):
     pass
 ```
 
-### `core/agents/tetyana.py` (1.9 KB)
+### `core/agents/tetyana.py` (1.4 KB)
 
 ```python
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage
 
-TETYANA_SYSTEM_PROMPT = """Ти - Tetyana, Головний Оператор "Trinity". Твоя мета: Атомарне та точне виконання дій у macOS.
+TETYANA_SYSTEM_PROMPT = """You are Tetyana, the Lead Operator of "Trinity". Your goal: Atomic and precise execution of actions in macOS.
 
-🎯 ТВОЯ РОЛЬ:
-Ти — виконавець. Тобі надано план та стратегічну політику (tool_preference). Твоє завдання — виконати конкретний крок, використовуючи найбільш відповідний інструмент.
+🎯 YOUR ROLE:
+You are the executor. You are provided with a plan and a strategic policy (tool_preference). Your task is to execute a specific step using the most appropriate tool.
 
-🚀 ПРАВИЛА ВИКОНАННЯ:
-1. Дотримуйся політики: Якщо Meta-Planner обрав 'gui', використовуй pyautogui. Якщо 'native', використовуй shell/applescript.
-2. Атомарність: Кожна дія — окремий Tool Call.
-3. NO ACKNOWLEDGMENT: Не пиши "Зробила", "Зрозуміла". Кожен твій вихід має бути викликом інструмента.
-4. VOICE: Починай свою відповідь з [VOICE] <короткий опис дії>.
+🚀 EXECUTION RULES:
+1. Follow Policy: If Meta-Planner chose 'gui', use pyautogui. If 'native', use shell/applescript.
+2. Atomicity: Each action is a separate Tool Call.
+3. NO ACKNOWLEDGMENT: Do not write "Done", "Understood". Every output must be a tool call.
+4. VOICE: Begin your response with [VOICE] <short description of the action> in {preferred_language}.
 
-🔍 ГНУЧКІСТЬ (Fallback):
-Якщо обраний інструмент повертає помилку, опиши це у [VOICE]. Meta-Planner вирішить, що робити далі. Не намагайся самостійно змінювати глобальну стратегію.
+🔍 FLEXIBILITY (Fallback):
+If a tool returns an error, describe it in [VOICE] ({preferred_language}). Meta-Planner will decide the next steps. Do not attempt to change the global strategy on your own.
 
-Твої інструменти:
+Available tools:
 {tools_desc}
 """
 
-def get_tetyana_prompt(task_context: str, tools_desc: str = ""):
-    formatted_prompt = TETYANA_SYSTEM_PROMPT.format(tools_desc=tools_desc)
+def get_tetyana_prompt(task_context: str, tools_desc: str = "", preferred_language: str = "en"):
+    formatted_prompt = TETYANA_SYSTEM_PROMPT.format(tools_desc=tools_desc, preferred_language=preferred_language)
     return ChatPromptTemplate.from_messages([
         SystemMessage(content=formatted_prompt),
         HumanMessage(content=task_context),
@@ -20861,6 +20813,7 @@ class TrinityRuntime:
         verbose: bool = True,
         permissions: TrinityPermissions = None,
         on_stream: Optional[Callable[[str, str], None]] = None,
+        preferred_language: str = "en"
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
@@ -20869,6 +20822,7 @@ class TrinityRuntime:
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()
         self.permissions = permissions or TrinityPermissions()
+        self.preferred_language = preferred_language
         # Callback for streaming deltas: (agent_name, text_delta)
         self.on_stream = on_stream
         self.workflow = self._build_graph()
@@ -21016,8 +20970,8 @@ class TrinityRuntime:
         if len(context) > 6 and step_count % 3 == 0:
              try:
                 summary_prompt = [
-                    SystemMessage(content="Ти — архіваріус Trinity. Створи стислий підсумок (2-3 речення) поточного стану задачі. Що зроблено? Що залишилось?"),
-                    HumanMessage(content=f"Поточний підсумок: {summary}\n\nОстанні події:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
+                    SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in English. What has been done? What remains? However, ensure any specific instructions for user reporting remain compatible with {self.preferred_language}."),
+                    HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join([m.content[:500] for m in context[-4:]]))
                 ]
                 sum_resp = self.llm.invoke(summary_prompt)
                 summary = sum_resp.content
@@ -21027,9 +20981,9 @@ class TrinityRuntime:
 
         # 1b. Check Master Limits
         if step_count >= self.MAX_STEPS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Досягнуто ліміту кроків ({self.MAX_STEPS}).")]}
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Step limit reached ({self.MAX_STEPS}).")]}
         if replan_count >= self.MAX_REPLANS:
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Досягнуто ліміту перепланувань ({self.MAX_REPLANS}).")]}
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] Replan limit reached ({self.MAX_REPLANS}).")]}
 
         # 2. Plan Maintenance (Consumption)
         if plan:
@@ -21038,7 +20992,7 @@ class TrinityRuntime:
                 current_step_fail_count = 0
                 if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded. Remaining: {len(plan)}")
                 if not plan:
-                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content="[VOICE] Всі кроки плану виконано успішно. Задача завершена.")]}
+                     return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] All plan steps completed successfully in {self.preferred_language}.")]}
             elif last_step_status == "failed":
                 current_step_fail_count += 1
                 if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
@@ -21064,8 +21018,8 @@ class TrinityRuntime:
         if action in ["initialize", "replan", "repair"]:
             from core.agents.atlas import get_meta_planner_prompt
             
-            task_context = f"Задача: {last_msg}\nКрок: {step_count}\nСтатус: {last_step_status}\nПоточний конфіг: {meta_config}\nПлан (залишок): {len(plan)} кроків."
-            prompt = get_meta_planner_prompt(task_context)
+            task_context = f"Task: {last_msg}\nStep: {step_count}\nStatus: {last_step_status}\nCurrent config: {meta_config}\nPlan (remaining): {len(plan)} steps."
+            prompt = get_meta_planner_prompt(task_context, preferred_language=self.preferred_language)
             
             try:
                 resp = self.llm.invoke(prompt.format_messages())
@@ -21141,9 +21095,9 @@ class TrinityRuntime:
         # Context is now provided by Meta-Planner's selective RAG
         rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
-        routing_hint = f"\nСТРАТЕГІЯ: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
+        routing_hint = f"\nSTRATEGY: {meta_config.get('strategy', 'linear')}\nRIGOR: {meta_config.get('verification_rigor', 'medium')}"
         
-        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint)
+        prompt = get_atlas_plan_prompt(last_msg, context=rag_context + "\n\n" + structure_context + routing_hint, preferred_language=self.preferred_language)
         
         try:
             plan_resp = self.llm.invoke(prompt.format_messages())
@@ -21153,7 +21107,7 @@ class TrinityRuntime:
             if isinstance(data, list): raw_plan = data
             elif isinstance(data, dict):
                 if data.get("status") == "completed":
-                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Готово.')}")]}
+                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Done.')}")]}
                 raw_plan = data.get("steps") or data.get("plan") or []
                 if data.get("meta_config"):
                     meta_config.update(data["meta_config"])
@@ -30206,7 +30160,7 @@ def test_find_image_on_screen_missing_cv2_dependency(tmp_path, monkeypatch):
 
 ```
 
-### `tui/agents.py` (27.0 KB)
+### `tui/agents.py` (27.1 KB)
 
 ```python
 """Agent session and LLM interaction for TUI.
@@ -30815,7 +30769,8 @@ def run_graph_agent_task(
         tail_thread = threading.Thread(target=_tail_loop, daemon=True)
         tail_thread.start()
 
-        runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback)
+        chat_lang = getattr(state, "chat_lang", "en")
+        runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback, preferred_language=chat_lang)
         
         # Enrich Trinity Registry with TUI tools
         if not agent_session.tools:
@@ -39501,4 +39456,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 15986
+- **Skipped**: 15999

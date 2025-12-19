@@ -604,7 +604,8 @@ def run_graph_agent_task(
         tail_thread = threading.Thread(target=_tail_loop, daemon=True)
         tail_thread.start()
 
-        runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback)
+        chat_lang = getattr(state, "chat_lang", "en")
+        runtime = TrinityRuntime(verbose=False, permissions=permissions, on_stream=on_stream_callback, preferred_language=chat_lang)
         
         # Enrich Trinity Registry with TUI tools
         if not agent_session.tools:
