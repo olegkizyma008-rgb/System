@@ -1,8 +1,8 @@
 [Atlas] Final report
 
-Task: Find a modern AI movie online using the browser.
+Task: Створи на робочому столі повноцінний сайт продажу квітів
 Outcome: completed
-Replans: 7
+Replans: 2
 Last agent: knowledge
 
 Last message:
