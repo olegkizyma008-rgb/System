@@ -4,34 +4,15 @@
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16058
+- **Files Skipped**: 16065
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:54:20
+- **Generated**: 2025-12-19 05:43:33
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-    Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:45:21 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:45:21 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:45:21 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:48:57 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:49:00 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:49:00 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:49:00 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:50:22 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:50:23 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:50:23 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:50:23 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:51:34 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:51:36 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:51:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:51:36 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:51:54 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
 2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:52:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
@@ -113,6 +94,25 @@ Traceback (most recent call last):
     input_area = VSplit(
                  ^^^^^^^
 TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:54:33 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:54:33 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:54:33 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:58:55 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:58:57 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:58:57 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:58:57 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 05:05:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 05:05:04 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 05:05:04 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 05:05:04 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 05:12:44 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 05:12:46 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 05:12:46 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 05:12:46 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 05:43:18 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 05:43:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -148,18 +148,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39452 ------------------------------------------
- 1 file changed, 39452 deletions(-)
+ project_structure_final.txt | 39450 ------------------------------------------
+ 1 file changed, 39450 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-9384c1b docs: update Atlas workflow definition
+e2e609e Fix TUI input frame height to tightly wrap content
+553493a docs: update Atlas workflow definition
 26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
 de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
 c0a8dbd fix(tui): strictly force single-line height for input area when empty
-2f7f8b2 fix(tui): glue input to bottom and enable upward expansion
 ```
 
 ---
@@ -12232,7 +12232,7 @@ cli.py: error: unrecognized arguments: Найди через гугл фільм
 test content
 ```
 
-### `project_structure_final.txt` (540.5 KB)
+### `project_structure_final.txt` (540.4 KB)
 
 ```text
 # System — Project Structure
@@ -12241,34 +12241,15 @@ test content
 
 - **Project Root**: `/Users/dev/Documents/GitHub/System`
 - **Files Included**: 127
-- **Files Skipped**: 16058
+- **Files Skipped**: 16065
 - **Max File Size**: 2.0 MB
-- **Generated**: 2025-12-19 04:54:20
+- **Generated**: 2025-12-19 05:43:33
 
 ---
 
 ## Program Execution Logs (Last 100 lines)
 
 ```
-    Frame(input_area, style="class:frame.border", height=Dimension(min=3, max=12), dont_extend_height=True), # Dynamic area height
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: Frame.__init__() got an unexpected keyword argument 'dont_extend_height'
-2025-12-19 04:45:21 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:45:21 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:45:21 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:48:57 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:49:00 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:49:00 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:49:00 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:50:22 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:50:23 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:50:23 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:50:23 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:51:34 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
-2025-12-19 04:51:36 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
-2025-12-19 04:51:36 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
-2025-12-19 04:51:36 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
-2025-12-19 04:51:54 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
 2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
 2025-12-19 04:52:17 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
 2025-12-19 04:52:17 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
@@ -12350,6 +12331,25 @@ Traceback (most recent call last):
     input_area = VSplit(
                  ^^^^^^^
 TypeError: VSplit.__init__() got an unexpected keyword argument 'dont_extend_height'
+2025-12-19 04:54:33 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:54:33 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:54:33 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 04:58:55 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 04:58:57 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 04:58:57 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 04:58:57 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 05:05:02 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 05:05:04 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 05:05:04 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 05:05:04 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 05:12:44 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 05:12:46 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 05:12:46 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 05:12:46 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
+2025-12-19 05:43:18 | INFO     | MainThread | system_cli.cli | cli_main:2476 | TUI mode exited successfully
+2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2428 | CLI started with arguments: []
+2025-12-19 05:43:22 | DEBUG    | MainThread | system_cli.cli | cli_main:2470 | Parsed command: None
+2025-12-19 05:43:22 | INFO     | MainThread | system_cli.cli | cli_main:2473 | Starting TUI mode
 ```
 
 ---
@@ -12385,18 +12385,18 @@ Tests:
 ## Git Diff (Recent Changes)
 
 ```
- project_structure_final.txt | 39452 ------------------------------------------
- 1 file changed, 39452 deletions(-)
+ project_structure_final.txt | 39450 ------------------------------------------
+ 1 file changed, 39450 deletions(-)
 ```
 
 ## Git Log (Last 5 Commits)
 
 ```
-9384c1b docs: update Atlas workflow definition
+e2e609e Fix TUI input frame height to tightly wrap content
+553493a docs: update Atlas workflow definition
 26f7db3 fix(tui): remove invalid dont_extend_height from containers to fix crash
 de965b6 fix(tui): wrap input frame in non-extending HSplit to prevent vertical stretching
 c0a8dbd fix(tui): strictly force single-line height for input area when empty
-2f7f8b2 fix(tui): glue input to bottom and enable upward expansion
 ```
 
 ---
@@ -35103,7 +35103,7 @@ def build_keybindings(
     return kb, handle_menu_enter
 ```
 
-### `tui/layout.py` (13.9 KB)
+### `tui/layout.py` (14.0 KB)
 
 ```python
 from __future__ import annotations
@@ -35371,11 +35371,17 @@ def build_app(
     )
     setattr(menu_window, "name", "menu")
 
+    def get_input_height():
+        current_lines = input_buffer.document.line_count
+        # Ensure at least 1 line, max 10 lines
+        target = min(10, max(1, current_lines))
+        return Dimension(min=target, preferred=target, max=target)
+
     input_window = Window(
         BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
         style="class:input",
         wrap_lines=True, # Ensure long pastes are visible
-        height=Dimension(min=1, preferred=1, max=10), # Dynamic height
+        height=get_input_height, # Dynamic height based on content
         dont_extend_height=True,
     )
     setattr(input_window, "name", "input")
@@ -35392,7 +35398,6 @@ def build_app(
             ),
             input_window,
         ],
-        height=Dimension(min=1, preferred=1, max=10),
     )
 
     def get_status_text() -> AnyFormattedText:
@@ -35448,7 +35453,7 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height, glued to bottom, expands upwards
+            Frame(input_area, style="class:frame.border"), # Dynamic area height, glued to bottom, expands upwards
             status_window,
         ]
     )
@@ -39447,4 +39452,4 @@ graph TD
 ## Summary
 
 - **Total Files**: 127
-- **Skipped**: 16058
+- **Skipped**: 16065

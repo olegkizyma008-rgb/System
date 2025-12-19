@@ -263,11 +263,17 @@ def build_app(
     )
     setattr(menu_window, "name", "menu")
 
+    def get_input_height():
+        current_lines = input_buffer.document.line_count
+        # Ensure at least 1 line, max 10 lines
+        target = min(10, max(1, current_lines))
+        return Dimension(min=target, preferred=target, max=target)
+
     input_window = Window(
         BufferControl(buffer=input_buffer, key_bindings=input_key_bindings), 
         style="class:input",
         wrap_lines=True, # Ensure long pastes are visible
-        height=Dimension(min=1, preferred=1, max=10), # Dynamic height
+        height=get_input_height, # Dynamic height based on content
         dont_extend_height=True,
     )
     setattr(input_window, "name", "input")
@@ -284,7 +290,6 @@ def build_app(
             ),
             input_window,
         ],
-        height=Dimension(min=1, preferred=1, max=10),
     )
 
     def get_status_text() -> AnyFormattedText:
@@ -340,7 +345,7 @@ def build_app(
                 ],
                 height=Dimension(weight=1) 
             ),
-            Frame(input_area, style="class:frame.border", height=Dimension(min=3, preferred=3, max=12)), # Dynamic area height, glued to bottom, expands upwards
+            Frame(input_area, style="class:frame.border"), # Dynamic area height, glued to bottom, expands upwards
             status_window,
         ]
     )
