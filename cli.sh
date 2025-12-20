@@ -4,7 +4,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Strict check for Python 3.12 .venv
+# Strict check for Python 3.11+ .venv
 if [ -f "$SCRIPT_DIR/.venv/bin/activate" ]; then
   source "$SCRIPT_DIR/.venv/bin/activate"
   PYTHON_EXE="$SCRIPT_DIR/.venv/bin/python"
@@ -13,12 +13,13 @@ else
   exit 1
 fi
 
-# Verify version in venv
+# Verify version in venv (support 3.11 or 3.12)
 VENV_VERSION=$("$PYTHON_EXE" --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
-if [ "$VENV_VERSION" != "3.12" ]; then
-  echo "❌ .venv використовує Python $VENV_VERSION, але потрібно 3.12. Запустіть ./setup.sh." >&2
+if [ "$VENV_VERSION" != "3.11" ] && [ "$VENV_VERSION" != "3.12" ]; then
+  echo "❌ .venv використовує Python $VENV_VERSION, але потрібно 3.11 або 3.12. Запустіть ./setup.sh." >&2
   exit 1
 fi
+
 
 # Завантажуємо .env, якщо є (включаючи SUDO_PASSWORD)
 if [ -f "$SCRIPT_DIR/.env" ]; then

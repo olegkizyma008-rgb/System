@@ -22,5 +22,4 @@ pyautogui>=0.9.50
 paddleocr>=2.7.0
 paddlepaddle>=2.6.0
 # Note: playwright-mcp is a Node.js project, managed via npx @playwright/mcp@latest
-# Note: super-rag is optional and installed separately if available
-# Install with: pip install git+https://github.com/superagent-ai/super-rag.git
+

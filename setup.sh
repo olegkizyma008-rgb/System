@@ -83,18 +83,9 @@ else
     echo "✅ PaddleOCR installed successfully"
 fi
 
-# Install super-rag for advanced vision features
-# Note: super-rag requires Python <3.12, so skip for Python 3.12+
-# However, super-rag has dependency conflicts (e2b ^0.14.7) that prevent installation
-# on any Python version. Using OpenCV-based vision analysis instead.
-PYTHON_MAJOR_MINOR=$(echo $PYTHON_VERSION | cut -d. -f1,2)
-if [ "$PYTHON_MAJOR_MINOR" = "3.12" ]; then
-    echo "⚠️  super-rag requires Python <3.12, but Python $PYTHON_VERSION is installed."
-else
-    echo "⚠️  super-rag skipped due to dependency conflicts (e2b ^0.14.7)"
-fi
-echo "   The system will use OpenCV-based vision analysis."
-echo "   Advanced features will be unavailable, but core functionality works."
+# Note: super-rag is deprecated (abandoned project with broken dependencies)
+# System uses DifferentialVisionAnalyzer (OpenCV + PaddleOCR) instead
+echo "📝 Using DifferentialVisionAnalyzer for vision analysis (OpenCV + PaddleOCR)"
 
 # Install additional useful packages
 echo "📦 Installing additional useful packages..."
@@ -140,11 +131,11 @@ else
     PADDLEOCR_INSTALLED=false
 fi
 
-# Check super-rag
-if $PYTHON_CMD -c "import super_rag; print('✅ super-rag installed')" 2>/dev/null; then
-    echo "✅ super-rag installed"
+# DifferentialVisionAnalyzer check
+if $PYTHON_CMD -c "from system_ai.tools.vision import DifferentialVisionAnalyzer; print('✅ DifferentialVisionAnalyzer available')" 2>/dev/null; then
+    echo "✅ DifferentialVisionAnalyzer installed"
 else
-    echo "⚠️  super-rag not installed (using OpenCV fallback)"
+    echo "⚠️  DifferentialVisionAnalyzer not found"
 fi
 
 echo "--- LLM Dependencies ---"
@@ -210,8 +201,8 @@ echo "🔧 To update the system later, run:"
 echo "   source .venv/bin/activate && pip install -r requirements.txt --upgrade"
 echo ""
 echo "📝 System is ready for:"
-echo "  • Vision analysis with OpenCV"
+echo "  • Vision analysis with DifferentialVisionAnalyzer (OpenCV)"
 echo "  • OCR with PaddleOCR (or Copilot fallback)"
-echo "  • Advanced vision with super-rag (if installed)"
+echo "  • VisionContextManager for cyclical summarization"
 echo "  • Full LLM integration"
 echo "  • All agent operations (Atlas, Tetyana, Grisha)"
