@@ -1637,21 +1637,19 @@ def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
         ("menu.settings.section.agent", None, "section"),
         ("menu.settings.llm", MenuLevel.LLM_SETTINGS, None),
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
-        ("menu.settings.section.automation", None, "section"),
-        ("menu.settings.automation_permissions", MenuLevel.AUTOMATION_PERMISSIONS, None),
-        ("menu.settings.section.dev", None, "section"),
-        ("menu.settings.dev", MenuLevel.DEV_SETTINGS, None),
-        ("menu.settings.section.experimental", None, "section"),
-        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
-    ]
-
-
 def _get_llm_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
+    return [
+        ("Global Defaults", MenuLevel.LLM_DEFAULTS, None),
+def run_tui():
+    menu_items = _get_llm_menu_items()
+    if not all(isinstance(item, tuple) and len(item) == 3 for item in menu_items):
     return [
         ("Global Defaults", MenuLevel.LLM_DEFAULTS, None),
         ("Atlas (Planner)", MenuLevel.LLM_ATLAS, None),
         ("Tetyana (Executor)", MenuLevel.LLM_TETYANA, None),
         ("Grisha (Verifier)", MenuLevel.LLM_GRISHA, None),
+        ("System Vision", MenuLevel.LLM_VISION, None)
+    ]
         ("System Vision", MenuLevel.LLM_VISION, None),
     ]
 
@@ -1681,17 +1679,17 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
             status = status_res
     except Exception:
         pass
-
-    prov = status.get("provider") or "copilot"
-    mod = status.get("model") or ""
+    prov = str(status.get("provider", "copilot"))
+    mod = str(status.get("model", ""))
 
     if section == "defaults":
-        main_mod = status.get("main_model", "")
-        vis_mod = status.get("vision_model", "")
+        main_mod = str(status.get("main_model", ""))
+        vis_mod = str(status.get("vision_model", ""))
         return [
             (f"Provider: {prov}", "provider", None),
             (f"Main Model: {main_mod}", "main_model", None),
             (f"Vision Model: {vis_mod}", "vision_model", None),
+        ]
         ]
 
     return [
