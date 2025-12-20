@@ -13,22 +13,22 @@ fi
 
 # Function to check Python version
 check_python_version() {
-    local required_version="3.12"
-    local python_cmd="python3.12"
+    local required_version="3.11"
+    local python_cmd="python3.11"
     
-    # Try to find Python 3.12
-    if command -v python3.12 &> /dev/null; then
-        PYTHON_CMD="python3.12"
-        PYTHON_VERSION=$(python3.12 --version 2>&1 | awk '{print $2}')
-        echo "✅ Found Python 3.12: $PYTHON_VERSION"
+    # Try to find Python 3.11
+    if command -v python3.11 &> /dev/null; then
+        PYTHON_CMD="python3.11"
+        PYTHON_VERSION=$(python3.11 --version 2>&1 | awk '{print $2}')
+        echo "✅ Found Python 3.11: $PYTHON_VERSION"
         return 0
     elif command -v python3 &> /dev/null; then
         PYTHON_CMD="python3"
         PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
-        echo "⚠️  Using Python $PYTHON_VERSION (Python 3.12 recommended)"
+        echo "⚠️  Using Python $PYTHON_VERSION (Python 3.11 recommended)"
         return 0
     else
-        echo "❌ Python 3 not found. Please install Python 3.12 or later."
+        echo "❌ Python 3 not found. Please install Python 3.11 or later."
         return 1
     fi
 }
@@ -85,23 +85,16 @@ fi
 
 # Install super-rag for advanced vision features
 # Note: super-rag requires Python <3.12, so skip for Python 3.12+
+# However, super-rag has dependency conflicts (e2b ^0.14.7) that prevent installation
+# on any Python version. Using OpenCV-based vision analysis instead.
 PYTHON_MAJOR_MINOR=$(echo $PYTHON_VERSION | cut -d. -f1,2)
 if [ "$PYTHON_MAJOR_MINOR" = "3.12" ]; then
     echo "⚠️  super-rag requires Python <3.12, but Python $PYTHON_VERSION is installed."
-    echo "   The system will use OpenCV-based vision analysis."
-    echo "   Advanced features will be unavailable, but core functionality works."
 else
-    echo "📦 Attempting to install super-rag for advanced vision features..."
-    pip install git+https://github.com/superagent-ai/super-rag.git
-
-    if [ $? -ne 0 ]; then
-        echo "⚠️  super-rag repository not found or unavailable."
-        echo "   The system will use OpenCV-based vision analysis."
-        echo "   Advanced features will be unavailable, but core functionality works."
-    else
-        echo "✅ super-rag installed successfully"
-    fi
+    echo "⚠️  super-rag skipped due to dependency conflicts (e2b ^0.14.7)"
 fi
+echo "   The system will use OpenCV-based vision analysis."
+echo "   Advanced features will be unavailable, but core functionality works."
 
 # Install additional useful packages
 echo "📦 Installing additional useful packages..."

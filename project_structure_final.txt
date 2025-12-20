@@ -1,14 +1,11 @@
 ## Metadata
-Generated: Sat Dec 20 06:55:57 EET 2025
+Generated: Sat Dec 20 07:27:46 EET 2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
 
 ## Project Structure
 .
-├── PYTHON_311_MIGRATION_SUMMARY.md
-├── README.md
-├── RESPONSE_SAVING_WORKFLOW.md
 ├── auto_commit.sh
 ├── cleanup_modules.json
 ├── cleanup_scripts
@@ -31,184 +28,184 @@ Generated: Sat Dec 20 06:55:57 EET 2025
 ├── cli.sh
 ├── configs
 │   ├── Anna-Station
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Avas-Work
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Bradleys-MBA
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Bryan-Core
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Desktop-Billy
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Elijah-Personal
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Gary-Studio
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Grace-MBP-Plus
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Home-Eugene
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Host-Penelope
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Instance-Layla
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Jeffrey-Workspace
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Jerrys-Air
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Laptop-Natalie
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Layla-Office
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Main-Vincent
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── My-Benjamin
-│   │   ├── User
-│   │   │   └── globalStorage
-│   │   │       └── storage.json
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   │           └── storage.json
 │   ├── My-Lucy
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Nicholas-Machine
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Office-Bobby
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   ├── original
+│   │   ├── hostname.txt
+│   │   ├── mac_address.txt
+│   │   ├── machineid
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   │           └── storage.json
 │   ├── Paul-Remote
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Penelope-Test-01
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Russell-Local-Plus
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Samanthas-Host
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Secondary-Tyler
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Steven-Backup-2
-│   │   ├── User
-│   │   │   └── globalStorage
-│   │   │       └── storage.json
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   │           └── storage.json
 │   ├── Timothy-Office
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Timothy-Tower
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Walters-Device
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Willie-Build-02
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Workstation-Keith
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
-│   ├── Workstation-Logan
-│   │   ├── User
-│   │   │   └── globalStorage
-│   │   ├── hostname.txt
-│   │   └── metadata.json
-│   └── original
-│       ├── User
-│       │   └── globalStorage
-│       │       └── storage.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   └── Workstation-Logan
 │       ├── hostname.txt
-│       ├── mac_address.txt
-│       ├── machineid
-│       └── metadata.json
+│       ├── metadata.json
+│       └── User
+│           └── globalStorage
 ├── configs_vscode
 │   └── original
-│       ├── User
-│       │   └── globalStorage
-│       │       └── storage.json
 │       ├── hostname.txt
 │       ├── mac_address.txt
 │       ├── machineid
-│       └── metadata.json
+│       ├── metadata.json
+│       └── User
+│           └── globalStorage
+│               └── storage.json
 ├── core
 │   ├── agents
 │   │   ├── atlas.py
@@ -239,8 +236,11 @@ Generated: Sat Dec 20 06:55:57 EET 2025
 │   ├── __init__.py
 │   └── copilot.py
 ├── pytest.ini
+├── PYTHON_311_MIGRATION_SUMMARY.md
+├── README.md
 ├── regenerate_structure.sh
 ├── requirements.txt
+├── RESPONSE_SAVING_WORKFLOW.md
 ├── run_trinity_task.py
 ├── save_response.sh
 ├── script.js
@@ -277,9 +277,9 @@ Generated: Sat Dec 20 06:55:57 EET 2025
 │   └── state.py
 ├── templates
 │   ├── bootstrap
-│   │   ├── README.md
 │   │   ├── generate_structure.py
 │   │   ├── post-commit
+│   │   ├── README.md
 │   │   ├── regenerate_structure.sh
 │   │   └── save_response_and_commit.py
 │   └── bootstrap_new_project.sh
@@ -303,10 +303,10 @@ Generated: Sat Dec 20 06:55:57 EET 2025
     ├── agents.py
     ├── app.py
     ├── cleanup.py
-    ├── cli.py
     ├── cli_defaults.py
     ├── cli_localization.py
     ├── cli_paths.py
+    ├── cli.py
     ├── commands.py
     ├── constants.py
     ├── i18n.py
