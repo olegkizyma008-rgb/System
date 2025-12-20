@@ -101,11 +101,11 @@ AVAILABLE TOOLS:
 {tools_desc}
 
 🚀 YOUR TASKS:
-1. **ALIGN WITH GLOBAL GOAL**: Always check if the current steps serve the "Global Goal". If the goal is "Find movie", don't just "Open Google" and stop.
+1. **ALIGN WITH GLOBAL GOAL**: Always check if the current steps serve the "Global Goal". If the goal is "Find movie", don't just "Open Google" and stop. You MUST plan all the way to opening the content in fullscreen if requested.
 2. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
 3. Decomposition: Break the global goal into atomic actions for Tetyana.
 3. Experience: Use provided context (RAG) to avoid errors.
-4. SELF-REVIEW: Ensure the plan covers all stages until full verification.
+4. SELF-REVIEW: Ensure the plan covers all stages until full verification. A plan is NOT complete if the Global Goal is not fully realized. If you only plan one step, explain why.
 5. ANTI-LOOP: Check history. If 'Open Google' or 'Search' was just performed/failed, DO NOT repeat it. Proceed to the next logical step (e.g., Click result, Check different source).
 6. Localization: Ensure the user-facing report (prefixed with [VOICE]) is in {preferred_language}.
 
@@ -126,6 +126,7 @@ Rules:
 - **Link Extraction**: When Tetyana needs to select a result from a list, ALWAYS plan a `browser_get_links` step first to identify target URLs, followed IMMEDIATELY by a `browser_click` step.
 - **Google Selectors**: IMPORTANT: Instruct Tetyana to use `textarea[name="q"]` for the Google search box.
 - **Force Selection**: If a search was just performed, the NEXT step MUST be to select a result. Do not plan "Verify search" or "Check results" as a separate step if it delays clicking. Combined verification with the selection if needed, or simply trust the selection logic.
+129. **Persistence**: If the goal involves multiple actions (Find -> Open -> Play -> Fullscreen), your plan MUST include all these stages. Do not assume any step is the final one unless it explicitly achieves the Global Goal.
 
 Output format (JSON):
 {{

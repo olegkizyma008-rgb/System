@@ -693,7 +693,7 @@ class TrinityRuntime:
                 for m in (context[-4:] if len(context) >= 4 else context):
                     msg_content = getattr(m, "content", "") if m is not None else ""
                     if msg_content:
-                        recent_contents.append(str(msg_content)[:500])
+                        recent_contents.append(str(msg_content)[:4000])
                 
                 summary_prompt = [
                     SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in {self.preferred_language}. What has been done? What remains?"),
@@ -1643,7 +1643,9 @@ class TrinityRuntime:
         explicit_failure_markers = [
             "[failed]", "critical error", "fatal error", "не можу підтвердити", 
             "cannot confirm", "verification failed", "unable to verify", 
-            "не вдалося", "помилка", "не підтверджено"
+            "не вдалося", "помилка", "не підтверджено", "не виконано", 
+            "не вдалося виконати", "не бачу", "немає", "відсутній",
+            "not achieved", "goal not met"
         ]
         has_explicit_fail = any(m in lower_content for m in explicit_failure_markers)
         
@@ -1690,8 +1692,23 @@ class TrinityRuntime:
             next_agent = "meta_planner"
         elif any(kw in lower_content for kw in ["успішно", "працює", "готово", "виконано", "completed", "done"]):
             # Fallback soft success markers (weakest)
-            step_status = "success"
-            next_agent = "meta_planner"
+            # CHECK FOR NEGATIONS: if 'не' or 'not' is near the marker, it's NOT a success
+            # Simple heuristic: if 'не' appears within 20 chars before the keyword
+            is_negated = False
+            for kw in ["успішно", "готово", "виконано", "працює"]:
+                if kw in lower_content:
+                    idx = lower_content.find(kw)
+                    pre_text = lower_content[max(0, idx-15):idx]
+                    if "не " in pre_text or "нема" in pre_text or "not " in pre_text:
+                        is_negated = True
+                        break
+            
+            if not is_negated:
+                step_status = "success"
+                next_agent = "meta_planner"
+            else:
+                step_status = "failed"
+                next_agent = "meta_planner"
 
         # NEW: Anti-loop protection via uncertain_streak
         current_streak = int(state.get("uncertain_streak") or 0)
