@@ -19,21 +19,81 @@ The system includes two specialized operation modes:
 ### Prerequisites
 
 - Python 3.8+
-- Docker (for SonarQube MCP)
-- Node.js/npm (for Context7 MCP)
+- **Node.js/npm** (for Context7 MCP) - https://nodejs.org/
+- **Docker** (for SonarQube MCP) - https://www.docker.com/products/docker-desktop
 - pip
 
-### Setup
+### Setup Instructions
+
+#### 1. Install System Dependencies
+
+**Node.js (for Context7 MCP):**
+```bash
+# macOS with Homebrew
+brew install node
+
+# Or download from: https://nodejs.org/
+
+# Verify installation
+node --version
+npm --version
+```
+
+**Docker (for SonarQube MCP):**
+```bash
+# Download Docker Desktop from: https://www.docker.com/products/docker-desktop
+# Or install with Homebrew:
+brew install --cask docker
+
+# Start Docker daemon
+open -a Docker
+
+# Verify installation
+docker --version
+docker ps  # Should not error
+```
+
+#### 2. Python Setup
 
 ```bash
 # Clone the repository or copy the mcp_integration directory
 # Install required Python packages
 pip install -r requirements.txt
-
-# Ensure MCP servers are available:
-# - Context7: npx @upstash/context7-mcp
-# - SonarQube: docker run mcp/sonarqube
 ```
+
+#### 3. Configure MCP Servers
+
+**Context7 MCP** will be automatically discovered via npx when needed.
+
+**SonarQube MCP** requires environment configuration:
+
+```bash
+# Set SonarQube credentials in your environment
+export SONARQUBE_TOKEN="your_sonarqube_token_here"
+export SONARQUBE_URL="https://sonarqube.example.com"
+export SONARQUBE_ORG="your_org_name"
+
+# Or edit mcp_integration/config/mcp_config.json directly
+```
+
+#### 4. Test MCP Availability (Optional)
+
+```bash
+# Test Context7 MCP
+npx @upstash/context7-mcp --version
+
+# Test SonarQube MCP (requires Docker running)
+docker run --rm mcp/sonarqube --version
+```
+
+### Automatic Setup
+
+The `setup.sh` script in the project root will automatically:
+1. ✅ Check for Node.js and npm
+2. ✅ Check for Docker and verify daemon is running
+3. ✅ Test MCP server accessibility
+4. ⚠️  Warn if any dependencies are missing
+5. ✅ Configure Python virtual environment with all dependencies
 
 ## Configuration
 

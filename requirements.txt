@@ -25,5 +25,25 @@ paddlepaddle>=2.6.0
 rich>=13.0.0
 typer>=0.9.0
 
+# ===== EXTERNAL MCP SERVERS (for DEV mode) =====
+# These require external tools to be installed separately:
+#
+# 1. Context7 MCP - Memory and context management
+#    - Requires: Node.js and npm
+#    - Install: https://nodejs.org/
+#    - Command: npx @upstash/context7-mcp
+#    - Python integration: via mcp_integration module
+#
+# 2. SonarQube MCP - Code quality analysis
+#    - Requires: Docker and Docker daemon running
+#    - Install: https://www.docker.com/products/docker-desktop
+#    - Command: docker run mcp/sonarqube
+#    - Python integration: via mcp_integration module
+#    - Configure: Set SONARQUBE_TOKEN, SONARQUBE_URL, SONARQUBE_ORG env vars
+#
+# MCP Integration Python Package:
+# mcp_integration/core/mcp_manager.py - Unified manager for all MCP servers
+# See setup.sh for automated availability checks
+
 # Note: playwright-mcp is a Node.js project, managed via npx @playwright/mcp@latest
 
