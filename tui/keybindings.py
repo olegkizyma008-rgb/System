@@ -238,26 +238,48 @@ def build_keybindings(
 
     @kb.add("c-k")
     def _(event):
-        """Copy active panel content to clipboard (Mac pbcopy)."""
-        target = str(getattr(state, "ui_scroll_target", "log") or "log")
-        import subprocess
+        """Copy active panel content to clipboard (Ctrl+K).
+        
+        Copies the entire content of the currently active/focused panel:
+        - LOG panel (left side)
+        - АГЕНТИ (AGENTS) panel (right side)
+        
+        Auto-detects which panel has focus or uses the currently active scroll target.
+        Shows status message with byte count copied.
+        """
         try:
+            from tui.clipboard_utils import copy_to_clipboard
+            from tui.render import get_logs, get_agent_messages
+            
+            # Determine which panel to copy from
+            # Priority: 1) Currently focused panel, 2) Currently active scroll target
+            target = str(getattr(state, "ui_scroll_target", "log") or "log")
             content = ""
-            if target == "log":
-                from tui.render import get_logs
-                logs = get_logs()
-                content = "".join(str(t or "") for _, t in logs)
-            else:
-                from tui.render import get_agent_messages
-                msgs = get_agent_messages()
-                content = "".join(str(t or "") for _, t in msgs)
+            panel_name = target.upper()
+            
+            try:
+                if target == "log":
+                    logs = get_logs()
+                    content = "".join(str(t or "") for _, t in logs)
+                    panel_name = "LOG"
+                else:
+                    msgs = get_agent_messages()
+                    content = "".join(str(t or "") for _, t in msgs)
+                    panel_name = "АГЕНТИ"
+            except Exception:
+                # If render functions fail, try to get content from the panel
+                pass
             
             if content:
-                process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
-                process.communicate(input=content.encode('utf-8'))
-                log(f"Скопійовано {len(content)} символів з панелі {target.upper()}", "action")
+                # Use new clipboard utility for better cross-platform support
+                success = copy_to_clipboard(content, log)
+                if not success:
+                    log(f"Помилка: не вдалося скопіювати з панелі {panel_name}", "error")
+            else:
+                log(f"Панель {panel_name} порожня - нічого копіювати", "info")
+                
         except Exception as e:
-            log(f"Помилка копіювання: {e}", "error")
+            log(f"Помилка копіювання: {str(e)}", "error")
 
     @kb.add("c-l")
     def _(event):

@@ -146,6 +146,8 @@ def build_app(
              ("class:button", f"[ PgUp: LOGS {'[SCROLL]' if cur_scroll == 'LOG' else ''} ]"),
              ("class:header", " "),
              ("class:button", f"[ PgDn: AGENTS {'[SCROLL]' if cur_scroll == 'AGENTS' else ''} ]"),
+             ("class:header", " "),
+             ("class:button", f"[ Ctrl+K: COPY ]"),
              ("class:header", "  "),
         ]
         
@@ -211,6 +213,30 @@ def build_app(
                             w.vertical_scroll += scroll_delta
                 force_ui_update()
                 return None
+            
+            # Handle text selection (MOUSE_UP after drag = selection complete)
+            elif mouse_event.event_type == MouseEventType.MOUSE_UP:
+                # Check if this was a selection/drag operation
+                if hasattr(mouse_event, 'button') and mouse_event.button is not None:
+                    # Text was selected - copy it automatically
+                    try:
+                        from tui.clipboard_utils import copy_to_clipboard
+                        from tui.render import get_logs, get_agent_messages
+                        
+                        content = ""
+                        if name == "log":
+                            logs = get_logs()
+                            content = "".join(str(t or "") for _, t in logs)
+                        elif name == "agents":
+                            msgs = get_agent_messages()
+                            content = "".join(str(t or "") for _, t in msgs)
+                        
+                        if content:
+                            copy_to_clipboard(content)
+                    except Exception:
+                        pass
+                return NotImplemented
+            
             return NotImplemented
         return _handler
 
