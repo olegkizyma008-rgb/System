@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+from tui.enums import MenuLevel
 """cli.py
 
 Єдиний і основний інтерфейс керування системою.
@@ -673,9 +673,29 @@ def _load_ui_settings() -> None:
     pass
 
 
-def _save_ui_settings() -> None:
-    # Logic to save UI settings if needed
-    pass
+def _save_ui_settings() -> bool:
+    try:
+        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
+        payload = {
+            "theme": str(state.ui_theme or "monaco").strip().lower() or "monaco",
+            "ui_lang": normalize_lang(state.ui_lang),
+            "chat_lang": normalize_lang(state.chat_lang),
+            "streaming": bool(getattr(state, "ui_streaming", True)),
+            "gui_mode": str(getattr(state, "ui_gui_mode", "auto") or "auto").strip().lower() or "auto",
+            "execution_mode": str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native",
+            "unsafe_mode": bool(state.ui_unsafe_mode),
+            "automation_allow_shortcuts": bool(getattr(state, "automation_allow_shortcuts", False)),
+            "left_panel_ratio": float(getattr(state, "ui_left_panel_ratio", 0.6)),
+            "scroll_target": str(getattr(state, "ui_scroll_target", "log")),
+            "log_follow": bool(getattr(state, "ui_log_follow", True)),
+            "agents_follow": bool(getattr(state, "ui_agents_follow", True)),
+            "dev_code_provider": str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower() or "vibe-cli",
+        }
+        with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
 
 
 def _load_monitor_targets() -> None:
@@ -735,7 +755,7 @@ def _scan_traces(editor: str) -> Dict[str, List[str]]:
 
 
 def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
-    return _list_editors_new(cfg)
+    return _get_editors_list_new(cfg)
 
 
 def _get_editors_list() -> List[Tuple[str, str]]:
@@ -1617,13 +1637,12 @@ def _custom_task_recording_analyze_last() -> Tuple[bool, str]:
 
     if str(state.ui_lang or "").strip().lower() == "uk":
         return True, "Введи додатковий контекст для аналізу (опціонально) і натисни Enter. Можна просто Enter щоб пропустити."
+    if not isinstance(state.ui_lang, str):
+        state.ui_lang = ''
+
+    if str(state.ui_lang or '').strip().lower() == 'uk':
+        return True, "Введи додатковий контекст для аналізу (опціонально) і натисни Enter. Можна просто Enter щоб пропустити."
     return True, "Type optional extra context for analysis and press Enter (or press Enter to skip)."
-
-
-def _get_monitoring_menu_items() -> List[Tuple[str, Any]]:
-    return [
-        ("menu.monitoring.targets", MenuLevel.MONITOR_TARGETS),
-        ("menu.monitoring.start_stop", MenuLevel.MONITOR_CONTROL),
     ]
 
 
@@ -1637,19 +1656,17 @@ def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
         ("menu.settings.section.agent", None, "section"),
         ("menu.settings.llm", MenuLevel.LLM_SETTINGS, None),
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
+        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
+        ("menu.settings.section.dev", None, "section"),
+        ("menu.settings.dev_code_provider", MenuLevel.DEV_SETTINGS, None),
+    ]
+
 def _get_llm_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
-    return [
-        ("Global Defaults", MenuLevel.LLM_DEFAULTS, None),
-def run_tui():
-    menu_items = _get_llm_menu_items()
-    if not all(isinstance(item, tuple) and len(item) == 3 for item in menu_items):
     return [
         ("Global Defaults", MenuLevel.LLM_DEFAULTS, None),
         ("Atlas (Planner)", MenuLevel.LLM_ATLAS, None),
         ("Tetyana (Executor)", MenuLevel.LLM_TETYANA, None),
         ("Grisha (Verifier)", MenuLevel.LLM_GRISHA, None),
-        ("System Vision", MenuLevel.LLM_VISION, None)
-    ]
         ("System Vision", MenuLevel.LLM_VISION, None),
     ]
 
@@ -1661,7 +1678,8 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
         section = "defaults"
     elif level == MenuLevel.LLM_ATLAS:
         section = "atlas"
-    elif level == MenuLevel.LLM_TETYANA:
+    if not isinstance(level, MenuLevel):
+        raise TypeError(f"Expected level to be of type MenuLevel, got {type(level).__name__}")
         section = "tetyana"
     elif level == MenuLevel.LLM_GRISHA:
         section = "grisha"
@@ -1689,7 +1707,6 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
             (f"Provider: {prov}", "provider", None),
             (f"Main Model: {main_mod}", "main_model", None),
             (f"Vision Model: {vis_mod}", "vision_model", None),
-        ]
         ]
 
     return [

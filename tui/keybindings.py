@@ -442,7 +442,7 @@ def build_keybindings(
                 start_status = tool_llm_status({"section": section})
                 # Check for model or main_model key
                 cur_mod = start_status.get("model") or start_status.get("main_model") or ""
-                models = ["gpt-4o", "gpt-4", "claude-3-5-sonnet-latest", "gemini-1.5-pro-002", "mistral-large-latest"]
+                models = ["gpt-4.1", "gpt-4o", "gpt-4", "claude-3-5-sonnet-latest", "gemini-1.5-pro-002", "mistral-large-latest"]
                 next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
                 if section == "defaults":
                     tool_llm_set({"main_model": next_mod})
