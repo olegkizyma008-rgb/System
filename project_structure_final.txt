@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sat Dec 20 22:41:25  2025
+Generated: Sat Dec 20 22:59:22  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -61,7 +61,8 @@ Tests:
 
 ## Git History (Last 10 Commits)
 ```
-  9affe53b fix: change invalid 'c-s-k' keybinding to 'c-o' to fix TUI crash
+  535265dd fix: change invalid 'c-s-k' keybinding to 'c-o' to fix TUI crash
+  581c99b8 fix: change invalid 'c-s-k' keybinding to 'c-o' to fix TUI crash
   d90ab8e0 docs: Update Atlas documentation and agent workflow definition.
   e89c0534 docs: update atlas and README documentation
   b4284d68 feat(tui): add Ctrl+Shift+K toggle for auto-copy on selection
@@ -70,7 +71,6 @@ Tests:
   e15006cd feat: Trinity Improvements v1.0 - Pydantic models, MyPy typing, state logging, tests + project reorganization
   b0b0a288 fix: Improve error handling in Vibe CLI Assistant and ensure safe access to pause context
   fad1b84d docs: Update README and setup script with detailed MCP server setup instructions
-  cb4e405c fix: Safely access response content in MCP and Trinity classes to prevent attribute errors
 ```
 
 ## Project Structure
