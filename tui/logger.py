@@ -267,3 +267,43 @@ def get_log_files_info() -> dict:
 
 # Initialize default logger on module import
 _default_logger = setup_logging(verbose=False)
+
+
+def setup_root_file_logging(root_dir: str) -> None:
+    """Setup logging to root directory files (Left/Right screens)."""
+    logs_dir = Path(root_dir) / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Left Screen Logger (Main Logs)
+    left_logger = logging.getLogger("system_cli.left")
+    left_logger.setLevel(logging.DEBUG)
+    left_logger.propagate = False
+    
+    try:
+        left_handler = logging.handlers.RotatingFileHandler(
+            logs_dir / "left_screen.log",
+            maxBytes=10 * 1024 * 1024,
+            backupCount=3,
+            encoding="utf-8"
+        )
+        left_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
+        left_logger.addHandler(left_handler)
+    except Exception as e:
+        print(f"Failed to setup left screen log: {e}", file=sys.stderr)
+
+    # Right Screen Logger (Agent Messages)
+    right_logger = logging.getLogger("system_cli.right")
+    right_logger.setLevel(logging.DEBUG)
+    right_logger.propagate = False
+
+    try:
+        right_handler = logging.handlers.RotatingFileHandler(
+            logs_dir / "right_screen.log",
+            maxBytes=10 * 1024 * 1024,
+            backupCount=3,
+            encoding="utf-8"
+        )
+        right_handler.setFormatter(logging.Formatter("%(asctime)s | %(message)s", datefmt=DATE_FORMAT))
+        right_logger.addHandler(right_handler)
+    except Exception as e:
+        print(f"Failed to setup right screen log: {e}", file=sys.stderr)
