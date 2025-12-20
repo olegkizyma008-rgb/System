@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sat Dec 20 22:59:22  2025
+Generated: Sat Dec 20 23:03:03  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -61,7 +61,8 @@ Tests:
 
 ## Git History (Last 10 Commits)
 ```
-  535265dd fix: change invalid 'c-s-k' keybinding to 'c-o' to fix TUI crash
+  a502e1b4 fix: revert broken self-healing changes to keybindings.py
+  aafd2bd4 fix: change invalid 'c-s-k' keybinding to 'c-o' to fix TUI crash
   581c99b8 fix: change invalid 'c-s-k' keybinding to 'c-o' to fix TUI crash
   d90ab8e0 docs: Update Atlas documentation and agent workflow definition.
   e89c0534 docs: update atlas and README documentation
@@ -70,7 +71,6 @@ Tests:
   9efb14d6 fix: Update project_structure_final.txt generation + atlas.md verification section
   e15006cd feat: Trinity Improvements v1.0 - Pydantic models, MyPy typing, state logging, tests + project reorganization
   b0b0a288 fix: Improve error handling in Vibe CLI Assistant and ensure safe access to pause context
-  fad1b84d docs: Update README and setup script with detailed MCP server setup instructions
 ```
 
 ## Project Structure

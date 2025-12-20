@@ -287,34 +287,8 @@ def build_keybindings(
         w = _find_window_by_name(event, "input")
         if w:
             event.app.layout.focus(w)
-    # Validate key before adding
-    from prompt_toolkit.key_binding.key_bindings import _parse_key
-    try:
-        _parse_key(key)
-    except ValueError:
-        raise ValueError(f"Invalid key binding: {key}")
 
-    ...
-    for key_seq, handler in key_bindings_to_add:
-        try:
-            key_bindings.add(key_seq)(handler)
-        except ValueError:
-            # Log and skip invalid key sequences
-            print(f"Warning: Invalid key sequence: {key_seq}")
-            continue
-    ...
-    try:
-        from prompt_toolkit.keys import Keys
-        # Try to parse as special key
-        Keys(key)
-    except Exception:
-        # Not a special key, check if single character
-        if not (isinstance(key, str) and len(key) == 1):
-            valid = False
-    if valid:
-        bindings.add(key)(handler)
-    else:
-        print(f"[WARN] Invalid key binding: {key}")
+    @kb.add("c-o")
     def _(event):
         """Toggle auto-copy on text selection (Ctrl+O).
         
