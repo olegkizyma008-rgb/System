@@ -42,7 +42,7 @@ if _repo_root not in sys.path:
 
 from i18n import TOP_LANGS, lang_name, normalize_lang, tr
 from system_cli.state import AppState, MenuLevel, state
-from tui.logger import setup_logging, get_logger, log_exception, log_command_execution
+from tui.logger import setup_logging, get_logger, log_exception, log_command_execution, setup_root_file_logging
 
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.data_structures import Point
@@ -58,6 +58,13 @@ from tui.app import TuiRuntime, run_tui as tui_run_tui
 from tui.constants import MAIN_MENU_ITEMS
 from tui.cli_defaults import DEFAULT_CLEANUP_CONFIG
 from tui.cli_localization import AVAILABLE_LOCALES, LocalizationConfig
+
+
+# Setup root logging immediately
+try:
+    setup_root_file_logging(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+except Exception:
+    pass
 from tui.themes import THEME_NAMES, THEMES
 from tui.messages import MessageBuffer, AgentType
 from tui.cli_paths import (

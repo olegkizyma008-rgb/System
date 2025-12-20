@@ -255,6 +255,14 @@ def log_replace_at(index: int, text: str, category: str = "info") -> None:
 def log(text: str, category: str = "info") -> None:
     """Main log function - appends to log buffer."""
     global _logs_need_trim
+    
+    # Log to root file (Left Screen)
+    try:
+        import logging
+        logging.getLogger("system_cli.left").info(f"[{category.upper()}] {text}")
+    except Exception:
+        pass
+
     override = getattr(_thread_log_override, "handler", None)
     if callable(override):
         try:
@@ -273,6 +281,13 @@ def log(text: str, category: str = "info") -> None:
 
 def log_agent_message(agent: AgentType, text: str) -> None:
     """Log agent message to clean display panel."""
+    # Log to root file (Right Screen)
+    try:
+        import logging
+        logging.getLogger("system_cli.right").info(f"[{agent.value}] {text}")
+    except Exception:
+        pass
+
     with _agent_messages_lock:
         try:
             _agent_messages_buffer.upsert_stream(agent, text, is_technical=False)
