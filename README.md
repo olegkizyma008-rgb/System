@@ -2,58 +2,131 @@
 
 **Autonomous Multi-Agent macOS Operator built on Trinity Runtime.**
 
-Atlas is not just an automation script. It is a local "neural operator" for macOS that perceives the screen (Vision-First), plans implicitly (Meta-Planning), and executes actions through a strict low-level tool interface (MCP). It is designed to act as a high-level cognitive layer over the OS, capable of complex tasks ranging from system management to web automation and coding.
+Atlas — це не просто автоматизатор, а **автономний мультиагентний оператор macOS**, що сприймає екран (Vision-First), планує (Meta-Planning 2.0), і виконує дії через MCP інструменти.
+
+**Актуальний стан: Грудень 2025 (Cognitive 2.1 + Trinity Improvements v1.0)**
 
 ---
 
-## 🧠 Core Principles (Cognitive 2.0)
+## 🧠 Основні принципи (Core Principles)
 
-1.  **Autonomous Navigation**: Self-correction loop: *Perception → Planning → Action → Verification*.
-2.  **Meta-Planning**: The agent manages its own strategy (e.g., "Aggressive" vs "Careful") and budgets its own attention (Context7).
-3.  **Vision-First**: Uses screenshots and Computer Vision as the "Ground Truth".
-4.  **Privacy & Stealth**: Built-in system for cleaning traces (`cleanup_scripts`) and spoofing identifiers.
-5.  **Continuous Learning**: Every mission result (Success/Failure) is analyzed and stored in the **Knowledge Base** to improve future plans.
-
----
-
-## 🏗 Architecture: The Trinity Graph
-
-The system runs on **Trinity Runtime**, a cyclic graph (LangGraph) of specialized nodes:
-
-| Agent / Layer | Role | Description |
-| :--- | :--- | :--- |
-| **Meta-Planner** | *Orchestrator* | The "Head". Performs Active Retrieval and filters memories. |
-| **Context7** | *Context Manager* | **Explicit Layer**. Budgets tokens, injects policy, and normalizes context. |
-| **Atlas** | *Architect* | Generates tactical plans based on normalized context. |
-| **Tetyana** | *Executor* | Universal operator. Executes tools (Shell, AppleScript, Browser). |
-| **Grisha** | *Verifier* | QA. Verifies actions via visual feedback and logic. |
-| **Knowledge** | *Learner* | Reflection phase. Extracts lessons and updates the vector DB. |
+1. **Автономна Навігація** — Цикл "Сприйняття → Планування → Дія → Верифікація"
+2. **Meta-Planning 2.0** — Агент керує власною стратегією та рівнем верифікації
+3. **Vision-First** — Скріншоти та CV як Ground Truth (multi-monitor, диференційний аналіз)
+4. **Privacy & Stealth** — Очищення слідів та підміна ідентифікаторів
+5. **Continuous Learning 2.0** — Knowledge Base з оцінкою впевненості
+6. **State Logging** — Деталізовані логи в `logs/trinity_state_*.log`
 
 ---
 
-## 🛠 Tooling (MCP Foundation)
+## 🏗 Архітектура: Trinity Runtime (LangGraph)
 
-Atlas accesses the world through the **Model Context Protocol (MCP)** registry:
+```mermaid
+graph TD
+    START((START)) --> MP[meta_planner<br/>Голова/Стратег]
+    MP -->|Policy| C7[context7<br/>Контекст-Менеджер]
+    C7 -->|Context| A[atlas<br/>Архітектор Плану]
+    MP -->|план готовий| T[tetyana<br/>Виконавець]
+    MP -->|план готовий| G[grisha<br/>Верифікатор]
+    A --> MP
+    T --> G
+    G --> MP
+    MP -->|завершено| K[knowledge<br/>Екстрактор Досвіду]
+    K --> END((END))
+```
 
--   **Unified Automation**: Internal module for Shell, AppleScript, Mouse/Keyboard, and Shortcuts.
--   **System Cleanup**: Advanced privacy tools (logs wiping, hardware spoofing).
--   **Recorder Control**: Semantic session recording.
--   **External MCPs**:
-    -   **Playwright**: Full browser automation.
-    -   **PyAutoGUI**: Fallback input emulation.
--   **Integrations**:
-    -   **AI-IDE Support**: Windsurf, Antigravity, Cursor, Continue CLI.
+### Trinity Agents
+
+| Agent | Role | Description |
+|:---|:---|:---|
+| **Meta-Planner** | Orchestrator | Active Retrieval та фільтрація спогадів |
+| **Context7** | Context Manager | Token budget, sliding window, політики |
+| **Atlas** | Architect | Тактичний план на основі контексту |
+| **Tetyana** | Executor | Native/GUI/Playwright виконання |
+| **Grisha** | Verifier | Візуальна верифікація з `enhanced_vision_analysis` |
+| **Knowledge** | Learner | Рефлексія та збереження досвіду |
 
 ---
 
-## 🚀 Quick Start
+## 🔧 Ключові Підсистеми
 
-### Prerequisites
--   macOS (Silicon recommended)
--   Python 3.12+ (managed by setup)
--   Node.js (for Playwright MCP)
+### Hierarchical Memory System (`core/memory.py`)
 
-### Installation
+| Шар | Тривалість | Призначення |
+|:---|:---|:---|
+| **Working Memory** | Поточна сесія | Тимчасові дані |
+| **Episodic Memory** | Декілька сесій | Конкретні події |
+| **Semantic Memory** | Постійно | Консолідовані знання |
+
+### Vision Pipeline
+
+- **DifferentialVisionAnalyzer**: Multi-monitor, OCR, diff visualization
+- **VisionContextManager**: Trend detection, active region tracking
+- **Enhanced Analysis**: `capture_and_analyze()` з генерацією diff images
+
+### Context7 Sliding Window
+
+- Token Budget з динамічним керуванням
+- Priority Weighting для недавніх кроків
+- ContextMetrics для відстеження використання
+
+---
+
+## 🛠 MCP Фондація (Інструменти)
+
+### Внутрішні
+- **Automation (Unified)**: Shell, AppleScript, Shortcuts, Mouse/Keyboard
+- **System Cleanup**: Очищення слідів, спуфінг (Stealth Mode)
+- **Desktop/Vision**: `enhanced_vision_analysis`, `compare_images`
+
+### Зовнішні MCP Сервери
+- **Playwright MCP**: Контроль браузера (headless/headful)
+- **PyAutoGUI MCP**: Альтернативна емуляція вводу
+- **Context7 MCP**: Документація бібліотек
+- **SonarQube MCP**: Quality gate та аналіз коду
+
+---
+
+## 🎨 TUI та Теми
+
+**14 тем у 4 категоріях:**
+- **Classic**: monaco, dracula, nord, gruvbox
+- **Modern**: catppuccin, tokyo-night, one-dark, rose-pine
+- **Vibrant**: cyberpunk, aurora, midnight-blue, solarized-dark
+- **Special**: hacker-vibe
+
+**Навігація**: `Ctrl+T` швидка зміна, `Settings → Appearance` вибір
+
+---
+
+## 🆕 Trinity Improvements v1.0 (Грудень 2025)
+
+### Pydantic State Validation
+```python
+from core.trinity_models import TrinityStateModel, MetaConfig
+state = TrinityStateModel(current_agent="meta_planner", task_type="DEV")
+state.validate_state()  # ✅
+```
+
+### MyPy Type Checking
+```bash
+mypy core/trinity.py --config-file=setup.cfg
+```
+
+### Unit Testing
+- 16 тестів для Pydantic моделей (100% coverage)
+- `pytest tests/test_trinity_models.py -v`
+
+---
+
+## 🚀 Швидкий старт
+
+### Вимоги
+- macOS (Silicon рекомендовано)
+- Python 3.11+ (рекомендовано) або 3.12
+- Node.js (для Playwright MCP)
+
+### Встановлення
 
 ```bash
 git clone https://github.com/your-repo/system.git
@@ -62,37 +135,55 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
-The `setup.sh` script will:
-1.  Create a Python 3.12 virtual environment.
-2.  Install all Python dependencies (`requirements.txt`).
-3.  Install Playwright browsers.
-4.  Patch `mcp-pyautogui-server`.
-5.  Set execution permissions for cleanup scripts.
-6.  Install git hooks (post-commit) for automatic project structure generation.
-
-### Usage
-
-Run the TUI (Text User Interface):
+### Використання
 
 ```bash
-./cli.sh
+./cli.sh                    # Запуск TUI
+/trinity <завдання>         # Запуск Trinity
+/autopilot <завдання>       # Режим повної автономії
+/help                       # Показати команди
 ```
 
-**Commands:**
--   `/trinity <task>`: Start a standard agent assignment.
--   `/autopilot <task>`: Run in fully autonomous mode.
--   `/help`: Show all commands.
+---
+
+## 📁 Структура проекту
+
+**Автоматично генерована структура**: [`project_structure_final.txt`](project_structure_final.txt)
+
+- Оновлюється при кожному commit (git hook)
+- Містить: task_logs, .last_response.txt, git history, statistics
+- **163 папки, 256+ файлів**
+
+### Логи та інтеграція
+
+| Файл/Папка | Опис |
+|:---|:---|
+| `logs/trinity_state_*.log` | Детальні логи Trinity |
+| `.last_response.txt` | Остання відповідь агента |
+| `task_logs/` | Лог-файли завдань |
+| `~/Library/Application Support/Windsurf/logs/` | Логи Windsurf |
 
 ---
 
+## ⚡ Advanced Capabilities
+
+### Self-Healing
+1. **Detection**: Grisha аналізує результат кроку
+2. **Correction**: Replanning Loop при помилках
+3. **Strategy Shift**: Native → GUI при необхідності
+4. **Limits**: `MAX_REPLANS` для уникнення циклів
+
+### Dev Mode
+- Direct Code Editing через `multi_replace_file_content`
+- Shell Execution: `git`, `npm`, `python`
+- Unsafe Tools з підтвердженням
+
+### Інтерактивність
+- **User → Agent**: Команди через TUI
+- **Agent → User**: Тег `[VOICE]` для повідомлень
+- **Feedback Loop**: Прийом даних під час пауз
+
 ---
 
-## ⚡️ Advanced Capabilities
-
--   **Self-Healing**: Atlas automaticaly detects failures (via `Grisha`) and triggers replanning to fix errors without user intervention.
--   **Dev Mode**: Capable of editing its own source code, running shell commands, and managing git integration.
--   **Interactive TUI**: Real-time communication via `[VOICE]` messages; users can intervene or guide the agent via the CLI chat.
-
----
-
-*For deep architectural details, see [docs/atlas.md](docs/atlas.md).*
+*Останнє оновлення: 20 грудня 2025 р.*
+*Детальна документація: [docs/atlas.md](docs/atlas.md)*
