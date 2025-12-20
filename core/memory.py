@@ -110,6 +110,28 @@ class AtlasMemory:
             print(f"[Memory] Query error: {e}")
             return []
 
+    def delete_memory(self, category: str, where_filter: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Deletes memories matching the filter.
+        
+        Args:
+            category: Collection name
+            where_filter: Metadata filter (e.g. {"session_id": "..."})
+        """
+        collection = self._get_collection(category)
+        if not collection:
+            return {"status": "error", "error": f"Invalid category: {category}"}
+            
+        try:
+            # ChromaDB delete requires ids or where filter
+            if not where_filter:
+                return {"status": "error", "error": "Delete requires a filter (use empty dict for all)"}
+                
+            collection.delete(where=where_filter)
+            return {"status": "success"}
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+
     def _get_collection(self, category: str):
         if category == "ui_patterns": return self.ui_patterns
         if category == "strategies": return self.strategies
@@ -306,6 +328,22 @@ class HierarchicalMemory(AtlasMemory):
             print(f"[Memory] Episodic query error: {e}")
             return []
     
+    def clear_episodic_memory(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Clear episodic memory.
+        
+        Args:
+            session_id: If provided, only clear for this session. Otherwise clear all.
+        """
+        try:
+            where_filter = {"session_id": session_id} if session_id else {}
+            # If where_filter is empty, we must ensure the library supports it.
+            # ChromaDB usually requires a filter for delete.
+            self.episodic_memory.delete(where=where_filter)
+            return {"status": "success", "layer": "episodic"}
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+    
     def add_semantic_memory(
         self,
         content: str,
@@ -481,7 +519,9 @@ _memory_instance = None
 
 class _FallbackMemory:
     """Fallback when ChromaDB is not available."""
-    
+    def __init__(self):
+        self._working_memory = {}
+
     def add_memory(self, category: str, content: str, metadata: Dict[str, Any] = None):
         _ = category
         _ = content
@@ -495,11 +535,22 @@ class _FallbackMemory:
         return []
     
     # Hierarchical memory fallbacks
-    def add_to_working_memory(self, *args, **kwargs):
-        return {"status": "success", "layer": "working", "key": "fallback"}
+    def add_to_working_memory(self, key: str, content: str, *args, **kwargs):
+        from datetime import datetime
+        self._working_memory[key] = type('obj', (object,), {
+            "content": content,
+            "is_expired": lambda: False
+        })
+        return {"status": "success", "layer": "working", "key": key}
     
-    def query_working_memory(self, *args, **kwargs):
-        return []
+    def query_working_memory(self, query: str = "", *args, **kwargs):
+        return [{"key": k, "content": v.content} for k, v in self._working_memory.items()]
+
+    def get_from_working_memory(self, key: str, *args, **kwargs):
+        return self._working_memory.get(key)
+
+    def clear_working_memory(self, *args, **kwargs):
+        self._working_memory.clear()
     
     def add_episodic_memory(self, *args, **kwargs):
         return {"status": "success", "layer": "episodic", "id": "fallback"}
@@ -518,6 +569,12 @@ class _FallbackMemory:
     
     def get_stats(self):
         return {"fallback_mode": True}
+
+    def delete_memory(self, *args, **kwargs):
+        return {"status": "success", "deleted": 0}
+        
+    def clear_episodic_memory(self, *args, **kwargs):
+        return {"status": "success", "layer": "episodic"}
 
 
 def get_memory() -> AtlasMemory:
@@ -582,3 +639,20 @@ def query_all_memory_tool(query: str) -> Dict[str, Any]:
     results = mem.get_relevant_context(query)
     return {"status": "success", "results": results}
 
+
+def clear_memory_tool(target: str = "working") -> Dict[str, Any]:
+    """
+    Clear memory layers.
+    target: 'working', 'episodic', 'all'
+    """
+    mem = get_hierarchical_memory()
+    if target == "working":
+        mem.clear_working_memory()
+        return {"status": "success", "target": "working"}
+    elif target == "episodic":
+        return mem.clear_episodic_memory() # Clear all episodic
+    elif target == "all":
+        mem.clear_working_memory()
+        res = mem.clear_episodic_memory()
+        return {"status": "success", "target": "all", "episodic_result": res}
+    return {"status": "error", "error": "Invalid target"}

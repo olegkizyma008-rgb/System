@@ -555,7 +555,9 @@ class DifferentialVisionAnalyzer:
         change_percentage = (non_zero / total_pixels) * 100
 
         # Find changed regions
-        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours_result = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Handle different OpenCV versions (returns 2 or 3 values)
+        contours = contours_result[0] if len(contours_result) == 2 else contours_result[1]
         changed_regions = []
         for cnt in contours:
             area = cv2.contourArea(cnt)

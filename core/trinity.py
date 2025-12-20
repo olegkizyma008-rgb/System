@@ -1382,7 +1382,9 @@ class TrinityRuntime:
                             if str(res_dict.get("status", "")).lower() == "error":
                                 had_failure = True
                     except Exception:
-                        pass
+                        # If not JSON, check for error string pattern from MCP executor
+                        if str(res_str).strip().startswith("Error"):
+                            had_failure = True
                     
                     # Check for permission_required errors in result
                     try:

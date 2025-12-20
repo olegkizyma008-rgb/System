@@ -425,6 +425,22 @@ def handle_command(cmd: str, wait: bool = False) -> None:
         log("Agent chat disabled.", "action")
         return
 
+    if command == "/memory-clear":
+        target = "working"
+        if args:
+            target = args[0].lower().strip()
+        
+        try:
+            from core.memory import clear_memory_tool
+            res = clear_memory_tool(target)
+            if res.get("status") == "success":
+                log(f"Memory cleared: {res}", "action")
+            else:
+                log(f"Memory clear failed: {res.get('error')}", "error")
+        except Exception as e:
+            log(f"Error clearing memory: {e}", "error")
+        return
+
     # More commands can be added here...
     log(f"Unknown command: {command}", "error")
 
