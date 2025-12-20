@@ -2,7 +2,10 @@ import base64
 import os
 import tempfile
 import subprocess
-from typing import Any, Dict, Optional
+import hashlib
+from typing import Any, Dict, Optional, List
+from datetime import datetime
+import numpy as np
 
 
 def analyze_image_local(image_path: str, *, mode: str = "auto") -> Dict[str, Any]:
@@ -344,3 +347,202 @@ def compare_images(path1: str, path2: str, prompt: str = None) -> Dict[str, Any]
         
     except Exception as e:
         return {"status": "error", "error": str(e)}
+
+
+class DifferentialVisionAnalyzer:
+    """Core class for differential visual analysis with OCR support"""
+
+    def __init__(self):
+        self.previous_frame = None
+        self.context_history = []
+        self.similarity_threshold = float(os.getenv("VISION_SIMILARITY_THRESHOLD", "0.95"))
+        self._ocr_engine = None
+
+    def _get_ocr_engine(self):
+        """Lazy load OCR engine to avoid overhead if not used"""
+        if self._ocr_engine is None:
+            try:
+                from paddleocr import PaddleOCR
+                # Initialize PaddleOCR with ukrainian and english support
+                self._ocr_engine = PaddleOCR(use_angle_cls=True, lang='en+uk', show_log=False)
+            except ImportError:
+                # Fallback to a dummy or logger if not installed
+                self._ocr_engine = "unavailable"
+        return self._ocr_engine
+
+    def analyze_frame(self, image_path: str, reference_path: str = None) -> dict:
+        """
+        Analyze frame with differential comparison and OCR
+        """
+        try:
+            import cv2
+            
+            # 1. Load current frame
+            current_frame = cv2.imread(image_path)
+            if current_frame is None:
+                return {"status": "error", "error": f"Cannot load image at {image_path}"}
+
+            # 2. Comparison reference
+            ref_frame = None
+            if reference_path:
+                ref_frame = cv2.imread(reference_path)
+            elif self.previous_frame is not None:
+                ref_frame = self.previous_frame
+
+            # 3. Calculate differences
+            diff_result = {}
+            if ref_frame is not None:
+                diff_result = self._calculate_frame_diff(ref_frame, current_frame)
+            else:
+                diff_result = {
+                    "global_change_percentage": 0,
+                    "has_significant_changes": False,
+                    "changed_regions": [],
+                    "note": "No reference frame for comparison"
+                }
+
+            # 4. Perform OCR
+            ocr_results = self._perform_ocr_analysis(image_path)
+
+            # 5. Store state
+            self.previous_frame = current_frame
+
+            # 6. Generate summary
+            context_summary = self._generate_context_summary(diff_result, ocr_results)
+
+            return {
+                "status": "success",
+                "timestamp": datetime.now().isoformat(),
+                "diff": diff_result,
+                "ocr": ocr_results,
+                "context": context_summary
+            }
+
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+
+    def _calculate_frame_diff(self, prev_frame, curr_frame) -> dict:
+        """Calculate visual differences between frames using OpenCV"""
+        import cv2
+        
+        # Ensure identical sizes
+        if prev_frame.shape != curr_frame.shape:
+             # Resize curr to prev for comparison if needed
+             curr_frame_resized = cv2.resize(curr_frame, (prev_frame.shape[1], prev_frame.shape[0]))
+        else:
+             curr_frame_resized = curr_frame
+
+        # Structural difference
+        diff = cv2.absdiff(prev_frame, curr_frame_resized)
+        gray_diff = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+        
+        # Threshold to find significant changes
+        _, thresh = cv2.threshold(gray_diff, 30, 255, cv2.THRESH_BINARY)
+        
+        non_zero = cv2.countNonZero(thresh)
+        total_pixels = gray_diff.size
+        change_percentage = (non_zero / total_pixels) * 100
+
+        # Find changed regions
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        changed_regions = []
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area > 500:  # Ignore noise
+                x, y, w, h = cv2.boundingRect(cnt)
+                changed_regions.append({
+                    "area": float(area),
+                    "bbox": {"x": int(x), "y": int(y), "width": int(w), "height": int(h)}
+                })
+
+        return {
+            "global_change_percentage": float(change_percentage),
+            "changed_regions": changed_regions,
+            "has_significant_changes": change_percentage > (1.0 - self.similarity_threshold) * 100
+        }
+
+    def _perform_ocr_analysis(self, image_path: str) -> dict:
+        """Perform OCR using PaddleOCR if available, else fallback to Copilot analysis"""
+        engine = self._get_ocr_engine()
+        
+        if engine == "unavailable":
+            # Fallback to analyze_with_copilot for critical OCR if possible
+            # or return empty result
+            return {"status": "unavailable", "note": "PaddleOCR not installed"}
+            
+        try:
+            result = engine.ocr(image_path, cls=True)
+            text_regions = []
+            
+            if result and result[0]:
+                for line in result[0]:
+                    bbox = line[0]
+                    text, conf = line[1]
+                    text_regions.append({
+                        "text": text,
+                        "confidence": float(conf),
+                        "bbox": bbox
+                    })
+
+            return {
+                "status": "success",
+                "regions": text_regions,
+                "full_text": " ".join([r["text"] for r in text_regions])
+            }
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+
+    def _generate_context_summary(self, diff_data: dict, ocr_data: dict) -> str:
+        """Generate human-readable context summary"""
+        summary = []
+        
+        if diff_data.get("has_significant_changes"):
+            summary.append(f"Detected screen changes ({diff_data['global_change_percentage']:.1f}%)")
+        else:
+            summary.append("Screen remains mostly stable")
+
+        if ocr_data.get("status") == "success" and ocr_data.get("full_text"):
+            text = ocr_data["full_text"]
+            if len(text) > 100:
+                text = text[:97] + "..."
+            summary.append(f"Visible text: {text}")
+
+        return ". ".join(summary)
+
+
+class EnhancedVisionTools:
+    """Entry point for Trinity vision operations"""
+
+    _analyzer_instance = None
+
+    @classmethod
+    def get_analyzer(cls):
+        if cls._analyzer_instance is None:
+            cls._analyzer_instance = DifferentialVisionAnalyzer()
+        return cls._analyzer_instance
+
+    @staticmethod
+    def capture_and_analyze(image_path: str = None, reference_path: str = None) -> dict:
+        """Tool implementation for differential vision analysis"""
+        # If no image path, take a screenshot
+        if not image_path:
+            from system_ai.tools.screenshot import take_screenshot
+            snap = take_screenshot()
+            if snap.get("status") != "success":
+                return snap
+            image_path = snap.get("path")
+
+        analyzer = EnhancedVisionTools.get_analyzer()
+        return analyzer.analyze_frame(image_path, reference_path)
+
+    @staticmethod
+    def analyze_with_context(image_path: str, context_manager: Any) -> dict:
+        """Analyze image and update the shared vision context"""
+        result = EnhancedVisionTools.capture_and_analyze(image_path)
+        if result.get("status") == "success":
+            context_manager.update_context(result)
+        return result

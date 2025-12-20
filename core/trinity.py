@@ -10,7 +10,8 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, System
 
 from core.agents.atlas import get_atlas_prompt, get_atlas_plan_prompt
 from core.agents.tetyana import get_tetyana_prompt
-from core.agents.grisha import get_grisha_prompt
+from core.agents.grisha import get_grisha_prompt, get_grisha_media_prompt
+from core.vision_context import VisionContextManager
 from providers.copilot import CopilotLLM
 
 from core.mcp import MCPToolRegistry
@@ -57,8 +58,10 @@ class TrinityState(TypedDict):
     meta_config: Optional[Dict[str, Any]]  # Meta-planning: strategy, verification_rigor, recovery_mode, tool_preference, reasoning
     retrieved_context: Optional[str]  # Structured findings from RAG
     original_task: Optional[str]  # The original user request (Golden Goal)
+    is_media: Optional[bool]  # Flag for media-related tasks (movie, video, audio)
     vibe_assistant_pause: Optional[Dict[str, Any]]  # Vibe CLI Assistant pause state
     vibe_assistant_context: Optional[str]  # Context for Vibe CLI Assistant
+    vision_context: Optional[Dict[str, Any]] # Enhanced visual context
 
 class TrinityRuntime:
     MAX_REPLANS = 10
@@ -140,8 +143,34 @@ class TrinityRuntime:
         if self.self_healing_enabled:
             self._initialize_self_healing()
         
+        # Initialize Vision Context Manager
+        self.vision_context_manager = VisionContextManager(max_history=10)
+        
         # Initialize Vibe CLI Assistant
         self.vibe_assistant = VibeCLIAssistant(name="Doctor Vibe")
+        
+        # Register core tools including enhanced vision
+        self._register_tools()
+
+    def _register_tools(self) -> None:
+        """Register all local tools and MCP tools."""
+        from system_ai.tools.vision import EnhancedVisionTools
+        
+        # Core Vision Tools
+        self.registry.register_tool(
+            "enhanced_vision_analysis",
+            EnhancedVisionTools.capture_and_analyze,
+            description="Capture screen and perform differential visual/OCR analysis"
+        )
+        
+        self.registry.register_tool(
+            "vision_analysis_with_context",
+            lambda args: EnhancedVisionTools.analyze_with_context(
+                args.get("image_path"),
+                self.vision_context_manager
+            ),
+            description="Analyze image and update global visual context"
+        )
 
     def _initialize_self_healing(self) -> None:
         """Initialize the self-healing module."""
@@ -312,18 +341,22 @@ class TrinityRuntime:
 
         return {"task_type": "UNKNOWN", "requires_windsurf": True, "confidence": 0.1, "reason": "keyword_fallback: unknown"}
 
-    def _classify_task(self, task: str) -> tuple[str, bool]:
+    def _classify_task(self, task: str) -> tuple[str, bool, bool]:
         """
         Classify task as DEV or GENERAL.
-        Returns: (task_type, is_dev)
+        Returns: (task_type, is_dev, is_media)
         """
+        task_lower = str(task or "").lower()
+        media_keywords = {"фільм", "movie", "video", "youtube", "netflix", "дивитись", "watch", "серіал", "serial", "film"}
+        is_media = any(k in task_lower for k in media_keywords)
+        
         llm_res = self._classify_task_llm(task)
         if llm_res:
             task_type = str(llm_res.get("task_type") or "").strip().upper()
-            return (task_type, task_type == "DEV")
+            return (task_type, task_type == "DEV", is_media)
         fb = self._classify_task_fallback(task)
         task_type = str(fb.get("task_type") or "").strip().upper()
-        return (task_type, task_type != "GENERAL")
+        return (task_type, task_type != "GENERAL", is_media)
     
     def get_self_healing_status(self) -> Optional[Dict[str, Any]]:
         """
@@ -572,10 +605,10 @@ class TrinityRuntime:
             self.logger.info("🚀 ETERNAL ENGINE MODE ACTIVATED with Doctor Vibe")
         
         # Classify the task
-        task_type, is_dev = self._classify_task(task)
+        task_type, is_dev, is_media = self._classify_task(task)
         
         if self.verbose:
-            self.logger.info(f"📝 Task classified as: {task_type} (DEV: {is_dev})")
+            self.logger.info(f"📝 Task classified as: {task_type} (DEV: {is_dev}, MEDIA: {is_media})")
         
         # Set up initial state with Doctor Vibe context
         initial_state = {
@@ -609,6 +642,7 @@ class TrinityRuntime:
             "retrieved_context": "",
             "original_task": task,
             "vibe_assistant_pause": None,
+            "is_media": is_media,
             "vibe_assistant_context": "eternal_engine_mode: Doctor Vibe monitoring activated"
         }
         
@@ -736,12 +770,10 @@ class TrinityRuntime:
             elif last_step_status == "uncertain":
                 # Treat uncertain as soft failure - increment count but don't replan immediately
                 current_step_fail_count += 1
-                if self.verbose: print(f"🧠 [Meta-Planner] Step uncertain ({current_step_fail_count}/3).")
-                # After 3 uncertain attempts, assume step completed and move on
-                if current_step_fail_count >= 3:
-                    # After 3 uncertain attempts, we MUST treat this as a failure to force replanning.
-                    # Previously this was "forcing step completion", which caused false positives.
-                    if self.verbose: print(f"🧠 [Meta-Planner] Uncertainty limit reached ({current_step_fail_count}). Marking step as FAILED.")
+                if self.verbose: print(f"🧠 [Meta-Planner] Step uncertain ({current_step_fail_count}/4).")
+                # Increase allowance for uncertainty to avoid premature failure
+                if current_step_fail_count >= 4:
+                    if self.verbose: print(f"🧠 [Meta-Planner] Uncertainty limit reached ({current_step_fail_count}). Marking step as FAILED to trigger recovery.")
                     last_step_status = "failed"
                     # Capture failed action for forbidden list (Manual Retry)
                     hist = state.get("history_plan_execution") or []
@@ -884,9 +916,10 @@ class TrinityRuntime:
         prompt = get_atlas_plan_prompt(
             f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}",
             tools_desc=self.registry.list_tools(),
-            context=final_context,
+            context=final_context + ("\n\n[MEDIA_MODE] This is a media-related task. Use the Two-Phase Media Strategy." if state.get("is_media") else ""),
             preferred_language=self.preferred_language,
-            forbidden_actions="\n".join(state.get("forbidden_actions") or [])
+            forbidden_actions="\n".join(state.get("forbidden_actions") or []),
+            vision_context=self.vision_context_manager.current_context
         )
         
         # Inject ANTI-LOOP reinforcement if replanning after failure
@@ -992,7 +1025,8 @@ class TrinityRuntime:
             "current_step_fail_count": state.get("current_step_fail_count"),
             "gui_mode": state.get("gui_mode"),
             "execution_mode": state.get("execution_mode"),
-            "task_type": state.get("task_type")
+            "task_type": state.get("task_type"),
+            "vision_context": self.vision_context_manager.get_context_for_api()
         }
 
     def _tetyana_node(self, state: TrinityState):
@@ -1044,7 +1078,12 @@ class TrinityRuntime:
         
         # Combined context: Goal + immediate request + hints + retry
         full_context = f"Global Goal: {original_task}\nRequest: {last_msg}{routing_hint}{retry_context}"
-        prompt = get_tetyana_prompt(full_context, tools_desc=tools_list, preferred_language=self.preferred_language)
+        prompt = get_tetyana_prompt(
+            full_context, 
+            tools_desc=tools_list, 
+            preferred_language=self.preferred_language,
+            vision_context=self.vision_context_manager.current_context
+        )
         
         # Bind tools to LLM for structured tool_calls output.
         tool_defs = self.registry.get_all_tool_definitions()
@@ -1456,11 +1495,23 @@ class TrinityRuntime:
         # Based on typical usage, it returns a string description. 
         # For prompt safety, we will append a STRICT WARNING instead of parsing the string complexly.
         
-        tools_desc = self.registry.list_tools() # We pass full list but instruct strictly.
+        tools_desc = self.registry.list_tools()
+        
+        plan = state.get("plan") or []
+        current_step_desc = plan[0].get("description", "Unknown") if plan else "Final Verification"
         
         original_task = state.get("original_task") or ""
-        verify_context = f"Global Goal: {original_task}\nVerify result of: {last_msg}"
-        prompt = get_grisha_prompt(verify_context, tools_desc=tools_desc, preferred_language=self.preferred_language)
+        verify_context = f"Global Goal: {original_task}\nCurrent Step Objective: {current_step_desc}\nLast Action Result: {last_msg}"
+        
+        if state.get("is_media"):
+            prompt = get_grisha_media_prompt(verify_context, tools_desc=tools_desc, preferred_language=self.preferred_language)
+        else:
+            prompt = get_grisha_prompt(
+                verify_context, 
+                tools_desc=tools_desc, 
+                preferred_language=self.preferred_language,
+                vision_context=self.vision_context_manager.current_context
+            )
         
         content = ""  # Initialize content variable
         executed_tools_results = [] # Keep track of results for verdict phase

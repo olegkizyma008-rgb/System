@@ -38,11 +38,33 @@ Responsibilities:
 - Fail early if blocked and explain why in [VOICE].
 """
 
-def get_atlas_prompt(task_description: str, preferred_language: str = "en"):
+def get_atlas_prompt(task_description: str, preferred_language: str = "en", vision_context: str = ""):
     formatted_prompt = ATLAS_SYSTEM_PROMPT.format(preferred_language=preferred_language)
+    if vision_context:
+        formatted_prompt += f"\n\nCURRENT VISION CONTEXT:\n{vision_context}\n"
+        formatted_prompt += "\nVISION STRATEGY:\n1. Prefer 'enhanced_vision_analysis' for UI changes.\n2. Use context summaries to avoid redundant captures.\n"
+
     return ChatPromptTemplate.from_messages([
         SystemMessage(content=formatted_prompt),
         HumanMessage(content=task_description),
+    ])
+
+def get_atlas_vision_prompt(task_description: str, tools_desc: str, vision_context: str = ""):
+    """Specialized prompt for high-rigor vision tasks"""
+    return ChatPromptTemplate.from_messages([
+        SystemMessage(content=f"""You are Atlas with enhanced vision capabilities.
+Your task is to analyze visual changes on the screen.
+
+VISION STRATEGY:
+1. Use 'enhanced_vision_analysis' for all visual tasks.
+2. Compare current state with previous context when available.
+3. Use diff data for efficient processing.
+
+AVAILABLE TOOLS:
+{tools_desc}
+
+CONTEXT: {vision_context}"""),
+        HumanMessage(content=task_description)
     ])
 
 
@@ -97,6 +119,9 @@ Rules:
 - **Site Rotation**: If a specific site (e.g., UASerials) fails to load or returns an error, plan to try a different known site or perform a broad Google search with exclusions.
 - **Search Query Refinement**: When searching for free content, explicit exclude subscription domains in the query (e.g., "watch movie online -site:netflix.com -site:amazon.com -site:kinopoisk.ru").
 - **Action-Oriented**: Never plan a "Find" or "Search" step without an immediate follow-up step to "Open", "Click", or "Navigate" to a result. A search result page is not a final destination.
+- **Two-Phase Media Strategy**: If the task is media-related, follow this sequence:
+    1. **RESEARCH PHASE**: Perform parallel-style searches (Google, YouTube, specialized sites). Gather multiple candidate links.
+    2. **EXECUTION PHASE**: Select the most relevant link, ensure it's not a subscription site, play the video, and verify full-screen.
 - **Navigation Enforcement**: When the goal is to select a result, explicitly specify a step to "Select" or "Click" a specific result. Do NOT just plan "Get links" and stop. You MUST plan the follow-up step: "Click the link with text '...' or the first relevant result".
 - **Link Extraction**: When Tetyana needs to select a result from a list, ALWAYS plan a `browser_get_links` step first to identify target URLs, followed IMMEDIATELY by a `browser_click` step.
 - **Google Selectors**: IMPORTANT: Instruct Tetyana to use `textarea[name="q"]` for the Google search box.
@@ -123,12 +148,15 @@ def get_meta_planner_prompt(task_context: str, preferred_language: str = "en"):
         HumanMessage(content=task_context),
     ])
 
-def get_atlas_plan_prompt(task_description: str, tools_desc: str = "", context: str = "", preferred_language: str = "en", forbidden_actions: str = ""):
+def get_atlas_plan_prompt(task_description: str, tools_desc: str = "", context: str = "", preferred_language: str = "en", forbidden_actions: str = "", vision_context: str = ""):
     formatted_prompt = ATLAS_PLANNING_PROMPT.format(
         preferred_language=preferred_language,
         tools_desc=tools_desc,
         forbidden_actions=forbidden_actions or "None"
     )
+    if vision_context:
+        formatted_prompt += f"\n\nVISION CONTEXT SUMMARY:\n{vision_context}\n"
+
     msg = f"Task: {task_description}"
     if context:
         msg += f"\n\nContext/RAG: {context}"

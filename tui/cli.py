@@ -1674,15 +1674,16 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
 
     # Fetch status
     from tui.tools import tool_llm_status
+    status = {}
     try:
-        status = tool_llm_status({"section": section})
-        if not isinstance(status, dict):
-            status = {}
+        status_res = tool_llm_status({"section": section})
+        if isinstance(status_res, dict):
+            status = status_res
     except Exception:
-        status = {}
+        pass
 
-    prov = status.get("provider", "copilot")
-    mod = status.get("model", "")
+    prov = status.get("provider") or "copilot"
+    mod = status.get("model") or ""
 
     if section == "defaults":
         main_mod = status.get("main_model", "")
