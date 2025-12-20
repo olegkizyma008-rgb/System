@@ -929,35 +929,35 @@ class TrinityRuntime:
             meta_config=meta_config,
             last_msg=last_user_msg
         )
-        
-            # Prepare history of execution for context
-            execution_history = []
-            hist = state.get("history_plan_execution") or []
-            if hist:
-                for h in hist:
-                    execution_history.append(f"- {h}")
-            
-            history_str = "\n".join(execution_history) if execution_history else "No steps executed yet. Starting fresh."
-            
-            prompt = get_atlas_plan_prompt(
-                f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}\n\nEXECUTION HISTORY SO FAR (Status of steps):\n{history_str}",
-                tools_desc=self.registry.list_tools(),
-                context=final_context + ("\n\n[MEDIA_MODE] This is a media-related task. Use the Two-Phase Media Strategy." if state.get("is_media") else ""),
-                preferred_language=self.preferred_language,
-                forbidden_actions="\n".join(state.get("forbidden_actions") or []),
-                vision_context=self.vision_context_manager.current_context
-            )
-            
-            # Inject ANTI-LOOP reinforcement if replanning after failure
-            if state.get("last_step_status") == "failed":
-                prompt.messages.append(HumanMessage(content=f"PREVIOUS ATTEMPT FAILED. Current history shows what didn't work. AVOID REPEATING FAILED ACTIONS. Respecify the plan starting from the current state to achieve the goal. RESUME, DO NOT RESTART."))
-            elif state.get("last_step_status") == "uncertain":
-                prompt.messages.append(HumanMessage(content=f"PREVIOUS STEP WAS UNCERTAIN. Review the last action's output and verify if you need to retry it differently or try an alternative approach to confirm success."))
 
-            try:
-                def on_delta(chunk):
-                    if self.on_stream:
-                        self.on_stream("atlas", chunk)
+        # Prepare history of execution for context
+        execution_history = []
+        hist = state.get("history_plan_execution") or []
+        if hist:
+            for h in hist:
+                execution_history.append(f"- {h}")
+        
+        history_str = "\n".join(execution_history) if execution_history else "No steps executed yet. Starting fresh."
+        
+        prompt = get_atlas_plan_prompt(
+            f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}\n\nEXECUTION HISTORY SO FAR (Status of steps):\n{history_str}",
+            tools_desc=self.registry.list_tools(),
+            context=final_context + ("\n\n[MEDIA_MODE] This is a media-related task. Use the Two-Phase Media Strategy." if state.get("is_media") else ""),
+            preferred_language=self.preferred_language,
+            forbidden_actions="\n".join(state.get("forbidden_actions") or []),
+            vision_context=self.vision_context_manager.current_context
+        )
+        
+        # Inject ANTI-LOOP reinforcement if replanning after failure
+        if state.get("last_step_status") == "failed":
+            prompt.messages.append(HumanMessage(content=f"PREVIOUS ATTEMPT FAILED. Current history shows what didn't work. AVOID REPEATING FAILED ACTIONS. Respecify the plan starting from the current state to achieve the goal. RESUME, DO NOT RESTART."))
+        elif state.get("last_step_status") == "uncertain":
+            prompt.messages.append(HumanMessage(content=f"PREVIOUS STEP WAS UNCERTAIN. Review the last action's output and verify if you need to retry it differently or try an alternative approach to confirm success."))
+
+        try:
+            def on_delta(chunk):
+                if self.on_stream:
+                    self.on_stream("atlas", chunk)
 
                 # Use Atlas-specific LLM
                 atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
@@ -988,37 +988,37 @@ class TrinityRuntime:
                 
                 return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
 
-            except Exception as e:
-                if self.verbose: print(f"⚠️ [Atlas] Error: {e}")
+        except Exception as e:
+            if self.verbose: print(f"⚠️ [Atlas] Error: {e}")
+            
+            # Check if this is a planning failure that Doctor Vibe should handle
+            error_str = str(e).lower()
+            if "no steps generated" in error_str or "empty plan" in error_str or "cannot" in error_str:
+                if self.verbose:
+                    print(f"🚨 [Atlas] Planning failure detected. Activating Doctor Vibe intervention.")
                 
-                # Check if this is a planning failure that Doctor Vibe should handle
-                error_str = str(e).lower()
-                if "no steps generated" in error_str or "empty plan" in error_str or "cannot" in error_str:
-                    if self.verbose:
-                        print(f"🚨 [Atlas] Planning failure detected. Activating Doctor Vibe intervention.")
+                # Create pause context for Doctor Vibe
+                pause_context = {
+                    "reason": "planning_failure",
+                    "message": f"Doctor Vibe: Атлас не може створити план для завдання: {last_msg}",
+                    "timestamp": datetime.now().isoformat(),
+                    "suggested_action": "Будь ласка, уточніть завдання або розбийте його на простіші кроки",
+                    "atlas_status": "planning_failed",
+                    "auto_resume_available": False,
+                    "original_task": state.get("original_task"),
+                    "current_attempt": last_msg
+                }
                     
-                    # Create pause context for Doctor Vibe
-                    pause_context = {
-                        "reason": "planning_failure",
-                        "message": f"Doctor Vibe: Атлас не може створити план для завдання: {last_msg}",
-                        "timestamp": datetime.now().isoformat(),
-                        "suggested_action": "Будь ласка, уточніть завдання або розбийте його на простіші кроки",
-                        "atlas_status": "planning_failed",
-                        "auto_resume_available": False,
-                        "original_task": state.get("original_task"),
-                        "current_attempt": last_msg
-                    }
-                    
-                    # Notify Doctor Vibe and create pause state
-                    self.vibe_assistant.handle_pause_request(pause_context)
-                    
-                    return {
-                        **state,
-                        "vibe_assistant_pause": pause_context,
-                        "vibe_assistant_context": f"PAUSED: Planning failure for task: {last_msg}",
-                        "current_agent": "meta_planner",  # Stay in meta_planner to handle pause
-                        "messages": list(context) + [AIMessage(content=f"[VOICE] Doctor Vibe: Виникла проблема з плануванням. Будь ласка, уточніть завдання.")]
-                    }
+                # Notify Doctor Vibe and create pause state
+                self.vibe_assistant.handle_pause_request(pause_context)
+                
+                return {
+                    **state,
+                    "vibe_assistant_pause": pause_context,
+                    "vibe_assistant_context": f"PAUSED: Planning failure for task: {last_msg}",
+                    "current_agent": "meta_planner",  # Stay in meta_planner to handle pause
+                    "messages": list(context) + [AIMessage(content=f"[VOICE] Doctor Vibe: Виникла проблема з плануванням. Будь ласка, уточніть завдання.")]
+                }
             else:
                 # Regular fallback for other errors
                 if self.verbose:
