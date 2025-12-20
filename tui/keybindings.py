@@ -51,7 +51,7 @@ def build_keybindings(
     fs_usage_service: Any,
     opensnoop_service: Any,
     force_ui_update: Callable[[], None],
-) -> KeyBindings:
+) -> Tuple[KeyBindings, Callable]:
     kb = KeyBindings()
 
     def _find_window_by_name(event: Any, name: str) -> Any:
@@ -280,13 +280,6 @@ def build_keybindings(
                 
         except Exception as e:
             log(f"Помилка копіювання: {str(e)}", "error")
-
-    @kb.add("c-l")
-    def _(event):
-        """Focus the input field."""
-        w = _find_window_by_name(event, "input")
-        if w:
-            event.app.layout.focus(w)
 
     @kb.add("c-o")
     def _(event):
