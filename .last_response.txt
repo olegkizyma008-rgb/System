@@ -9,11 +9,14 @@ Last message:
 [VOICE] Ліміт перепланувань вичерпано (10).
 
 Changed files:
-- tui/logger.py
+- core/trinity.py
+- core/verification.py
+- core/utils.py
 
 Diff stat:
-tui/logger.py | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+core/trinity.py      | 85 ++--------------------------------------------------
+ core/verification.py | 83 +++++++++++++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 77 insertions(+), 91 deletions(-)
 
 Verification:
 - status: unknown (no explicit signal)

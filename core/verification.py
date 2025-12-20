@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 import json
 import logging
+from core.utils import extract_json_object
 
 class AdaptiveVerifier:
     """
@@ -246,12 +247,78 @@ class AdaptiveVerifier:
 
     def replan_on_failure(self, failed_step: Dict[str, Any], context: str) -> List[Dict[str, Any]]:
         """
-        Generates a high-granularity recovery plan for a failed step.
+        Generates a dynamic recovery plan for a failed step using the LLM.
+        Avoids hardcoded loops by analyzing the context and specific error.
         """
-        # This would invoke the LLM (Atlas) to 'zoom in' on the problem
-        # For now, return a retry stub
-        return [
-            {"type": "diagnose", "description": f"Check why {failed_step['description']} failed"},
-            {"type": "retry", "description": f"Retry {failed_step['description']} with explicit dwell time"},
-            {"type": "verify", "method": "visual", "description": "Verify retry success"}
-        ]
+        from langchain_core.prompts import ChatPromptTemplate
+        from langchain_core.messages import SystemMessage, HumanMessage
+
+        RECOVERY_PROMPT = """You are the Recovery Strategist. A step in the execution plan has FAILED.
+Your goal: specific, logical recovery steps.
+
+Failed Step: {step_desc}
+Context/Error: {context}
+
+RULES:
+1. Do NOT just say "retry" blindly. If it failed, propose an ALTERNATIVE way or a fix before retrying.
+2. Return a JSON list of steps. Each step has "type" (execute|verify) and "description".
+3. Keep it short (1-3 steps max).
+4. If the error implies a missing file/tool, tasks should include creating/finding it.
+
+Example Output:
+[
+  {{"type": "execute", "description": "Check if file exists using ls"}},
+  {{"type": "execute", "description": "Create file if missing"}},
+  {{"type": "verify", "description": "Verify file creation"}}
+]
+"""
+        
+        try:
+            prompt = ChatPromptTemplate.from_messages([
+                SystemMessage(content=RECOVERY_PROMPT.format(
+                    step_desc=failed_step.get('description', 'Unknown action'),
+                    context=context[:2000]  # Limit context length
+                )),
+                HumanMessage(content="Generate recovery plan now.")
+            ])
+
+            response = self.llm.invoke(prompt.format_messages())
+            content = getattr(response, "content", "")
+            
+            plan = extract_json_object(content)
+            
+            if not plan or not isinstance(plan, list):
+                self.logger.warning("[Verifier] Recovery plan generation failed (invalid JSON). Falling back.")
+                raise ValueError("Invalid recovery plan JSON")
+                
+            # Normalize steps
+            clean_plan = []
+            for step in plan:
+                if isinstance(step, str):
+                    clean_plan.append({"type": "execute", "description": step})
+                elif isinstance(step, dict):
+                    if "type" not in step: step["type"] = "execute"
+                    clean_plan.append(step)
+            
+            if not clean_plan:
+                 raise ValueError("Empty recovery plan")
+                 
+            self.logger.info(f"[Verifier] Dynamic recovery plan generated: {len(clean_plan)} steps")
+            return clean_plan
+
+        except Exception as e:
+            self.logger.error(f"[Verifier] Dynamic replanning failed: {e}. using static fallback.")
+            # Intelligent static fallback based on keyword scan
+            desc = failed_step.get('description', '').lower()
+            if "click" in desc or "find" in desc:
+                return [
+                    {"type": "execute", "description": "Take full screen screenshot to analyze UI state"},
+                    {"type": "execute", "description": f"Retry: {failed_step.get('description')}"},
+                    {"type": "verify", "description": "Verify action success"}
+                ]
+            
+            return [
+                {"type": "execute", "description": f"Diagnose failure of: {failed_step.get('description')}"},
+                {"type": "execute", "description": f"Retry action: {failed_step.get('description')}"},
+                {"type": "verify", "description": "Verify result"}
+            ]

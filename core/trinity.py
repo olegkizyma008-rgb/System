@@ -22,6 +22,7 @@ from core.self_healing import IssueSeverity
 from core.vibe_assistant import VibeCLIAssistant
 from dataclasses import dataclass
 from tui.logger import get_logger, trace
+from core.utils import extract_json_object
 
 @dataclass
 class TrinityPermissions:
@@ -211,88 +212,6 @@ class TrinityRuntime:
         else:
             self.logger.warning(f"Auto-repair failed: {result.get('message', 'unknown')}")
     
-    def _extract_json_object(self, text: str) -> Any:
-        """Helper to extract any JSON object or list from a string."""
-        if not text:
-            return None
-        s = str(text).strip()
-        
-        # Try direct JSON first.
-        try:
-            return json.loads(s)
-        except Exception:
-            pass
-
-        # Try cleaning markdown code blocks
-        s_clean = re.sub(r"^```json\s*", "", s, flags=re.IGNORECASE | re.MULTILINE)
-        s_clean = re.sub(r"\s*```$", "", s_clean, flags=re.IGNORECASE | re.MULTILINE)
-        try:
-            return json.loads(s_clean.strip())
-        except Exception:
-            pass
-
-        # Search for first JSON object {} or list []
-        # We search for the first occurrence of { or [
-        start_brace = s.find('{')
-        start_bracket = s.find('[')
-        
-        if start_brace == -1 and start_bracket == -1:
-            return None
-            
-        start_idx = -1
-        if start_brace != -1 and (start_bracket == -1 or start_brace < start_bracket):
-            start_idx = start_brace
-        else:
-            start_idx = start_bracket
-            
-        # Try to parse from start_idx to the end, effectively ignoring trailing text
-        # If that fails, we can try to find the balancing brace/bracket (complex without a parser)
-        # But json.loads supports parsing if we slice correctly. 
-        # Actually, standard json.loads doesn't ignore trailing chars. 
-        # So we try to find the last valid brace/bracket.
-        
-        candidate = s[start_idx:]
-        
-        # Optimization: Try full candidate first
-        try:
-            return json.loads(candidate)
-        except Exception:
-            pass
-            
-        # Optimization: Try regex to find the matching closing brace/bracket
-        # This is heuristics based, not a full parser, but faster than iterative slicing for large texts
-        try:
-            if candidate.startswith('{'):
-                # Simple balanced brace counter
-                count = 0
-                for i, char in enumerate(candidate):
-                    if char == '{': count += 1
-                    elif char == '}': count -= 1
-                    if count == 0:
-                        return json.loads(candidate[:i+1])
-            elif candidate.startswith('['):
-                count = 0
-                for i, char in enumerate(candidate):
-                    if char == '[': count += 1
-                    elif char == ']': count -= 1
-                    if count == 0:
-                        return json.loads(candidate[:i+1])
-        except Exception:
-            pass
-
-        # Fallback to iterative trimming from the end if regex failed
-        for i in range(len(candidate), 0, -1):
-            try:
-                # Potential optimization: only try if candidate[i-1] is } or ]
-                char = candidate[i-1]
-                if char not in ['}', ']']:
-                    continue
-                return json.loads(candidate[:i])
-            except Exception:
-                pass
-                
-        return None
-
     def _classify_task_llm(self, task: str) -> Optional[Dict[str, Any]]:
         try:
             if os.getenv("PYTEST_CURRENT_TEST"):
@@ -317,7 +236,7 @@ class TrinityRuntime:
             ]
             resp = self.llm.invoke(msgs)
             resp_content = getattr(resp, "content", "") if resp is not None else ""
-            data = self._extract_json_object(resp_content)
+            data = extract_json_object(resp_content)
             if not data:
                 return None
             task_type = str(data.get("task_type") or "").strip().upper()
