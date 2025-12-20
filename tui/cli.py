@@ -1,4 +1,4 @@
-"""cli.py
+from some_module import MenuLevel
 
 Єдиний і основний інтерфейс керування системою.
 
@@ -7,7 +7,7 @@
 - Керування модулями очистки (enable/disable)
 - Режим "нова установка" (відкриття DMG/ZIP/URL)
 - LLM-режим: smart-plan (побудова патернів/модулів) і /ask (одноразовий запит)
-- Менеджер локалізацій (список/primary) – збереження в ~/.localization_cli.json
+- Менеджер локалізацій (список/primary) - збереження в ~/.localization_cli.json
 
 Запуск:
   python3 cli.py            # TUI
@@ -15,6 +15,7 @@
 
 Примітка: скрипт навмисно не прив'язується до версій редакторів.
 """
+
 
 import argparse
 import atexit
@@ -1634,17 +1635,18 @@ def _custom_task_recording_analyze_last() -> Tuple[bool, str]:
     except Exception:
         pass
 
-    if str(state.ui_lang or "").strip().lower() == "uk":
-        return True, "Введи додатковий контекст для аналізу (опціонально) і натисни Enter. Можна просто Enter щоб пропустити."
     if not isinstance(state.ui_lang, str):
         state.ui_lang = ''
 
-    if str(state.ui_lang or '').strip().lower() == 'uk':
-        return True, "Введи додатковий контекст для аналізу (опціонально) і натисни Enter. Можна просто Enter щоб пропустити."
-    return True, "Type optional extra context for analysis and press Enter (or press Enter to skip)."
+    state.ui_lang = str(state.ui_lang or '').strip().lower()
+    if not hasattr(state, 'ui_lang') or not isinstance(state.ui_lang, str):
+        state.ui_lang = ''
+    else:
+        state.ui_lang = str(state.ui_lang).strip().lower()
 
-
-def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
+    if state.ui_lang == 'uk':
+        # Add logic for 'uk' if necessary
+        pass
     return [
         ("menu.settings.section.appearance", None, "section"),
         ("menu.settings.appearance", MenuLevel.APPEARANCE, None),
@@ -1676,8 +1678,8 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
     
     # Determine section from level
     section = ""
-    if level == MenuLevel.LLM_DEFAULTS:
-        section = "defaults"
+    if not isinstance(level, MenuLevel):
+        raise TypeError(f"Invalid type for level: expected MenuLevel, got {type(level).__name__}")
     elif level == MenuLevel.LLM_ATLAS:
         section = "atlas"
     elif level == MenuLevel.LLM_TETYANA:
@@ -1688,6 +1690,7 @@ def _get_llm_sub_menu_items(level: Any) -> List[Tuple[str, Any]]:
         section = "vision"
     else:
         return []
+
 
     # Fetch status
     from tui.tools import tool_llm_status

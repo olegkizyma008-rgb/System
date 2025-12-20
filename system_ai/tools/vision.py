@@ -348,15 +348,23 @@ def compare_images(path1: str, path2: str, prompt: str = None) -> Dict[str, Any]
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
-
 class DifferentialVisionAnalyzer:
-    """Core class for differential visual analysis with OCR support"""
+    """Core class for differential visual analysis with OCR and multi-monitor support.
+    
+    Enhanced features:
+    - Multi-monitor screenshot capture
+    - Diff image generation for visualization
+    - Improved region detection with monitor indexing
+    - Color and structure analysis
+    """
 
     def __init__(self):
         self.previous_frame = None
         self.context_history = []
         self.similarity_threshold = float(os.getenv("VISION_SIMILARITY_THRESHOLD", "0.95"))
         self._ocr_engine = None
+        self._monitor_count = 1
+        self._last_diff_image_path: Optional[str] = None
 
     def _get_ocr_engine(self):
         """Lazy load OCR engine to avoid overhead if not used"""
@@ -364,15 +372,108 @@ class DifferentialVisionAnalyzer:
             try:
                 from paddleocr import PaddleOCR
                 # Initialize PaddleOCR with ukrainian and english support
-                self._ocr_engine = PaddleOCR(use_angle_cls=True, lang='en+uk', show_log=False)
+                self._ocr_engine = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
             except ImportError:
                 # Fallback to a dummy or logger if not installed
                 self._ocr_engine = "unavailable"
         return self._ocr_engine
 
-    def analyze_frame(self, image_path: str, reference_path: str = None) -> dict:
+    def capture_all_monitors(self) -> Dict[str, Any]:
+        """Capture screenshot from all monitors using native macOS APIs.
+        
+        Returns combined image path and monitor info.
         """
-        Analyze frame with differential comparison and OCR
+        try:
+            # Try native macOS multi-monitor capture
+            from Quartz import (
+                CGGetActiveDisplayList, 
+                CGDisplayBounds,
+                CGWindowListCreateImage,
+                CGRectMake,
+                kCGWindowListOptionOnScreenOnly,
+                kCGNullWindowID
+            )
+            from Cocoa import NSBitmapImageRep, NSPNGFileType
+            import Quartz
+            
+            # Get all displays
+            max_displays = 16
+            active_displays, num_displays = CGGetActiveDisplayList(max_displays, None, None)
+            self._monitor_count = num_displays
+            
+            if num_displays == 0:
+                return {"status": "error", "error": "No displays found"}
+            
+            # Calculate combined bounds
+            min_x, min_y = float('inf'), float('inf')
+            max_x, max_y = float('-inf'), float('-inf')
+            
+            for display_id in active_displays[:num_displays]:
+                bounds = CGDisplayBounds(display_id)
+                min_x = min(min_x, bounds.origin.x)
+                min_y = min(min_y, bounds.origin.y)
+                max_x = max(max_x, bounds.origin.x + bounds.size.width)
+                max_y = max(max_y, bounds.origin.y + bounds.size.height)
+            
+            # Capture combined rect
+            combined_rect = CGRectMake(min_x, min_y, max_x - min_x, max_y - min_y)
+            image = CGWindowListCreateImage(
+                combined_rect,
+                kCGWindowListOptionOnScreenOnly,
+                kCGNullWindowID,
+                0
+            )
+            
+            if image is None:
+                return {"status": "error", "error": "Failed to capture screen image"}
+            
+            # Save to file
+            bitmap = NSBitmapImageRep.alloc().initWithCGImage_(image)
+            png_data = bitmap.representationUsingType_properties_(NSPNGFileType, None)
+            
+            output_path = tempfile.mktemp(suffix=".png")
+            png_data.writeToFile_atomically_(output_path, True)
+            
+            return {
+                "status": "success",
+                "path": output_path,
+                "monitor_count": num_displays,
+                "bounds": {"x": min_x, "y": min_y, "width": max_x - min_x, "height": max_y - min_y}
+            }
+            
+        except ImportError:
+            # Fallback to mss for multi-monitor
+            try:
+                import mss
+                
+                with mss.mss() as sct:
+                    # Monitor 0 is the combined view
+                    self._monitor_count = len(sct.monitors) - 1
+                    screenshot = sct.grab(sct.monitors[0])
+                    
+                    output_path = tempfile.mktemp(suffix=".png")
+                    mss.tools.to_png(screenshot.rgb, screenshot.size, output=output_path)
+                    
+                    return {
+                        "status": "success",
+                        "path": output_path,
+                        "monitor_count": self._monitor_count,
+                        "bounds": sct.monitors[0]
+                    }
+            except Exception as e:
+                return {"status": "error", "error": f"mss fallback failed: {e}"}
+                
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+
+    def analyze_frame(self, image_path: str, reference_path: str = None, generate_diff_image: bool = False) -> dict:
+        """
+        Analyze frame with differential comparison, OCR, and optional diff image generation.
+        
+        Args:
+            image_path: Path to current image
+            reference_path: Optional path to reference image
+            generate_diff_image: If True, creates a visualization of differences
         """
         try:
             import cv2
@@ -392,13 +493,14 @@ class DifferentialVisionAnalyzer:
             # 3. Calculate differences
             diff_result = {}
             if ref_frame is not None:
-                diff_result = self._calculate_frame_diff(ref_frame, current_frame)
+                diff_result = self._calculate_frame_diff(ref_frame, current_frame, generate_diff_image)
             else:
                 diff_result = {
                     "global_change_percentage": 0,
                     "has_significant_changes": False,
                     "changed_regions": [],
-                    "note": "No reference frame for comparison"
+                    "note": "No reference frame for comparison",
+                    "monitor_count": self._monitor_count
                 }
 
             # 4. Perform OCR
@@ -410,13 +512,18 @@ class DifferentialVisionAnalyzer:
             # 6. Generate summary
             context_summary = self._generate_context_summary(diff_result, ocr_results)
 
-            return {
+            result = {
                 "status": "success",
                 "timestamp": datetime.now().isoformat(),
                 "diff": diff_result,
                 "ocr": ocr_results,
                 "context": context_summary
             }
+            
+            if generate_diff_image and self._last_diff_image_path:
+                result["diff_image_path"] = self._last_diff_image_path
+
+            return result
 
         except Exception as e:
             return {
@@ -425,8 +532,8 @@ class DifferentialVisionAnalyzer:
                 "timestamp": datetime.now().isoformat()
             }
 
-    def _calculate_frame_diff(self, prev_frame, curr_frame) -> dict:
-        """Calculate visual differences between frames using OpenCV"""
+    def _calculate_frame_diff(self, prev_frame, curr_frame, generate_image: bool = False) -> dict:
+        """Calculate visual differences between frames using OpenCV."""
         import cv2
         
         # Ensure identical sizes
@@ -454,16 +561,68 @@ class DifferentialVisionAnalyzer:
             area = cv2.contourArea(cnt)
             if area > 500:  # Ignore noise
                 x, y, w, h = cv2.boundingRect(cnt)
+                
+                # Calculate which monitor this region belongs to
+                monitor_idx = self._get_monitor_for_position(x, y)
+                
+                # Calculate color change intensity in region
+                region_diff = diff[y:y+h, x:x+w]
+                color_intensity = float(np.mean(region_diff)) if region_diff.size > 0 else 0
+                
                 changed_regions.append({
                     "area": float(area),
-                    "bbox": {"x": int(x), "y": int(y), "width": int(w), "height": int(h)}
+                    "bbox": {"x": int(x), "y": int(y), "width": int(w), "height": int(h)},
+                    "monitor": monitor_idx,
+                    "color_intensity": color_intensity
                 })
+
+        # Generate diff visualization image
+        if generate_image and len(changed_regions) > 0:
+            self._last_diff_image_path = self._generate_diff_image(curr_frame_resized, changed_regions)
 
         return {
             "global_change_percentage": float(change_percentage),
             "changed_regions": changed_regions,
-            "has_significant_changes": change_percentage > (1.0 - self.similarity_threshold) * 100
+            "has_significant_changes": change_percentage > (1.0 - self.similarity_threshold) * 100,
+            "monitor_count": self._monitor_count
         }
+
+    def _get_monitor_for_position(self, x: int, y: int) -> int:
+        """Determine which monitor a position belongs to (simplified)."""
+        # This is a simplified version - could be enhanced with actual monitor bounds
+        # For now, divide screen width by monitor count
+        if self._monitor_count <= 1:
+            return 0
+        # Assume horizontal arrangement, ~1920px per monitor
+        return min(x // 1920, self._monitor_count - 1)
+
+    def _generate_diff_image(self, frame, regions: List[Dict]) -> str:
+        """Generate a visualization of changed regions."""
+        import cv2
+        
+        output = frame.copy()
+        
+        for region in regions:
+            bbox = region.get("bbox", {})
+            x, y = bbox.get("x", 0), bbox.get("y", 0)
+            w, h = bbox.get("width", 0), bbox.get("height", 0)
+            
+            # Color based on intensity
+            intensity = region.get("color_intensity", 50)
+            color = (0, int(min(255, intensity * 3)), 255)  # Orange to red gradient
+            
+            # Draw rectangle
+            cv2.rectangle(output, (x, y), (x + w, y + h), color, 2)
+            
+            # Add label
+            label = f"M{region.get('monitor', 0)} {int(region.get('area', 0))}px"
+            cv2.putText(output, label, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color, 1)
+        
+        # Save
+        output_path = tempfile.mktemp(suffix="_diff.png")
+        cv2.imwrite(output_path, output)
+        
+        return output_path
 
     def _perform_ocr_analysis(self, image_path: str) -> dict:
         """Perform OCR using PaddleOCR if available, else fallback to Copilot analysis"""
@@ -502,6 +661,8 @@ class DifferentialVisionAnalyzer:
         
         if diff_data.get("has_significant_changes"):
             summary.append(f"Detected screen changes ({diff_data['global_change_percentage']:.1f}%)")
+            if diff_data.get("monitor_count", 1) > 1:
+                summary.append(f"across {diff_data['monitor_count']} monitors")
         else:
             summary.append("Screen remains mostly stable")
 
@@ -515,29 +676,46 @@ class DifferentialVisionAnalyzer:
 
 
 class EnhancedVisionTools:
-    """Entry point for Trinity vision operations"""
+    """Entry point for Trinity vision operations with enhanced capabilities."""
 
     _analyzer_instance = None
 
     @classmethod
-    def get_analyzer(cls):
+    def get_analyzer(cls) -> DifferentialVisionAnalyzer:
         if cls._analyzer_instance is None:
             cls._analyzer_instance = DifferentialVisionAnalyzer()
         return cls._analyzer_instance
 
     @staticmethod
-    def capture_and_analyze(image_path: str = None, reference_path: str = None) -> dict:
-        """Tool implementation for differential vision analysis"""
+    def capture_and_analyze(
+        image_path: str = None, 
+        reference_path: str = None,
+        generate_diff_image: bool = False,
+        multi_monitor: bool = True
+    ) -> dict:
+        """Tool implementation for differential vision analysis.
+        
+        Args:
+            image_path: Path to image to analyze (if None, captures screen)
+            reference_path: Optional reference image for comparison
+            generate_diff_image: Generate visualization of changes
+            multi_monitor: Use multi-monitor capture (default True)
+        """
+        analyzer = EnhancedVisionTools.get_analyzer()
+        
         # If no image path, take a screenshot
         if not image_path:
-            from system_ai.tools.screenshot import take_screenshot
-            snap = take_screenshot()
+            if multi_monitor:
+                snap = analyzer.capture_all_monitors()
+            else:
+                from system_ai.tools.screenshot import take_screenshot
+                snap = take_screenshot()
+            
             if snap.get("status") != "success":
                 return snap
             image_path = snap.get("path")
 
-        analyzer = EnhancedVisionTools.get_analyzer()
-        return analyzer.analyze_frame(image_path, reference_path)
+        return analyzer.analyze_frame(image_path, reference_path, generate_diff_image)
 
     @staticmethod
     def analyze_with_context(image_path: str, context_manager: Any) -> dict:
@@ -546,3 +724,20 @@ class EnhancedVisionTools:
         if result.get("status") == "success":
             context_manager.update_context(result)
         return result
+
+    @staticmethod
+    def get_multi_monitor_screenshot() -> dict:
+        """Capture screenshot from all monitors."""
+        analyzer = EnhancedVisionTools.get_analyzer()
+        return analyzer.capture_all_monitors()
+
+    @staticmethod
+    def analyze_with_diff_visualization(reference_path: str = None) -> dict:
+        """Analyze current screen with diff visualization."""
+        return EnhancedVisionTools.capture_and_analyze(
+            image_path=None,
+            reference_path=reference_path,
+            generate_diff_image=True,
+            multi_monitor=True
+        )
+
