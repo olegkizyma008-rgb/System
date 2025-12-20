@@ -3,7 +3,7 @@ description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 m
 ---
 
 # Project Atlas: Архітектура, Workflow та Основні Принципи  
-**Актуальний стан на грудень 2025 року (Cognitive 2.0)**
+**Актуальний стан на грудень 2025 року (Cognitive 2.1)**
 
 Цей документ є **єдиним джерелом правди** про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
 
@@ -18,7 +18,7 @@ Atlas — це не просто автоматизатор, а **автоном
 2.  **Управління Мисленням (Meta-Planning)**  
     Агент керує власною стратегією: обирає рівень верифікації, режим відновлення та тип плану.
 3.  **Візуальне Сприйняття (Vision-First)**  
-    Використання скріншотів та Computer Vision як Ground Truth.
+    Використання скріншотів та Computer Vision як Ground Truth. Підтримка multi-monitor та диференційного аналізу.
 4.  **Конфіденційність та Стелс-режим (Privacy & Stealth)**  
     Система очищення слідів та підміна ідентифікаторів (`spoofing`).
 5.  **Постійне Навчання (Continuous Learning 2.0)**  
@@ -33,7 +33,7 @@ Atlas — це не просто автоматизатор, а **автоном
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег/Контролер]
-    MP -->|Policy & Strategy| C7[context7<br/>Контекст-Менеджер]
+    MP -->|Policy & Strategy| C7[context7<br/>Контекст-Менеджер<br/>+ Sliding Window]
     C7 -->|Normalized Context| A[atlas<br/>Архітектор Плану]
     MP -->|план готовий| T[tetyana<br/>Виконавець]
     MP -->|план готовий| G[grisha<br/>Верифікатор]
@@ -42,20 +42,104 @@ graph TD
     G --> MP
     MP -->|завершено| K[knowledge<br/>Екстрактор Досвіду]
     K --> END((END))
+    
+    subgraph Memory Layers
+        WM[Working Memory]
+        EM[Episodic Memory]
+        SM[Semantic Memory]
+    end
+    
+    MP -.-> WM
+    WM -.-> EM
+    EM -.-> SM
 ```
 
 ### 2.1 Trinity Agents & Layers
 
 -   **Meta-Planner** (`_meta_planner_node`): Головний оркестратор. Виконує **Active Retrieval** та фільтрує спогади.
--   **Context7** (`context7`): **Explicit Context Manager**. Готує контекст, керує бюджетом токенів та ін'єктує стратегічні політики перед плануванням.
+-   **Context7** (`context7`): **Explicit Context Manager**. Готує контекст, керує бюджетом токенів та ін'єктує стратегічні політики. **Новинка**: Sliding Window з пріоритезацією недавніх кроків.
 -   **Atlas** (`_atlas_node`): Архітектор тактичного плану. Отримує *нормалізований* контекст від Context7 для розробки кроків.
 -   **Tetyana** (`_tetyana_node`): Виконавець (Native/GUI/Playwright).
--   **Grisha** (`_grisha_node`): Верифікатор. У разі успіху або критичного провалу ініціює перехід до навчання.
+-   **Grisha** (`_grisha_node`): Верифікатор. У разі успіху або критичного провалу ініціює перехід до навчання. Використовує `enhanced_vision_analysis` для візуальної верифікації.
 -   **Knowledge** (`_knowledge_node`): **Етап рефлексії**. Зберігає досвід (`success`/`failed`).
 
 ---
 
-## 3. Мета-планінг та Пам'ять (Meta-planning 2.0)
+## 3. Ключові Підсистеми (Core Components)
+
+### 3.1 Hierarchical Memory System
+
+Трирівнева система пам'яті (`core/memory.py`):
+
+| Шар | Тривалість | Призначення |
+|:---|:---|:---|
+| **Working Memory** | Поточна сесія | Тимчасові дані, активний контекст |
+| **Episodic Memory** | Декілька сесій | Конкретні події, взаємодії, результати |
+| **Semantic Memory** | Постійно | Консолідовані знання, патерни, стратегії |
+
+```python
+memory = HierarchicalMemory()
+memory.add_to_working("current_task", {...})
+memory.consolidate_to_semantic()  # Promote important knowledge
+```
+
+### 3.2 Context7 Sliding Window
+
+Оптимізований менеджер контексту (`core/context7.py`):
+
+- **Token Budget**: Динамічне керування бюджетом токенів
+- **Priority Weighting**: Пріоритезація недавніх кроків та критичної інформації
+- **ContextMetrics**: Відстеження використання токенів
+
+### 3.3 Agent Message Protocol
+
+Структурована комунікація між агентами (`core/agent_protocol.py`):
+
+- **AgentMessage**: Типізовані повідомлення з метаданими
+- **PriorityMessageQueue**: Черга з пріоритетами
+- **MessageRouter**: Маршрутизація та доставка
+
+### 3.4 Parallel Tool Executor
+
+Паралельне виконання незалежних кроків (`core/parallel_executor.py`):
+
+- **DependencyAnalyzer**: Аналіз залежностей між кроками
+- **Thread Pool**: Паралельне виконання незалежних операцій
+- **StepResult**: Відстеження статусу та метрик
+
+---
+
+## 4. Vision Pipeline (Enhanced)
+
+Розширена система візуального аналізу (`system_ai/tools/vision.py`, `core/vision_context.py`):
+
+### 4.1 DifferentialVisionAnalyzer
+
+| Функція | Опис |
+|:---|:---|
+| `capture_all_monitors()` | Multi-monitor screenshot через Quartz/mss |
+| `analyze_frame()` | Диференційний аналіз + OCR |
+| `_generate_diff_image()` | Візуалізація змінених регіонів |
+
+### 4.2 VisionContextManager
+
+- **Trend Detection**: Відстеження тренду змін (increasing/decreasing/stable)
+- **Active Region Tracking**: Hot zones з частими змінами
+- **Frame History**: До 10 кадрів з метаданими
+- **Step Verification**: `get_diff_summary_for_step()` для верифікації дій
+
+```python
+# Використання агентами
+result = EnhancedVisionTools.capture_and_analyze(
+    multi_monitor=True,
+    generate_diff_image=True
+)
+context_manager.update_context(result)
+```
+
+---
+
+## 5. Мета-планінг та Пам'ять (Meta-planning 2.0)
 
 | Параметр | Значення | Опис |
 | :--- | :--- | :--- |
@@ -67,48 +151,47 @@ graph TD
 
 ---
 
-## 4. MCP Фондація (Інструменти)
+## 6. MCP Фондація (Інструменти)
 
 Центральний реєстр `MCPToolRegistry` надає агентам доступ до:
 
 ### Внутрішні Інструменти (Internal)
--   **Automation (Unified)**: Уніфікований модуль для Shell, AppleScript, Shortcuts та вводу (миша/клавіатура).
--   **System Cleanup**: Інструменти для очищення слідів, логів та спуфінгу (Stealth Mode).
--   **Recorder Control**: Програмне керування записом сесій (Start/Stop/Status).
--   **Desktop/Vision**: Аналіз екрану, пошук зображень, OCR. Підтримує **Dynamic Focus** (автоматична активація цільового вікна перед знімком).
+-   **Automation (Unified)**: Shell, AppleScript, Shortcuts, Mouse/Keyboard
+-   **System Cleanup**: Очищення слідів, логів, спуфінг (Stealth Mode)
+-   **Recorder Control**: Програмне керування записом сесій
+-   **Desktop/Vision**: `enhanced_vision_analysis`, `vision_analysis_with_context`, `compare_images`
 
 ### Зовнішні MCP Сервери (External)
--   **Playwright MCP**: Повний контроль браузера (headless/headful).
--   **PyAutoGUI MCP**: Альтернативна емуляція вводу (якщо внутрішня недоступна).
-
-
----
-
-## 5. Додаткові можливості та Інтеграції (Extensions)
-
-### 5.1 AI-IDE Integrations
--   **Windsurf**, **Antigravity**, **Cursor**, **Continue CLI**: Спеціальні профілі для розробки.
-
-### 5.2 Cleanup & Privacy System
--   Очищення `IndexedDB`, `keychain`, локальних сховищ ШІ.
--   **Spoofing**: MAC, hostname (з авто-ревертом через 4 години).
+-   **Playwright MCP**: Повний контроль браузера (headless/headful)
+-   **PyAutoGUI MCP**: Альтернативна емуляція вводу
+-   **Context7 MCP**: Доступ до документації бібліотек
+-   **SonarQube MCP**: Quality gate та аналіз коду
 
 ---
 
-## 6. Система моніторингу та Трейси (Monitoring)
+## 7. TUI та Теми
 
-| Event | Опис |
-| :--- | :--- |
-| `trinity_run_start` | Початок виконання всього графа. |
-| `knowledge_stored` | Подія збереження досвіду (статус, впевненість, джерело). |
-| `atlas_plan_generated` | Подія створення нового плану. |
-| `grisha_decision` | Вердикт верифікатора. |
+### 7.1 Доступні теми (14 тем)
+
+| Категорія | Теми |
+|:---|:---|
+| **Classic** | monaco, dracula, nord, gruvbox |
+| **Modern** | catppuccin, tokyo-night, one-dark, rose-pine |
+| **Vibrant** | cyberpunk, aurora, midnight-blue, solarized-dark |
+| **Special** | hacker-vibe (dimmed) |
+
+### 7.2 Навігація TUI
+- **Ctrl+T**: Швидка зміна теми
+- **Settings → Appearance**: Вибір теми з превʼю
+- **Custom themes**: `~/.system_cli/themes/*.json`
 
 ---
 
-## 7. Швидкий старт
+## 8. Швидкий старт
 
 ```bash
+# Вимоги: Python 3.11 (рекомендовано) або 3.12
+./setup.sh                  # Встановлення залежностей
 ./cli.sh                    # Запуск TUI
 /trinity <завдання>         # Запуск Trinity
 /autopilot <завдання>       # Режим повної автономії
@@ -116,30 +199,50 @@ graph TD
 
 ---
 
+## 9. FAQ & Advanced Capabilities
+
+### 9.1 Режим Розробника (Dev Mode)
+Atlas може працювати в розширеному режимі:
+-   **Direct Code Editing**: Через `multi_replace_file_content`
+-   **Shell Execution**: `git`, `npm`, `python` та інші
+-   **Unsafe Tools**: AppleScript, Mouse Control (з підтвердженням)
+
+### 9.2 Self-Healing
+1.  **Detection**: Grisha аналізує результат кожного кроку
+2.  **Correction**: Replanning Loop при помилках
+3.  **Strategy Shift**: Перехід Native → GUI при необхідності
+4.  **Limits**: `MAX_REPLANS` для уникнення нескінченних циклів
+
+### 9.3 Інтерактивність
+-   **User → Agent**: Команди/уточнення через TUI
+-   **Agent → User**: Тег `[VOICE]` для повідомлень
+-   **Feedback Loop**: Прийом даних під час пауз
 
 ---
 
-## 8. FAQ & Advanced Capabilities
+## 10. Файлова структура ключових компонентів
 
-### 8.1 Режим Розробника (Dev Mode)
-Atlas може працювати в розширеному режимі (Dev Mode), що дозволяє:
--   **Direct Code Editing**: Агент може читати та змінювати код власної системи (через `multi_replace_file_content`).
--   **Shell Execution**: Виконання термінальних команд (включаючи `git`, `npm`, `python`).
--   **Unsafe Tools**: Доступ до потенційно небезпечних інструментів (AppleScript, Mouse Control) за умови підтвердження користувачем (`confirm users`) або в режимі `--unsafe`.
+```
+core/
+├── trinity.py          # Trinity Runtime (LangGraph)
+├── context7.py         # Context Manager + Sliding Window
+├── memory.py           # Hierarchical Memory (Working/Episodic/Semantic)
+├── agent_protocol.py   # Agent Message Protocol
+├── parallel_executor.py # Parallel Tool Execution
+├── vision_context.py   # Vision Context Manager
+└── mcp.py             # MCP Tool Registry
 
-### 8.2 Чи може Atlas "лікувати" себе? (Self-Healing)
-**Так.** Це закладено в архітектуру Trinity Runtime:
-1.  **Detection**: Агент-верифікатор (`Grisha`) аналізує результат виконання кожного кроку.
-2.  **Correction**: Якщо виявлено помилку (наприклад, `JSON parsing error` або `Element not found`), система ініціює `Replanning Loop`.
-3.  **Strategy Shift**: Meta-Planner може змінити стратегію (наприклад, перейти з Native Mode на GUI Mode), якщо попередній підхід не спрацював.
-4.  **Limits**: Система має ліміт на кількість спроб (`MAX_REPLANS`), щоб уникнути нескінченних циклів.
+system_ai/tools/
+├── vision.py          # DifferentialVisionAnalyzer, EnhancedVisionTools
+└── screenshot.py      # Screenshot utilities
 
-### 8.3 Інтерактивність (Chat & Response)
-Atlas працює в напівавтономному режимі через TUI (`cli.py`):
--   **User -> Agent**: Ви можете писати команди або уточнення прямо в чат TUI.
--   **Agent -> User**: Агенти використовують тег `[VOICE]` для відправки повідомлень користувачу, які відображаються в інтерфейсі.
--   **Feedback Loop**: Хоча агент фокусується на завданні, він може "чути" нові вхідні дані від користувача під час пауз між кроками, якщо це реалізовано через режим `interactive`.
+tui/
+├── cli.py            # Main TUI application
+├── themes.py         # 14 color themes
+├── menu.py           # Menu system
+└── keybindings.py    # Keyboard shortcuts
+```
 
 ---
 
-*Останнє оновлення: 19 грудня 2025*
+*Останнє оновлення: 20 грудня 2025*
