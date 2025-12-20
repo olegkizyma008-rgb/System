@@ -1720,39 +1720,57 @@ class TrinityRuntime:
         step_status = "uncertain"
         next_agent = "meta_planner"
 
-        # 1. Check for explicit success markers
+        # 1. Check for explicit FAILURE markers first (Priority)
+        explicit_failure_markers = [
+            "[failed]", "critical error", "fatal error", "не можу підтвердити", 
+            "cannot confirm", "verification failed", "unable to verify", 
+            "не вдалося", "помилка", "не підтверджено"
+        ]
+        has_explicit_fail = any(m in lower_content for m in explicit_failure_markers)
+        
+        # 2. Check for explicit SUCCESS markers
         explicit_complete_markers = [
             "[verified]", "[confirmed]", "[step_completed]", "[completed]",
-            "verification passed", "qa passed", "verdict: pass", "перевірку пройдено", "підтверджую"
+            "verification passed", "qa passed", "verdict: pass", "перевірку пройдено", 
+            "підтверджую", "verified: true", "verified: yes"
         ]
         has_explicit_complete = any(m in lower_content for m in explicit_complete_markers)
         
-        # 2. Check for tool execution errors in context
+        # 3. Check for tool execution errors in context
         latest_tools_result = "\n".join(executed_tools_results).lower()
         has_tool_error_in_context = '"status": "error"' in latest_tools_result
         
-        # 3. Check for test failures
+        # 4. Check for test failures
         has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
         
-        # 4. Markers analysis
-        if has_explicit_complete:
-            step_status = "success"
+        # 5. Markers analysis (Failure takes precedence)
+        if has_explicit_fail:
+             step_status = "failed"
+             next_agent = "meta_planner"
+        elif has_test_failure:
+            step_status = "failed"
+            next_agent = "meta_planner"
+        elif has_tool_error_in_context:
+            # If the tool failed, we default to failed unless EXPLICITLY confirmed (safe default)
+            # But even if [VERIFIED] is present, tool error is suspicious. 
+            # We trust [VERIFIED] only if there are NO tool errors.
+            if has_explicit_complete:
+                 # Ambiguous: Tool error but LLM says verified. 
+                 # Trust LLM only if it explained why the error is fine? 
+                 # For safety, let's downgrade to UNCERTAIN or FAILED.
+                 # Let's say FAILED to force replan/retry.
+                 step_status = "failed"
+            else:
+                 step_status = "failed"
             next_agent = "meta_planner"
         elif "[captcha]" in lower_content or "captcha detected" in lower_content:
             step_status = "uncertain"
             next_agent = "meta_planner"
-        elif has_test_failure:
-            step_status = "failed"
+        elif has_explicit_complete:
+            step_status = "success"
             next_agent = "meta_planner"
-        elif "[failed]" in lower_content or "critical error" in lower_content or "fatal error" in lower_content:
-            step_status = "failed"
-            next_agent = "meta_planner"
-        elif has_tool_error_in_context:
-            # If the tool failed and Grisha didn't explicitly say [VERIFIED] despite it (rare), assume fail.
-            step_status = "failed"
-            next_agent = "meta_planner"
-        elif any(kw in lower_content for kw in ["успішно", "verified", "працює", "готово", "виконано", "completed", "done"]):
-            # Fallback soft markers
+        elif any(kw in lower_content for kw in ["успішно", "працює", "готово", "виконано", "completed", "done"]):
+            # Fallback soft success markers (weakest)
             step_status = "success"
             next_agent = "meta_planner"
 
