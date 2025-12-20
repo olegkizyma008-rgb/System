@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sat Dec 20 19:42:43 EET 2025
+Generated: Sat Dec 20 21:04:08 EET 2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -40,6 +40,11 @@ Generated: Sat Dec 20 19:42:43 EET 2025
 │   │   └── User
 │   │       └── globalStorage
 │   ├── Avas-Work
+│   │   ├── hostname.txt
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   ├── Bradley-Station-Plus
 │   │   ├── hostname.txt
 │   │   ├── metadata.json
 │   │   └── User
@@ -243,7 +248,51 @@ Generated: Sat Dec 20 19:42:43 EET 2025
 ├── i18n.py
 ├── index.html
 ├── main.py
+├── mcp_integration
+│   ├── __init__.py
+│   ├── config
+│   │   ├── mcp_config.json
+│   │   └── server_specific
+│   ├── core
+│   │   └── mcp_manager.py
+│   ├── modes
+│   │   ├── atlas_healing_mode.py
+│   │   ├── dev_project_mode_fixed.py
+│   │   ├── dev_project_mode_minimal.py
+│   │   └── dev_project_mode.py
+│   ├── README.md
+│   ├── test_integration.py
+│   ├── tests
+│   └── utils
 ├── project_structure_final.txt
+├── projects
+│   ├── dev_20251220_201052
+│   │   ├── assets
+│   │   ├── config
+│   │   │   └── config.json
+│   │   ├── docs
+│   │   ├── README.md
+│   │   ├── scripts
+│   │   ├── src
+│   │   └── tests
+│   ├── dev_20251220_202728
+│   │   ├── assets
+│   │   ├── config
+│   │   │   └── config.json
+│   │   ├── docs
+│   │   ├── README.md
+│   │   ├── scripts
+│   │   ├── src
+│   │   └── tests
+│   └── dev_20251220_202833
+│       ├── assets
+│       ├── config
+│       │   └── config.json
+│       ├── docs
+│       ├── README.md
+│       ├── scripts
+│       ├── src
+│       └── tests
 ├── providers
 │   ├── __init__.py
 │   └── copilot.py
@@ -282,6 +331,7 @@ Generated: Sat Dec 20 19:42:43 EET 2025
 │       ├── desktop.py
 │       ├── filesystem.py
 │       ├── macos_native_automation.py
+│       ├── mcp_integration.py
 │       ├── permissions_manager.py
 │       ├── screenshot.py
 │       ├── system.py
@@ -290,6 +340,20 @@ Generated: Sat Dec 20 19:42:43 EET 2025
 ├── system_cli
 │   ├── __init__.py
 │   └── state.py
+├── TASK_ANALYSIS_GUIDE.md
+├── task_analysis_system.py
+├── task_analysis.log
+├── task_logs
+│   ├── task_20251220_204318.log
+│   ├── task_20251220_204358_data.json
+│   ├── task_20251220_204358.log
+│   ├── task_20251220_204452_data.json
+│   ├── task_20251220_204452.log
+│   ├── task_20251220_204516_data.json
+│   ├── task_20251220_204516.log
+│   ├── task_20251220_204544_data.json
+│   └── task_20251220_204544.log
+├── task_screenshots
 ├── templates
 │   ├── bootstrap
 │   │   ├── generate_structure.py
@@ -346,4 +410,4 @@ Generated: Sat Dec 20 19:42:43 EET 2025
 │   └── tools.py
 └── verify_mcp_patch.py
 
-127 directories, 213 files
+161 directories, 243 files

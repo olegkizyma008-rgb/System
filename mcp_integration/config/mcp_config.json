@@ -1,0 +1,45 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "description": "Context7 MCP Server for memory and context management",
+      "timeout": 30000,
+      "retryAttempts": 3
+    },
+    "sonarqube": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "SONARQUBE_TOKEN",
+        "-e",
+        "SONARQUBE_ORG",
+        "-e",
+        "SONARQUBE_URL",
+        "mcp/sonarqube",
+        "stdio"
+      ],
+      "env": {
+        "SONARQUBE_TOKEN": "fa7de4618ee39599212686503e636ddc7c2a4321",
+        "SONARQUBE_URL": "",
+        "SONARQUBE_ORG": "olegkizyma008-rgb"
+      },
+      "description": "SonarQube MCP Server for code quality analysis",
+      "timeout": 60000,
+      "retryAttempts": 2
+    }
+  },
+  "defaultServer": "context7",
+  "logging": {
+    "level": "info",
+    "file": "mcp_integration.log",
+    "maxSize": "10MB",
+    "maxFiles": 5
+  }
+}

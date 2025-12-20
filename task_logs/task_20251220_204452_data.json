@@ -1,0 +1,33 @@
+{
+  "task_id": "task_20251220_204452",
+  "name": "Test Task",
+  "description": "Testing the analysis system",
+  "start_time": "2025-12-20T20:44:52.787133",
+  "status": "completed",
+  "logs": [
+    {
+      "timestamp": "2025-12-20T20:44:52.787545",
+      "type": "info",
+      "data": {
+        "message": "Step 1 completed"
+      }
+    },
+    {
+      "timestamp": "2025-12-20T20:44:52.787578",
+      "type": "info",
+      "data": {
+        "message": "Step 2 completed"
+      }
+    }
+  ],
+  "screenshots": [],
+  "errors": [],
+  "metrics": {
+    "duration_seconds": 0.000474,
+    "screenshot_count": 0,
+    "error_count": 0,
+    "log_count": 2
+  },
+  "log_file": "task_logs/task_20251220_204452.log",
+  "end_time": "2025-12-20T20:44:52.787607"
+}

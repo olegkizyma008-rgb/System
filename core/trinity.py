@@ -116,6 +116,15 @@ class TrinityRuntime:
         self.verbose = verbose
         self.logger = get_logger("system_cli.trinity")
         self.registry = MCPToolRegistry()
+        
+        # Integrate MCP tools with Trinity's registry
+        try:
+            from system_ai.tools.mcp_integration import register_mcp_tools_with_trinity
+            register_mcp_tools_with_trinity(self.registry)
+        except Exception as e:
+            if self.verbose:
+                self.logger.warning(f"MCP integration with Trinity deferred: {e}")
+        
         self.context_layer = Context7(verbose=verbose)
         self.verifier = AdaptiveVerifier(self.llm)
         self.memory = get_memory()

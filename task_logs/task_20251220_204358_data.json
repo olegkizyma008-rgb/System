@@ -1,0 +1,61 @@
+{
+  "task_id": "task_20251220_204358",
+  "name": "AI Movie Search",
+  "description": "Find and play AI movie",
+  "start_time": "2025-12-20T20:43:58.989573",
+  "status": "completed",
+  "logs": [
+    {
+      "timestamp": "2025-12-20T20:43:58.989963",
+      "type": "info",
+      "data": {
+        "message": "Opening Google search"
+      }
+    },
+    {
+      "timestamp": "2025-12-20T20:44:03.234583",
+      "type": "info",
+      "data": {
+        "message": "Typing search query"
+      }
+    },
+    {
+      "timestamp": "2025-12-20T20:44:05.368504",
+      "type": "info",
+      "data": {
+        "message": "Executing search"
+      }
+    },
+    {
+      "timestamp": "2025-12-20T20:44:10.485640",
+      "type": "info",
+      "data": {
+        "message": "Navigating to first result"
+      }
+    },
+    {
+      "timestamp": "2025-12-20T20:44:18.678049",
+      "type": "info",
+      "data": {
+        "message": "Entering fullscreen"
+      }
+    },
+    {
+      "timestamp": "2025-12-20T20:44:20.792170",
+      "type": "info",
+      "data": {
+        "message": "Task completed successfully"
+      }
+    }
+  ],
+  "screenshots": [],
+  "errors": [],
+  "metrics": {
+    "duration_seconds": 21.802648,
+    "screenshot_count": 0,
+    "error_count": 0,
+    "log_count": 6
+  },
+  "log_file": "task_logs/task_20251220_204358.log",
+  "end_time": "2025-12-20T20:44:20.792221"
+}
