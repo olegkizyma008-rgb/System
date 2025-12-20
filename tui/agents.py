@@ -718,6 +718,9 @@ def run_graph_agent_task(
             event_count += 1
             print(f"DEBUG: Event {event_count} received")
             for node_name, state_update in event.items():
+                if not state_update or not isinstance(state_update, dict):
+                    continue
+                
                 print(f"DEBUG: Processing node {node_name}")
                 agent_name = node_name.capitalize()
                 tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"

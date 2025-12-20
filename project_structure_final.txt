@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sun Dec 21 00:53:17  2025
+Generated: Sun Dec 21 00:59:25  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -61,7 +61,8 @@ Tests:
 
 ## Git History (Last 10 Commits)
 ```
-  0f9ba011 fix(tui): resolve keybindings syntax error and add self-healing toggle (disabled by default)
+  f1e36398 fix(trinity): resolve Atlas planning recursion and NoneType crash
+  8fb94933 fix(tui): resolve keybindings syntax error and add self-healing toggle (disabled by default)
   abd1dbfb fix(tui): resolve syntax error and incorrect type hint in keybindings.py
   138bc1e6 fix: revert broken self-healing changes to keybindings.py
   aafd2bd4 fix: change invalid 'c-s-k' keybinding to 'c-o' to fix TUI crash
@@ -70,7 +71,6 @@ Tests:
   e89c0534 docs: update atlas and README documentation
   b4284d68 feat(tui): add Ctrl+Shift+K toggle for auto-copy on selection
   d511c53a feat: Implement TUI selection and clipboard features, and remove temporary screenshot artifacts.
-  9efb14d6 fix: Update project_structure_final.txt generation + atlas.md verification section
 ```
 
 ## Project Structure

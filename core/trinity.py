@@ -999,35 +999,35 @@ class TrinityRuntime:
                 if self.on_stream:
                     self.on_stream("atlas", chunk)
 
-                # Use Atlas-specific LLM
-                atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-                atlas_llm = CopilotLLM(model_name=atlas_model)
+            # Use Atlas-specific LLM
+            atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+            atlas_llm = CopilotLLM(model_name=atlas_model)
 
-                plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-                plan_resp_content = getattr(plan_resp, "content", "") if plan_resp is not None else ""
-                data = self._extract_json_object(plan_resp_content)
-                
-                raw_plan = []
-                if isinstance(data, list): raw_plan = data
-                elif isinstance(data, dict):
-                    if data.get("status") == "completed":
-                        return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Done.')}")]}
-                    raw_plan = data.get("steps") or data.get("plan") or []
-                    if data.get("meta_config"):
-                        meta_config.update(data["meta_config"])
-                        if self.verbose: print(f"🌐 [Atlas] Strategy Justification: {meta_config.get('reasoning')}")
-                        if self.verbose: print(f"🌐 [Atlas] Preferences: tool_pref={meta_config.get('tool_preference', 'hybrid')}")
+            plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
+            plan_resp_content = getattr(plan_resp, "content", "") if plan_resp is not None else ""
+            data = self._extract_json_object(plan_resp_content)
+            
+            raw_plan = []
+            if isinstance(data, list): raw_plan = data
+            elif isinstance(data, dict):
+                if data.get("status") == "completed":
+                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Done.')}")]}
+                raw_plan = data.get("steps") or data.get("plan") or []
+                if data.get("meta_config"):
+                    meta_config.update(data["meta_config"])
+                    if self.verbose: print(f"🌐 [Atlas] Strategy Justification: {meta_config.get('reasoning')}")
+                    if self.verbose: print(f"🌐 [Atlas] Preferences: tool_pref={meta_config.get('tool_preference', 'hybrid')}")
 
-                if not raw_plan: raise ValueError("No steps generated")
+            if not raw_plan: raise ValueError("No steps generated")
 
-                # Optimize with Grisha (Verifier) using GRISHA settings
-                grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-                grisha_llm = CopilotLLM(model_name=grisha_model)
-                local_verifier = AdaptiveVerifier(grisha_llm)
-                
-                optimized_plan = local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
-                
-                return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
+            # Optimize with Grisha (Verifier) using GRISHA settings
+            grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+            grisha_llm = CopilotLLM(model_name=grisha_model)
+            local_verifier = AdaptiveVerifier(grisha_llm)
+            
+            optimized_plan = local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
+            
+            return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
 
         except Exception as e:
             if self.verbose: print(f"⚠️ [Atlas] Error: {e}")
