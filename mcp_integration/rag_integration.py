@@ -65,16 +65,18 @@ class MCPToolSelector:
                 logger.warning("⚠️ ChromaDB persistence unavailable; using in-memory client")
                 try:
                     self.chroma_client = chromadb.Client()
-                except BaseException:
+                except BaseException as disc_err:
+                    if isinstance(disc_err, (KeyboardInterrupt, SystemExit)):
+                        raise
                     self.chroma_client = None
-                    logger.error("❌ ChromaDB completely unavailable, RAG disabled")
+                    logger.error(f"❌ ChromaDB completely unavailable, RAG disabled: {disc_err}")
             
             if self.chroma_client:
                 try:
                     self.collection = self.chroma_client.get_collection("mcp_tool_schemas")
                     count = self.collection.count()
                     logger.info(f"✅ Connected to existing RAG collection ({count} items)")
-                except:
+                except Exception:
                     try:
                         self.collection = self.chroma_client.create_collection(
                             name="mcp_tool_schemas",
@@ -95,9 +97,9 @@ class MCPToolSelector:
                 )
                 self.redis_client.ping()
                 logger.info("✅ Connected to Redis cache")
-            except:
+            except Exception as redis_err:
                 self.redis_client = None
-                logger.warning("⚠️  Redis not available, using direct search")
+                logger.warning(f"⚠️  Redis not available, using direct search: {redis_err}")
                 
         except Exception as e:
             logger.error(f"❌ Initialization error: {e}")

@@ -114,109 +114,37 @@ class CopilotMCPClient:
     def _build_prompt(self, command: str, **kwargs) -> str:
         """Build appropriate prompt based on command and arguments"""
         
-        # AI Analysis commands
-        if command == "ai_analyze":
-            data = kwargs.get("data", "")
-            purpose = kwargs.get("purpose", "general analysis")
-            return f"Analyze the following data for {purpose}:\n\n{data}"
+        handlers = {
+            "ai_analyze": lambda: f"Analyze the following data for {kwargs.get('purpose', 'general analysis')}:\n\n{kwargs.get('data', '')}",
+            "ai_summarize": lambda: f"Summarize the following content:\n\n{kwargs.get('content', '')}",
+            "ai_generate": lambda: f"Generate {kwargs.get('content_type', 'text')} about {kwargs.get('topic', '')}",
+            "ai_translate": lambda: f"Translate the following text to {kwargs.get('language', 'English')}:\n\n{kwargs.get('text', '')}",
+            "ai_extract": lambda: f"Extract {kwargs.get('entities', 'entities')} from the following text:\n\n{kwargs.get('text', '')}",
+            "ai_classify": lambda: f"Classify the following content into these categories: {kwargs.get('categories', '')}\n\nContent:\n{kwargs.get('content', '')}",
+            "ai_compare": lambda: f"Compare the following:\n\nItem 1: {kwargs.get('item1', '')}\n\nItem 2: {kwargs.get('item2', '')}",
+            "ai_evaluate": lambda: f"Evaluate the following content against these criteria: {kwargs.get('criteria', '')}\n\nContent:\n{kwargs.get('content', '')}",
+            "ai_predict": lambda: f"Predict {kwargs.get('outcome', '')} based on the following data:\n\n{kwargs.get('data', '')}",
+            "ai_recommend": lambda: f"Recommend {kwargs.get('items', '')} based on these preferences: {kwargs.get('preferences', '')}",
+            "ai_explain": lambda: f"Explain the following concept in {kwargs.get('style', 'simple')} style:\n\n{kwargs.get('concept', '')}",
+            "ai_rewrite": lambda: f"Rewrite the following text in {kwargs.get('style', '')} style:\n\n{kwargs.get('text', '')}",
+            "ai_code_review": lambda: f"Review the following code:\n\n```\n{kwargs.get('code', '')}\n```",
+            "ai_debug": lambda: f"Debug the following error:\n\nError: {kwargs.get('error', '')}\n\nContext: {kwargs.get('context', '')}",
+            "ai_optimize": lambda: f"Optimize the following content for {kwargs.get('goal', '')}:\n\n{kwargs.get('content', '')}",
+            "ai_validate": lambda: f"Validate the following data against this schema:\n\nSchema: {kwargs.get('schema', '')}\n\nData: {kwargs.get('data', '')}",
+            "ai_convert": lambda: f"Convert the following data from {kwargs.get('format1', '')} to {kwargs.get('format2', '')}:\n\n{kwargs.get('data', '')}",
+            "ai_sentiment": lambda: f"Analyze the sentiment of the following text:\n\n{kwargs.get('text', '')}",
+            "ai_keywords": lambda: f"Extract keywords from the following text:\n\n{kwargs.get('text', '')}",
+            "ai_answer": lambda: f"Answer the following question:\n\n{kwargs.get('question', '')}",
+        }
         
-        elif command == "ai_summarize":
-            content = kwargs.get("content", "")
-            return f"Summarize the following content:\n\n{content}"
-        
-        elif command == "ai_generate":
-            content_type = kwargs.get("content_type", "text")
-            topic = kwargs.get("topic", "")
-            return f"Generate {content_type} about {topic}"
-        
-        elif command == "ai_translate":
-            text = kwargs.get("text", "")
-            language = kwargs.get("language", "English")
-            return f"Translate the following text to {language}:\n\n{text}"
-        
-        elif command == "ai_extract":
-            entities = kwargs.get("entities", "entities")
-            text = kwargs.get("text", "")
-            return f"Extract {entities} from the following text:\n\n{text}"
-        
-        elif command == "ai_classify":
-            content = kwargs.get("content", "")
-            categories = kwargs.get("categories", "")
-            return f"Classify the following content into these categories: {categories}\n\nContent:\n{content}"
-        
-        elif command == "ai_compare":
-            item1 = kwargs.get("item1", "")
-            item2 = kwargs.get("item2", "")
-            return f"Compare the following:\n\nItem 1: {item1}\n\nItem 2: {item2}"
-        
-        elif command == "ai_evaluate":
-            content = kwargs.get("content", "")
-            criteria = kwargs.get("criteria", "")
-            return f"Evaluate the following content against these criteria: {criteria}\n\nContent:\n{content}"
-        
-        elif command == "ai_predict":
-            outcome = kwargs.get("outcome", "")
-            data = kwargs.get("data", "")
-            return f"Predict {outcome} based on the following data:\n\n{data}"
-        
-        elif command == "ai_recommend":
-            items = kwargs.get("items", "")
-            preferences = kwargs.get("preferences", "")
-            return f"Recommend {items} based on these preferences: {preferences}"
-        
-        elif command == "ai_explain":
-            concept = kwargs.get("concept", "")
-            style = kwargs.get("style", "simple")
-            return f"Explain the following concept in {style} style:\n\n{concept}"
-        
-        elif command == "ai_rewrite":
-            text = kwargs.get("text", "")
-            style = kwargs.get("style", "")
-            return f"Rewrite the following text in {style} style:\n\n{text}"
-        
-        elif command == "ai_code_review":
-            code = kwargs.get("code", "")
-            return f"Review the following code:\n\n```\n{code}\n```"
-        
-        elif command == "ai_debug":
-            error = kwargs.get("error", "")
-            context = kwargs.get("context", "")
-            return f"Debug the following error:\n\nError: {error}\n\nContext: {context}"
-        
-        elif command == "ai_optimize":
-            content = kwargs.get("content", "")
-            goal = kwargs.get("goal", "")
-            return f"Optimize the following content for {goal}:\n\n{content}"
-        
-        elif command == "ai_validate":
-            data = kwargs.get("data", "")
-            schema = kwargs.get("schema", "")
-            return f"Validate the following data against this schema:\n\nSchema: {schema}\n\nData: {data}"
-        
-        elif command == "ai_convert":
-            data = kwargs.get("data", "")
-            format1 = kwargs.get("format1", "")
-            format2 = kwargs.get("format2", "")
-            return f"Convert the following data from {format1} to {format2}:\n\n{data}"
-        
-        elif command == "ai_sentiment":
-            text = kwargs.get("text", "")
-            return f"Analyze the sentiment of the following text:\n\n{text}"
-        
-        elif command == "ai_keywords":
-            text = kwargs.get("text", "")
-            return f"Extract keywords from the following text:\n\n{text}"
-        
-        elif command == "ai_answer":
-            question = kwargs.get("question", "")
-            return f"Answer the following question:\n\n{question}"
-        
-        else:
-            # Generic command
-            prompt_parts = [f"Command: {command}"]
-            for key, value in kwargs.items():
-                prompt_parts.append(f"{key}: {value}")
-            return "\n".join(prompt_parts)
+        if command in handlers:
+            return handlers[command]()
+            
+        # Generic command fallback
+        prompt_parts = [f"Command: {command}"]
+        for key, value in kwargs.items():
+            prompt_parts.append(f"{key}: {value}")
+        return "\n".join(prompt_parts)
     
     def get_status(self) -> Dict[str, Any]:
         """Get client status"""

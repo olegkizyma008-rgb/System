@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 01:33:11  2025
+Generated: Mon Dec 22 01:34:53  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  26b3c17e Refactor: Modularize TUI keybindings and refine exception handling
+  1df48126 Refactor: Finalize SonarQube cleanup and modularization
+  67a5f439 Refactor: Modularize TUI keybindings and refine exception handling
   d3a82097 refactor(trinity): modularize _grisha_node to reduce cognitive complexity
   b2fa90d4 Refactor: Finalize SonarCloud alignment for olegkizima01 organization
   7f547212 feat: Update critical issues count and effort totals, and add a new critical issue for `python:S3776` in `core/trinity.py`.
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   3ff9c2c0 chore: Update SonarCloud project key and name.
   2b3dff5a feat: Add SonarCloud project configuration and update gitignore.
   46dad878 feat: Add Anthropic and local MCP servers, enhance RAG tool prioritization, integrate SonarQube scripts, and remove old project artifacts.
-  012eb491 feat: Implement the initial weapon shop website, including a terminal-themed loading screen, core UI, and backend setup.
 ```
 
 ## Project Structure
