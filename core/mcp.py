@@ -346,14 +346,24 @@ class MCPToolRegistry:
         self.register_tool("recorder_status", lambda: _recorder_action("status"), "Get recorder status. Args: none")
 
 
-        # Browser Tools (Local Playwright)
-        self.register_tool("browser_open_url", browser_open_url, "Open URL in local browser. Args: url (str), headless (bool)")
-        self.register_tool("browser_navigate", browser_navigate, "Navigate to URL. Args: url (str), headless (bool)")
-        self.register_tool("browser_click_element", browser_click_element, "Click element in browser. Args: selector (str)")
-        self.register_tool("browser_type_text", browser_type_text, "Type text in browser. Args: selector (str), text (str), press_enter (bool)")
+        # Browser Tools (Local Playwright, routed to MCP when available)
+        # IMPORTANT: Use playwright.playwright_get_visible_html first to find correct selectors!
+        # Common selectors for popular sites:
+        # - YouTube search: [name="search_query"]
+        # - Google search: textarea[name="q"] or input[name="q"]
+        # - Generic search: input[type="search"], [role="searchbox"], #search
+        self.register_tool("browser_open_url", browser_open_url, 
+            "Open URL in browser. Args: url (str), headless (bool=False). Wait 3-5s after for page load.")
+        self.register_tool("browser_navigate", browser_navigate, 
+            "Navigate to URL. Args: url (str), headless (bool=False)")
+        self.register_tool("browser_click_element", browser_click_element, 
+            "Click element. Args: selector (CSS selector str). Use playwright.playwright_get_visible_html to find selectors first!")
+        self.register_tool("browser_type_text", browser_type_text, 
+            "Type text in input. Args: selector (str), text (str), press_enter (bool). "
+            "YouTube: [name='search_query'], Google: textarea[name='q']")
         self.register_tool("browser_press_key", browser_press_key, "Press a key in browser. Args: key (str)")
         self.register_tool("browser_screenshot", browser_screenshot, "Take screenshot of browser. Args: path (optional str)")
-        self.register_tool("browser_snapshot", browser_snapshot, "Accessibility tree snapshot (best for navigation). Args: none")
+        self.register_tool("browser_snapshot", browser_snapshot, "Get visible text from page for verification. Args: none")
         self.register_tool("browser_get_content", browser_get_content, "Get page/element text. Args: none")
         self.register_tool("browser_get_links", browser_get_links, "Extract all clickable links from the current page. Args: none")
         self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
@@ -411,16 +421,27 @@ class MCPToolRegistry:
         )
 
     def _register_external_mcp(self):
-        """Register external MCP servers (Playwright & PyAutoGUI)."""
+        """Register external MCP servers (Playwright & PyAutoGUI) - PRIORITY over local implementations."""
+        import os
         import platform
-        playwright_args = ["@playwright/mcp@latest"]
-        if platform.system() != "Darwin":
-            playwright_args.append("--no-sandbox")
+        
+        # Use the installed executeautomation playwright-mcp-server
+        # -y flag auto-confirms installation if needed
+        playwright_args = ["-y", "@executeautomation/playwright-mcp-server"]
+        
+        # AppleScript MCP server for native macOS automation
+        applescript_args = ["-y", "@mseep/applescript-mcp"]
+        disable_applescript = str(os.getenv("DISABLE_MCP_APPLESCRIPT", "1")).strip().lower() in {"1", "true", "yes", "on"}
 
         providers = [
             ("playwright", "npx", playwright_args),  # MCP server for browser automation (PRIORITY)
-            ("pyautogui", "mcp-pyautogui-server", [])  # MCP server for GUI automation
+            # ("pyautogui", "mcp-pyautogui-server", [])  # MCP server for GUI automation - enable when installed
         ]
+
+        if not disable_applescript:
+            providers.append(("applescript", "npx", applescript_args))  # MCP server for AppleScript automation
+        else:
+            print("[MCP] Skipping applescript provider (disabled via DISABLE_MCP_APPLESCRIPT)")
         
         for name, cmd, args in providers:
             try:
@@ -428,8 +449,104 @@ class MCPToolRegistry:
                 self._external_providers[name] = provider
                 # Lazy loading: we don't connect yet, just register the intent
                 # Note: list_tools() will trigger connection if needed to get descriptions
+                print(f"[MCP] Registered external provider: {name}")
             except Exception as e:
                 print(f"[MCP] Failed to initialize external provider {name}: {e}")
+
+    def _adapt_args_for_mcp(self, local_name: str, mcp_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Adapt local tool arguments to MCP server format.
+        
+        @executeautomation/playwright-mcp-server API:
+        - Playwright_navigate: url, browserType, width, height, timeout, waitUntil, headless
+        - Playwright_click: selector
+        - Playwright_fill: selector, value
+        - Playwright_screenshot: name, selector, width, height, storeBase64, fullPage, savePng
+        - playwright_press_key: key, selector
+        - Playwright_hover: selector
+        - Playwright_select: selector, value
+        """
+        mcp_args = {}
+        
+        if local_name in ("browser_open_url", "browser_navigate"):
+            # Local: url, headless -> MCP: url, headless, browserType
+            mcp_args["url"] = args.get("url", "")
+            if "headless" in args:
+                mcp_args["headless"] = args["headless"]
+            mcp_args["browserType"] = "chromium"  # default to chromium
+            
+        elif local_name == "browser_click_element":
+            # Local: selector -> MCP: selector
+            mcp_args["selector"] = self._smart_selector(args.get("selector", ""))
+            
+        elif local_name == "browser_type_text":
+            # Local: selector, text, press_enter -> MCP: selector, value
+            mcp_args["selector"] = self._smart_selector(args.get("selector", ""))
+            mcp_args["value"] = args.get("text", "")
+            # Note: press_enter needs to be handled separately via playwright_press_key
+            
+        elif local_name == "browser_screenshot":
+            # Local: path -> MCP: name, savePng, downloadsDir
+            path = args.get("path", "screenshot")
+            import os
+            mcp_args["name"] = os.path.basename(path).replace(".png", "")
+            mcp_args["savePng"] = True
+            mcp_args["downloadsDir"] = os.path.dirname(path) or "."
+            mcp_args["fullPage"] = args.get("full_page", False)
+                
+        elif local_name == "browser_press_key":
+            # Local: key, selector -> MCP: key, selector
+            mcp_args["key"] = args.get("key", "")
+            if args.get("selector"):
+                mcp_args["selector"] = args["selector"]
+                
+        elif local_name == "browser_hover":
+            # Local: selector -> MCP: selector
+            mcp_args["selector"] = args.get("selector", "")
+            
+        elif local_name == "browser_select":
+            # Local: selector, value -> MCP: selector, value
+            mcp_args["selector"] = args.get("selector", "")
+            mcp_args["value"] = args.get("value", "")
+            
+        elif local_name == "browser_snapshot":
+            # No args needed for playwright_get_visible_text
+            pass
+            
+        elif local_name == "browser_get_content":
+            # Local: selector -> MCP: selector, cleanHtml
+            if args.get("selector"):
+                mcp_args["selector"] = args["selector"]
+            mcp_args["cleanHtml"] = True
+            
+        elif local_name == "run_applescript":
+            # Local: script -> MCP: script
+            mcp_args["script"] = args.get("script", "")
+            
+        else:
+            # Pass through unchanged
+            mcp_args = args
+            
+        return mcp_args
+
+    def _smart_selector(self, selector: str) -> str:
+        """Auto-correct common selector mistakes for popular sites.
+        
+        This helps when LLM uses generic selectors that don't work on specific sites.
+        The correction is based on the current page URL (if available from MCP).
+        """
+        # Common selector mappings for sites where generic selectors fail
+        selector_fixes = {
+            # YouTube
+            "input#search": '[name="search_query"]',
+            "#search": '[name="search_query"]',
+            "input[name='q']": '[name="search_query"]',  # Google-style won't work on YT
+            
+            # Google (fix textarea vs input)
+            'input[name="q"]': 'textarea[name="q"], input[name="q"]',
+        }
+        
+        # Return fixed selector if we have a mapping
+        return selector_fixes.get(selector, selector)
 
     def register_tool(self, name: str, func: Callable, description: str):
         self._tools[name] = func
@@ -488,7 +605,65 @@ class MCPToolRegistry:
 
     def execute(self, tool_name: str, args: Dict[str, Any]) -> str:
         """Executes a tool safely and returns a string result."""
-        # Check external tools first
+        
+        # MCP PRIORITY: Try to route browser_* and applescript calls to MCP servers first
+        # Tool names from @executeautomation/playwright-mcp-server API:
+        # - playwright_navigate, playwright_click, playwright_fill, playwright_screenshot
+        # - playwright_close, playwright_get_visible_text, playwright_press_key, etc.
+        mcp_routing = {
+            # Local tool name -> (MCP provider, MCP tool name)
+            "browser_open_url": ("playwright", "playwright_navigate"),
+            "browser_navigate": ("playwright", "playwright_navigate"),
+            "browser_click_element": ("playwright", "playwright_click"),
+            "browser_type_text": ("playwright", "playwright_fill"),
+            "browser_screenshot": ("playwright", "playwright_screenshot"),
+            "browser_snapshot": ("playwright", "playwright_get_visible_text"),
+            "browser_get_content": ("playwright", "playwright_get_visible_html"),
+            "browser_close": ("playwright", "playwright_close"),
+            "browser_press_key": ("playwright", "playwright_press_key"),
+            "browser_hover": ("playwright", "playwright_hover"),
+            "browser_select": ("playwright", "playwright_select"),
+            "browser_go_back": ("playwright", "playwright_go_back"),
+            "browser_go_forward": ("playwright", "playwright_go_forward"),
+            "run_applescript": ("applescript", "run_applescript"),
+        }
+        
+        # Check if we should route to MCP
+        if tool_name in mcp_routing:
+            provider_name, mcp_tool = mcp_routing[tool_name]
+            if provider_name in self._external_providers:
+                provider = self._external_providers[provider_name]
+                try:
+                    # Ensure connected
+                    if not provider._connected:
+                        provider.connect()
+                    
+                    # Adapt arguments for MCP format
+                    mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
+                    
+                    res = provider.execute(mcp_tool, mcp_args)
+                    print(f"[MCP] Executed {mcp_tool} via {provider_name}")
+                    
+                    # Handle press_enter for browser_type_text
+                    if tool_name == "browser_type_text" and args.get("press_enter"):
+                        try:
+                            import time
+                            time.sleep(0.5)  # Small delay before pressing Enter
+                            key_args = {"key": "Enter"}
+                            # Use the ADAPTED selector, not original
+                            if mcp_args.get("selector"):
+                                key_args["selector"] = mcp_args["selector"]
+                            provider.execute("playwright_press_key", key_args)
+                            print("[MCP] Also pressed Enter key")
+                        except Exception as key_e:
+                            print(f"[MCP] Warning: Failed to press Enter: {key_e}")
+                    
+                    return json.dumps(res, indent=2, ensure_ascii=False)
+                except Exception as e:
+                    print(f"[MCP] Failed {provider_name}.{mcp_tool}, falling back to local: {e}")
+                    # Fall through to local implementation
+        
+        # Check external tools first (prefixed tools like playwright.browser_snapshot)
         provider_name = self._external_tools_map.get(tool_name)
         if provider_name and provider_name in self._external_providers:
             provider = self._external_providers[provider_name]

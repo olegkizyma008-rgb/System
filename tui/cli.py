@@ -2522,6 +2522,11 @@ def cli_main(argv: List[str]) -> None:
     p_eternal_engine.add_argument("--task", required=True, help="Task to execute in eternal engine mode")
     p_eternal_engine.add_argument("--hyper", action="store_true", help="Enable hyper mode (unlimited permissions)")
 
+    # Screenshots management
+    p_screens = sub.add_parser("screenshots", help="List or open task screenshots")
+    p_screens.add_argument("action", choices=["list", "open"], help="Action: list or open")
+    p_screens.add_argument("--count", type=int, default=10, help="Number of items to list (default 10)")
+
     sub.add_parser("agent-reset", help="Reset in-memory agent session")
     sub.add_parser("agent-on", help="Enable agent chat")
     sub.add_parser("agent-off", help="Disable agent chat")
@@ -2690,6 +2695,30 @@ def cli_main(argv: List[str]) -> None:
         from tui.commands import start_eternal_engine_mode
         start_eternal_engine_mode(args.task, args.hyper)
         return
+
+    if args.command == "screenshots":
+        if args.action == "list":
+            from tui.tools import tool_list_screenshots
+            out = tool_list_screenshots({"count": getattr(args, "count", 10)})
+            if not out.get("ok"):
+                print(out.get("error") or "Error listing screenshots")
+                raise SystemExit(1)
+            items = out.get("items") or []
+            if not items:
+                print(f"No screenshots found in {out.get('root')}.")
+                raise SystemExit(0)
+            for i in items:
+                sz = i.get("size")
+                print(f"{i.get('name')}  {sz} bytes")
+            raise SystemExit(0)
+        elif args.action == "open":
+            from tui.tools import tool_open_screenshots
+            out = tool_open_screenshots({})
+            if not out.get("ok"):
+                print(out.get("error") or "Error opening screenshots directory")
+                raise SystemExit(1)
+            print(f"Opened {out.get('root')} in Finder")
+            raise SystemExit(0)
     
     if args.command == "agent-chat":
         logger.info(f"Agent chat message: {args.message}")

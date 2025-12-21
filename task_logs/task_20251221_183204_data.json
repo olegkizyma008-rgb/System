@@ -1,0 +1,26 @@
+{
+  "task_id": "task_20251221_183204",
+  "name": "Mirror Screenshot Test",
+  "description": "Ensure screenshot mirrored to task_screenshots",
+  "start_time": "2025-12-21T18:32:04.984828",
+  "status": "completed",
+  "logs": [],
+  "screenshots": [
+    {
+      "screenshot_id": "screenshot_1",
+      "path": "task_screenshots/task_20251221_183204_screenshot_1.jpg",
+      "source_path": "/Users/dev/Documents/GitHub/System/.agent/workflows/data/screenshots/20251221_183204/snap_1766302325120.jpg",
+      "timestamp": "2025-12-21T18:32:05.154609",
+      "description": "Mirror capture"
+    }
+  ],
+  "errors": [],
+  "metrics": {
+    "duration_seconds": 0.169917,
+    "screenshot_count": 1,
+    "error_count": 0,
+    "log_count": 0
+  },
+  "log_file": "task_logs/task_20251221_183204.log",
+  "end_time": "2025-12-21T18:32:05.154745"
+}

@@ -1598,8 +1598,41 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
         plan = state.get("plan") or []
         current_step_desc = plan[0].get("description", "Unknown") if plan else "Final Verification"
         
+        # Extract just Tetyana's tool results from last_msg for clearer context
+        tetyana_result_summary = ""
+        if "[STEP_COMPLETED]" in last_msg:
+            tetyana_result_summary = "Tetyana reported: [STEP_COMPLETED] - action succeeded"
+        elif "Tool Results:" in last_msg:
+            # Extract just the tool results section
+            try:
+                tool_results_start = last_msg.find("Tool Results:")
+                tool_results_end = last_msg.find("[STEP_COMPLETED]", tool_results_start)
+                if tool_results_end == -1:
+                    tool_results_end = len(last_msg)
+                tetyana_result_summary = last_msg[tool_results_start:tool_results_end].strip()
+            except Exception:
+                tetyana_result_summary = last_msg[:500]
+        else:
+            tetyana_result_summary = last_msg[:500] if len(last_msg) > 500 else last_msg
+        
         original_task = state.get("original_task") or ""
-        verify_context = f"Global Goal: {original_task}\nCurrent Step Objective: {current_step_desc}\nLast Action Result: {last_msg}"
+        
+        # CRITICAL: Make the verification context very explicit about what to verify
+        verify_context = f"""🎯 VERIFICATION TASK:
+
+GLOBAL GOAL (for reference only): {original_task}
+
+⚡ CURRENT STEP TO VERIFY: {current_step_desc}
+
+📋 TETYANA'S REPORT:
+{tetyana_result_summary}
+
+❓ YOUR TASK: Did the CURRENT STEP "{current_step_desc}" complete successfully?
+- If YES → respond with [STEP_COMPLETED]
+- If there was an error → respond with [FAILED]
+- If unsure → use vision tools first, then decide
+
+⚠️ IMPORTANT: Do NOT evaluate the global goal yet! Only verify the current step."""
         
         if state.get("is_media"):
             prompt = get_grisha_media_prompt(verify_context, tools_desc=tools_desc, preferred_language=self.preferred_language)
@@ -1676,15 +1709,19 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
             
             # Define tool categories for smart detection
             gui_visual_tools = {"click", "type_text", "move_mouse", "press_key", "find_image_on_screen"}
-            browser_tools = {"browser_open_url", "browser_click", "browser_type", "browser_get_links", "browser_screenshot"}
+            browser_tools = {"browser_open_url", "browser_click", "browser_type", "browser_type_text", "browser_get_links", "browser_screenshot", "browser_navigate", "browser_press_key"}
             playwright_tools = {t for t in tetyana_tools if t.startswith("playwright.")}
             pyautogui_tools = {t for t in tetyana_tools if t.startswith("pyautogui.")}
             
             # Check if visual verification is needed
             used_gui_tools = bool(set(tetyana_tools) & gui_visual_tools) or bool(pyautogui_tools)
             used_browser_tools = bool(set(tetyana_tools) & browser_tools) or bool(playwright_tools)
-            is_browser_task = "browser_" in content.lower() or "браузер" in content.lower() or tetyana_context.get("browser_tool")
+            # Check last_msg (Tetyana's output) for browser indicators, not content (Grisha's LLM response)
+            is_browser_task = "browser_" in last_msg.lower() or "браузер" in last_msg.lower() or tetyana_context.get("browser_tool")
             needs_visual_verification = used_gui_tools or used_browser_tools or is_browser_task
+            
+            if self.verbose:
+                print(f"👁️ [Grisha] Visual check: tetyana_tools={tetyana_tools}, used_browser={used_browser_tools}, is_browser_task={is_browser_task}, needs_visual={needs_visual_verification}")
             
             # Determine the best screenshot method
             vision_args = {}
@@ -1699,13 +1736,23 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
                     vision_method = "specific_window"
             elif used_browser_tools or playwright_tools or is_browser_task:
                 # Browser task - try to capture browser window
-                vision_args["app_name"] = "Safari"  # Default browser, could be detected
+                # Do NOT default to Safari blindly, as Playwright might use Chromium/Firefox
+                # vision_args["app_name"] = "Safari" 
                 vision_method = "browser"
+                
                 # Try to detect actual browser from tool results
-                for browser in ["Chrome", "Safari", "Firefox", "Arc", "Brave"]:
+                detected_browser = None
+                for browser in ["Chrome", "Safari", "Firefox", "Arc", "Brave", "Chromium"]:
                     if browser.lower() in content.lower():
-                        vision_args["app_name"] = browser
+                        detected_browser = browser
                         break
+                
+                if detected_browser:
+                    vision_args["app_name"] = detected_browser
+                else:
+                    # If no specific browser detected, rely on full screen / multi-monitor capture
+                    # This avoids capturing an empty Safari window when Chrome is used
+                    vision_method = "full_screen_browser_context"
             elif pyautogui_tools or used_gui_tools:
                 # GUI automation - need to detect active window
                 vision_method = "active_window"
@@ -1724,7 +1771,7 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
                 
                 if used_browser_actions:
                     import time
-                    wait_time = 1.5  # seconds - allow page to load/update after actions
+                    wait_time = 3.0  # seconds - allow page to load/update after actions
                     if self.verbose:
                         print(f"👁️ [Grisha] Waiting {wait_time}s for browser to settle...")
                     try:

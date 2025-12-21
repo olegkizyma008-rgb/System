@@ -33,7 +33,7 @@ def main() -> None:
                 "install", "smart-plan", "ask", "agent-chat", "agent-reset", 
                 "agent-on", "agent-off", "self-healing-status", "self-healing-scan",
                 "vibe-status", "vibe-continue", "vibe-cancel", "vibe-help",
-                "eternal-engine",
+                "eternal-engine", "screenshots",
                 "-h", "--help"
             }
             if first_arg not in known_commands and not first_arg.startswith("-"):

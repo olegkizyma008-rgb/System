@@ -1,0 +1,18 @@
+{
+  "task_id": "task_20251221_183425",
+  "name": "Reliability Test",
+  "description": "Exercise screenshot retries and fallback",
+  "start_time": "2025-12-21T18:34:25.966493",
+  "status": "completed",
+  "logs": [],
+  "screenshots": [],
+  "errors": [],
+  "metrics": {
+    "duration_seconds": 0.002088,
+    "screenshot_count": 0,
+    "error_count": 0,
+    "log_count": 0
+  },
+  "log_file": "task_logs/task_20251221_183425.log",
+  "end_time": "2025-12-21T18:34:25.968581"
+}

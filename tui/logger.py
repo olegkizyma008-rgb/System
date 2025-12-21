@@ -253,25 +253,9 @@ def trace(logger: logging.Logger, event: str, data: Optional[dict] = None) -> No
         payload = {"event": event}
         if data:
             payload.update(data)
-        # Log as INFO but with a special marker or just rely on JSONFormatter to pick it up if we pass extra
-        # Actually, let's just log the dict as a message, JSONFormatter might double encode if we are not careful.
-        # But JSONFormatter expects record.getMessage().
-        # If we want clean JSONL, we should probably use the logger.info(msg) where msg is the JSON string,
-        # OR rely on the fact that JSONFormatter wraps everything.
-        # Let's just log a clear message that it's a trace.
-        logger.info(f"TRACE: {event} - {json.dumps(data, ensure_ascii=False) if data else '{}'}")
-    except Exception:
-        logger.debug(f"TRACE: {event} (serialization failed)")
-
-def trace(logger: logging.Logger, event: str, data: Optional[dict] = None) -> None:
-    """Log structured trace event for AI analysis."""
-    import json
-    try:
-        payload = {"event": event}
-        if data:
-            payload.update(data)
         serialized = json.dumps(payload, ensure_ascii=False)
-        logger.debug(f"[TRACE] {serialized}")
+        # Use INFO level for traces to ensure they appear in standard logs
+        logger.info(f"[TRACE] {serialized}")
     except Exception:
         logger.debug(f"[TRACE] {event} (serialization failed)")
 

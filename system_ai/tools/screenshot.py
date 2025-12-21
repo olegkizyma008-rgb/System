@@ -1,6 +1,7 @@
 import os
 import time
 import subprocess
+import tempfile
 from typing import Any, Dict, Optional, Tuple, Union, List
 from PIL import Image, ImageChops
 import mss
@@ -234,18 +235,81 @@ def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] 
             if window_title:
                 focus_id += f"_{window_title}"
         
-        with mss.mss() as sct:
-            # Multi-monitor support: monitor 0 is the union of all monitors
-            monitor = sct.monitors[0]
-            
-            # If app_name, try to get its window geometry
-            region = None
-            if app_name:
-                region = _get_app_geometry(app_name, window_title)
-            
-            sct_img = sct.grab(region or monitor)
-            img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
-            
+        img = None
+        mss_error = None
+        # Try mss capture with up to 2 attempts
+        try:
+            with mss.mss() as sct:
+                # Multi-monitor support: monitor 0 is the union of all monitors
+                monitor = sct.monitors[0]
+
+                # If app_name, try to get its window geometry
+                region = None
+                if app_name:
+                    region = _get_app_geometry(app_name, window_title)
+
+                # Retry loop
+                attempts = 2
+                for i in range(attempts):
+                    try:
+                        sct_img = sct.grab(region or monitor)
+                        img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
+                        break
+                    except Exception as e:
+                        mss_error = str(e)
+                        time.sleep(0.2)
+        except Exception as e:
+            mss_error = str(e)
+
+        # Fallback to macOS screencapture if mss failed
+        if img is None:
+            try:
+                fd, tmp_path = tempfile.mkstemp(suffix=".png")
+                os.close(fd)
+                cmd = ["screencapture", "-x"]
+                # If we have region geometry, use -R x,y,w,h
+                region = None
+                if app_name:
+                    region = _get_app_geometry(app_name, window_title)
+                if region:
+                    cmd += ["-R", f"{region['left']},{region['top']},{region['width']},{region['height']}"]
+                cmd.append(tmp_path)
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                if result.returncode == 0 and os.path.exists(tmp_path):
+                    try:
+                        img = Image.open(tmp_path)
+                    except Exception as e:
+                        # If reading fails, surface error below
+                        mss_error = f"Fallback image read failed: {e}"
+                        img = None
+                    finally:
+                        # Clean up temp file since manager will re-save
+                        try:
+                            os.unlink(tmp_path)
+                        except Exception:
+                            pass
+                else:
+                    err = (result.stderr or "").strip()
+                    low = err.lower()
+                    if "screen recording" in low or "not permitted" in low:
+                        return {
+                            "tool": "take_screenshot",
+                            "status": "error",
+                            "error": err or "Screen recording permission required",
+                            "error_type": "permission_required",
+                            "permission": "screen_recording",
+                            "settings_url": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+                            "hint": "Grant Screen Recording permission to Terminal/VS Code"
+                        }
+                    # Generic fallback error
+                    return {"tool": "take_screenshot", "status": "error", "error": err or (mss_error or "Unknown capture error")}
+            except Exception as e:
+                return {"tool": "take_screenshot", "status": "error", "error": str(e)}
+
+        if img is None:
+            # Neither mss nor screencapture succeeded
+            return {"tool": "take_screenshot", "status": "error", "error": mss_error or "Unable to capture screen"}
+
         res = manager.process_screenshot(img, focus_id)
         
         return {

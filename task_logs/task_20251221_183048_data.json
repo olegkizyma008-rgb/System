@@ -1,0 +1,25 @@
+{
+  "task_id": "task_20251221_183048",
+  "name": "Quick Screenshot Test",
+  "description": "Verify screenshot capture works",
+  "start_time": "2025-12-21T18:30:48.482186",
+  "status": "completed",
+  "logs": [],
+  "screenshots": [
+    {
+      "screenshot_id": "screenshot_1",
+      "path": "/Users/dev/Documents/GitHub/System/.agent/workflows/data/screenshots/20251221_183048/snap_1766302248668.jpg",
+      "timestamp": "2025-12-21T18:30:48.711869",
+      "description": "Test capture"
+    }
+  ],
+  "errors": [],
+  "metrics": {
+    "duration_seconds": 0.229809,
+    "screenshot_count": 1,
+    "error_count": 0,
+    "log_count": 0
+  },
+  "log_file": "task_logs/task_20251221_183048.log",
+  "end_time": "2025-12-21T18:30:48.711995"
+}

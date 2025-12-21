@@ -73,6 +73,50 @@ def tool_list_dir(args: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": False, "error": str(e)}
 
 
+# --- Screenshot management helpers ---
+def _task_screenshots_dir() -> str:
+    base = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+    return os.path.join(base, "task_screenshots")
+
+
+def tool_list_screenshots(args: Dict[str, Any]) -> Dict[str, Any]:
+    """List recent screenshots in task_screenshots directory."""
+    try:
+        root = _task_screenshots_dir()
+        count = int(args.get("count", 10) or 10)
+        if not os.path.isdir(root):
+            return {"ok": True, "root": root, "count": 0, "items": []}
+        # Collect files
+        files = [os.path.join(root, f) for f in os.listdir(root) if os.path.isfile(os.path.join(root, f))]
+        files.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+        items = []
+        for p in files[:count]:
+            try:
+                items.append({
+                    "name": os.path.basename(p),
+                    "path": p,
+                    "size": os.path.getsize(p),
+                    "mtime": int(os.path.getmtime(p))
+                })
+            except Exception:
+                continue
+        return {"ok": True, "root": root, "count": len(items), "items": items}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_open_screenshots(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Open the task_screenshots directory in Finder (macOS)."""
+    try:
+        root = _task_screenshots_dir()
+        os.makedirs(root, exist_ok=True)
+        # Use macOS 'open' to reveal directory
+        subprocess.run(["open", root], capture_output=True)
+        return {"ok": True, "root": root}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 def tool_organize_desktop(args: Dict[str, Any], allow_shell: bool) -> Dict[str, Any]:
     """Organize desktop by moving files into categorized folders."""
     if not allow_shell:

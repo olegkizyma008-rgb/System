@@ -8,6 +8,7 @@ and identify issues for code improvement.
 """
 
 import os
+import shutil
 import json
 import time
 import logging
@@ -130,34 +131,45 @@ class TaskAnalyzer:
             from system_ai.tools.screenshot import take_screenshot
             
             screenshot_id = f"screenshot_{len(self.current_task['screenshots']) + 1}"
-            screenshot_path = os.path.join(
-                self.screenshot_dir, 
-                f"{self.current_task['task_id']}_{screenshot_id}.png"
-            )
-            
-            # Take screenshot
-            screenshot_result = take_screenshot(screenshot_path)
-            
-            if screenshot_result.get("success"):
+
+            # Take screenshot using the system tool which returns a dict with status/path
+            screenshot_result = take_screenshot()
+
+            if screenshot_result.get("status") == "success" and screenshot_result.get("path"):
+                source_path = screenshot_result["path"]
+                # Mirror into task_screenshots with task-based filename, preserving extension
+                ext = os.path.splitext(source_path)[1] or ".png"
+                dest_path = os.path.join(
+                    self.screenshot_dir,
+                    f"{self.current_task['task_id']}_{screenshot_id}{ext}"
+                )
+                try:
+                    shutil.copyfile(source_path, dest_path)
+                    screenshot_path = dest_path
+                except Exception:
+                    # Fallback to original source path if copy fails
+                    screenshot_path = source_path
                 screenshot_info = {
                     "screenshot_id": screenshot_id,
                     "path": screenshot_path,
+                    "source_path": source_path,
                     "timestamp": datetime.now().isoformat(),
                     "description": description
                 }
-                
+
                 self.current_task["screenshots"].append(screenshot_info)
-                
+
                 logger.info(f"📸 Captured screenshot: {description}")
-                
+
                 return {
                     "success": True,
                     "screenshot_id": screenshot_id,
                     "path": screenshot_path
                 }
             else:
-                logger.error(f"Failed to capture screenshot: {screenshot_result.get('error')}")
-                return screenshot_result
+                err_msg = screenshot_result.get("error") or "Unknown screenshot error"
+                logger.error(f"Failed to capture screenshot: {err_msg}")
+                return {"success": False, "error": err_msg}
                 
         except Exception as e:
             logger.error(f"Screenshot capture error: {e}")

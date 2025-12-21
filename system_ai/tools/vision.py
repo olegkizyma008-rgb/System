@@ -398,7 +398,8 @@ class DifferentialVisionAnalyzer:
             
             # Get all displays
             max_displays = 16
-            active_displays, num_displays = CGGetActiveDisplayList(max_displays, None, None)
+            # CGGetActiveDisplayList returns (error, active_displays, num_displays)
+            _, active_displays, num_displays = CGGetActiveDisplayList(max_displays, None, None)
             self._monitor_count = num_displays
             
             if num_displays == 0:
