@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 00:01:01  2025
+Generated: Mon Dec 22 00:05:26  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  06867a55 feat: Add Anthropic and local MCP servers, enhance RAG tool prioritization, integrate SonarQube scripts, and remove old project artifacts.
+  d03c4468 feat: Add SonarCloud project configuration and update gitignore.
+  46dad878 feat: Add Anthropic and local MCP servers, enhance RAG tool prioritization, integrate SonarQube scripts, and remove old project artifacts.
   012eb491 feat: Implement the initial weapon shop website, including a terminal-themed loading screen, core UI, and backend setup.
   5ab1533a refactor(tui/cli): remove 583 lines of duplicate and dead code
   a70e0af1 feat: Run cleanup in a background thread to prevent UI blocking and improve responsiveness
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   3529aab0 Refactor cleanup scripts to ensure proper PATH settings and permissions
   abcdc10f feat: Update antigraviti_cleanup.sh to improve application checks and ensure compatibility with system commands
   092ef9f6 Implement ChromaDB persistent client with backup and repair functionality
-  3a3a73b3 feat: Enhance Grisha's verification logic and improve image loading function for Claude API compatibility
 ```
 
 ## Project Structure
@@ -504,6 +504,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 ├── server_registration.log
 ├── setup.cfg
 ├── setup.sh
+├── sonar-project.properties
 ├── style.css
 ├── system_ai
 │   ├── __init__.py
@@ -639,6 +640,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
     ├── test_modern_enhancements.py
     └── verify_website.py
 
-181 directories, 380 files
+181 directories, 381 files
 
 ```

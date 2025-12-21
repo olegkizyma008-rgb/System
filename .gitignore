@@ -68,6 +68,19 @@ __pycache__/
 
 # Virtual environments
 .venv/
+venv/
+ENV/
+env/
+bin/
+lib/
+include/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
 # Cleanup modules JSON (should be committed)
 # cleanup_modules.json - потрібен для комітів
