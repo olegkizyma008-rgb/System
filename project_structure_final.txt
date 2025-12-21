@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sun Dec 21 23:19:10  2025
+Generated: Mon Dec 22 00:01:01  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -56,14 +56,15 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 
 ### Project Statistics
-  - Python files: 20366
+  - Python files: 20370
   - Test files: 17
   - Documentation files: 13
   - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  93bd95b6 feat: Implement the initial weapon shop website, including a terminal-themed loading screen, core UI, and backend setup.
+  06867a55 feat: Add Anthropic and local MCP servers, enhance RAG tool prioritization, integrate SonarQube scripts, and remove old project artifacts.
+  012eb491 feat: Implement the initial weapon shop website, including a terminal-themed loading screen, core UI, and backend setup.
   5ab1533a refactor(tui/cli): remove 583 lines of duplicate and dead code
   a70e0af1 feat: Run cleanup in a background thread to prevent UI blocking and improve responsiveness
   941063c4 feat: Update run_cleanup function to support logging via callback and adjust keybindings accordingly
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   abcdc10f feat: Update antigraviti_cleanup.sh to improve application checks and ensure compatibility with system commands
   092ef9f6 Implement ChromaDB persistent client with backup and repair functionality
   3a3a73b3 feat: Enhance Grisha's verification logic and improve image loading function for Claude API compatibility
-  7855d396 feat: Add disconnect method and async cleanup to ExternalMCPProvider for proper resource management
 ```
 
 ## Project Structure
@@ -472,6 +472,9 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── README.md
 │   ├── register_all_servers.py
 │   ├── server_registration.log
+│   ├── servers
+│   │   ├── anthropic_server.py
+│   │   └── local_server.py
 │   ├── setup_all.sh
 │   ├── setup_mcp_servers.sh
 │   ├── setup_rag_database.py
@@ -483,33 +486,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │       └── sonarqube_context7_helper.py
 ├── project_structure_final.txt
 ├── projects
-│   ├── dev_20251220_201052
-│   │   ├── assets
-│   │   ├── config
-│   │   │   └── config.json
-│   │   ├── docs
-│   │   ├── README.md
-│   │   ├── scripts
-│   │   ├── src
-│   │   └── tests
-│   ├── dev_20251220_202728
-│   │   ├── assets
-│   │   ├── config
-│   │   │   └── config.json
-│   │   ├── docs
-│   │   ├── README.md
-│   │   ├── scripts
-│   │   ├── src
-│   │   └── tests
-│   └── dev_20251220_202833
-│       ├── assets
-│       ├── config
-│       │   └── config.json
-│       ├── docs
-│       ├── README.md
-│       ├── scripts
-│       ├── src
-│       └── tests
 ├── providers
 │   ├── __init__.py
 │   ├── copilot.py
@@ -522,7 +498,10 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 ├── save_response.sh
 ├── script.js
 ├── scripts
-│   └── fix_mcp_server.py
+│   ├── demo_sonarqube_atlas.py
+│   ├── fix_mcp_server.py
+│   └── test_sonar_connection.py
+├── server_registration.log
 ├── setup.cfg
 ├── setup.sh
 ├── style.css
@@ -660,6 +639,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
     ├── test_modern_enhancements.py
     └── verify_website.py
 
-201 directories, 381 files
+181 directories, 380 files
 
 ```

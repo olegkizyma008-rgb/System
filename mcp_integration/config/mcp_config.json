@@ -2,7 +2,10 @@
   "mcpServers": {
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"],
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
       "description": "Context7 MCP Server for memory and context management",
       "timeout": 30000,
       "retryAttempts": 3,
@@ -10,7 +13,10 @@
     },
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp"],
+      "args": [
+        "-y",
+        "@playwright/mcp"
+      ],
       "description": "Playwright MCP Server for browser automation",
       "timeout": 60000,
       "retryAttempts": 2,
@@ -18,7 +24,10 @@
     },
     "pyautogui": {
       "command": "python3",
-      "args": ["-m", "mcp_pyautogui_server"],
+      "args": [
+        "-m",
+        "mcp_pyautogui_server"
+      ],
       "description": "PyAutoGUI MCP Server for GUI automation",
       "timeout": 30000,
       "retryAttempts": 2,
@@ -26,7 +35,10 @@
     },
     "applescript": {
       "command": "npx",
-      "args": ["-y", "@iflow-mcp/applescript-mcp"],
+      "args": [
+        "-y",
+        "@iflow-mcp/applescript-mcp"
+      ],
       "description": "AppleScript MCP Server for macOS automation",
       "timeout": 30000,
       "retryAttempts": 2,
@@ -34,7 +46,10 @@
     },
     "anthropic": {
       "command": "python3",
-      "args": ["-m", "anthropic_mcp"],
+      "args": [
+        "-m",
+        "mcp_integration.servers.anthropic_server"
+      ],
       "description": "Anthropic MCP Server for AI analysis",
       "timeout": 60000,
       "retryAttempts": 3,
@@ -42,7 +57,10 @@
     },
     "copilot": {
       "command": "python3",
-      "args": ["-m", "mcp_integration.core.copilot_mcp_client"],
+      "args": [
+        "-m",
+        "mcp_integration.core.copilot_mcp_client"
+      ],
       "description": "Copilot MCP Client for AI analysis (alternative to Anthropic)",
       "timeout": 60000,
       "retryAttempts": 3,
@@ -51,7 +69,10 @@
     },
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/filesystem-mcp"],
+      "args": [
+        "-y",
+        "@anthropic-ai/filesystem-mcp"
+      ],
       "description": "Filesystem MCP Server for file operations",
       "timeout": 30000,
       "retryAttempts": 2,
@@ -59,7 +80,18 @@
     },
     "sonarqube": {
       "command": "docker",
-      "args": ["run", "-i", "--rm", "-e", "SONARQUBE_TOKEN", "-e", "SONARQUBE_ORG", "-e", "SONARQUBE_URL", "mcp/sonarqube"],
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "SONARQUBE_TOKEN",
+        "-e",
+        "SONARQUBE_ORG",
+        "-e",
+        "SONARQUBE_URL",
+        "mcp/sonarqube"
+      ],
       "env": {
         "SONARQUBE_TOKEN": "${SONAR_API_KEY}",
         "SONARQUBE_URL": "${SONAR_URL}",
@@ -72,14 +104,20 @@
     },
     "local_fallback": {
       "command": "python3",
-      "args": ["-m", "local_mcp_fallback"],
+      "args": [
+        "-m",
+        "mcp_integration.servers.local_server"
+      ],
       "description": "Local fallback for all MCP operations",
       "timeout": 10000,
       "retryAttempts": 1,
       "category": "fallback"
     }
   },
-  "fallbackChain": ["copilot", "local_fallback"],
+  "fallbackChain": [
+    "copilot",
+    "local_fallback"
+  ],
   "defaultServer": "context7",
   "defaultAIServer": "copilot",
   "logging": {

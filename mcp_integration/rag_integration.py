@@ -150,13 +150,45 @@ class MCPToolSelector:
                 if self.redis_client and candidates:
                     self.redis_client.setex(cache_key, 300, json.dumps(candidates))
                 
-                return candidates
+                return self._prioritize_mcp_tools(candidates)
             
             return []
             
         except Exception as e:
             logger.error(f"❌ Tool selection error: {e}")
             return []
+
+    def _prioritize_mcp_tools(self, candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Boost scores of MCP server tools to ensure they are prioritized/
+        """
+        for candidate in candidates:
+            server = candidate.get("server", "local")
+            # Boost score if not a fallback/local server
+            if server not in ["local", "local_fallback", "unknown"]:
+                candidate["score"] = min(1.0, candidate["score"] * 1.2)  # 20% boost
+        
+        # Re-sort based on new scores
+        return sorted(candidates, key=lambda x: x["score"], reverse=True)
+
+    def select_tool_sequence(self, task_steps: List[str]) -> List[Dict[str, Any]]:
+        """
+        Select the best tool for each step in a sequence of tasks.
+        
+        Args:
+            task_steps: List of task descriptions (e.g. ["open browser", "search google"])
+            
+        Returns:
+            List of best tool for each step, maintaining order.
+        """
+        sequence_tools = []
+        for step in task_steps:
+            best_tool = self.get_best_tool(step)
+            if best_tool:
+                sequence_tools.append(best_tool)
+            else:
+                sequence_tools.append({"tool": "unknown", "description": "No suitable tool found for step"})
+        return sequence_tools
     
     def get_best_tool(self, task_description: str) -> Optional[Dict[str, Any]]:
         """Get the single best tool for a task."""
