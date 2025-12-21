@@ -9,7 +9,23 @@ Last message:
 [VOICE] Ліміт перепланувань вичерпано (10).
 
 Changed files:
-- (no uncommitted changes detected)
+- cleanup_scripts/advanced_antigraviti_cleanup.sh
+- cleanup_scripts/advanced_windsurf_cleanup.sh
+- cleanup_scripts/antigraviti_cleanup.sh
+- cleanup_scripts/vscode_identifier_cleanup.sh
+- cleanup_scripts/windsurf_identifier_cleanup.sh
+- cleanup_scripts/common_functions.sh
+- cleanup_scripts/cursor_cleanup.sh
+- cleanup_scripts/editor_cleanup.sh
+- cleanup_scripts/hostname_spoof.sh
+
+Diff stat:
+cleanup_scripts/advanced_antigraviti_cleanup.sh | 281 +++++++++++-------------
+ cleanup_scripts/advanced_windsurf_cleanup.sh    | 271 +++++++----------------
+ cleanup_scripts/antigraviti_cleanup.sh          | 275 +++++++++++------------
+ cleanup_scripts/vscode_identifier_cleanup.sh    | 239 ++++++++------------
+ cleanup_scripts/windsurf_identifier_cleanup.sh  | 241 ++++++++------------
+ 5 files changed, 522 insertions(+), 785 deletions(-)
 
 Verification:
 - status: unknown (no explicit signal)

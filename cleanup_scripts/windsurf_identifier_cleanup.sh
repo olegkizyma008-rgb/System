@@ -1,94 +1,51 @@
 #!/bin/zsh
 
+setopt NULL_GLOB
+
 # ═══════════════════════════════════════════════════════════════
-#  🔄 WINDSURF IDENTIFIER CLEANUP - Повне очищення ідентифікаторів
-#  Видаляє всі ідентифікатори для обходу обмежень облікового запису
+#  🌊 WINDSURF IDENTIFIER CLEANUP - Повне очищення ідентифікаторів
+#  Використовує спільні функції з common_functions.sh
+#  ПРИМІТКА: Hostname виведено в hostname_spoof.sh
 # ═══════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$SCRIPT_DIR"
-if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
-    REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-fi
+source "$SCRIPT_DIR/common_functions.sh"
 
-# Завантаження змінних середовища
-ENV_FILE="$REPO_ROOT/.env"
-if [ -f "$ENV_FILE" ]; then
-    export $(grep -v '^#' "$ENV_FILE" | grep -v '^$' | xargs)
-fi
+# Перевірка UNSAFE_MODE
+check_safe_mode "windsurf_identifier_cleanup"
 
-# Режими виконання
-AUTO_YES="${AUTO_YES:-1}"
-UNSAFE_MODE="${UNSAFE_MODE:-0}"
-
-# SUDO_ASKPASS
-SUDO_HELPER="$REPO_ROOT/cleanup_scripts/sudo_helper.sh"
-if [ ! -f "$SUDO_HELPER" ] && [ -f "$REPO_ROOT/sudo_helper.sh" ]; then
-    SUDO_HELPER="$REPO_ROOT/sudo_helper.sh"
-fi
-export SUDO_ASKPASS="$SUDO_HELPER"
-chmod +x "$SUDO_ASKPASS" 2>/dev/null
-sudo() { command sudo -A "$@"; }
-
-if [ "${UNSAFE_MODE}" != "1" ]; then
-    echo "\n🛡️  SAFE_MODE: windsurf_identifier_cleanup вимкнено. Увімкніть UNSAFE_MODE=1 якщо потрібно."
-    exit 0
-fi
-
-# Перевірка sudo доступу (неінтерактивно через SUDO_ASKPASS)
-sudo -v 2>/dev/null
-if [ $? -ne 0 ]; then
-    echo "❌ Помилка: не вдалося отримати sudo права. Перевірте SUDO_PASSWORD у .env"
-    exit 1
-fi
-
-# Кольори
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-WHITE='\033[1;37m'
-NC='\033[0m'
-
-echo "${CYAN}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo "${CYAN}║${NC}  ${GREEN}🔄 WINDSURF IDENTIFIER CLEANUP${NC}                            ${CYAN}║${NC}"
-echo "${CYAN}║${NC}  ${WHITE}Повне очищення ідентифікаторів для обходу лімітів${NC}        ${CYAN}║${NC}"
-echo "${CYAN}╚══════════════════════════════════════════════════════════════╝${NC}"
+print_header "🌊 WINDSURF IDENTIFIER CLEANUP" "$CYAN"
+print_info "Очищення ідентифікаторів Windsurf Editor"
 echo ""
 
-# Функція для генерації випадкового UUID
-generate_uuid() {
-    uuidgen | tr '[:upper:]' '[:lower:]'
-}
+# ─────────────────────────────────────────────────────────────────
+# WINDSURF-СПЕЦИФІЧНІ ШЛЯХИ
+# ─────────────────────────────────────────────────────────────────
+WINDSURF_BASE="$HOME/Library/Application Support/Windsurf"
 
-# Функція для генерації випадкового machine-id (hex формат)
-generate_machine_id() {
-    openssl rand -hex 16
-}
-
-# Зупинка Windsurf якщо запущений
-echo "${YELLOW}🛑 Зупинка Windsurf...${NC}"
+# 1. Зупинка Windsurf
+print_step 1 6 "Зупинка Windsurf..."
 pkill -f windsurf 2>/dev/null
 pkill -f Windsurf 2>/dev/null
 sleep 2
+print_success "Windsurf зупинено"
 
-# 1. Очищення Machine ID
-echo "${BLUE}[1/8] Очищення Machine ID...${NC}"
-MACHINEID_PATH=~/Library/Application\ Support/Windsurf/machineid
+# 2. Очищення Machine ID
+print_step 2 6 "Оновлення Machine ID..."
+MACHINEID_PATH="$WINDSURF_BASE/machineid"
 if [ -f "$MACHINEID_PATH" ]; then
     NEW_MACHINE_ID=$(generate_machine_id)
     echo "$NEW_MACHINE_ID" > "$MACHINEID_PATH"
-    echo "  ✓ Machine ID оновлено: $NEW_MACHINE_ID"
+    print_success "Machine ID оновлено: $NEW_MACHINE_ID"
 else
-    echo "  ℹ️  Machine ID файл не знайдено"
+    print_info "Machine ID файл не знайдено"
 fi
 
-# 2. Очищення Storage файлів
-echo "${BLUE}[2/8] Очищення Storage файлів...${NC}"
+# 3. Очищення Storage файлів
+print_step 3 6 "Оновлення Storage файлів..."
 STORAGE_PATHS=(
-    ~/Library/Application\ Support/Windsurf/storage.json
-    ~/Library/Application\ Support/Windsurf/User/globalStorage/storage.json
+    "$WINDSURF_BASE/storage.json"
+    "$WINDSURF_BASE/User/globalStorage/storage.json"
 )
 
 for STORAGE_PATH in "${STORAGE_PATHS[@]}"; do
@@ -110,93 +67,87 @@ for STORAGE_PATH in "${STORAGE_PATHS[@]}"; do
   "lastSessionDate": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
 }
 EOF
-        echo "  ✓ Storage оновлено: $(basename "$STORAGE_PATH")"
+        print_success "Storage оновлено: $(basename "$STORAGE_PATH")"
     fi
 done
 
-# 3. Видалення кешів та баз даних
-echo "${BLUE}[3/8] Видалення кешів та баз даних...${NC}"
-rm -rf ~/Library/Application\ Support/Windsurf/User/globalStorage/state.vscdb* 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Local\ Storage 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Session\ Storage 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/IndexedDB 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/databases 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/GPUCache 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/CachedData 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Code\ Cache 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/User/workspaceStorage 2>/dev/null
-echo "  ✓ Кеші та бази даних видалено"
+# 4. Видалення кешів та баз даних
+print_step 4 6 "Видалення кешів та баз даних..."
+CACHE_PATHS=(
+    "$WINDSURF_BASE/User/globalStorage/state.vscdb"
+    "$WINDSURF_BASE/User/globalStorage/state.vscdb.backup"
+    "$WINDSURF_BASE/Local Storage"
+    "$WINDSURF_BASE/Session Storage"
+    "$WINDSURF_BASE/IndexedDB"
+    "$WINDSURF_BASE/databases"
+    "$WINDSURF_BASE/GPUCache"
+    "$WINDSURF_BASE/CachedData"
+    "$WINDSURF_BASE/Code Cache"
+    "$WINDSURF_BASE/User/workspaceStorage"
+    "$WINDSURF_BASE/logs"
+)
 
-# 4. Очищення Keychain
-echo "${BLUE}[4/8] Очищення Keychain...${NC}"
-for service in "Windsurf" "windsurf" "com.windsurf" "Windsurf Editor" "Codeium Windsurf" "Codeium" "codeium" "codeium.com" "api.codeium.com"; do
+for path in "${CACHE_PATHS[@]}"; do
+    safe_remove "$path"
+done
+print_success "Кеші та бази даних видалено"
+
+# 5. Очищення Keychain
+print_step 5 6 "Очищення Keychain..."
+WINDSURF_KEYCHAIN_SERVICES=(
+    "Windsurf"
+    "windsurf"
+    "com.windsurf"
+    "Windsurf Editor"
+    "Codeium Windsurf"
+    "Codeium"
+    "codeium"
+    "codeium.com"
+    "api.codeium.com"
+    "com.exafunction.windsurf"
+    "windsurf.com"
+    "auth.windsurf.com"
+)
+
+for service in "${WINDSURF_KEYCHAIN_SERVICES[@]}"; do
     security delete-generic-password -s "$service" 2>/dev/null
     security delete-internet-password -s "$service" 2>/dev/null
     security delete-generic-password -l "$service" 2>/dev/null
 done
-echo "  ✓ Keychain очищено"
+print_success "Keychain очищено"
 
-# 5. Видалення cookies та веб-даних
-echo "${BLUE}[5/8] Видалення cookies та веб-даних...${NC}"
-rm -rf ~/Library/Application\ Support/Windsurf/Cookies* 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Network\ Persistent\ State 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/TransportSecurity 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/Trust\ Tokens* 2>/dev/null
-rm -rf ~/Library/Application\ Support/Windsurf/SharedStorage* 2>/dev/null
-echo "  ✓ Cookies та веб-дані видалено"
+# 6. Видалення cookies та веб-даних
+print_step 6 6 "Видалення cookies та веб-даних..."
+WEB_DATA_PATHS=(
+    "$WINDSURF_BASE/Cookies"
+    "$WINDSURF_BASE/Cookies-journal"
+    "$WINDSURF_BASE/Network Persistent State"
+    "$WINDSURF_BASE/TransportSecurity"
+    "$WINDSURF_BASE/Trust Tokens"
+    "$WINDSURF_BASE/SharedStorage"
+    "$WINDSURF_BASE/WebStorage"
+)
 
-# 6. Генерація нового hostname (тимчасово)
-echo "${BLUE}[6/8] Генерація нового hostname...${NC}"
-REAL_NAMES=("Alex" "James" "Michael" "David" "Robert" "John" "Richard" "Charles" "Daniel" "Matthew" "Anthony" "Mark" "Emma" "Olivia" "Ava" "Sophia" "Isabella" "Mia" "Charlotte" "Amelia")
-PLACE_NAMES=("Studio" "Office" "Desktop" "Workspace" "MacBook" "iMac" "MacStudio" "Pro" "Air" "Mini")
+for path in "${WEB_DATA_PATHS[@]}"; do
+    safe_remove "$path"
+done
+print_success "Cookies та веб-дані видалено"
 
-RANDOM_NAME=${REAL_NAMES[$((RANDOM % ${#REAL_NAMES[@]}))]}
-RANDOM_PLACE=${PLACE_NAMES[$((RANDOM % ${#PLACE_NAMES[@]}))]}
-NEW_HOSTNAME="${RANDOM_NAME}-${RANDOM_PLACE}"
-
-ORIGINAL_HOSTNAME=$(scutil --get HostName 2>/dev/null || echo "Unknown")
-echo "  📝 Оригінальний hostname: $ORIGINAL_HOSTNAME"
-echo "  🎲 Новий hostname: $NEW_HOSTNAME"
-
-sudo scutil --set HostName "$NEW_HOSTNAME" 2>/dev/null
-sudo scutil --set LocalHostName "$NEW_HOSTNAME" 2>/dev/null
-sudo scutil --set ComputerName "$NEW_HOSTNAME" 2>/dev/null
-
-# 7. Очищення DNS кешу
-echo "${BLUE}[7/8] Очищення DNS кешу...${NC}"
-sudo dscacheutil -flushcache 2>/dev/null
-sudo killall -HUP mDNSResponder 2>/dev/null
-echo "  ✓ DNS кеш очищено"
-
-# 8. Планування відновлення hostname через 4 години
-echo "${BLUE}[8/8] Планування відновлення hostname...${NC}"
-{
-    sleep 14400  # 4 години
-    echo "⏰ Відновлення оригінального hostname: $ORIGINAL_HOSTNAME"
-    sudo scutil --set HostName "$ORIGINAL_HOSTNAME" 2>/dev/null
-    sudo scutil --set LocalHostName "$ORIGINAL_HOSTNAME" 2>/dev/null
-    sudo scutil --set ComputerName "$ORIGINAL_HOSTNAME" 2>/dev/null
-    sudo dscacheutil -flushcache 2>/dev/null
-    sudo killall -HUP mDNSResponder 2>/dev/null
-} > /tmp/windsurf_hostname_restore_$$.log 2>&1 &
-
-RESTORE_PID=$!
-echo "  ✓ Відновлення заплановано (PID: $RESTORE_PID)"
-echo "  ⏰ Hostname буде відновлено через 4 години"
-
+# ─────────────────────────────────────────────────────────────────
+# ЗВІТ
+# ─────────────────────────────────────────────────────────────────
 echo ""
 echo "${GREEN}╔══════════════════════════════════════════════════════════════╗${NC}"
 echo "${GREEN}║${NC}  ${WHITE}✅ ОЧИЩЕННЯ ІДЕНТИФІКАТОРІВ ЗАВЕРШЕНО!${NC}                    ${GREEN}║${NC}"
 echo "${GREEN}╠══════════════════════════════════════════════════════════════╣${NC}"
-echo "${GREEN}║${NC}  ${CYAN}📋 Виконані дії:${NC}                                          ${GREEN}║${NC}"
-echo "${GREEN}║${NC}    ✓ Machine ID оновлено                                  ${GREEN}║${NC}"
-echo "${GREEN}║${NC}    ✓ Storage файли оновлено                               ${GREEN}║${NC}"
-echo "${GREEN}║${NC}    ✓ Кеші та бази даних видалено                          ${GREEN}║${NC}"
-echo "${GREEN}║${NC}    ✓ Keychain очищено                                     ${GREEN}║${NC}"
-echo "${GREEN}║${NC}    ✓ Cookies та веб-дані видалено                         ${GREEN}║${NC}"
-echo "${GREEN}║${NC}    ✓ Hostname змінено на: ${YELLOW}$NEW_HOSTNAME${NC}                    ${GREEN}║${NC}"
-echo "${GREEN}║${NC}    ✓ DNS кеш очищено                                      ${GREEN}║${NC}"
-echo "${GREEN}║${NC}                                                            ${GREEN}║${NC}"
-echo "${GREEN}║${NC}  ${YELLOW}💡 Тепер можна запускати Windsurf як новий користувач${NC}     ${GREEN}║${NC}"
+echo "${GREEN}║${NC}  ${CYAN}📋 Виконані дії:${NC}"
+echo "${GREEN}║${NC}    ✓ Machine ID оновлено"
+echo "${GREEN}║${NC}    ✓ Storage файли оновлено"
+echo "${GREEN}║${NC}    ✓ Кеші та бази даних видалено"
+echo "${GREEN}║${NC}    ✓ Keychain очищено"
+echo "${GREEN}║${NC}    ✓ Cookies та веб-дані видалено"
+echo "${GREEN}║${NC}"
+echo "${GREEN}║${NC}  ${YELLOW}💡 Для зміни hostname запустіть: hostname_spoof.sh${NC}"
+echo "${GREEN}║${NC}  ${YELLOW}💡 Тепер можна запускати Windsurf як новий користувач${NC}"
 echo "${GREEN}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""

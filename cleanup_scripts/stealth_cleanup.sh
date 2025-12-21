@@ -2,97 +2,88 @@
 
 setopt NULL_GLOB
 
-echo "🕵️  STEALTH CLEANUP SYSTEM - ADVANCED FINGERPRINT REMOVAL"
-echo "=========================================================="
+# ═══════════════════════════════════════════════════════════════
+#  🕵️ STEALTH CLEANUP - Advanced Fingerprint Removal
+#  Для глибокого очищення системних ідентифікаторів
+# ═══════════════════════════════════════════════════════════════
 
-# Директорії для конфігурацій
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR"
 if [ ! -f "$REPO_ROOT/cleanup_modules.json" ] && [ -f "$SCRIPT_DIR/../cleanup_modules.json" ]; then
     REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 fi
-CONFIGS_DIR="$REPO_ROOT/configs"
 
-# Завантаження змінних середовища
-ENV_FILE="$REPO_ROOT/.env"
-if [ -f "$ENV_FILE" ]; then
-    export $(grep -v '^#' "$ENV_FILE" | grep -v '^$' | xargs)
-fi
-
-# Режими виконання
-AUTO_YES="${AUTO_YES:-1}"
-UNSAFE_MODE="${UNSAFE_MODE:-0}"
-
-# Налаштування SUDO_ASKPASS
-SUDO_HELPER="$REPO_ROOT/cleanup_scripts/sudo_helper.sh"
-if [ ! -f "$SUDO_HELPER" ] && [ -f "$REPO_ROOT/sudo_helper.sh" ]; then
-    SUDO_HELPER="$REPO_ROOT/sudo_helper.sh"
-fi
-export SUDO_ASKPASS="$SUDO_HELPER"
-chmod +x "$SUDO_ASKPASS" 2>/dev/null
-
-sudo() { command sudo -A "$@"; }
-
-if [ "${UNSAFE_MODE}" != "1" ]; then
-    echo "\n🛡️  SAFE_MODE: stealth_cleanup вимкнено. Увімкніть UNSAFE_MODE=1 якщо усвідомлюєте ризики."
-    exit 0
-fi
-
-# Запит sudo прав
-echo "\n🔑 Потрібні права адміністратора для глибокого очищення..."
-sudo -v 2>/dev/null
-
-if [ $? -ne 0 ]; then
-    echo "❌ Помилка: невірний пароль sudo. Вихід."
+# Підключення common_functions.sh
+COMMON_FUNCTIONS="$SCRIPT_DIR/common_functions.sh"
+if [ -f "$COMMON_FUNCTIONS" ]; then
+    source "$COMMON_FUNCTIONS"
+else
+    echo "❌ Не знайдено common_functions.sh"
     exit 1
 fi
 
-echo "✅ Права отримано. Починаю стелс очищення..."
+CONFIGS_DIR="$REPO_ROOT/configs"
+
+# Завантаження змінних середовища
+load_env "$REPO_ROOT"
+
+# SUDO_ASKPASS
+setup_sudo_askpass "$REPO_ROOT"
+
+# Перевірка безпечного режиму
+check_safe_mode "stealth_cleanup"
+
+print_header "STEALTH CLEANUP SYSTEM"
+print_info "Advanced Fingerprint Removal"
+echo ""
+
+# Перевірка sudo доступу
+check_sudo
+
+print_info "Починаю стелс очищення..."
+
+TOTAL_STEPS=10
 
 # =============================================================================
 # 1. HARDWARE FINGERPRINT CLEANUP
 # =============================================================================
-echo "\n[1/10] 🔧 Очищення апаратних ідентифікаторів..."
+print_step 1 $TOTAL_STEPS "Очищення апаратних ідентифікаторів..."
 
 # Генерація нового Hardware UUID (потребує SIP disable)
-echo "🔄 Спроба зміни Hardware UUID..."
+print_info "Спроба зміни Hardware UUID..."
 NEW_HW_UUID=$(uuidgen)
 sudo nvram SystemAudioVolumeDB=%80%00%00%00 2>/dev/null
 if [ $? -eq 0 ]; then
-    echo "✅ Hardware UUID змінено"
+    print_success "Hardware UUID змінено"
 else
-    echo "⚠️  Hardware UUID не змінено (потрібно відключити SIP)"
+    print_warning "Hardware UUID не змінено (потрібно відключити SIP)"
 fi
 
-# Очищення NVRAM (зберігає апаратні ідентифікатори)
-echo "🔄 Очищення NVRAM..."
+# Очищення NVRAM
+print_info "Очищення NVRAM..."
 sudo nvram -c 2>/dev/null
 sudo nvram boot-args="" 2>/dev/null
 
-# Зміна системного серійного номера в пам'ті (тимчасово)
-echo "🔄 Маскування серійного номера..."
-sudo sysctl -w kern.osversion="$(sw_vers -buildVersion | sed 's/.$/X/')" 2>/dev/null
-
-echo "✅ Апаратні ідентифікатори оброблено"
+print_success "Апаратні ідентифікатори оброблено"
 
 # =============================================================================
 # 2. SYSTEM LOGS AND CACHE CLEANUP
 # =============================================================================
-echo "\n[2/10] 🗑️  Агресивне очищення системних логів та кешів..."
+print_step 2 $TOTAL_STEPS "Агресивне очищення системних логів та кешів..."
 
 # Системні логи
-echo "🔄 Видалення системних логів..."
+print_info "Видалення системних логів..."
 sudo rm -rf /var/log/* 2>/dev/null
 sudo rm -rf /Library/Logs/* 2>/dev/null
-sudo rm -rf ~/Library/Logs/* 2>/dev/null
+safe_remove_glob ~/Library/Logs/*
 sudo rm -rf /System/Library/Logs/* 2>/dev/null
 
 # Crash reports
-sudo rm -rf ~/Library/Application\ Support/CrashReporter/* 2>/dev/null
+safe_remove ~/Library/Application\ Support/CrashReporter
 sudo rm -rf /Library/Application\ Support/CrashReporter/* 2>/dev/null
 
 # Diagnostic reports
-sudo rm -rf ~/Library/Logs/DiagnosticReports/* 2>/dev/null
+safe_remove ~/Library/Logs/DiagnosticReports
 sudo rm -rf /var/db/diagnostics/* 2>/dev/null
 
 # Console logs
@@ -101,7 +92,7 @@ sudo rm -rf /var/db/uuidtext/* 2>/dev/null
 # Install logs
 sudo rm -rf /var/log/install.log* 2>/dev/null
 
-echo "✅ Системні логи очищено"
+print_success "Системні логи очищено"
 
 # =============================================================================
 # 3. SPOTLIGHT AND INDEXING CLEANUP
