@@ -16,6 +16,8 @@ import chromadb
 from chromadb.config import Settings
 import redis
 
+from mcp_integration.chroma_utils import create_persistent_client, get_default_chroma_persist_dir
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -60,11 +62,13 @@ class ServerRegistry:
         """Initialize ChromaDB and Redis"""
         try:
             # Initialize ChromaDB with persistent storage
-            persist_directory = Path(__file__).parent / "data" / "chroma_db"
-            persist_directory.mkdir(parents=True, exist_ok=True)
+            persist_directory = get_default_chroma_persist_dir() / "mcp_integration"
             
-            # Use PersistentClient for data persistence
-            self.chroma_client = chromadb.PersistentClient(path=str(persist_directory))
+            # Use PersistentClient for data persistence (repair+retry once on Rust panic)
+            init_res = create_persistent_client(persist_dir=persist_directory, logger=logger)
+            if init_res is None:
+                raise RuntimeError("ChromaDB persistence unavailable")
+            self.chroma_client = init_res.client
             
             # Delete existing collection to start fresh
             try:

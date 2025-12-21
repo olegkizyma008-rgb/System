@@ -159,24 +159,35 @@ class TrinityRuntime:
 
     def _register_tools(self) -> None:
         """Register all local tools and MCP tools."""
-        from system_ai.tools.vision import EnhancedVisionTools
         from system_ai.tools.screenshot import get_frontmost_app, get_all_windows
+
+        disable_vision = str(os.environ.get("TRINITY_DISABLE_VISION", "")).strip().lower() in {"1", "true", "yes", "on"}
+        EnhancedVisionTools = None
+        if not disable_vision:
+            try:
+                from system_ai.tools.vision import EnhancedVisionTools as _EnhancedVisionTools
+
+                EnhancedVisionTools = _EnhancedVisionTools
+            except Exception as e:
+                if self.verbose:
+                    self.logger.warning(f"Vision tools unavailable: {e}")
         
-        # Core Vision Tools
-        self.registry.register_tool(
-            "enhanced_vision_analysis",
-            EnhancedVisionTools.capture_and_analyze,
-            description="Capture screen and perform differential visual/OCR analysis. Args: app_name (optional), window_title (optional)"
-        )
-        
-        self.registry.register_tool(
-            "vision_analysis_with_context",
-            lambda args: EnhancedVisionTools.analyze_with_context(
-                args.get("image_path"),
-                self.vision_context_manager
-            ),
-            description="Analyze image and update global visual context"
-        )
+        # Core Vision Tools (optional)
+        if EnhancedVisionTools is not None:
+            self.registry.register_tool(
+                "enhanced_vision_analysis",
+                EnhancedVisionTools.capture_and_analyze,
+                description="Capture screen and perform differential visual/OCR analysis. Args: app_name (optional), window_title (optional)"
+            )
+
+            self.registry.register_tool(
+                "vision_analysis_with_context",
+                lambda args: EnhancedVisionTools.analyze_with_context(
+                    args.get("image_path"),
+                    self.vision_context_manager
+                ),
+                description="Analyze image and update global visual context"
+            )
         
         # Window detection utilities
         self.registry.register_tool(
@@ -805,6 +816,14 @@ class TrinityRuntime:
                      forbidden = state.get("forbidden_actions") or []
                      forbidden.append(f"FAILED ACTION: {hist[-1]}")
                      state["forbidden_actions"] = forbidden
+                 
+                 # Smart strategy change: if Google keeps failing, suggest alternative search
+                 last_forbidden = forbidden[-1] if forbidden else ""
+                 if "google" in last_forbidden.lower() or "captcha" in last_forbidden.lower():
+                     if self.verbose:
+                         self.logger.info("🔄 [Meta-Planner] Google repeatedly failing. Adding hint to use DuckDuckGo.")
+                     meta_config["search_hint"] = "USE_DUCKDUCKGO"
+                     meta_config["avoid_google"] = True
             else:
                  recovery_mode = meta_config.get("recovery_mode", "local_fix")
                  action = "replan" if recovery_mode == "full_replan" else "repair"
@@ -1340,6 +1359,14 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
                         continue
                         
                     # Execute via MCP Registry
+                    # Add smart wait for browser tools that depend on page load
+                    browser_wait_tools = {"browser_get_links", "browser_get_text", "browser_get_visible_html", "browser_screenshot"}
+                    if name in browser_wait_tools:
+                        import time
+                        wait_time = 2.0  # seconds - allow page to fully load before extracting content
+                        if self.verbose: print(f"⏳ [Tetyana] Waiting {wait_time}s for page to settle before {name}...")
+                        time.sleep(wait_time)
+                    
                     res_str = self.registry.execute(name, args)
                     results.append(f"Result for {name}: {res_str}")
 
@@ -1380,10 +1407,20 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
                             if res_dict.get("has_captcha"):
                                 had_failure = True
                                 if self.verbose: print("⚠️ [Tetyana] Captcha detected. Marking as failure to trigger GUI mode.")
+                            # Check for Google captcha/block page in URL or output
+                            output_str = str(res_dict.get("output", "") or res_dict.get("url", ""))
+                            if "sorry/index" in output_str or "recaptcha" in output_str.lower():
+                                had_failure = True
+                                if self.verbose: print("⚠️ [Tetyana] Google captcha/block detected in URL. Marking as failure.")
                     except Exception:
                         # If not JSON, check for error string pattern from MCP executor
                         if str(res_str).strip().startswith("Error"):
                             had_failure = True
+                    
+                    # Also check raw result string for captcha indicators
+                    if "sorry/index" in str(res_str) or "recaptcha" in str(res_str).lower():
+                        had_failure = True
+                        if self.verbose: print("⚠️ [Tetyana] Captcha/block detected in response. Marking as failure.")
                     
                     # Check for permission_required errors in result
                     try:
@@ -1788,7 +1825,7 @@ GLOBAL GOAL (for reference only): {original_task}
                 
                 # CRITICAL: Wait for browser/GUI to settle after Tetyana's actions
                 # Without this delay, Grisha captures stale screenshots before page updates
-                browser_action_tools = {"browser_type_text", "browser_click", "browser_open_url", "browser_navigate"}
+                browser_action_tools = {"browser_type_text", "browser_click", "browser_open_url", "browser_navigate", "browser_get_links", "browser_screenshot"}
                 used_browser_actions = bool(set(tetyana_tools or []) & browser_action_tools)
                 
                 if used_browser_actions:
@@ -1962,10 +1999,10 @@ GLOBAL GOAL (for reference only): {original_task}
                   # Ideally the first prompt should have triggered tools. 
                   # If we are here, Grisha produced text without tools and without a verdict.
         
-        if step_status in {"uncertain", "failed"}:
+        if step_status == "uncertain":
             current_streak += 1
         else:
-            current_streak = 0  # Reset on definite decision (success)
+            current_streak = 0  # Reset on definite decision (success or failed)
         
         # If 3+ consecutive uncertain decisions, consider forcing completion
         vision_shows_failure = any(kw in sanitized_lower_content for kw in VISION_FAILURE_KEYWORDS)

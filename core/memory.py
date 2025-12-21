@@ -43,7 +43,23 @@ class AtlasMemory:
     
     def __init__(self, persist_path: str = "./memory_db"):
         import chromadb
-        self.client = chromadb.PersistentClient(path=persist_path)
+        from pathlib import Path
+
+        # Ensure a stable absolute persistence directory (and avoid edge-cases with relative paths)
+        persist_dir = Path(persist_path).expanduser().resolve()
+        persist_dir.mkdir(parents=True, exist_ok=True)
+
+        # Best-effort repair+retry for rare Rust sqlite panics
+        try:
+            self.client = chromadb.PersistentClient(path=str(persist_dir))
+        except BaseException:
+            try:
+                backup_dir = persist_dir.parent / f"{persist_dir.name}_corrupt_{int(time.time())}"
+                persist_dir.rename(backup_dir)
+                persist_dir.mkdir(parents=True, exist_ok=True)
+                self.client = chromadb.PersistentClient(path=str(persist_dir))
+            except BaseException as e:
+                raise RuntimeError(f"ChromaDB PersistentClient failed for {persist_dir}: {e}")
         
         # Initialize Collections
         self.ui_patterns = self.client.get_or_create_collection(name="ui_patterns")

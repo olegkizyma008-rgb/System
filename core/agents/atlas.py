@@ -129,6 +129,8 @@ Rules:
 - **Media Strategy**: When searching for content to watch/read, prioritize known free/accessible sources (e.g., UASerials, YouTube, Open Archives) and avoid subscription services (Netflix, Amazon, HBO) unless user credentials are known.
 - **Site Rotation**: If a specific site (e.g., UASerials) fails to load or returns an error, plan to try a different known site or perform a broad Google search with exclusions.
 - **Search Query Refinement**: When searching for free content, explicit exclude subscription domains in the query (e.g., "watch movie online -site:netflix.com -site:amazon.com -site:kinopoisk.ru").
+- **CAPTCHA/BLOCK HANDLING**: If Google shows captcha or blocks (URL contains 'sorry/index' or 'recaptcha'), IMMEDIATELY switch to DuckDuckGo (https://duckduckgo.com/?q=...) or Bing. Do NOT retry Google if blocked.
+- **Alternative Search Engines**: If meta_config has 'avoid_google': true or 'search_hint': 'USE_DUCKDUCKGO', use https://duckduckgo.com/?q=<query> instead of Google.
 - **Action-Oriented**: Never plan a "Find" or "Search" step without an immediate follow-up step to "Open", "Click", or "Navigate" to a result. A search result page is not a final destination.
 - **Two-Phase Media Strategy**: If the task is media-related, follow this sequence:
     1. **RESEARCH PHASE**: Perform parallel-style searches (Google, YouTube, specialized sites). Gather multiple candidate links.

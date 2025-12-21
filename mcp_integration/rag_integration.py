@@ -13,6 +13,8 @@ import chromadb
 from chromadb.config import Settings
 import redis
 
+from mcp_integration.chroma_utils import create_persistent_client, get_default_chroma_persist_dir
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +44,7 @@ class MCPToolSelector:
         self._initialized = True
     
     def _initialize(self):
-        """Initialize the tool selector."""
+        """Initialize the tool selector with graceful fallback for ChromaDB issues."""
         try:
             # Load configuration
             config_file = self.base_dir / "config" / "mcp_config.json"
@@ -52,22 +54,36 @@ class MCPToolSelector:
                 self.fallback_chain = self.config.get('fallbackChain', ['local_fallback'])
             
             # Initialize ChromaDB with persistent storage
-            persist_dir = self.base_dir / "data" / "chroma_db"
-            persist_dir.mkdir(parents=True, exist_ok=True)
+            persist_dir = get_default_chroma_persist_dir() / "mcp_integration"
             
-            # Use PersistentClient for data persistence
-            self.chroma_client = chromadb.PersistentClient(path=str(persist_dir))
+            # Use PersistentClient for data persistence (repair+retry once on Rust panic)
+            init_res = create_persistent_client(persist_dir=persist_dir, logger=logger)
+            if init_res is not None:
+                self.chroma_client = init_res.client
+            else:
+                # If persistence is not available, fall back to in-memory as last resort
+                logger.warning("⚠️ ChromaDB persistence unavailable; using in-memory client")
+                try:
+                    self.chroma_client = chromadb.Client()
+                except BaseException:
+                    self.chroma_client = None
+                    logger.error("❌ ChromaDB completely unavailable, RAG disabled")
             
-            try:
-                self.collection = self.chroma_client.get_collection("mcp_tool_schemas")
-                count = self.collection.count()
-                logger.info(f"✅ Connected to existing RAG collection ({count} items)")
-            except:
-                self.collection = self.chroma_client.create_collection(
-                    name="mcp_tool_schemas",
-                    metadata={"description": "MCP tool schemas and examples"}
-                )
-                logger.info("📊 Created new RAG collection")
+            if self.chroma_client:
+                try:
+                    self.collection = self.chroma_client.get_collection("mcp_tool_schemas")
+                    count = self.collection.count()
+                    logger.info(f"✅ Connected to existing RAG collection ({count} items)")
+                except:
+                    try:
+                        self.collection = self.chroma_client.create_collection(
+                            name="mcp_tool_schemas",
+                            metadata={"description": "MCP tool schemas and examples"}
+                        )
+                        logger.info("📊 Created new RAG collection")
+                    except Exception as col_err:
+                        self.collection = None
+                        logger.warning(f"⚠️ Could not create collection: {col_err}")
             
             # Initialize Redis
             try:

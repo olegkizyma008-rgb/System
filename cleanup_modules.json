@@ -489,7 +489,7 @@
           "id": "editor_cleanup",
           "name": "Universal Editor Cleanup",
           "script": "./cleanup_scripts/editor_cleanup.sh",
-          "enabled": false,
+          "enabled": true,
           "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
           "order": 5
         }

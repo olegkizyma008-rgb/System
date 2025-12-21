@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 04:17:54  2025
+Generated: Mon Dec 22 05:20:53  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -56,14 +56,15 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 
 ### Project Statistics
-  - Python files: 20359
-  - Test files: 16
+  - Python files: 20361
+  - Test files: 17
   - Documentation files: 13
   - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  d580bef3 feat: Enhance Grisha's verification logic and improve image loading function for Claude API compatibility
+  77cb437b Implement ChromaDB persistent client with backup and repair functionality
+  3a3a73b3 feat: Enhance Grisha's verification logic and improve image loading function for Claude API compatibility
   7855d396 feat: Add disconnect method and async cleanup to ExternalMCPProvider for proper resource management
   47927e93 feat: Update AppleScript MCP server installation to use @iflow-mcp/applescript-mcp
   b3f96863 feat: Update PaddleOCR integration to utilize the new API and improve text extraction logic
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   3cae3751 feat: Enhance LLM integration and testing framework; update PaddleOCR initialization and test cases
   8fd39cc2 feat: Add Copilot MCP client integration and testing framework
   6563eda1 feat: Complete MCP integration with RAG system - 21,500+ tool examples
-  f2fda54c feat: Implement comprehensive MCP server registration system with tool schema management and vectorization
 ```
 
 ## Project Structure
@@ -424,6 +424,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 ├── mcp_integration
 │   ├── __init__.py
 │   ├── check_servers.py
+│   ├── chroma_utils.py
 │   ├── config
 │   │   ├── mcp_config.json
 │   │   └── server_specific
@@ -440,24 +441,13 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   │       └── system_examples.json
 │   ├── data
 │   │   ├── chroma_db
-│   │   │   ├── 1bbfe330-caf2-473a-a051-d31252bd36af
+│   │   │   ├── 848a3188-15f7-4449-90d8-ab404a72361a
 │   │   │   │   ├── data_level0.bin
 │   │   │   │   ├── header.bin
 │   │   │   │   ├── index_metadata.pickle
 │   │   │   │   ├── length.bin
 │   │   │   │   └── link_lists.bin
-│   │   │   ├── 867e5c6a-830e-4edc-81ac-5edd4bd18527
-│   │   │   │   ├── data_level0.bin
-│   │   │   │   ├── header.bin
-│   │   │   │   ├── length.bin
-│   │   │   │   └── link_lists.bin
-│   │   │   ├── chroma.sqlite3
-│   │   │   └── e49176cd-b782-4b7c-bc43-526ca34299dc
-│   │   │       ├── data_level0.bin
-│   │   │       ├── header.bin
-│   │   │       ├── index_metadata.pickle
-│   │   │       ├── length.bin
-│   │   │       └── link_lists.bin
+│   │   │   └── chroma.sqlite3
 │   │   ├── registration_report.json
 │   │   └── schemas
 │   │       ├── anthropic_schema.json
@@ -604,6 +594,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── conftest.py
 │   ├── test_agent_protocol.py
 │   ├── test_bootstrap_e2e.py
+│   ├── test_chroma_persistence.py
 │   ├── test_cli_parsing.py
 │   ├── test_context7_sliding_window.py
 │   ├── test_doctor_vibe_auto_repair.py
@@ -647,6 +638,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 ├── VERIFICATION_REPORT.md
 └── verify_memory.py
 
-197 directories, 372 files
+195 directories, 365 files
 
 ```

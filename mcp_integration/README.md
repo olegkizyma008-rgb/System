@@ -4,6 +4,14 @@
 
 This system provides comprehensive integration for multiple MCP (Mistral Copilot Protocol) servers with intelligent fallback and prioritization.
 
+## RAG Storage (ChromaDB)
+
+MCP integration uses ChromaDB for local persistent vector storage.
+
+- Default path: `~/.system_cli/chroma/mcp_integration`
+- Override with env var: `SYSTEM_CHROMA_PERSIST_DIR` (a directory path)
+- If ChromaDB hits a rare Rust/SQLite panic, the directory is moved aside to `*_corrupt_<timestamp>` and recreated automatically.
+
 ## Architecture
 
 ```mermaid

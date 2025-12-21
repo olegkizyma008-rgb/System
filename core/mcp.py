@@ -36,7 +36,10 @@ from system_ai.tools.windsurf import (
     get_windsurf_current_project_path,
     open_project_in_windsurf,
 )
-from system_ai.tools.vision import analyze_with_copilot, ocr_region, find_image_on_screen, compare_images
+analyze_with_copilot = None
+ocr_region = None
+find_image_on_screen = None
+compare_images = None
 from core.memory import save_memory_tool, query_memory_tool
 from system_ai.tools.macos_native_automation import create_automation_executor
 from system_ai.tools.system import list_processes, kill_process, get_system_stats
@@ -333,11 +336,45 @@ class MCPToolRegistry:
         self.register_tool("capture_screen", take_screenshot, "Capture current screen state for verification. Args: app_name (optional)")
         self.register_tool("take_burst_screenshot", take_burst_screenshot, "Take multiple screenshots in a burst. Args: app_name (optional), count (int), interval (float)")
         self.register_tool("capture_screen_region", capture_screen_region, "Capture screenshot of screen region. Args: x,y,width,height")
-        self.register_tool("vision_analyze", analyze_with_copilot, "Analyze screen with AI to get coordinates and text. Args: image_path (optional), prompt (str)")
-        self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen with AI to verify state, find elements, or solve tasks. Args: image_path (optional), prompt (str)")
-        self.register_tool("ocr_region", ocr_region, "OCR a screen region using vision. Args: x,y,width,height")
-        self.register_tool("find_image_on_screen", find_image_on_screen, "Find an image template on screen (may be unimplemented). Args: template_path (str), tolerance (float)")
-        self.register_tool("compare_images", compare_images, "Compare two images (before/after) using vision. Args: path1 (str), path2 (str), prompt (str optional)")
+
+        # Vision tools are optional and can be heavy (OCR/model init). Lazy-import them.
+        disable_vision = str(os.environ.get("TRINITY_DISABLE_VISION", "")).strip().lower() in {"1", "true", "yes", "on"}
+        if not disable_vision:
+            try:
+                from system_ai.tools.vision import (
+                    analyze_with_copilot as _analyze_with_copilot,
+                    ocr_region as _ocr_region,
+                    find_image_on_screen as _find_image_on_screen,
+                    compare_images as _compare_images,
+                )
+
+                global analyze_with_copilot, ocr_region, find_image_on_screen, compare_images
+                analyze_with_copilot = _analyze_with_copilot
+                ocr_region = _ocr_region
+                find_image_on_screen = _find_image_on_screen
+                compare_images = _compare_images
+
+                self.register_tool("vision_analyze", analyze_with_copilot, "Analyze screen with AI to get coordinates and text. Args: image_path (optional), prompt (str)")
+                self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen with AI to verify state, find elements, or solve tasks. Args: image_path (optional), prompt (str)")
+                self.register_tool("ocr_region", ocr_region, "OCR a screen region using vision. Args: x,y,width,height")
+                self.register_tool("find_image_on_screen", find_image_on_screen, "Find an image template on screen. Args: template_path (str), tolerance (float)")
+                self.register_tool("compare_images", compare_images, "Compare two images (before/after) using vision. Args: path1 (str), path2 (str), prompt (str optional)")
+            except Exception as e:
+                self.register_tool(
+                    "vision_analyze",
+                    lambda image_path=None, prompt=None, **_: {"status": "error", "error": f"Vision tools unavailable: {e}"},
+                    "Analyze screen with AI (unavailable)"
+                )
+                self.register_tool("analyze_screen", lambda image_path=None, prompt=None, **_: {"status": "error", "error": f"Vision tools unavailable: {e}"}, "Analyze screen with AI (unavailable)")
+                self.register_tool("ocr_region", lambda *_, **__: {"status": "error", "error": f"Vision tools unavailable: {e}"}, "OCR a screen region (unavailable)")
+                self.register_tool("find_image_on_screen", lambda *_, **__: {"status": "error", "error": f"Vision tools unavailable: {e}"}, "Find image on screen (unavailable)")
+                self.register_tool("compare_images", lambda *_, **__: {"status": "error", "error": f"Vision tools unavailable: {e}"}, "Compare images (unavailable)")
+        else:
+            self.register_tool("vision_analyze", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "Analyze screen with AI (disabled)")
+            self.register_tool("analyze_screen", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "Analyze screen with AI (disabled)")
+            self.register_tool("ocr_region", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "OCR a screen region (disabled)")
+            self.register_tool("find_image_on_screen", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "Find image on screen (disabled)")
+            self.register_tool("compare_images", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "Compare images (disabled)")
 
         self.register_tool("move_mouse", move_mouse, "Move mouse to absolute coordinates. Args: x (int), y (int)")
         self.register_tool("click_mouse", click_mouse, "Click mouse (left/right/double) optionally at x,y. Args: button(str), x?(int), y?(int)")
@@ -371,6 +408,8 @@ class MCPToolRegistry:
         self.register_tool("system_cleanup_windsurf", system_cleanup_windsurf, "Run deep Windsurf cleanup. Args: allow=True")
         self.register_tool("system_spoof_hardware", system_spoof_hardware, "Spoof MAC/Hostname. Args: allow=True")
         self.register_tool("system_check_identifiers", system_check_identifiers, "Check system identifiers. Args: none")
+
+        # (vision tools registered above)
 
         # Recorder Control
         def _recorder_action(action: str) -> Any:
