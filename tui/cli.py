@@ -519,10 +519,6 @@ def _format_monitor_summary(
     )
 
 
-def _load_monitor_settings() -> None:
-    _load_monitor_settings_new()
-
-
 def _save_monitor_settings() -> bool:
     return _save_monitor_settings_new()
 
@@ -533,18 +529,6 @@ def _load_monitor_targets() -> None:
 
 def _save_monitor_targets() -> bool:
     return _save_monitor_targets_new()
-
-
-def _monitor_db_read_since_id(db_path: str, last_id: int, limit: int = 5000) -> List[Dict[str, Any]]:
-    return _monitor_db_read_since_id_new(db_path, last_id, limit)
-
-
-def _monitor_db_get_max_id(db_path: str) -> int:
-    return _monitor_db_get_max_id_new(db_path)
-
-
-def _format_monitor_summary(*args: Any, **kwargs: Any) -> str:
-    return _format_monitor_summary_new(*args, **kwargs)
 
 
 def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
@@ -639,28 +623,8 @@ def _get_llm_signature() -> str:
     )
 
 
-def _load_env() -> None:
-    return _load_env_new()
-
-
 def _reset_agent_llm() -> None:
     return _reset_agent_llm_new()
-
-
-def _load_monitor_targets() -> None:
-    return _load_monitor_targets_new()
-
-
-def _save_monitor_targets() -> bool:
-    return _save_monitor_targets_new()
-
-
-def _load_monitor_settings() -> None:
-    return _load_monitor_settings_new()
-
-
-def _save_monitor_settings() -> bool:
-    return _save_monitor_settings_new()
 
 
 def _monitor_start_selected() -> Tuple[bool, str]:
@@ -671,40 +635,8 @@ def _monitor_stop_selected() -> Tuple[bool, str]:
     return _monitor_stop_selected_new()
 
 
-def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
-    return _monitor_resolve_watch_items_new(targets)
-
-
-def _load_cleanup_config() -> Dict[str, Any]:
-    return _load_cleanup_config_new()
-
-
-def _save_cleanup_config(cfg: Dict[str, Any]) -> bool:
-    return _save_cleanup_config_new(cfg)
-
-
-def _find_module(cfg: Dict[str, Any], editor: str, mod_id: str) -> Optional[ModuleRef]:
-    return _find_module_new(cfg, editor, mod_id)
-
-
-def _set_module_enabled(cfg: Dict[str, Any], ref: ModuleRef, enabled: bool) -> bool:
-    return _set_module_enabled_new(cfg, ref, enabled)
-
-
-def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False, log_callback=None) -> Tuple[bool, str]:
-    return _run_cleanup_new(cfg, editor, dry_run=dry_run, log_callback=log_callback)
-
-
-def _perform_install(cfg: Dict[str, Any], editor: str) -> Tuple[bool, str]:
-    return _perform_install_new(cfg, editor)
-
-
 def _scan_traces(editor: str) -> Dict[str, List[str]]:
     return _scan_traces_new(editor)
-
-
-def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
-    return _get_editors_list_new(cfg)
 
 
 def _get_editors_list() -> List[Tuple[str, str]]:
@@ -714,12 +646,6 @@ def _get_editors_list() -> List[Tuple[str, str]]:
 def _apply_default_monitor_targets() -> None:
     # Optional logic to add default targets
     pass
-
-
-def _reset_agent_llm() -> None:
-    agent_session.llm = None
-    agent_session.llm_signature = ""
-    agent_session.reset()
 
 
 def _monitor_db_insert(
@@ -845,65 +771,6 @@ def _safe_abspath(path: str) -> str:
             return p
 
     return candidates[0]
-
-
-def _scan_traces(editor: str) -> Dict[str, Any]:
-    editor_key = editor.strip().lower()
-
-    patterns_map: Dict[str, List[str]] = {
-        "windsurf": ["*Windsurf*", "*windsurf*"],
-        "vscode": ["*Code*", "*VSCodium*", "*vscode*", "*VSCode*"],
-        "antigravity": ["*Antigravity*", "*antigravity*", "*Google/Antigravity*"],
-        "cursor": ["*Cursor*", "*cursor*"],
-    }
-
-    base_dirs = [
-        "~/Library/Application Support",
-        "~/Library/Caches",
-        "~/Library/Preferences",
-        "~/Library/Logs",
-        "~/Library/Saved Application State",
-    ]
-
-    patterns = patterns_map.get(editor_key) or [f"*{editor_key}*"]
-    found: List[Dict[str, Any]] = []
-
-    for b in base_dirs:
-        base = os.path.expanduser(b)
-        for pat in patterns:
-            for p in sorted(glob.glob(os.path.join(base, pat))):
-                entry: Dict[str, Any] = {"path": p, "type": "file" if os.path.isfile(p) else "dir"}
-                if os.path.isdir(p):
-                    try:
-                        items = os.listdir(p)
-                        entry["items"] = len(items)
-                        entry["sample"] = items[:20]
-                    except Exception as e:
-                        entry["error"] = str(e)
-                found.append(entry)
-
-    # Applications bundles
-    for pat in patterns:
-        for p in sorted(glob.glob(os.path.join("/Applications", pat))):
-            found.append({"path": p, "type": "app" if p.endswith(".app") else "file"})
-
-    # Dot-directories
-    dot_candidates = [
-        os.path.expanduser("~/.vscode"),
-        os.path.expanduser("~/.vscode-oss"),
-        os.path.expanduser("~/.cursor"),
-        os.path.expanduser("~/.windsurf"),
-    ]
-    for p in dot_candidates:
-        if os.path.exists(p) and editor_key in os.path.basename(p).lower():
-            found.append({"path": p, "type": "dir" if os.path.isdir(p) else "file"})
-
-    return {
-        "editor": editor_key,
-        "count": len(found),
-        "found": found[:120],
-        "note": "Це швидкий скан типових директорій. Якщо потрібно глибше — скажи, які саме шляхи/патерни шукати.",
-    }
 
 
 def _tool_scan_traces(args: Dict[str, Any]) -> Dict[str, Any]:
@@ -1195,42 +1062,6 @@ def _start_recording_analysis(*, rec_dir: str, name: str, user_context: str) -> 
     _start_recording_analysis_new(rec_dir=rec_dir, name=name, user_context=user_context)
 
 
-def _recordings_base_dir() -> str:
-    return _recordings_base_dir_new()
-
-
-def _recordings_last_path() -> str:
-    return _recordings_last_path_new()
-
-
-def _recordings_save_last(path: str) -> None:
-    _recordings_save_last_new(path)
-
-
-def _recordings_load_last() -> Optional[str]:
-    return _recordings_load_last_new()
-
-
-def _recordings_list_session_dirs(limit: int = 20) -> List[str]:
-    return _recordings_list_session_dirs_new(limit)
-
-
-def _recordings_read_meta(dir_path: str) -> Dict[str, Any]:
-    return _recordings_read_meta_new(dir_path)
-
-
-def _recordings_update_meta(dir_path: str, updates: Dict[str, Any]) -> bool:
-    return _recordings_update_meta_new(dir_path, updates)
-
-
-def _extract_automation_title(text: str) -> Optional[str]:
-    return _extract_automation_title_new(text)
-
-
-def _extract_automation_prompt(text: str) -> Optional[str]:
-    return _extract_automation_prompt_new(text)
-
-
 def _recordings_ensure_meta_name(dir_path: str) -> str:
     return _recordings_ensure_meta_name_new(dir_path)
 
@@ -1265,14 +1096,6 @@ def _open_in_finder(path: str) -> Tuple[bool, str]:
 def _get_recorder_service() -> Any:
     return _get_recorder_service_new()
 
-
-
-def _monitor_start_selected() -> Tuple[bool, str]:
-    return _monitor_start_selected_new()
-
-
-def _monitor_stop_selected() -> Tuple[bool, str]:
-    return _monitor_stop_selected_new()
 
 
 def _monitor_summary_start_if_needed() -> None:
@@ -1815,46 +1638,6 @@ def _tool_monitor_targets(args: Dict[str, Any]) -> Dict[str, Any]:
     return _tool_monitor_targets_new(args)
 
 
-def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
-    return _monitor_resolve_watch_items_new(targets)
-
-
-    # unique by (path,target)
-    seen: Set[Tuple[str, str]] = set()
-    uniq: List[Tuple[str, str]] = []
-    for p, k in items:
-        key = (p, k)
-        if key in seen:
-            continue
-        seen.add(key)
-        uniq.append((p, k))
-    return uniq
-
-
-def _load_monitor_targets() -> None:
-    try:
-        if not os.path.exists(MONITOR_TARGETS_PATH):
-            return
-        with open(MONITOR_TARGETS_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        selected = data.get("selected") or []
-        if isinstance(selected, list):
-            state.monitor_targets = {str(x) for x in selected if x}
-    except Exception:
-        return
-
-
-def _save_monitor_targets() -> bool:
-    try:
-        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
-        payload = {"selected": sorted(state.monitor_targets)}
-        with open(MONITOR_TARGETS_PATH, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception:
-        return False
-
-
 def _scan_installed_apps(app_dirs: List[str]) -> List[str]:
     apps: List[str] = []
     for d in app_dirs:
@@ -2016,17 +1799,6 @@ def _normalize_menu_index(items: List[MonitorMenuItem]) -> None:
     state.menu_index = 0
 
 
-def _apply_default_monitor_targets() -> None:
-    # Default test set: antigravity + Safari + Chrome (if available)
-    if state.monitor_targets:
-        return
-    state.monitor_targets.add("editor:antigravity")
-    browsers = _get_installed_browsers()
-    for preferred in ("Safari", "Google Chrome", "Chrome"):
-        if preferred in browsers:
-            state.monitor_targets.add(f"browser:{preferred}")
-
-
 localization = LocalizationConfig.load()
 cleanup_cfg = None
 
@@ -2074,350 +1846,6 @@ def _resume_paused_agent() -> None:
 def _handle_command(cmd: str) -> None:
     _handle_command_new(cmd)
 
-    # Removed duplicate implementation
-
-    if command == "/bootstrap":
-        project_name = (args[0] if args else "").strip()
-        parent_dir = (args[1] if len(args) > 1 else ".").strip()
-        
-        if not project_name:
-            log("Usage: /bootstrap <project_name> [parent_dir]", "error")
-            return
-        
-        log(f"/bootstrap {project_name} {parent_dir}", "user")
-        
-        def _run_bootstrap() -> None:
-            try:
-                # Find bootstrap script
-                import os
-                system_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                bootstrap_script = os.path.join(system_root, "templates", "bootstrap_new_project.sh")
-                
-                if not os.path.exists(bootstrap_script):
-                    log(f"❌ Bootstrap script not found: {bootstrap_script}", "error")
-                    return
-                
-                # Run bootstrap script
-                import subprocess
-                result = subprocess.run(
-                    ["bash", bootstrap_script, project_name, parent_dir],
-                    capture_output=True,
-                    text=True,
-                    timeout=120
-                )
-                
-                # Log output
-                if result.stdout:
-                    for line in result.stdout.strip().split('\n'):
-                        log(line, "action")
-                
-                if result.returncode != 0:
-                    if result.stderr:
-                        log(f"❌ Error: {result.stderr}", "error")
-                    return
-                
-                log(f"✅ Project '{project_name}' bootstrapped successfully!", "action")
-                
-            except Exception as e:
-                log(f"❌ Bootstrap error: {e}", "error")
-        
-        threading.Thread(target=_run_bootstrap, daemon=True).start()
-        return
-
-    if command == "/agent-reset":
-        agent_session.reset()
-        log("Agent session reset.", "action")
-        return
-
-    if command == "/agent-on":
-        agent_session.enabled = True
-        log("Agent chat enabled.", "action")
-        return
-
-    if command == "/agent-off":
-        agent_session.enabled = False
-        log("Agent chat disabled.", "action")
-        return
-
-    if command == "/agent-mode":
-        global agent_chat_mode
-        mode = (args[0].lower() if args else "").strip()
-        if mode in {"", "status"}:
-            log(f"Agent mode: {'ON' if agent_chat_mode else 'OFF'}", "info")
-            return
-        if mode == "toggle":
-            agent_chat_mode = not agent_chat_mode
-            log(f"Agent mode: {'ON' if agent_chat_mode else 'OFF'}", "action")
-            return
-        if mode in {"on", "enable", "enabled"}:
-            agent_chat_mode = True
-            log("Agent mode: ON", "action")
-            return
-        if mode in {"off", "disable", "disabled"}:
-            agent_chat_mode = False
-            log("Agent mode: OFF", "action")
-            return
-        log("Usage: /agent-mode [on|off|toggle]", "error")
-        return
-
-    cleanup_cfg = _load_cleanup_config()
-
-    if command == "/run":
-        if not args:
-            log("Usage: /run <editor> [--dry]", "error")
-            return
-        editor = args[0]
-        dry = "--dry" in args or "--dry-run" in args
-        ok, msg = _run_cleanup(cleanup_cfg, editor, dry_run=dry)
-        log(msg, "action" if ok else "error")
-        return
-
-    if command == "/modules":
-        if not args:
-            log("Usage: /modules <editor>", "error")
-            return
-        editor = args[0]
-        meta = cleanup_cfg.get("editors", {}).get(editor)
-        if not meta:
-            log(f"Невідомий редактор: {editor}", "error")
-            return
-        mods = meta.get("modules", [])
-        if not mods:
-            log(f"Модулів для {editor} немає.", "info")
-            return
-        for m in mods:
-            mark = "ON" if m.get("enabled") else "OFF"
-            log(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})", "info")
-        return
-
-    if command in {"/enable", "/disable"}:
-        if len(args) < 2:
-            log("Usage: /enable <editor> <id> | /disable <editor> <id>", "error")
-            return
-        editor = args[0]
-        mid = args[1]
-        ref = _find_module(cleanup_cfg, editor, mid)
-        if not ref:
-            log("Модуль не знайдено.", "error")
-            return
-        enabled = command == "/enable"
-        ok = _set_module_enabled(cleanup_cfg, ref, enabled)
-        if ok:
-            log(f"Модуль {'увімкнено' if enabled else 'вимкнено'}: {editor}/{mid}", "action")
-        else:
-            log("Не вдалося змінити статус модуля.", "error")
-        return
-
-    if command == "/install":
-        if not args:
-            log("Usage: /install <editor>", "error")
-            return
-        ok, msg = _perform_install(cleanup_cfg, args[0])
-        log(msg, "action" if ok else "error")
-        return
-
-    if command == "/locales":
-        if not args:
-            log("Usage: /locales <codes...>", "error")
-            return
-        codes: List[str] = []
-        for token in args:
-            code = token.strip().upper().strip(".,;")
-            if any(l.code == code for l in AVAILABLE_LOCALES):
-                if code not in codes:
-                    codes.append(code)
-            else:
-                log(f"Невідома локаль: {token}", "error")
-        if not codes:
-            return
-        localization.selected = codes
-        localization.primary = codes[0]
-        localization.save()
-        log(f"Оновлено локалі: primary={localization.primary}, selected={' '.join(localization.selected)}", "action")
-        return
-
-    if command == "/theme":
-        sub = (args[0].lower() if args else "status").strip()
-        if sub in {"status", ""}:
-            log(f"Theme: {state.ui_theme}", "info")
-            return
-        if sub == "set":
-            if len(args) < 2:
-                log("Usage: /theme set <monaco|dracula|nord|gruvbox>", "error")
-                return
-            out = _tool_ui_theme_set({"theme": args[1]})
-            log(str(out.get("theme") or out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        log("Usage: /theme status|set <...>", "error")
-        return
-
-    if command in {"/streaming", "/stream"}:
-        sub = (args[0].lower() if args else "status").strip()
-        if sub in {"status", ""}:
-            log(f"Streaming: {'ON' if bool(getattr(state, 'ui_streaming', True)) else 'OFF'}", "info")
-            return
-        if sub in {"on", "enable", "enabled", "true", "1"}:
-            state.ui_streaming = True
-            _save_ui_settings()
-            log("Streaming: ON", "action")
-            return
-        if sub in {"off", "disable", "disabled", "false", "0"}:
-            state.ui_streaming = False
-            _save_ui_settings()
-            log("Streaming: OFF", "action")
-            return
-        if sub == "set":
-            if len(args) < 2:
-                log("Usage: /streaming set <on|off>", "error")
-                return
-            raw = str(args[1]).strip().lower()
-            state.ui_streaming = raw in {"on", "true", "1", "yes"}
-            _save_ui_settings()
-            log(f"Streaming: {'ON' if state.ui_streaming else 'OFF'}", "action")
-            return
-        log("Usage: /streaming status|on|off", "error")
-        return
-
-    if command == "/lang":
-        sub = (args[0].lower() if args else "status").strip()
-        if sub in {"status", ""}:
-            log(f"ui={state.ui_lang} chat={state.chat_lang}", "info")
-            return
-        if sub == "set":
-            if len(args) < 3:
-                log("Usage: /lang set ui <code> | /lang set chat <code>", "error")
-                return
-            which = args[1].lower().strip()
-            code = normalize_lang(args[2])
-            if which == "ui":
-                state.ui_lang = code
-            elif which == "chat":
-                state.chat_lang = code
-            else:
-                log("Usage: /lang set ui <code> | /lang set chat <code>", "error")
-                return
-            _save_ui_settings()
-            log(f"ui={state.ui_lang} chat={state.chat_lang}", "action")
-            return
-        log("Usage: /lang status|set ...", "error")
-        return
-
-    if command == "/llm":
-        sub = (args[0].lower() if args else "status").strip()
-        rest = args[1:]
-        if sub in {"", "status"}:
-            out = _tool_llm_status()
-            if out.get("ok"):
-                log(f"provider={out.get('provider')} main={out.get('main_model')} vision={out.get('vision_model')}", "info")
-            else:
-                log(str(out.get("error") or ""), "error")
-            return
-        if sub == "set":
-            if len(rest) < 2:
-                log("Usage: /llm set provider <copilot> | /llm set main <model> | /llm set vision <model>", "error")
-                return
-            key = rest[0].lower().strip()
-            val = " ".join(rest[1:]).strip()
-            payload: Dict[str, Any] = {}
-            if key == "provider":
-                payload["provider"] = val
-            elif key == "main":
-                payload["main_model"] = val
-            elif key == "vision":
-                payload["vision_model"] = val
-            else:
-                log("Usage: /llm set provider|main|vision <value>", "error")
-                return
-            out = _tool_llm_set(payload)
-            log("OK" if out.get("ok") else str(out.get("error") or "Failed"), "action" if out.get("ok") else "error")
-            return
-        log("Usage: /llm status|set ...", "error")
-        return
-
-    if command == "/monitor":
-        sub = (args[0].lower() if args else "status").strip()
-        rest = args[1:]
-        if sub in {"", "status"}:
-            st = _tool_monitor_status()
-            log(
-                f"Monitoring: active={st.get('active')} source={st.get('source')} sudo={st.get('use_sudo')} targets={st.get('targets_count')}",
-                "info",
-            )
-            return
-        if sub == "start":
-            out = _tool_monitor_start()
-            log(str(out.get("message") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "stop":
-            out = _tool_monitor_stop()
-            log(str(out.get("message") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "source":
-            if not rest:
-                log("Usage: /monitor source <watchdog|fs_usage|opensnoop>", "error")
-                return
-            out = _tool_monitor_set_source({"source": rest[0]})
-            log(str(out.get("source") or out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "sudo":
-            if not rest:
-                log("Usage: /monitor sudo <on|off>", "error")
-                return
-            raw = rest[0].strip().lower()
-            use_sudo = raw in {"1", "true", "yes", "on", "enable", "enabled"}
-            out = _tool_monitor_set_use_sudo({"use_sudo": use_sudo})
-            if out.get("ok"):
-                log(f"sudo={'ON' if out.get('use_sudo') else 'OFF'}", "action")
-            else:
-                log(str(out.get("error") or ""), "error")
-            return
-        log("Usage: /monitor status|start|stop|source <...>|sudo <on|off>", "error")
-        return
-
-    if command in {"/monitor-targets", "/monitor_targets"}:
-        sub = (args[0].lower() if args else "list").strip()
-        rest = args[1:]
-        if sub in {"list", "ls", "status"}:
-            if not state.monitor_targets:
-                log("Monitor targets: (none)", "info")
-                return
-            for k in sorted(state.monitor_targets):
-                log(f"[x] {k}", "info")
-            return
-        if sub in {"add", "+"}:
-            if not rest:
-                log("Usage: /monitor-targets add <key>", "error")
-                return
-            out = _tool_monitor_targets({"action": "add", "key": rest[0]})
-            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub in {"remove", "rm", "-"}:
-            if not rest:
-                log("Usage: /monitor-targets remove <key>", "error")
-                return
-            out = _tool_monitor_targets({"action": "remove", "key": rest[0]})
-            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "clear":
-            out = _tool_monitor_targets({"action": "clear"})
-            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "save":
-            out = _tool_monitor_targets({"action": "save"})
-            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        log("Usage: /monitor-targets list|add|remove|clear|save", "error")
-        return
-
-    log("Невідома команда. Використай /help.", "error")
-
-
-def _get_editors_list() -> List[Tuple[str, str]]:
-    global cleanup_cfg
-    _ensure_cleanup_cfg_loaded()
-    return _list_editors(cleanup_cfg)
-
-
 def _handle_input(buff: Buffer) -> None:
     _handle_input_new(buff)
 
@@ -2438,17 +1866,6 @@ def get_status():
 
 
 # ================== KEY BINDINGS ==================
-
-
-def _get_cleanup_cfg() -> Any:
-    global cleanup_cfg
-    _ensure_cleanup_cfg_loaded()
-    return cleanup_cfg
-
-
-def _set_cleanup_cfg(cfg: Any) -> None:
-    global cleanup_cfg
-    cleanup_cfg = cfg
 
 
 def _tool_llm_status() -> Dict[str, Any]:
