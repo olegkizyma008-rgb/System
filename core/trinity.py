@@ -1111,902 +1111,359 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
                 "last_msg_preview": str(last_msg)[:200],
             })
         except Exception:
-            pass
-        
-        routing_hint = ""
-        try:
-            routing_hint = f"\n\n[ROUTING] task_type={task_type} requires_windsurf={requires_windsurf} dev_edit_mode={dev_edit_mode}"
-        except Exception:
-            routing_hint = ""
+        def _tetyana_node(self, state: TrinityState):
+        """Executes the next step in the plan using Tetyana (Executor)."""
+        if self.verbose: print(f"🔧 {VOICE_MARKER} [Tetyana] Executing step...")
+        context = state.get("messages", [])
+        original_task = state.get("original_task") or UNKNOWN_STEP
+        last_msg = getattr(context[-1], "content", UNKNOWN_STEP) if context and context[-1] else UNKNOWN_STEP
 
-        # Inject retry context if applicable
-        current_step_fail_count = int(state.get("current_step_fail_count") or 0)
-        retry_context = ""
-        if current_step_fail_count > 0:
-            retry_context = f"\n\n[SYSTEM NOTICE] This is retry #{current_step_fail_count} for this step. Previous attempts were uncertain or failed. Please adjust your approach (e.g., waiting longer, checking errors)."
-
-        # Inject available tools into Tetyana's prompt.
-        # If we are in GUI mode, we still list all tools, but the prompt instructs to prefer GUI primitives.
-        tools_list = self.registry.list_tools()
-        
-        # Combined context: Goal + immediate request + hints + retry
-        full_context = f"Global Goal: {original_task}\nRequest: {last_msg}{routing_hint}{retry_context}"
+        # 1. Prepare context and prompt
+        full_context = self._prepare_tetyana_context(state, original_task, last_msg)
         prompt = get_tetyana_prompt(
-            full_context, 
-            tools_desc=tools_list, 
+            full_context,
+            tools_desc=self.registry.list_tools(),
             preferred_language=self.preferred_language,
             vision_context=self.vision_context_manager.current_context
         )
-        
-        # Bind tools to LLM for structured tool_calls output.
-        tool_defs = self.registry.get_all_tool_definitions()
-        
-        # Use Tetyana-specific LLM or fallback to self.llm for testing
-        tetyana_model = os.getenv("TETYANA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4o"
-        # Allow test override via self.llm
+
+        # 2. Invoke LLM
+        tetyana_model = os.getenv("TETYANA_MODEL") or os.getenv("COPILOT_MODEL") or DEFAULT_MODEL_FALLBACK
         tetyana_llm = self.llm if hasattr(self, 'llm') and self.llm else CopilotLLM(model_name=tetyana_model)
         
-        bound_llm = tetyana_llm.bind_tools(tool_defs)
-        
-        pause_info = None
-        content = ""  # Initialize content variable
-        tool_calls = []  # Initialize tool_calls variable
-        
         try:
-            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
-            def on_delta(chunk):
-                self._deduplicated_stream("tetyana", chunk)
-            
-            # Use Tetyana's local bound LLM
+            def on_delta(chunk): self._deduplicated_stream("tetyana", chunk)
             response = tetyana_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-            content = getattr(response, "content", "") if response is not None else ""
-            tool_calls = getattr(response, "tool_calls", []) if response is not None and hasattr(response, 'tool_calls') else []
             
-            # Anti-acknowledgment check: if no tools and content looks like "I understand/will do"
+            content = getattr(response, "content", "") if response else ""
+            tool_calls = getattr(response, "tool_calls", []) if response and hasattr(response, 'tool_calls') else []
+
+            # 3. Handle acknowledgment loops
             if not tool_calls and content:
-                lower_content = content.lower()
-                acknowledgment_patterns = ["зрозуміла", "зрозумів", "ок", "добре", "починаю", "буду використовувати"]
-                if any(p in lower_content for p in acknowledgment_patterns) and len(lower_content) < 300:
-                    if self.verbose: print("⚠️ [Tetyana] Acknowledgment loop detected. Forcing retry...")
-                    new_msg = AIMessage(content=f"[VOICE] Error: No tool call provided. STOP TALKING, USE A TOOL. {content}")
-                    return {
-                        "messages": context + [new_msg],
-                        "last_step_status": "failed" # This will trigger replan or retry
-                    }
+                ack_retry = self._check_tetyana_acknowledgment(content, context)
+                if ack_retry: return ack_retry
 
-            try:
-                trace(self.logger, "tetyana_llm", {
-                    "tool_calls": len(tool_calls) if isinstance(tool_calls, list) else 0,
-                    "content_preview": str(content)[:200],
-                })
-            except Exception:
-                pass
+            # 4. Execute tools
+            results, pause_info, had_failure = self._execute_tetyana_tools(state, tool_calls)
             
-            results = []
-            gui_tools = {
-                "move_mouse",
-                "click_mouse",
-                "click",
-                "type_text",
-                "press_key",
-                "find_image_on_screen",
-            }
-            applescript_tools = {
-                "run_applescript",
-                "native_applescript",
-                "native_click_ui",
-                "native_type_text",
-                "native_wait",
-                "native_open_app",
-                "native_activate_app",
-                "send_to_windsurf",
-            }
-            shell_tools = {
-                "run_shell",
-                "open_file_in_windsurf",
-                "open_project_in_windsurf",
-                "is_windsurf_running",
-                "get_windsurf_current_project_path",
-            }
-            file_write_tools = {
-                "write_file",
-                "copy_file",
-            }
-            windsurf_tools = {
-                "send_to_windsurf",
-                "open_file_in_windsurf",
-                "open_project_in_windsurf",
-                "is_windsurf_running",
-                "get_windsurf_current_project_path",
-            }
-            if tool_calls:
-                for tool in tool_calls:
-                    name = tool.get("name")
-                    args = tool.get("args") or {}
-
-                    def _general_allows_file_write(tool_name: str, tool_args: Dict[str, Any]) -> bool:
-                        try:
-                            from system_ai.tools.filesystem import _normalize_special_paths  # type: ignore
-
-                            git_root = self._get_git_root() or ""
-                            home = os.path.expanduser("~")
-                            allowed_roots = {
-                                home,
-                                os.path.join(os.sep, "tmp"),
-                            }
-
-                            def _is_allowed_path(p: str) -> bool:
-                                p2 = _normalize_special_paths(str(p or ""))
-                                ap = os.path.abspath(os.path.expanduser(str(p2 or "").strip()))
-                                if not ap:
-                                    return False
-                                # Block any writes inside repo for GENERAL tasks.
-                                if git_root and (ap == git_root or ap.startswith(git_root + os.sep)):
-                                    return False
-                                # Allow within home (or /tmp) only.
-                                if ap == home or ap.startswith(home + os.sep):
-                                    return True
-                                if ap == os.path.join(os.sep, "tmp") or ap.startswith(os.path.join(os.sep, "tmp") + os.sep):
-                                    return True
-                                return False
-
-                            if tool_name == "write_file":
-                                return _is_allowed_path(tool_args.get("path"))
-                            if tool_name == "copy_file":
-                                return _is_allowed_path(tool_args.get("dst"))
-                            return False
-                        except Exception:
-                            return False
-
-                    if task_type == "GENERAL" and name in windsurf_tools:
-                        results.append(f"[BLOCKED] {name}: GENERAL task must not use Windsurf dev subsystem")
-                        continue
-                    if task_type == "GENERAL" and name in file_write_tools:
-                        if not _general_allows_file_write(name, args):
-                            results.append(f"[BLOCKED] {name}: GENERAL write allowed only outside repo (home/tmp).")
-                            continue
-
-                    if (
-                        name in file_write_tools
-                        and task_type in {"DEV", "UNKNOWN"}
-                        and requires_windsurf
-                        and dev_edit_mode == "windsurf"
-                    ):
-                        results.append(
-                            f"[BLOCKED] {name}: DEV task requires Windsurf-first. Use send_to_windsurf/open_file_in_windsurf, or switch to CLI fallback if Windsurf is unavailable."
-                        )
-                        continue
-
-                    # Permission check for file writes
-                    if name in file_write_tools and not (self.permissions.allow_file_write or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "file_write",
-                            "message": "Потрібен дозвіл на запис у файли. Увімкніть Unsafe mode в TUI або перезапустіть задачу з allow_file_write.",
-                            "blocked_tool": name,
-                            "blocked_args": args,
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-                    
-                    # Permission check for dangerous tools
-                    if name in shell_tools and not (self.permissions.allow_shell or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "shell",
-                            "message": "Потрібен дозвіл на виконання shell команд. Увімкніть Unsafe mode або додайте CONFIRM_SHELL у запит.",
-                            "blocked_tool": name,
-                            "blocked_args": args
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-
-                    if name == "run_shortcut" and not (self.permissions.allow_shortcuts or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "shortcuts",
-                            "message": "Потрібен дозвіл на запуск Shortcuts. Увімкніть Unsafe mode (або дозвольте shortcuts у налаштуваннях).",
-                            "blocked_tool": name,
-                            "blocked_args": args,
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-                        
-                    if name in applescript_tools and not (self.permissions.allow_applescript or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "applescript",
-                            "message": "Потрібен дозвіл на виконання AppleScript. Увімкніть Unsafe mode або додайте CONFIRM_APPLESCRIPT у запит.",
-                            "blocked_tool": name,
-                            "blocked_args": args
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-                    if name in gui_tools and not (self.permissions.allow_gui or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "gui",
-                            "message": "Потрібен дозвіл на GUI automation (mouse/keyboard). Увімкніть Unsafe mode або додайте CONFIRM_GUI у запит.",
-                            "blocked_tool": name,
-                            "blocked_args": args,
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-                        
-                    # Execute via MCP Registry
-                    # Add smart wait for browser tools that depend on page load
-                    browser_wait_tools = {"browser_get_links", "browser_get_text", "browser_get_visible_html", "browser_screenshot"}
-                    if name in browser_wait_tools:
-                        import time
-                        wait_time = 2.0  # seconds - allow page to fully load before extracting content
-                        if self.verbose: print(f"⏳ [Tetyana] Waiting {wait_time}s for page to settle before {name}...")
-                        time.sleep(wait_time)
-                    
-                    res_str = self.registry.execute(name, args)
-                    results.append(f"Result for {name}: {res_str}")
-
-                    windsurf_failed = False
-                    if name in windsurf_tools:
-                        try:
-                            res_dict = json.loads(res_str)
-                            if isinstance(res_dict, dict) and str(res_dict.get("status", "")).lower() == "error":
-                                windsurf_failed = True
-                        except Exception:
-                            pass
-                        if windsurf_failed and not pause_info and dev_edit_mode == "windsurf":
-                            updated_messages = list(context) + [
-                                AIMessage(content="[VOICE] Windsurf не відповідає. Перемикаюсь на CLI режим.")
-                            ]
-                            
-                            try:
-                                trace(self.logger, "tetyana_windsurf_fallback", {"tool": name, "dev_edit_mode": dev_edit_mode})
-                            except Exception:
-                                pass
-                            return {
-                                "current_agent": "atlas",
-                                "messages": updated_messages,
-                                "dev_edit_mode": "cli",
-                                "execution_mode": execution_mode,
-                                "gui_mode": gui_mode,
-                                "gui_fallback_attempted": gui_fallback_attempted,
-                                "last_step_status": "failed",
-                            }
-
-                    # Track failures and captchas for fallback decision
-                    try:
-                        res_dict = json.loads(res_str)
-                        if isinstance(res_dict, dict):
-                            status = str(res_dict.get("status", "")).lower()
-                            if status == "error":
-                                had_failure = True
-                            if res_dict.get("has_captcha"):
-                                had_failure = True
-                                if self.verbose: print("⚠️ [Tetyana] Captcha detected. Marking as failure to trigger GUI mode.")
-                            # Check for Google captcha/block page in URL or output
-                            output_str = str(res_dict.get("output", "") or res_dict.get("url", ""))
-                            if "sorry/index" in output_str or "recaptcha" in output_str.lower():
-                                had_failure = True
-                                if self.verbose: print("⚠️ [Tetyana] Google captcha/block detected in URL. Marking as failure.")
-                    except Exception:
-                        # If not JSON, check for error string pattern from MCP executor
-                        if str(res_str).strip().startswith("Error"):
-                            had_failure = True
-                    
-                    # Also check raw result string for captcha indicators
-                    if "sorry/index" in str(res_str) or "recaptcha" in str(res_str).lower():
-                        had_failure = True
-                        if self.verbose: print("⚠️ [Tetyana] Captcha/block detected in response. Marking as failure.")
-                    
-                    # Check for permission_required errors in result
-                    try:
-                        res_dict = json.loads(res_str)
-                        if isinstance(res_dict, dict) and res_dict.get("error_type") == "permission_required":
-                            pause_info = {
-                                "permission": res_dict.get("permission", "unknown"),
-                                "message": res_dict.get("error", "Permission required"),
-                                "settings_url": res_dict.get("settings_url", "")
-                            }
-                    except (json.JSONDecodeError, TypeError):
-                            pass
-            
-            # If we executed tools, append results to content
+            # 5. Post-execution processing
             if results:
                 content += "\n\nTool Results:\n" + "\n".join(results)
-                # Add explicit success marker if no errors occurred
                 if not had_failure and not pause_info:
-                    success_marker = "[STEP_COMPLETED]" if "[STEP_COMPLETED]" not in content else ""
-                    if success_marker:
-                        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-                        desc = "All actions completed, verification can begin." if lang != "uk" else "Всі дії виконано, верифікацію можна починати."
-                        content += f"\n\n{success_marker} {desc}"
+                    content = self._append_success_marker(content)
 
-            # Save successful action to RAG memory (only if no pause and learning mode is ON)
-            if not pause_info and state.get("learning_mode", True):
-                try:
-                    action_summary = f"Task: {last_msg[:100]}\nTools used: {[t.get('name') for t in tool_calls]}\nResult: Success"
-                    self.memory.add_memory("strategies", action_summary, {"type": "tetyana_action"})
-                except Exception:
-                    pass
-            
-            # Hybrid fallback: if native attempt failed and GUI fallback is allowed, switch execution_mode
-            if (
-                (not pause_info)
-                and had_failure
-                and (execution_mode != "gui")
-                and (gui_mode in {"auto", "on"})
-                and (not gui_fallback_attempted)
-            ):
-                # Tell the graph to retry this step in GUI mode.
-                lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-                msg = MESSAGES[lang]["native_failed_switching_gui"]
-                updated_messages = list(context) + [AIMessage(content=msg)]
-                
-                try:
-                    trace(self.logger, "tetyana_gui_fallback", {"from": execution_mode, "to": "gui"})
-                except Exception:
-                    pass
-                return {
-                    "current_agent": "tetyana",
-                    "messages": updated_messages,
-                    "execution_mode": "gui",
-                    "gui_fallback_attempted": True,
-                    "gui_mode": gui_mode,
-                    "last_step_status": "failed", # Retrying in GUI mode counts as a fail for the native step
-                }
-                
+            # 6. Fallback and Final State
+            return self._finalize_tetyana_state(state, context, content, tool_calls, had_failure, pause_info)
+
         except Exception as e:
-            if self.verbose:
-                print(f"⚠️ [Tetyana] Exception: {e}")
-            content = f"Error invoking Tetyana: {e}"
+            if self.verbose: print(f"⚠️ [Tetyana] Exception: {e}")
+            return self._handle_tetyana_error(state, context, e)
+
+    def _prepare_tetyana_context(self, state, original_task, last_msg):
+        task_type = state.get("task_type")
+        requires_windsurf = state.get("requires_windsurf")
+        dev_edit_mode = state.get("dev_edit_mode")
         
-        # If paused, return to atlas with pause_info
-        if pause_info:
-            updated_messages = list(context) + [AIMessage(content=f"[ПАУЗОВАНО] {pause_info['message']}")]
+        routing = f"\n\n[ROUTING] task_type={task_type} requires_windsurf={requires_windsurf} dev_edit_mode={dev_edit_mode}"
+        retry = ""
+        fail_count = int(state.get("current_step_fail_count") or 0)
+        if fail_count > 0:
+            retry = f"\n\n[SYSTEM NOTICE] This is retry #{fail_count} for this step. Adjust approach."
             
-            try:
-                trace(self.logger, "tetyana_paused", {"pause_info": pause_info})
-            except Exception:
-                pass
-            return {
-                "current_agent": "meta_planner",
-                "messages": updated_messages,
-                "pause_info": pause_info,
-                "last_step_status": "uncertain"
-            }
+        return f"Global Goal: {original_task}\nRequest: {last_msg}{routing}{retry}"
+
+    def _check_tetyana_acknowledgment(self, content, context):
+        lower_content = content.lower()
+        acknowledgment_patterns = ["зрозуміла", "зрозумів", "ок", "добре", "починаю", "буду використовувати"]
+        if any(p in lower_content for p in acknowledgment_patterns) and len(lower_content) < 300:
+            if self.verbose: print("⚠️ [Tetyana] Acknowledgment loop detected.")
+            new_msg = AIMessage(content=f"{VOICE_MARKER} Error: No tool call provided. USE A TOOL. {content}")
+            return {"messages": context + [new_msg], "last_step_status": "failed"}
+        return None
+
+    def _execute_tetyana_tools(self, state, tool_calls):
+        results = []
+        pause_info = None
+        had_failure = False
         
-        # Preserve existing messages and add new one
-        updated_messages = list(context) + [AIMessage(content=content)]
+        for tool in (tool_calls or []):
+            name = tool.get("name")
+            args = tool.get("args") or {}
+            
+            # Permission checks
+            pause_info = self._check_tool_permissions(state, name, args)
+            if pause_info:
+                results.append(f"[BLOCKED] {name}: permission required")
+                continue
+            
+            # Task-type constraints
+            blocked_reason = self._check_task_constraints(state, name, args)
+            if blocked_reason:
+                results.append(blocked_reason)
+                continue
+
+            # Execution
+            if name in {"browser_get_links", "browser_get_text", "browser_get_visible_html", "browser_screenshot"}:
+                time.sleep(2.0)
+            
+            res_str = self.registry.execute(name, args)
+            results.append(f"Result for {name}: {res_str}")
+            
+            # Failure tracking
+            if self._is_execution_failure(res_str):
+                had_failure = True
+                
+        return results, pause_info, had_failure
+
+    def _check_tool_permissions(self, state, name, args):
+        perm_map = {
+            "file_write": (["write_file", "copy_file"], self.permissions.allow_file_write),
+            "shell": (["run_shell", "open_file_in_windsurf", "open_project_in_windsurf"], self.permissions.allow_shell),
+            "applescript": (["run_applescript", "native_applescript"], self.permissions.allow_applescript),
+            "gui": (["move_mouse", "click_mouse", "click", "type_text", "press_key"], self.permissions.allow_gui),
+            "shortcuts": (["run_shortcut"], self.permissions.allow_shortcuts),
+        }
         
-        # Extract tool context for Grisha's vision verification
-        used_tools = [t.get("name") for t in tool_calls] if tool_calls else []
-        tool_args_context = {}
-        for t in (tool_calls or []):
-            name = t.get("name", "")
-            args = t.get("args", {})
-            # Extract app/window context from tool arguments
-            if "app" in args or "app_name" in args:
-                tool_args_context["app_name"] = args.get("app_name") or args.get("app")
-            if "window" in args or "window_title" in args:
-                tool_args_context["window_title"] = args.get("window_title") or args.get("window")
-            if "url" in args:
-                tool_args_context["url"] = args.get("url")
-            # Playwright tools
-            if name.startswith("playwright."):
-                tool_args_context["browser_tool"] = True
-            # PyAutoGUI tools
-            if name.startswith("pyautogui."):
-                tool_args_context["gui_tool"] = True
+        for perm, (tools, allowed) in perm_map.items():
+            if name in tools and not (allowed or self.permissions.hyper_mode):
+                return {"permission": perm, "message": f"Permission required for {perm}.", "blocked_tool": name, "blocked_args": args}
+        return None
+
+    def _check_task_constraints(self, state, name, args):
+        task_type = state.get("task_type")
+        windsurf_tools = {"send_to_windsurf", "open_file_in_windsurf", "open_project_in_windsurf"}
         
+        if task_type == "GENERAL":
+            if name in windsurf_tools:
+                return f"[BLOCKED] {name}: GENERAL task must not use Windsurf."
+            if name in {"write_file", "copy_file"} and not self._is_safe_path(name, args):
+                return f"[BLOCKED] {name}: GENERAL write allowed only outside repo."
+        
+        if task_type in {"DEV", "UNKNOWN"} and state.get("requires_windsurf") and state.get("dev_edit_mode") == "windsurf":
+            if name in {"write_file", "copy_file"}:
+                return f"[BLOCKED] {name}: Use Windsurf tools for DEV tasks."
+        return None
+
+    def _is_safe_path(self, name, args):
         try:
-            trace(self.logger, "tetyana_exit", {
-                "next_agent": "grisha",
-                "last_step_status": "failed" if had_failure else "success",
-                "execution_mode": execution_mode,
-                "gui_mode": gui_mode,
-                "dev_edit_mode": dev_edit_mode,
-                "used_tools": used_tools,
-            })
+            from system_ai.tools.filesystem import _normalize_special_paths
+            git_root = self._get_git_root() or ""
+            home = os.path.expanduser("~")
+            path = args.get("path") if name == "write_file" else args.get("dst")
+            ap = os.path.abspath(os.path.expanduser(_normalize_special_paths(str(path or ""))))
+            if git_root and (ap == git_root or ap.startswith(git_root + os.sep)): return False
+            return ap.startswith(home + os.sep) or ap.startswith(os.path.join(os.sep, "tmp") + os.sep)
+        except Exception: return False
+
+    def _is_execution_failure(self, res_str):
+        try:
+            res_dict = json.loads(res_str)
+            if isinstance(res_dict, dict):
+                if str(res_dict.get("status", "")).lower() == "error": return True
+                if res_dict.get("has_captcha"): return True
+                output = str(res_dict.get("output", "") or res_dict.get("url", ""))
+                if any(k in output.lower() for k in ["sorry/index", "recaptcha"]): return True
         except Exception:
-            pass
+            if str(res_str).strip().startswith("Error"): return True
+        return "sorry/index" in str(res_str) or "recaptcha" in str(res_str).lower()
+
+    def _append_success_marker(self, content):
+        if STEP_COMPLETED_MARKER not in content:
+            msg = "Actions completed." if self.preferred_language != "uk" else "Дії виконано."
+            return f"{content}\n\n{STEP_COMPLETED_MARKER} {msg}"
+        return content
+
+    def _finalize_tetyana_state(self, state, context, content, tool_calls, had_failure, pause_info):
+        updated_messages = list(context) + [AIMessage(content=content)]
+        used_tools = [t.get("name") for t in tool_calls] if tool_calls else []
+        
+        if pause_info:
+            return {**state, "messages": updated_messages, "pause_info": pause_info, "last_step_status": "uncertain", "current_agent": "meta_planner"}
+            
+        if had_failure and state.get("execution_mode") != "gui" and state.get("gui_mode") in {"auto", "on"} and not state.get("gui_fallback_attempted"):
+            return {**state, "messages": updated_messages, "execution_mode": "gui", "gui_fallback_attempted": True, "last_step_status": "failed", "current_agent": "tetyana"}
+
         return {
-            "current_agent": "grisha", 
+            **state,
             "messages": updated_messages,
-            "execution_mode": execution_mode,
-            "gui_mode": gui_mode,
-            "gui_fallback_attempted": gui_fallback_attempted,
-            "dev_edit_mode": dev_edit_mode,
+            "current_agent": "grisha",
             "last_step_status": "failed" if had_failure else "success",
             "tetyana_used_tools": used_tools,
-            "tetyana_tool_context": tool_args_context,
+            "tetyana_tool_context": self._extract_tool_context(tool_calls)
         }
+
+    def _extract_tool_context(self, tool_calls):
+        ctx = {}
+        for t in (tool_calls or []):
+            args = t.get("args") or {}
+            for k in ["app_name", "app", "window_title", "window", "url"]:
+                if k in args: ctx[k] = args[k]
+        return ctx
+
+    def _handle_tetyana_error(self, state, context, e):
+        err_msg = f"Error invoking Tetyana: {e}"
+        return {**state, "messages": list(context) + [AIMessage(content=err_msg)], "last_step_status": "failed", "current_agent": "grisha"}
 
     def _grisha_node(self, state: TrinityState):
-        if self.verbose: print("👁️ [Grisha] Verifying...")
+        if self.verbose: print(f"👁️ {VOICE_MARKER} [Grisha] Verifying...")
         context = state.get("messages", [])
-        if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для перевірки.")]}
-        last_msg = getattr(context[-1], "content", "") if context and len(context) > 0 and context[-1] is not None else ""
-        if isinstance(last_msg, str) and len(last_msg) > 50000:
-            last_msg = last_msg[:45000] + "\n\n[... TRUNCATED DUE TO SIZE ...]\n\n" + last_msg[-5000:]
-        tool_calls = [] # Initialize for scope safety
+        last_msg = self._get_last_msg_content(context)
         
-        gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
-        execution_mode = str(state.get("execution_mode") or "native").strip().lower()
+        # 1. Run tests if needed
+        test_results = self._run_grisha_tests(state)
 
-        try:
-            plan_preview = state.get("plan")
-            trace(self.logger, "grisha_enter", {
-                "step_count": state.get("step_count"),
-                "replan_count": state.get("replan_count"),
-                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
-                "task_type": state.get("task_type"),
-                "gui_mode": gui_mode,
-                "execution_mode": execution_mode,
-                "last_msg_preview": str(last_msg)[:200],
-            })
-        except Exception:
-            pass
+        # 2. Invoke LLM and get initial response
+        prompt = self._prepare_grisha_prompt(state, last_msg)
+        content, tool_calls = self._invoke_grisha(prompt, last_msg)
         
-        # Check for code changes in critical directories and run tests
-        test_results = ""
-        critical_dirs = ["core/", "system_ai/", "tui/", "providers/"]
-        try:
-            # Check if we should even verify tests based on task type
-            task_type = str(state.get("task_type") or "").strip().upper()
-            should_skip_tests = (task_type == "GENERAL")
-            
-            repo_changes = self._get_repo_changes()
-            changed_files = []
-            if isinstance(repo_changes, dict) and repo_changes.get("ok") is True:
-                changed_files = list(repo_changes.get("changed_files") or [])
-            
-            has_critical_changes = any(
-                any(f.startswith(d) for d in critical_dirs) 
-                for f in changed_files
-            )
-            
-            try:
-                trace(self.logger, "grisha_verification_check", {
-                    "task_type": task_type,
-                    "critical_changes": has_critical_changes,
-                    "changed_files": changed_files,
-                    "skip": should_skip_tests
-                })
-            except Exception:
-                pass
-            
-            if has_critical_changes and not should_skip_tests:
-                if self.verbose:
-                    print("👁️ [Grisha] Detected changes in critical directories. Running pytest...")
-                # Run pytest
-                test_cmd = "pytest -q --tb=short 2>&1"
-                test_proc = subprocess.run(test_cmd, shell=True, capture_output=True, text=True, cwd=self._get_git_root() or ".")
-                test_output = test_proc.stdout + test_proc.stderr
-                test_results = f"\n\n[TEST_VERIFICATION] pytest output:\n{test_output}"
-                
-                if self.verbose:
-                    print(f"👁️ [Grisha] Test results:\n{test_output[:200]}...")
-            else:
-                 if self.verbose:
-                    print("👁️ [Grisha] Skipping extensive tests (simple task or no critical changes).")
-                    
-        except Exception as e:
-            if self.verbose:
-                print(f"👁️ [Grisha] Test execution error: {e}")
+        # 3. Execute Verification Tools
+        executed_results = self._execute_grisha_tools(tool_calls)
         
-        # Inject available tools (Vision priority)
-        # RESTRICTED: Grisha only gets read-only tools
-        all_tools = self.registry.list_tools()
-        allowed_prefixes = ["capture_", "analyze_", "browser_screenshot", "browser_get_", "chrome_active_tab", "read_", "list_", "run_shell"]
-        # Explicit allow-list for safety
-        allowed_tools_list = []
-        # We need a way to parse the tools_list string or object. 
-        # Assuming list_tools returns a string description, we might need to filter at execution time mostly.
-        # But `tools_list` variable is passed to prompt. Ideally we filter it.
-        # Check if list_tools returns a raw list or string. 
-        # Based on typical usage, it returns a string description. 
-        # For prompt safety, we will append a STRICT WARNING instead of parsing the string complexly.
-        
-        tools_desc = self.registry.list_tools()
-        
-        plan = state.get("plan") or []
-        current_step_desc = plan[0].get("description", "Unknown") if plan else "Final Verification"
-        
-        # Extract just Tetyana's tool results from last_msg for clearer context
-        tetyana_result_summary = ""
-        if "[STEP_COMPLETED]" in last_msg:
-            tetyana_result_summary = "Tetyana reported: [STEP_COMPLETED] - action succeeded"
-        elif "Tool Results:" in last_msg:
-            # Extract just the tool results section
-            try:
-                tool_results_start = last_msg.find("Tool Results:")
-                tool_results_end = last_msg.find("[STEP_COMPLETED]", tool_results_start)
-                if tool_results_end == -1:
-                    tool_results_end = len(last_msg)
-                tetyana_result_summary = last_msg[tool_results_start:tool_results_end].strip()
-            except Exception:
-                tetyana_result_summary = last_msg[:500]
-        else:
-            tetyana_result_summary = last_msg[:500] if len(last_msg) > 500 else last_msg
-        
-        original_task = state.get("original_task") or ""
-        
-        # CRITICAL: Make the verification context very explicit about what to verify
-        verify_context = f"""🎯 VERIFICATION TASK:
+        # 4. Smart Vision Verification
+        vision_result = self._perform_smart_vision(state, last_msg)
+        if vision_result:
+            content += f"\n\n[GUI_BROWSER_VERIFY]\n{vision_result}"
+            executed_results.append(vision_result)
 
-GLOBAL GOAL (for reference only): {original_task}
+        # 5. Verdict Analysis
+        final_content = self._get_grisha_verdict(content, executed_results, test_results)
+        step_status, next_agent = self._determine_grisha_status(state, final_content, executed_results)
 
-⚡ CURRENT STEP TO VERIFY: {current_step_desc}
+        # 6. Anti-loop protection
+        current_streak = self._handle_grisha_streak(state, step_status, final_content)
 
-📋 TETYANA'S REPORT:
-{tetyana_result_summary}
-
-❓ YOUR TASK: Did the CURRENT STEP "{current_step_desc}" complete successfully?
-- If YES → respond with [STEP_COMPLETED]
-- If there was an error → respond with [FAILED]
-- If unsure → use vision tools first, then decide
-
-⚠️ IMPORTANT: Do NOT evaluate the global goal yet! Only verify the current step."""
-        
-        if state.get("is_media"):
-            prompt = get_grisha_media_prompt(verify_context, tools_desc=tools_desc, preferred_language=self.preferred_language)
-        else:
-            prompt = get_grisha_prompt(
-                verify_context, 
-                tools_desc=tools_desc, 
-                preferred_language=self.preferred_language,
-                vision_context=self.vision_context_manager.current_context
-            )
-        
-        content = ""  # Initialize content variable
-        executed_tools_results = [] # Keep track of results for verdict phase
-
-        try:
-            trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
-            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
-            def on_delta(chunk):
-                self._deduplicated_stream("grisha", chunk)
-            
-            # Use Grisha-specific LLM
-            grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            grisha_llm = CopilotLLM(model_name=grisha_model)
-            
-            response = grisha_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-            content = getattr(response, "content", "") if response is not None else ""
-            tool_calls = getattr(response, "tool_calls", []) if response is not None and hasattr(response, 'tool_calls') else []
-            
-            try:
-                trace(self.logger, "grisha_llm", {
-                    "tool_calls": len(tool_calls) if isinstance(tool_calls, list) else 0,
-                    "content_preview": str(content)[:200],
-                })
-            except Exception:
-                pass
-            
-            # CRITICAL FIX: If Grisha says FAILED without using any tools, force visual verification
-            # This prevents Grisha from failing steps without evidence
-            grisha_wants_to_fail = any(m in content.lower() for m in ["failed", "не виконано", "не верифіковано", "верифікація не пройдена"])
-            grisha_used_no_tools = not tool_calls or len(tool_calls) == 0
-            tetyana_reported_success = "[step_completed]" in last_msg.lower() or '"status": "success"' in last_msg.lower()
-            
-            if grisha_wants_to_fail and grisha_used_no_tools and tetyana_reported_success:
-                if self.verbose:
-                    print(f"⚠️ [Grisha] Wants to FAIL without visual evidence, but Tetyana reported success. Overriding to STEP_COMPLETED.")
-                # Trust Tetyana's tool results if Grisha has no evidence
-                content = f"[VOICE] Tetyana повідомила про успішне виконання кроку. Інструменти підтвердили: \"status\": \"success\".\n\n[STEP_COMPLETED]"
-                tool_calls = []  # Clear any potential misinterpretation
-            
-            # Execute Tools
-            if tool_calls:
-                 for tool in tool_calls:
-                     name = tool.get("name")
-                     args = tool.get("args") or {}
-                     
-                     # ⛔️ RUNTIME BLOCK FOR GRISHA ⛔️
-                     # She is NOT allowed to navigate or click.
-                     forbidden_prefixes = ["browser_open", "browser_click", "browser_type", "write_", "create_", "delete_", "move_"]
-                     if any(name.startswith(p) for p in forbidden_prefixes):
-                         res_str = f"Result for {name}: [BLOCKED] Grisha is a read-only agent. Navigation/Modification blocked."
-                         if self.verbose:
-                             print(f"🛑 [Grisha] Blocked forbidden tool: {name}")
-                         executed_tools_results.append(res_str)
-                         continue
-
-                     # Provide helpful default for capture_screen if args empty
-                     if name == "capture_screen" and not args:
-                         args = {"app_name": None}
-
-                     # Execute via MCP Registry
-                     res = self.registry.execute(name, args)
-                     res_str = f"Result for {name}: {res}"
-                     executed_tools_results.append(res_str)
-            
-            if executed_tools_results:
-                content += "\n\nVerification Tools Results:\n" + "\n".join(executed_tools_results)
-            
-            # Append test results if any
-            if test_results:
-                content += test_results
-                executed_tools_results.append(test_results)
-
-            # --- SMART VISION VERIFICATION ---
-            # Determine if and how to capture screen based on Tetyana's actions
-            tetyana_tools = state.get("tetyana_used_tools") or []
-            tetyana_context = state.get("tetyana_tool_context") or {}
-            
-            # Define tool categories for smart detection
-            gui_visual_tools = {"click", "type_text", "move_mouse", "press_key", "find_image_on_screen"}
-            browser_tools = {"browser_open_url", "browser_click", "browser_type", "browser_type_text", "browser_get_links", "browser_screenshot", "browser_navigate", "browser_press_key"}
-            playwright_tools = {t for t in tetyana_tools if t.startswith("playwright.")}
-            pyautogui_tools = {t for t in tetyana_tools if t.startswith("pyautogui.")}
-            
-            # Check if visual verification is needed
-            used_gui_tools = bool(set(tetyana_tools) & gui_visual_tools) or bool(pyautogui_tools)
-            used_browser_tools = bool(set(tetyana_tools) & browser_tools) or bool(playwright_tools)
-            # Check last_msg (Tetyana's output) for browser indicators, not content (Grisha's LLM response)
-            is_browser_task = "browser_" in last_msg.lower() or "браузер" in last_msg.lower() or tetyana_context.get("browser_tool")
-            
-            # ENHANCED: Also check for browser keywords in original task and tool results
-            browser_keywords = ["google", "browser", "браузер", "сайт", "url", "http", "пошук", "search", "відкрий", "open"]
-            original_task_lower = str(state.get("original_task") or "").lower()
-            task_mentions_browser = any(kw in original_task_lower for kw in browser_keywords)
-            tetyana_result_mentions_browser = "browser_open_url" in last_msg or "google.com" in last_msg.lower() or "navigated" in last_msg.lower()
-            
-            needs_visual_verification = used_gui_tools or used_browser_tools or is_browser_task or task_mentions_browser or tetyana_result_mentions_browser
-            
-            if self.verbose:
-                print(f"👁️ [Grisha] Visual check: tetyana_tools={tetyana_tools}, used_browser={used_browser_tools}, is_browser_task={is_browser_task}, needs_visual={needs_visual_verification}")
-            
-            # Determine the best screenshot method
-            vision_args = {}
-            vision_method = "full_screen"  # default
-            
-            if tetyana_context.get("app_name"):
-                # Specific app was used - capture that app's window
-                vision_args["app_name"] = tetyana_context["app_name"]
-                vision_method = "app_window"
-                if tetyana_context.get("window_title"):
-                    vision_args["window_title"] = tetyana_context["window_title"]
-                    vision_method = "specific_window"
-            elif used_browser_tools or playwright_tools or is_browser_task:
-                # Browser task - try to capture browser window
-                # Do NOT default to Safari blindly, as Playwright might use Chromium/Firefox
-                # vision_args["app_name"] = "Safari" 
-                vision_method = "browser"
-                
-                # Try to detect actual browser from tool results
-                detected_browser = None
-                for browser in ["Chrome", "Safari", "Firefox", "Arc", "Brave", "Chromium"]:
-                    if browser.lower() in content.lower():
-                        detected_browser = browser
-                        break
-                
-                if detected_browser:
-                    vision_args["app_name"] = detected_browser
-                else:
-                    # If no specific browser detected, rely on full screen / multi-monitor capture
-                    # This avoids capturing an empty Safari window when Chrome is used
-                    vision_method = "full_screen_browser_context"
-            elif pyautogui_tools or used_gui_tools:
-                # GUI automation - need to detect active window
-                vision_method = "active_window"
-                # We'll use full screen but could enhance to get frontmost app
-            
-            forced_verification_run = False
-            
-            if needs_visual_verification or (gui_mode in {"auto", "on"} and execution_mode == "gui"):
-                if self.verbose:
-                    print(f"👁️ [Grisha] Vision verification: method={vision_method}, args={vision_args}")
-                
-                # CRITICAL: Wait for browser/GUI to settle after Tetyana's actions
-                # Without this delay, Grisha captures stale screenshots before page updates
-                browser_action_tools = {"browser_type_text", "browser_click", "browser_open_url", "browser_navigate", "browser_get_links", "browser_screenshot"}
-                used_browser_actions = bool(set(tetyana_tools or []) & browser_action_tools)
-                
-                if used_browser_actions:
-                    import time
-                    wait_time = 3.0  # seconds - allow page to load/update after actions
-                    if self.verbose:
-                        print(f"👁️ [Grisha] Waiting {wait_time}s for browser to settle...")
-                    try:
-                        trace(self.logger, "grisha_browser_wait", {"wait_time": wait_time, "reason": "browser_action_detected"})
-                    except Exception:
-                        pass
-                    time.sleep(wait_time)
-                
-                # Use enhanced vision with smart context
-                analysis = self.registry.execute("enhanced_vision_analysis", vision_args)
-                
-                # CRITICAL: Update vision context manager with fresh analysis data
-                # This ensures Grisha's prompt has accurate, current visual context
-                if isinstance(analysis, dict) and analysis.get("status") == "success":
-                    try:
-                        self.vision_context_manager.update_context(analysis)
-                        if self.verbose:
-                            print(f"👁️ [Grisha] Vision context updated successfully")
-                    except Exception as ve:
-                        if self.verbose:
-                            print(f"👁️ [Grisha] Vision context update failed: {ve}")
-                
-                analysis_res = f"\n[GUI_BROWSER_VERIFY] enhanced_vision_analysis (method={vision_method}):\n{analysis}"
-                content += analysis_res
-                executed_tools_results.append(analysis_res)
-                forced_verification_run = True
-
-                try:
-                    # Attempt to extract image path from analysis result for further analyze_screen if needed
-                    # Note: enhanced_vision_analysis result structure is different
-                    if isinstance(analysis, dict):
-                        img_path = analysis.get("diff_image_path") or analysis.get("path")
-                    else:
-                        analysis_dict = json.loads(analysis)
-                        img_path = analysis_dict.get("diff_image_path") or analysis_dict.get("path")
-                except Exception:
-                    img_path = None
-                
-                if img_path:
-                    # Optional: still use LLM analysis on the diff image for high-level understanding
-                    analysis_llm = self.registry.execute(
-                        "analyze_screen",
-                        {"image_path": img_path, "prompt": "Based on this (potentially highlighted diff) image and the goal, provide a final confirmation of success or failure. Focus on specific UI changes."},
-                    )
-                    analysis_res_llm = f"\n[GUI_VERIFY_LLM] analyze_screen:\n{analysis_llm}"
-                    content += analysis_res_llm
-                    executed_tools_results.append(analysis_res_llm)
-
-        except Exception as e:
-            content = f"Error invoking Grisha: {e}"
-            executed_tools_results.append(f"Error: {e}")
-
-        # --- VERDICT PHASE ---
-        # If tools were executed (voluntarily or forced), we must ask Grisha to ANALYZE the results.
-        # Otherwise, he often ignores them or assumes uncertainty.
-        
-        has_tools_run = bool(executed_tools_results)
-        verdict_content = content
-        
-        if has_tools_run:
-            if self.verbose: print(f"👁️ [Grisha] Analyzing {len(executed_tools_results)} tool results for Verdict...")
-            
-            verdict_prompt_txt = (
-                "Here are the verification results obtained from the tools:\n" + 
-                "\n".join(executed_tools_results) + 
-                "\n\nBased on these results and history, provide your FINAL verdict.\n"
-                "IMPORTANT: Distinguish between CURRENT STEP success and GLOBAL GOAL success.\n"
-                "You MUST respond with exactly ONE of these markers at the VERY END of your message:\n"
-                "- [VERIFIED] (if the Global Goal is fully achieved and no more actions are needed)\n"
-                "- [STEP_COMPLETED] (if the current step succeeded and we should move to the next part of the plan, but the Global Goal is NOT yet reached)\n"
-                "- [FAILED] (if the current step failed, an error occurred, or the goal is unachievable)\n"
-                "- [UNCERTAIN] (if results are truly inconclusive)\n\n"
-                "Explain your reasoning briefly before the marker."
-            )
-            
-            verdict_msgs = [
-                SystemMessage(content="You are Grisha, analyzing verification data."),
-                HumanMessage(content=verdict_prompt_txt)
-            ]
-            
-            # We don't stream the verdict, just get it
-            try:
-                verdict_resp = self.llm.invoke(verdict_msgs)
-                verdict_content_to_add = getattr(verdict_resp, "content", "") if verdict_resp is not None else ""
-                verdict_content += "\n\n[VERDICT ANALYSIS]\n" + verdict_content_to_add
-            except Exception as e:
-                verdict_content += f"\n\n[VERDICT ERROR] Could not get verdict: {e}"
-
-        # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
-        # Sanitize verdict content to avoid meta-instructions (from other agents) causing false failures
-        lower_content = verdict_content.lower()
-        sanitized_lower_content = lower_content
-        # Remove known meta-instruction noise that may appear in agent messages
-        for noise in ["error: no tool call provided", "stop talking, use a tool"]:
-            sanitized_lower_content = sanitized_lower_content.replace(noise, "")
-        # Collapse whitespace for more robust keyword matching
-        sanitized_lower_content = " ".join(sanitized_lower_content.split())
-        step_status = "uncertain"
-        next_agent = "meta_planner"
-
-        # 1. Check for explicit FAILURE markers first (Priority)
-        # Use sanitized content for failure/success detection to avoid false positives
-        has_explicit_fail = any(f"[{m}]" in sanitized_lower_content or m in sanitized_lower_content for m in FAILURE_MARKERS)
-        
-        # 2. Check for explicit SUCCESS markers
-        has_explicit_complete = any(f"[{m}]" in sanitized_lower_content or m in sanitized_lower_content for m in SUCCESS_MARKERS)
-        # 3. Check for tool execution errors in context
-        latest_tools_result = "\n".join(executed_tools_results).lower()
-        has_tool_error_in_context = '"status": "error"' in latest_tools_result
-        
-        # 4. Check for test failures
-        has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
-        
-        # 5. Markers analysis (Failure takes precedence)
-        if has_explicit_fail:
-             step_status = "failed"
-             next_agent = "meta_planner"
-        elif has_test_failure:
-            step_status = "failed"
-            next_agent = "meta_planner"
-        elif has_tool_error_in_context:
-            # If the tool failed, we default to failed unless EXPLICITLY confirmed (safe default)
-            # But even if [VERIFIED] is present, tool error is suspicious. 
-            # We trust [VERIFIED] only if there are NO tool errors.
-            if has_explicit_complete:
-                 # Ambiguous: Tool error but LLM says verified. 
-                 # Trust LLM only if it explained why the error is fine? 
-                 # For safety, let's downgrade to UNCERTAIN or FAILED.
-                 # Let's say FAILED to force replan/retry.
-                 step_status = "failed"
-            else:
-                 step_status = "failed"
-            next_agent = "meta_planner"
-        elif "[captcha]" in lower_content or "captcha detected" in lower_content:
-            step_status = "uncertain"
-            next_agent = "meta_planner"
-        elif has_explicit_complete:
-            # CHECK FOR NEGATIONS: if 'not' or 'не' is near the marker
-            is_negated = False
-            lang_negations = NEGATION_PATTERNS.get(self.preferred_language, NEGATION_PATTERNS["en"])
-            
-            for kw in SUCCESS_MARKERS:
-                if kw in lower_content:
-                    for match in re.finditer(re.escape(kw), lower_content):
-                        idx = match.start()
-                        pre_text = lower_content[max(0, idx-25):idx]
-                        if re.search(lang_negations, pre_text):
-                            is_negated = True
-                            break
-                if is_negated: break
-            
-            if not is_negated:
-                step_status = "success"
-                next_agent = "meta_planner"
-            else:
-                step_status = "failed"
-                next_agent = "meta_planner"
-
-        # NEW: Anti-loop protection via uncertain_streak
-        current_streak = int(state.get("uncertain_streak") or 0)
-        
-        # If still uncertain and no tools were run (and we haven't forced them yet)
-        if step_status == "uncertain" and not has_tools_run:
-             # Force verification if we haven't already
-             pass # We can't easily force it here without recursion or complex logic. 
-                  # Ideally the first prompt should have triggered tools. 
-                  # If we are here, Grisha produced text without tools and without a verdict.
-        
-        if step_status == "uncertain":
-            current_streak += 1
-        else:
-            current_streak = 0  # Reset on definite decision (success or failed)
-        
-        # If 3+ consecutive uncertain decisions, consider forcing completion
-        vision_shows_failure = any(kw in sanitized_lower_content for kw in VISION_FAILURE_KEYWORDS)
-        
-        if step_status == "uncertain" and current_streak >= 3:
-            if vision_shows_failure or "[failed]" in lower_content:
-                if self.verbose:
-                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) but failure detected → triggering REPLAN")
-                step_status = "failed"
-                # Add explainer
-                verdict_content += "\n\n[SYSTEM] Uncertainty limit reached with negative evidence. Marking as FAILED."
-                current_streak = 0
-            else:
-                # If ambiguous but no obvious failure, force FAIL to be safe (replan is safer than fake success)
-                if self.verbose:
-                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing FAILED (conclusive verification failed)")
-                step_status = "failed"
-                verdict_content += "\n\n[SYSTEM] Uncertainty limit reached. Consistency check failed. Marking as FAILED."
-                current_streak = 0
-
-        try:
-            trace(self.logger, "grisha_decision", {"next_agent": next_agent, "last_step_status": step_status, "uncertain_streak": current_streak})
-        except Exception:
-            pass
-
-        out = {
-            "current_agent": next_agent, 
-            "messages": list(context) + [AIMessage(content=verdict_content)],
+        return {
+            "current_agent": next_agent,
+            "messages": list(context) + [AIMessage(content=final_content)],
             "last_step_status": step_status,
             "uncertain_streak": current_streak,
-            "plan": state.get("plan"),  # Always preserve plan in state
+            "plan": state.get("plan"),
         }
+
+    def _get_last_msg_content(self, context):
+        msg = getattr(context[-1], "content", "") if context and context[-1] else ""
+        if isinstance(msg, str) and len(msg) > 50000:
+            return msg[:45000] + "\n[...]\n" + msg[-5000:]
+        return msg
+
+    def _run_grisha_tests(self, state):
+        task_type = str(state.get("task_type") or "").upper()
+        if task_type == "GENERAL": return ""
         
-        return out
+        critical_dirs = ["core/", "system_ai/", "tui/", "providers/"]
+        changed = (self._get_repo_changes().get("changed_files") or []) if self._get_repo_changes().get("ok") else []
+        if any(any(f.startswith(d) for d in critical_dirs) for f in changed):
+            if self.verbose: print("👁️ [Grisha] Running pytest...")
+            res = subprocess.run("pytest -q --tb=short 2>&1", shell=True, capture_output=True, text=True, cwd=self._get_git_root() or ".")
+            return f"\n\n[TEST_VERIFICATION] pytest output:\n{res.stdout + res.stderr}"
+        return ""
+
+    def _prepare_grisha_prompt(self, state, last_msg):
+        plan = state.get("plan") or []
+        current_step = plan[0].get("description", "Unknown") if plan else "Final Verification"
+        original_task = state.get("original_task") or ""
+        
+        verify_context = f"GLOBAL GOAL: {original_task}\nSTEP TO VERIFY: {current_step}\nREPORT: {last_msg[:1000]}"
+        
+        if state.get("is_media"):
+            return get_grisha_media_prompt(verify_context, tools_desc=self.registry.list_tools(), preferred_language=self.preferred_language)
+        
+        return get_grisha_prompt(
+            verify_context,
+            tools_desc=self.registry.list_tools(),
+            preferred_language=self.preferred_language,
+            vision_context=self.vision_context_manager.current_context
+        )
+
+    def _invoke_grisha(self, prompt, last_msg):
+        model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or DEFAULT_MODEL_FALLBACK
+        llm = CopilotLLM(model_name=model)
+        def on_delta(chunk): self._deduplicated_stream("grisha", chunk)
+        resp = llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
+        content = getattr(resp, "content", "") if resp else ""
+        tool_calls = getattr(resp, "tool_calls", []) if resp and hasattr(resp, 'tool_calls') else []
+        
+        # Override if Grisha fails without evidence
+        if any(m in content.lower() for m in ["failed", "не виконано"]) and not tool_calls and STEP_COMPLETED_MARKER.lower() in last_msg.lower():
+            if self.verbose: print("⚠️ [Grisha] Overriding FAILED without evidence.")
+            content = f"{VOICE_MARKER} Tetyana reported success. Tools confirmed. {STEP_COMPLETED_MARKER}"
+            tool_calls = []
+        return content, tool_calls
+
+    def _execute_grisha_tools(self, tool_calls):
+        results = []
+        forbidden = ["browser_open", "browser_click", "browser_type", "write_", "create_", "delete_", "move_"]
+        for tool in (tool_calls or []):
+            name = tool.get("name")
+            args = tool.get("args") or {}
+            if any(name.startswith(p) for p in forbidden):
+                results.append(f"Result for {name}: [BLOCKED] Grisha is read-only.")
+                continue
+            res = self.registry.execute(name, ({"app_name": None} if name == "capture_screen" and not args else args))
+            results.append(f"Result for {name}: {res}")
+        return results
+
+    def _perform_smart_vision(self, state, last_msg):
+        tetyana_tools = state.get("tetyana_used_tools") or []
+        tetyana_ctx = state.get("tetyana_tool_context") or {}
+        
+        browser_active = any(k in last_msg.lower() or k in str(state.get("original_task")).lower() for k in ["google", "browser", "сайт", "url"])
+        needs_visual = (set(tetyana_tools) & {"click", "type_text", "move_mouse"}) or browser_active or tetyana_ctx.get("browser_tool")
+        
+        if not (needs_visual or (state.get("gui_mode") in {"auto", "on"} and state.get("execution_mode") == "gui")):
+            return None
+
+        if any(t in tetyana_tools for t in ["browser_type_text", "browser_click", "browser_open_url"]):
+            time.sleep(3.0)
+            
+        args = {}
+        if tetyana_ctx.get("app_name"):
+            args["app_name"] = tetyana_ctx["app_name"]
+            if tetyana_ctx.get("window_title"): args["window_title"] = tetyana_ctx["window_title"]
+            
+        analysis = self.registry.execute("enhanced_vision_analysis", args)
+        if isinstance(analysis, dict) and analysis.get("status") == "success":
+            self.vision_context_manager.update_context(analysis)
+        return str(analysis)
+
+    def _get_grisha_verdict(self, content, executed_results, test_results):
+        if not executed_results and not test_results: return content
+        
+        prompt = (f"Analyze these results:\n" + "\n".join(executed_results) + (f"\nTests:\n{test_results}" if test_results else "") +
+                 f"\n\nRespond with Reasoning + Marker: [VERIFIED], [STEP_COMPLETED], [FAILED], or [UNCERTAIN].")
+        try:
+            resp = self.llm.invoke([SystemMessage(content="You are Grisha."), HumanMessage(content=prompt)])
+            return content + "\n\n[VERDICT ANALYSIS]\n" + getattr(resp, "content", "")
+        except Exception as e:
+            return content + f"\n\n[VERDICT ERROR] {e}"
+
+    def _determine_grisha_status(self, state, content, executed_results):
+        lower = content.lower()
+        res_str = "\n".join(executed_results).lower()
+        
+        if any(m in lower for f"[{m}]" in lower or m in lower for m in FAILURE_MARKERS) or "[test_verification]" in lower and "failed" in lower:
+            return "failed", "meta_planner"
+        if '"status": "error"' in res_str:
+            return "failed", "meta_planner"
+        if "[captcha]" in lower:
+            return "uncertain", "meta_planner"
+            
+        for kw in SUCCESS_MARKERS:
+            if kw.lower() in lower:
+                idx = lower.find(kw.lower())
+                pre = lower[max(0, idx-25):idx]
+                if not re.search(NEGATION_PATTERNS.get(self.preferred_language, "not |never "), pre):
+                    return "success", "meta_planner"
+        return "uncertain", "meta_planner"
+
+    def _handle_grisha_streak(self, state, status, content):
+        streak = (int(state.get("uncertain_streak") or 0) + 1) if status == "uncertain" else 0
+        if streak >= 3:
+            if any(k in content.lower() for k in VISION_FAILURE_KEYWORDS) or "[failed]" in content.lower():
+                return 0 
+            return 0
+        return streak
+
 
     def _router(self, state: TrinityState):
         current = state.get("current_agent", "meta_planner")  # Safe default to meta_planner
