@@ -24,21 +24,23 @@ class AdaptiveVerifier:
 
         rigor = (meta_config or {}).get("verification_rigor", "medium")
         
-        VERIFIER_PROMPT = """Ти — Grisha, агент безпеки та верифікації.
-Твоє завдання: Проаналізувати план дій та вставити кроки перевірки (VERIFY).
+        # Use English for internal prompt engineering for better reasoning, 
+        # but outputs should be language-agnostic or English (translated by UI/Agents if needed)
+        VERIFIER_PROMPT = """You are Grisha, the Verification Officer.
+Your task: Analyze the action plan and insert verification steps (VERIFY).
 
-ПОЛІТИКА ВЕРИФІКАЦІЇ (Rigor: {rigor}):
-- Якщо rigor="high": Вставляй VERIFY після КОЖНОГО кроку без винятку.
-- Якщо rigor="medium": Вставляй VERIFY після критичних кроків (файли, shell, GUI, git).
-- Якщо rigor="low": Вставляй VERIFY тільки один раз у самому кінці плану.
+VERIFICATION POLICY (Rigor: {rigor}):
+- If rigor="high": Insert VERIFY after EVERY step.
+- If rigor="medium": Insert VERIFY after critical steps (files, shell, GUI, git).
+- If rigor="low": Insert VERIFY only once at the end.
 
-Формат VERIFY кроку:
-{{"type": "verify", "description": "Перевірити, що [результат дії]"}}
+Format for VERIFY step:
+{{"type": "verify", "description": "Verify that [result of action]"}}
 
-Вхідний план:
+Input Plan:
 {plan_json}
 
-Поверни повний оновлений JSON список кроків (оригінальні кроки + вставлені VERIFY кроки).
+Return the FULL updated JSON list of steps (original + verify steps).
 """
 
         content = ""
@@ -48,7 +50,7 @@ class AdaptiveVerifier:
             full_prompt_content = VERIFIER_PROMPT.format(rigor=rigor, plan_json=plan_json)
             prompt = ChatPromptTemplate.from_messages([
                 SystemMessage(content=full_prompt_content),
-                HumanMessage(content=f"Оптимізуй план згідно з політикою Rigor: {rigor}")
+                HumanMessage(content=f"Optimize plan according to Rigor: {rigor}")
             ])
             
             response = self.llm.invoke(prompt.format_messages())
@@ -113,7 +115,7 @@ class AdaptiveVerifier:
                 return []
             if plan[-1].get("type") == "verify":
                 return plan
-            return plan + [{"type": "verify", "description": "Фінальна перевірка результату задачі"}]
+            return plan + [{"type": "verify", "description": "Final task verification"}]
 
         critical_keywords = [
             "create", "delete", "remove", "git", "commit", "push", "pull",
@@ -136,7 +138,7 @@ class AdaptiveVerifier:
                      continue
                  
                  # Dynamic description based on context
-                 v_desc = "Перевірити результат дії"
+                 v_desc = "Verify result of action"
                  if "search" in description or "google" in description:
                      v_desc = "Verify search results are visible and contain relevant links."
                  elif "click" in description or "open" in description:
@@ -170,7 +172,7 @@ class AdaptiveVerifier:
                 if not next_is_verify:
                     verify_step = {
                         "type": "verify",
-                        "description": f"Перевірити результат: {step.get('description', 'дії')}"
+                        "description": f"Verify result: {step.get('description', 'action')}"
                     }
                     enhanced_plan.append(verify_step)
         

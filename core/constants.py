@@ -36,15 +36,21 @@ MEDIA_KEYWORDS = [
 # VERIFICATION MARKERS (Grisha verdict)
 # -----------------------------------------------------------------------------
 SUCCESS_MARKERS = [
-    "verified", "success", "confirmed", "passed",
+    "verified", "success", "confirmed", "passed", "step_completed", "completed", "done",
     "успішно", "виконано", "готово", "підтверджено",
     "виконана", "виконаний", "готова", "готовий", "підтверджена", "підтверджений"
 ]
 
 FAILURE_MARKERS = [
-    "failed", "failure", "error", "unable", "cannot",
+    "[failed]", "failed", "failure", "critical error", "fatal error",
+    "verification failed", "unable to verify", "not achieved", "goal not met",
     "помилка", "невдача", "не вдалося", "не виконано", "не готова", "не готовий",
     "не вдалося", "не вдалось", "неможливо"
+]
+
+TERMINATION_MARKERS = [
+    "[verified]", "[achievement_confirmed]", "[task_done]", "[success]",
+    "[підтверджено]", "[виконано]"
 ]
 
 UNCERTAIN_MARKERS = [

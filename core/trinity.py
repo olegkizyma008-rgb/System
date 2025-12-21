@@ -26,7 +26,8 @@ from core.utils import extract_json_object
 from core.constants import (
     DEV_KEYWORDS, GENERAL_KEYWORDS, MEDIA_KEYWORDS, 
     SUCCESS_MARKERS, FAILURE_MARKERS, UNCERTAIN_MARKERS,
-    NEGATION_PATTERNS, VISION_FAILURE_KEYWORDS, MESSAGES
+    NEGATION_PATTERNS, VISION_FAILURE_KEYWORDS, MESSAGES,
+    TERMINATION_MARKERS
 )
 
 @dataclass
@@ -711,7 +712,7 @@ class TrinityRuntime:
                 if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded: {desc}. Remaining: {len(plan)}")
                 if not plan:
                     # Robust termination: Only end if the Global Goal is explicitly verified
-                    has_verified = any(m.upper() in last_msg.upper() for m in SUCCESS_MARKERS) or "[ACHIEVEMENT_CONFIRMED]" in last_msg.upper()
+                    has_verified = any(m.upper() in last_msg.upper() for m in TERMINATION_MARKERS) or "[ACHIEVEMENT_CONFIRMED]" in last_msg.upper()
                     if has_verified:
                         lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
                         msg = MESSAGES[lang]["task_achieved"]
@@ -2273,9 +2274,9 @@ class TrinityRuntime:
         lines.append("Verification:")
         # Best-effort heuristic based on last message content.
         msg_l = (last_message or "").lower()
-        if any(k in msg_l for k in ["verified", "confirmed", "успішно", "готово", "success"]):
+        if any(k in msg_l for k in SUCCESS_MARKERS):
             lines.append("- status: passed (heuristic)")
-        elif any(k in msg_l for k in ["failed", "error", "помилка", "не вдалося"]):
+        elif any(k in msg_l for k in FAILURE_MARKERS):
             lines.append("- status: failed (heuristic)")
         else:
             lines.append("- status: unknown (no explicit signal)")

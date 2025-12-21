@@ -1811,6 +1811,9 @@ def _tool_monitor_stop() -> Dict[str, Any]:
     return _tool_monitor_stop_new()
 
 
+def _tool_monitor_targets(args: Dict[str, Any]) -> Dict[str, Any]:
+    return _tool_monitor_targets_new(args)
+
 
 def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
     return _monitor_resolve_watch_items_new(targets)
@@ -2446,14 +2449,6 @@ def _get_cleanup_cfg() -> Any:
 def _set_cleanup_cfg(cfg: Any) -> None:
     global cleanup_cfg
     cleanup_cfg = cfg
-
-
-# Duplicate removed
-
-    if action == "save":
-        ok = _save_monitor_targets()
-        return {"ok": ok, "targets": sorted(state.monitor_targets)}
-    return {"ok": False, "error": "Unknown action"}
 
 
 def _tool_llm_status() -> Dict[str, Any]:

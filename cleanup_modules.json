@@ -63,6 +63,15 @@
           "script": "./cleanup_scripts/windsurf_cache_local_cleanup.sh",
           "enabled": true,
           "description": "Очищення кешів, локального сховища та індексів Windsurf"
+        },
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./cleanup_scripts/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
         }
       ]
     },
@@ -101,6 +110,15 @@
           "script": "./cleanup_scripts/check_vscode_backup.sh",
           "enabled": false,
           "description": "Перевірка бекапів VS Code"
+        },
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./cleanup_scripts/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
         }
       ]
     },
@@ -131,7 +149,7 @@
           "name": "Antigravity Fresh Install Reset",
           "script": "./cleanup_scripts/antigravity_fresh_install.sh",
           "enabled": true,
-          "description": "Скидає локальний стан Antigravity (onboarding/користувач/сховище), щоб наступний запуск виглядав як перша установка"
+          "description": "Скидає локальний стан Antigravity (onboarding/користувач/сховище)"
         },
         {
           "id": "antigravity_deep_vscode",
@@ -139,6 +157,15 @@
           "script": "./cleanup_scripts/deep_vscode_cleanup.sh",
           "enabled": true,
           "description": "VS Code cleanup якщо Antigravity працював поверх VS Code"
+        },
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./cleanup_scripts/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
         }
       ]
     },
@@ -149,7 +176,17 @@
         "url": "https://www.cursor.com/download",
         "hint": "Відкриється офіційна сторінка завантаження Cursor"
       },
-      "modules": []
+      "modules": [
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./cleanup_scripts/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
+        }
+      ]
     },
     "continue": {
       "label": "Continue CLI",
@@ -165,6 +202,15 @@
           "script": "echo 'Not implemented'",
           "enabled": false,
           "description": "Cleanup ~/.continue folder"
+        },
+        {
+          "id": "mikrotik_wifi_spoof",
+          "name": "🔚 ОСТАННІЙ: MikroTik WiFi & MAC Spoofing",
+          "script": "./cleanup_scripts/mikrotik_wifi_spoof.sh",
+          "enabled": true,
+          "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
+          "order": 999,
+          "requires_password": true
         }
       ]
     }
