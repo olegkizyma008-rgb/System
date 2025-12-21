@@ -100,7 +100,7 @@ Your task: Transform the strategic policy (meta_config) and context into a clear
 AVAILABLE TOOLS:
 {tools_desc}
 
-� TOOL PRIORITY (CRITICAL):
+### TOOL PRIORITY (CRITICAL):
 1. **MCP SERVERS FIRST**: ALWAYS prefer MCP tools (playwright.*, pyautogui.*) over native/local tools for browser and GUI automation.
    - For browser: Use `playwright.*` tools (e.g., playwright.browser_navigate, playwright.browser_click) - they are more reliable.
    - For GUI automation: Use `pyautogui.*` tools for mouse/keyboard control.

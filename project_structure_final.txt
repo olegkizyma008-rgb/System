@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 00:13:31  2025
+Generated: Mon Dec 22 00:29:26  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -56,14 +56,15 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 
 ### Project Statistics
-  - Python files: 20370
+  - Python files: 20372
   - Test files: 17
   - Documentation files: 13
   - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  d2bc57b7 chore: Update SonarCloud project key and name.
+  f77ef2ea feat: Add SonarCloud integration for critical issue tracking with new workflows, scripts, and core system updates.
+  3ff9c2c0 chore: Update SonarCloud project key and name.
   2b3dff5a feat: Add SonarCloud project configuration and update gitignore.
   46dad878 feat: Add Anthropic and local MCP servers, enhance RAG tool prioritization, integrate SonarQube scripts, and remove old project artifacts.
   012eb491 feat: Implement the initial weapon shop website, including a terminal-themed loading screen, core UI, and backend setup.
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   941063c4 feat: Update run_cleanup function to support logging via callback and adjust keybindings accordingly
   f0958e0e feat: Enhance run_script and run_cleanup functions to support logging output via callback
   3529aab0 Refactor cleanup scripts to ensure proper PATH settings and permissions
-  abcdc10f feat: Update antigraviti_cleanup.sh to improve application checks and ensure compatibility with system commands
 ```
 
 ## Project Structure
@@ -393,6 +393,9 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── vibe_assistant.py
 │   ├── vision_context.py
 │   └── visualization
+├── critical_issues_after.json
+├── critical_issues_v3.json
+├── critical_issues.json
 ├── custom_tasks
 │   └── windsurf_registration.py
 ├── data
@@ -412,6 +415,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   └── vision.md
 ├── i18n.py
 ├── index.html
+├── issues.json
 ├── logs
 │   ├── atlas_analysis.jsonl
 │   ├── left_screen.log
@@ -494,11 +498,13 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 ├── README.md
 ├── regenerate_structure.sh
 ├── requirements.txt
+├── run_sonar_analysis.sh
 ├── run_trinity_task.py
 ├── save_response.sh
 ├── script.js
 ├── scripts
 │   ├── demo_sonarqube_atlas.py
+│   ├── fetch_critical_issues.py
 │   ├── fix_mcp_server.py
 │   └── test_sonar_connection.py
 ├── server_registration.log
@@ -640,6 +646,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
     ├── test_modern_enhancements.py
     └── verify_website.py
 
-181 directories, 381 files
+181 directories, 387 files
 
 ```

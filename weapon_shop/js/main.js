@@ -3,15 +3,15 @@ class WeaponShop {
     constructor() {
         this.productGrid = document.getElementById('product-grid');
         this.products = [];
-        this.init();
+        // Removed synchronous call to async init()
     }
-    
+
     async init() {
         await this.loadProducts();
         this.renderProducts();
         this.setupEventListeners();
     }
-    
+
     async loadProducts() {
         // In a real application, this would fetch from an API
         // For now, we'll use local data
@@ -114,17 +114,17 @@ class WeaponShop {
             }
         ];
     }
-    
+
     renderProducts() {
         this.productGrid.innerHTML = '';
-        
+
         this.products.forEach((product, index) => {
             const productCard = document.createElement('div');
             productCard.className = 'product-card';
-            
+
             // Create weapon icon based on category
             const weaponIcon = this.createWeaponIcon(product.category);
-            
+
             // Add detailed pistol drawing for handguns
             let pistolDrawing = '';
             if (product.category.toLowerCase() === 'handguns') {
@@ -134,7 +134,7 @@ class WeaponShop {
                     </div>
                 `;
             }
-            
+
             productCard.innerHTML = `
                 <div class="product-image-container">
                     <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
@@ -148,53 +148,53 @@ class WeaponShop {
                     <button class="btn" onclick="alert('Added ${product.name} to cart!')">Add to Cart</button>
                 </div>
             `;
-            
+
             this.productGrid.appendChild(productCard);
-            
+
             // Draw detailed pistol for handguns
             if (product.category.toLowerCase() === 'handguns') {
                 this.drawPistolForProduct(index);
             }
         });
-        
+
         // Add hover effects
         this.addHoverEffects();
-        
+
         // Add modern animations
         this.addModernAnimations();
     }
-    
+
     drawPistolForProduct(index) {
         const pistolContainer = document.getElementById(`pistol-drawing-${index}`);
         if (!pistolContainer) return;
-        
+
         const pistolLines = this.createDetailedPistolDrawing();
-        
+
         pistolLines.forEach((line, lineIndex) => {
             setTimeout(() => {
                 const lineElement = document.createElement('div');
                 lineElement.className = 'pistol-line-product';
-                
+
                 // Calculate angle and length
                 const length = Math.sqrt(Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2));
                 const angle = Math.atan2(line.y2 - line.y1, line.x2 - line.x1) * 180 / Math.PI;
-                
+
                 lineElement.style.width = length + 'px';
                 lineElement.style.left = line.x1 + 'px';
                 lineElement.style.top = line.y1 + 'px';
                 lineElement.style.transform = `rotate(${angle}deg)`;
                 lineElement.style.transformOrigin = '0 0';
-                
+
                 pistolContainer.appendChild(lineElement);
             }, lineIndex * 50); // Staggered animation
         });
-        
+
         // Show the pistol drawing
         setTimeout(() => {
             pistolContainer.classList.add('show');
         }, pistolLines.length * 50);
     }
-    
+
     addModernAnimations() {
         // Animate product cards on scroll
         const observer = new IntersectionObserver((entries) => {
@@ -204,27 +204,27 @@ class WeaponShop {
                 }
             });
         }, { threshold: 0.1 });
-        
+
         document.querySelectorAll('.product-card').forEach(card => {
             observer.observe(card);
         });
-        
+
         // Add pulse animation to buttons
         document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('mouseenter', function() {
+            btn.addEventListener('mouseenter', function () {
                 this.style.animation = 'pulse 0.5s ease';
             });
-            
-            btn.addEventListener('animationend', function() {
+
+            btn.addEventListener('animationend', function () {
                 this.style.animation = 'none';
             });
         });
     }
-    
+
     createWeaponIcon(category) {
         let iconHTML = '';
-        
-        switch(category.toLowerCase()) {
+
+        switch (category.toLowerCase()) {
             case 'handguns':
                 iconHTML = `
                     <div class="weapon-icon handgun-icon" style="display: none;">
@@ -263,10 +263,10 @@ class WeaponShop {
                     </div>
                 `;
         }
-        
+
         return iconHTML;
     }
-    
+
     createDetailedPistolDrawing() {
         // Detailed pistol drawing lines
         const pistolLines = [
@@ -274,7 +274,7 @@ class WeaponShop {
             { x1: 10, y1: 60, x2: 30, y2: 60 },
             { x1: 30, y1: 60, x2: 30, y2: 20 },
             { x1: 30, y1: 20, x2: 50, y2: 20 },
-            
+
             // Slide
             { x1: 50, y1: 20, x2: 50, y2: 10 },
             { x1: 50, y1: 10, x2: 80, y2: 10 },
@@ -282,40 +282,40 @@ class WeaponShop {
             { x1: 80, y1: 15, x2: 90, y2: 15 },
             { x1: 90, y1: 15, x2: 90, y2: 50 },
             { x1: 90, y1: 50, x2: 60, y2: 50 },
-            
+
             // Trigger guard
             { x1: 60, y1: 50, x2: 60, y2: 65 },
             { x1: 60, y1: 65, x2: 30, y2: 65 },
             { x1: 30, y1: 65, x2: 30, y2: 60 },
-            
+
             // Barrel details
             { x1: 82, y1: 12, x2: 85, y2: 12 },
             { x1: 85, y1: 12, x2: 85, y2: 18 },
-            
+
             // Slide details
             { x1: 55, y1: 12, x2: 60, y2: 12 },
             { x1: 60, y1: 12, x2: 60, y2: 18 },
             { x1: 60, y1: 18, x2: 65, y2: 18 }
         ];
-        
+
         return pistolLines;
     }
-    
+
     addHoverEffects() {
         const cards = document.querySelectorAll('.product-card');
         cards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
+            card.addEventListener('mouseenter', function () {
                 this.style.transform = 'translateY(-5px)';
                 this.style.boxShadow = '0 10px 20px rgba(0, 255, 0, 0.2)';
             });
-            
-            card.addEventListener('mouseleave', function() {
+
+            card.addEventListener('mouseleave', function () {
                 this.style.transform = 'translateY(0)';
                 this.style.boxShadow = '0 5px 10px rgba(0, 255, 0, 0.1)';
             });
         });
     }
-    
+
     setupEventListeners() {
         // Smooth scrolling for navigation links
         document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
@@ -323,7 +323,7 @@ class WeaponShop {
                 e.preventDefault();
                 const targetId = this.getAttribute('href');
                 const targetElement = document.querySelector(targetId);
-                
+
                 if (targetElement) {
                     targetElement.scrollIntoView({
                         behavior: 'smooth'
@@ -331,11 +331,11 @@ class WeaponShop {
                 }
             });
         });
-        
+
         // Modern scroll effects
         this.setupScrollEffects();
     }
-    
+
     setupScrollEffects() {
         // Navigation scroll effect
         const nav = document.querySelector('nav');
@@ -348,7 +348,7 @@ class WeaponShop {
                 }
             });
         }
-        
+
         // Parallax effect for header
         const header = document.querySelector('header');
         if (header) {
@@ -358,38 +358,45 @@ class WeaponShop {
                 header.style.opacity = 1 - (scrollPosition * 0.001);
             });
         }
-        
+
         // Add modern tooltips
         document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('mouseenter', function() {
-                const tooltip = document.createElement('div');
-                tooltip.className = 'modern-tooltip';
-                tooltip.textContent = 'Add to Cart';
-                tooltip.style.position = 'absolute';
-                tooltip.style.bottom = '100%';
-                tooltip.style.left = '50%';
-                tooltip.style.transform = 'translateX(-50%)';
-                tooltip.style.background = 'var(--primary-color)';
-                tooltip.style.color = '#000';
-                tooltip.style.padding = '5px 10px';
-                tooltip.style.borderRadius = '3px';
-                tooltip.style.fontSize = '12px';
-                tooltip.style.opacity = '0';
-                tooltip.style.transition = 'opacity 0.3s';
-                tooltip.style.zIndex = '1000';
-                
-                this.appendChild(tooltip);
-                
-                setTimeout(() => {
-                    tooltip.style.opacity = '1';
-                }, 10);
-                
-                this.addEventListener('mouseleave', function() {
-                    tooltip.style.opacity = '0';
-                    setTimeout(() => tooltip.remove(), 300);
-                }, { once: true });
-            });
+            btn.addEventListener('mouseenter', this.handleTooltipEnter.bind(this));
         });
+    }
+
+    handleTooltipEnter(e) {
+        const btn = e.currentTarget;
+        const tooltip = document.createElement('div');
+        tooltip.className = 'modern-tooltip';
+        tooltip.textContent = 'Add to Cart';
+        Object.assign(tooltip.style, {
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--primary-color)',
+            color: '#000',
+            padding: '5px 10px',
+            borderRadius: '3px',
+            fontSize: '12px',
+            opacity: '0',
+            transition: 'opacity 0.3s',
+            zIndex: '1000'
+        });
+
+        btn.appendChild(tooltip);
+
+        setTimeout(() => {
+            tooltip.style.opacity = '1';
+        }, 10);
+
+        const removeTooltip = () => {
+            tooltip.style.opacity = '0';
+            setTimeout(() => tooltip.remove(), 300);
+        };
+
+        btn.addEventListener('mouseleave', removeTooltip, { once: true });
     }
 }
 
@@ -400,7 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainContent = document.getElementById('main-content');
         if (mainContent && mainContent.style.display === 'block') {
             clearInterval(checkMainContent);
-            new WeaponShop();
+            const shop = new WeaponShop();
+            shop.init(); // Properly call init after instantiation
         }
     }, 100);
 });

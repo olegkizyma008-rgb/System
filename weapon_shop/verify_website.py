@@ -11,6 +11,41 @@ def verify_website():
     print("🔍 Verifying Elite Armory Website...")
     print("=" * 50)
     
+STYLE_CSS = 'css/style.css'
+MAIN_JS = 'js/main.js'
+
+def check_files(files):
+    """Check if all provided files exist."""
+    print("📁 Checking main files...")
+    for file in files:
+        if os.path.exists(file):
+            print(f"✅ {file}")
+        else:
+            print(f"❌ {file} missing")
+            return False
+    return True
+
+def check_content(checks):
+    """Check if specific content exists in files."""
+    for file, check in checks:
+        try:
+            with open(file, 'r') as f:
+                content = f.read()
+                if check in content:
+                    print(f"✅ {check} in {file}")
+                else:
+                    print(f"❌ {check} missing from {file}")
+                    return False
+        except Exception as e:
+            print(f"❌ Error reading {file}: {e}")
+            return False
+    return True
+
+def verify_website():
+    """Verify the website is ready to launch"""
+    print("🔍 Verifying Elite Armory Website...")
+    print("=" * 50)
+    
     # Check if we're in the right directory
     if not os.path.exists('index.html'):
         print("❌ Not in the website directory. Please run from weapon_shop folder.")
@@ -21,59 +56,36 @@ def verify_website():
         'index.html',
         'launch_website.py',
         'server.py',
-        'css/style.css',
+        STYLE_CSS,
         'css/loading.css',
-        'js/main.js',
+        MAIN_JS,
         'js/loading.js'
     ]
     
-    print("📁 Checking main files...")
-    for file in main_files:
-        if os.path.exists(file):
-            print(f"✅ {file}")
-        else:
-            print(f"❌ {file} missing")
-            return False
+    if not check_files(main_files):
+        return False
     
     # Check CSS files
     print("\n🎨 Checking CSS files...")
     css_checks = [
-        ('css/style.css', '--modern-green'),
-        ('css/style.css', '@keyframes fadeInUp'),
+        (STYLE_CSS, '--modern-green'),
+        (STYLE_CSS, '@keyframes fadeInUp'),
         ('css/loading.css', '@keyframes headerGlow')
     ]
     
-    for file, check in css_checks:
-        try:
-            with open(file, 'r') as f:
-                if check in f.read():
-                    print(f"✅ {check} in {file}")
-                else:
-                    print(f"❌ {check} missing from {file}")
-                    return False
-        except Exception as e:
-            print(f"❌ Error reading {file}: {e}")
-            return False
+    if not check_content(css_checks):
+        return False
     
     # Check JavaScript files
     print("\n💻 Checking JavaScript files...")
     js_checks = [
-        ('js/main.js', 'createDetailedPistolDrawing'),
-        ('js/main.js', 'drawPistolForProduct'),
+        (MAIN_JS, 'createDetailedPistolDrawing'),
+        (MAIN_JS, 'drawPistolForProduct'),
         ('js/loading.js', 'typeText')
     ]
     
-    for file, check in js_checks:
-        try:
-            with open(file, 'r') as f:
-                if check in f.read():
-                    print(f"✅ {check} in {file}")
-                else:
-                    print(f"❌ {check} missing from {file}")
-                    return False
-        except Exception as e:
-            print(f"❌ Error reading {file}: {e}")
-            return False
+    if not check_content(js_checks):
+        return False
     
     print("\n" + "=" * 50)
     print("🎉 Website verification successful!")

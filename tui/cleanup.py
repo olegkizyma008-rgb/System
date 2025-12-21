@@ -75,55 +75,52 @@ def list_editors(cfg: Dict[str, Any]) -> List[str]:
     return result
 
 
+def pick_fallback_editor(editors: Dict[str, Any]) -> str:
+    """Pick a default editor if none specified."""
+    if not editors:
+        return ""
+    if "windsurf" in editors:
+        return "windsurf"
+    
+    for key, meta in editors.items():
+        try:
+            modules = (meta or {}).get("modules", []) if isinstance(meta, dict) else []
+            if any(isinstance(m, dict) and m.get("enabled") for m in (modules or [])):
+                return key
+        except Exception:
+            continue
+            
+    return sorted([str(k) for k in editors.keys() if str(k)])[0] if editors else ""
+
+
 def resolve_editor_arg(cfg: Dict[str, Any], editor: Optional[str]) -> Tuple[str, Optional[str]]:
     """Resolve editor argument to a valid editor key."""
     editors = cfg.get("editors", {}) or {}
 
-    def _pick_fallback() -> str:
-        if not editors:
-            return ""
-        if "windsurf" in editors:
-            return "windsurf"
-        for key, meta in editors.items():
-            try:
-                modules = (meta or {}).get("modules", []) if isinstance(meta, dict) else []
-                if any(isinstance(m, dict) and m.get("enabled") for m in (modules or [])):
-                    return key
-            except Exception:
-                continue
-        return sorted([str(k) for k in editors.keys() if str(k)])[:1][0]
-
     if not editor:
-        fallback = _pick_fallback()
-        if len(editors) == 1 and fallback:
-            return fallback, None
-        if fallback:
-            note = f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
-            return fallback, note
-        return "", f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+        fallback = pick_fallback_editor(editors)
+        if not fallback:
+            return "", f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+        
+        msg = f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
+        return fallback, None if len(editors) == 1 else msg
 
     low = editor.strip().lower()
     aliases = {
-        "ws": "windsurf",
-        "windsurfs": "windsurf",
-        "wind": "windsurf",
-        "code": "vscode",
-        "vs": "vscode",
-        "vscodium": "vscode",
-        "anti": "antigravity",
-        "ag": "antigravity",
-        "google": "antigravity",
-        "gemini": "antigravity",
-        "curs": "cursor",
-        "cur": "cursor",
+        "ws": "windsurf", "windsurfs": "windsurf", "wind": "windsurf",
+        "code": "vscode", "vs": "vscode", "vscodium": "vscode",
+        "anti": "antigravity", "ag": "antigravity", "google": "antigravity", "gemini": "antigravity",
+        "curs": "cursor", "cur": "cursor",
     }
     resolved = aliases.get(low, low)
     if resolved in editors:
         return resolved, None
-    fallback = _pick_fallback()
+        
+    fallback = pick_fallback_editor(editors)
     if fallback:
         note = f"Editor not specified. Доступні редактори: {', '.join(editors.keys())}. Вкажіть --editor."
         return fallback, note
+        
     return resolved, None
 
 
@@ -308,6 +305,19 @@ def perform_install(cfg: Dict[str, Any], editor: str) -> Tuple[bool, str]:
     return False, f"Install не налаштовано для {label}"
 
 
+def _scan_directory(p: str) -> Dict[str, Any]:
+    """Helper to scan a single directory/file."""
+    entry: Dict[str, Any] = {"path": p, "type": "file" if os.path.isfile(p) else "dir"}
+    if os.path.isdir(p):
+        try:
+            items = os.listdir(p)
+            entry["items"] = len(items)
+            entry["sample"] = items[:20]
+        except Exception as e:
+            entry["error"] = str(e)
+    return entry
+
+
 def scan_traces(editor: str) -> Dict[str, Any]:
     """Scan for editor traces in system directories."""
     editor_key = editor.strip().lower()
@@ -331,19 +341,12 @@ def scan_traces(editor: str) -> Dict[str, Any]:
     patterns = patterns_map.get(editor_key) or [f"*{editor_key}*"]
     found: List[Dict[str, Any]] = []
 
+    # System library scan
     for b in base_dirs:
         base = os.path.expanduser(b)
         for pat in patterns:
             for p in sorted(glob.glob(os.path.join(base, pat))):
-                entry: Dict[str, Any] = {"path": p, "type": "file" if os.path.isfile(p) else "dir"}
-                if os.path.isdir(p):
-                    try:
-                        items = os.listdir(p)
-                        entry["items"] = len(items)
-                        entry["sample"] = items[:20]
-                    except Exception as e:
-                        entry["error"] = str(e)
-                found.append(entry)
+                found.append(_scan_directory(p))
 
     # Applications bundles
     for pat in patterns:
@@ -352,11 +355,7 @@ def scan_traces(editor: str) -> Dict[str, Any]:
 
     # Dot-directories
     dot_candidates = [
-        os.path.expanduser("~/.vscode"),
-        os.path.expanduser("~/.vscode-oss"),
-        os.path.expanduser("~/.cursor"),
-        os.path.expanduser("~/.windsurf"),
-        os.path.expanduser("~/.continue"),
+        os.path.expanduser(f"~/.{e}") for e in ["vscode", "vscode-oss", "cursor", "windsurf", "continue"]
     ]
     for p in dot_candidates:
         if os.path.exists(p) and editor_key in os.path.basename(p).lower():

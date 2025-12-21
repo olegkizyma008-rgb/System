@@ -52,14 +52,15 @@ class AtlasMemory:
         # Best-effort repair+retry for rare Rust sqlite panics
         try:
             self.client = chromadb.PersistentClient(path=str(persist_dir))
-        except BaseException:
+        except Exception as e:
+            # Handle potential corruption by backing up and recreating
             try:
                 backup_dir = persist_dir.parent / f"{persist_dir.name}_corrupt_{int(time.time())}"
                 persist_dir.rename(backup_dir)
                 persist_dir.mkdir(parents=True, exist_ok=True)
                 self.client = chromadb.PersistentClient(path=str(persist_dir))
-            except BaseException as e:
-                raise RuntimeError(f"ChromaDB PersistentClient failed for {persist_dir}: {e}")
+            except Exception as retry_e:
+                raise RuntimeError(f"ChromaDB PersistentClient failed for {persist_dir}. Original error: {e}. Recovery error: {retry_e}")
         
         # Initialize Collections
         self.ui_patterns = self.client.get_or_create_collection(name="ui_patterns")

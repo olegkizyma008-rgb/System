@@ -54,50 +54,96 @@ def build_keybindings(
 ) -> Tuple[KeyBindings, Callable]:
     kb = KeyBindings()
 
-    def _find_window_by_name(event: Any, name: str) -> Any:
-        try:
-            for w in event.app.layout.find_all_windows():
-                if getattr(w, "name", None) == name:
-                    return w
-        except Exception:
-            return None
+def _find_window_by_name(event: Any, name: str) -> Any:
+    try:
+        for w in event.app.layout.find_all_windows():
+            if getattr(w, "name", None) == name:
+                return w
+    except Exception:
         return None
+    return None
 
-    def _scroll_named_window(event: Any, name: str, delta: int) -> None:
-        w = _find_window_by_name(event, name)
-        if w is None:
-            return
-        info = getattr(w, "render_info", None)
-        if info is None:
-            return
-        try:
-            max_scroll = max(0, int(info.content_height) - int(info.window_height))
-            w.vertical_scroll = max(0, min(max_scroll, int(getattr(w, "vertical_scroll", 0)) + int(delta)))
-        except Exception:
-            return
 
-    def _is_section_item(item: Any) -> bool:
-        return isinstance(item, tuple) and len(item) == 3 and item[2] == "section"
+def _scroll_named_window(event: Any, name: str, delta: int) -> None:
+    w = _find_window_by_name(event, name)
+    if w is None:
+        return
+    info = getattr(w, "render_info", None)
+    if info is None:
+        return
+    try:
+        max_scroll = max(0, int(info.content_height) - int(info.window_height))
+        w.vertical_scroll = max(0, min(max_scroll, int(getattr(w, "vertical_scroll", 0)) + int(delta)))
+    except Exception:
+        return
 
-    def _settings_next_selectable_index(items: List[Any], start: int, direction: int) -> int:
-        if not items:
-            return 0
-        idx = max(0, min(int(start), len(items) - 1))
-        step = 1 if direction >= 0 else -1
-        while 0 <= idx < len(items) and _is_section_item(items[idx]):
-            idx += step
-        if 0 <= idx < len(items):
-            return idx
-        # fallback: scan from beginning/end
-        if step > 0:
-            for i in range(0, len(items)):
-                if not _is_section_item(items[i]):
-                    return i
-        else:
-            for i in range(len(items) - 1, -1, -1):
-                if not _is_section_item(items[i]):
-                    return i
+
+def _is_section_item(item: Any) -> bool:
+    return isinstance(item, tuple) and len(item) == 3 and item[2] == "section"
+
+
+def _settings_next_selectable_index(items: List[Any], start: int, direction: int) -> int:
+    if not items:
         return 0
+    idx = max(0, min(int(start), len(items) - 1))
+    step = 1 if direction >= 0 else -1
+    
+    # Search for the next non-section item in the given direction
+    curr = idx
+    while 0 <= curr < len(items):
+        if not _is_section_item(items[curr]):
+            return curr
+        curr += step
+        
+    # Fallback: scan the entire list from the appropriate end
+    indices = range(len(items)) if step > 0 else range(len(items) - 1, -1, -1)
+    for i in indices:
+        if not _is_section_item(items[i]):
+            return i
+            
+    return 0
+
+
+def _get_menu_max_index(state: Any, MenuLevel: Any, MAIN_MENU_ITEMS: Sequence[Any],
+                        get_custom_tasks_menu_items: Callable, get_monitoring_menu_items: Callable,
+                        get_editors_list: Callable, get_cleanup_cfg: Callable,
+                        AVAILABLE_LOCALES: Sequence[Any], get_settings_menu_items: Callable,
+                        get_automation_permissions_menu_items: Callable,
+                        get_monitor_menu_items: Callable, get_llm_menu_items: Callable,
+                        get_llm_sub_menu_items: Callable, get_agent_menu_items: Callable) -> int:
+    lvl = state.menu_level
+    
+    # Registry of calculations for most menu levels
+    calc_map = {
+        MenuLevel.MAIN: lambda: len(MAIN_MENU_ITEMS) - 1,
+        MenuLevel.CUSTOM_TASKS: lambda: max(0, len(get_custom_tasks_menu_items()) - 1),
+        MenuLevel.MONITORING: lambda: max(0, len(get_monitoring_menu_items()) - 1),
+        MenuLevel.LOCALES: lambda: len(AVAILABLE_LOCALES) - 1,
+        MenuLevel.SETTINGS: lambda: max(0, len(get_settings_menu_items()) - 1),
+        MenuLevel.AUTOMATION_PERMISSIONS: lambda: max(0, len(get_automation_permissions_menu_items()) - 1),
+        MenuLevel.MONITOR_TARGETS: lambda: max(0, len(get_monitor_menu_items()) - 1),
+        MenuLevel.LLM_SETTINGS: lambda: max(0, len(get_llm_menu_items()) - 1),
+        MenuLevel.AGENT_SETTINGS: lambda: max(0, len(get_agent_menu_items()) - 1),
+        MenuLevel.APPEARANCE: lambda: max(0, len(THEME_NAMES) - 1),
+        MenuLevel.LANGUAGE: lambda: 1,
+    }
+    
+    if lvl in calc_map:
+        return calc_map[lvl]()
+        
+    # Handle composite or dynamic levels
+    if lvl in {MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}:
+        return max(0, len(get_editors_list()) - 1)
+        
+    if lvl == MenuLevel.MODULE_LIST:
+        m_cfg = get_cleanup_cfg() or {}
+        m_mods = m_cfg.get("editors", {}).get(state.selected_editor or "", {}).get("modules", [])
+        return max(0, len(m_mods) - 1)
+        
+    if lvl in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
+        return max(0, len(get_llm_sub_menu_items(lvl)) - 1)
+        
+    return 0
 
     @kb.add("c-c")
     def _(event):
@@ -320,49 +366,13 @@ def build_keybindings(
 
     @kb.add("down", filter=show_menu)
     def _(event):
-        max_idx = 0
-        if state.menu_level == MenuLevel.MAIN:
-            max_idx = len(MAIN_MENU_ITEMS) - 1
-        elif state.menu_level == MenuLevel.CUSTOM_TASKS:
-            max_idx = max(0, len(get_custom_tasks_menu_items()) - 1)
-        elif state.menu_level == MenuLevel.MONITORING:
-            max_idx = max(0, len(get_monitoring_menu_items()) - 1)
-        elif state.menu_level in {MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}:
-            max_idx = max(0, len(get_editors_list()) - 1)
-        elif state.menu_level == MenuLevel.MODULE_LIST:
-            cfg = get_cleanup_cfg() or {}
-            mods = cfg.get("editors", {}).get(state.selected_editor or "", {}).get("modules", [])
-            max_idx = max(0, len(mods) - 1)
-        elif state.menu_level == MenuLevel.LOCALES:
-            max_idx = len(AVAILABLE_LOCALES) - 1
-        elif state.menu_level == MenuLevel.SETTINGS:
-            max_idx = max(0, len(get_settings_menu_items()) - 1)
-        elif state.menu_level == MenuLevel.UNSAFE_MODE:
-            max_idx = 0
-        elif state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
-            max_idx = max(0, len(get_automation_permissions_menu_items()) - 1)
-        elif state.menu_level == MenuLevel.MONITOR_TARGETS:
-            max_idx = max(0, len(get_monitor_menu_items()) - 1)
-        elif state.menu_level == MenuLevel.MONITOR_CONTROL:
-            max_idx = 0
-        elif state.menu_level == MenuLevel.LLM_SETTINGS:
-            max_idx = max(0, len(get_llm_menu_items()) - 1)
-        elif state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
-            max_idx = max(0, len(get_llm_sub_menu_items(state.menu_level)) - 1)
-        elif state.menu_level == MenuLevel.AGENT_SETTINGS:
-            max_idx = max(0, len(get_agent_menu_items()) - 1)
-        elif state.menu_level == MenuLevel.APPEARANCE:
-            max_idx = max(0, len(THEME_NAMES) - 1)
-        elif state.menu_level == MenuLevel.LANGUAGE:
-            max_idx = 1
-        elif state.menu_level == MenuLevel.LAYOUT:
-            max_idx = 0
-        elif state.menu_level == MenuLevel.DEV_SETTINGS:
-            max_idx = 0
-        elif state.menu_level == MenuLevel.SELF_HEALING:
-            max_idx = 0
-        elif state.menu_level == MenuLevel.LEARNING_MODE:
-            max_idx = 0
+        max_idx = _get_menu_max_index(
+            state, MenuLevel, MAIN_MENU_ITEMS, get_custom_tasks_menu_items,
+            get_monitoring_menu_items, get_editors_list, get_cleanup_cfg,
+            AVAILABLE_LOCALES, get_settings_menu_items, get_automation_permissions_menu_items,
+            get_monitor_menu_items, get_llm_menu_items, get_llm_sub_menu_items,
+            get_agent_menu_items
+        )
 
         state.menu_index = min(max_idx, state.menu_index + 1)
 
@@ -405,32 +415,62 @@ def build_keybindings(
         ok, msg = run_cleanup(load_cleanup_config(), key, dry_run=True)
         log(msg, "action" if ok else "error")
 
+    def handle_module_list_space():
+        editor = state.selected_editor
+        if not editor: return
+        cfg = get_cleanup_cfg() or {}
+        meta = cfg.get("editors", {}).get(editor, {})
+        mods = meta.get("modules", [])
+        if not mods: return
+        m = mods[state.menu_index]
+        mid = m.get("id")
+        if not mid: return
+        ref = find_module(cfg, editor, str(mid))
+        if not ref: return
+        new_state = not bool(m.get("enabled"))
+        if set_module_enabled(cfg, ref, new_state):
+            set_cleanup_cfg(load_cleanup_config())
+            log(f"{editor}/{mid}: {'ON' if new_state else 'OFF'}", "action")
+        else:
+            log("Не вдалося змінити модуль.", "error")
+
+    def handle_llm_settings_space():
+        items = get_llm_sub_menu_items(state.menu_level)
+        if not items: return
+        state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+        itm = items[state.menu_index]
+        key = itm[1] if len(itm) > 1 else ""
+        section = {MenuLevel.LLM_ATLAS: "atlas", MenuLevel.LLM_TETYANA: "tetyana", 
+                   MenuLevel.LLM_GRISHA: "grisha", MenuLevel.LLM_VISION: "vision", 
+                   MenuLevel.LLM_DEFAULTS: "defaults"}.get(state.menu_level, "")
+        from tui.tools import tool_llm_set, tool_llm_status
+        if key == "provider":
+            cur_prov = tool_llm_status({"section": section}).get("provider", "copilot")
+            provs = ["copilot", "openai", "anthropic", "gemini"]
+            next_prov = provs[(provs.index(cur_prov) + 1) % len(provs)] if cur_prov in provs else "copilot"
+            tool_llm_set({"section": section, "provider": next_prov})
+            log(f"Provider set to: {next_prov}", "action")
+        elif key in {"model", "main_model"}:
+            start_status = tool_llm_status({"section": section})
+            cur_mod = start_status.get("model") or start_status.get("main_model") or ""
+            models = ["gpt-4.1", "gpt-4o", "gpt-4", "claude-3-5-sonnet-latest", "gemini-1.5-pro-002", "mistral-large-latest"]
+            next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
+            tool_llm_set({"main_model": next_mod} if section == "defaults" else {"section": section, "model": next_mod})
+            log(f"Model set to: {next_mod}", "action")
+        elif key == "vision_model":
+            cur_mod = tool_llm_status({"section": section}).get("vision_model", "")
+            models = ["gpt-4.1-vision", "gpt-4o", "claude-3-opus", "gemini-1.5-flash"]
+            next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
+            tool_llm_set({"vision_model": next_mod})
+            log(f"Vision model set to: {next_mod}", "action")
+        force_ui_update()
+
     @kb.add("space", filter=show_menu)
     def _(event):
-        if state.menu_level == MenuLevel.MODULE_LIST:
-            editor = state.selected_editor
-            if not editor:
-                return
-            cfg = get_cleanup_cfg() or {}
-            meta = cfg.get("editors", {}).get(editor, {})
-            mods = meta.get("modules", [])
-            if not mods:
-                return
-            m = mods[state.menu_index]
-            mid = m.get("id")
-            if not mid:
-                return
-            ref = find_module(cfg, editor, str(mid))
-            if not ref:
-                return
-            new_state = not bool(m.get("enabled"))
-            if set_module_enabled(cfg, ref, new_state):
-                set_cleanup_cfg(load_cleanup_config())
-                log(f"{editor}/{mid}: {'ON' if new_state else 'OFF'}", "action")
-            else:
-                log("Не вдалося змінити модуль.", "error")
-
-        elif state.menu_level == MenuLevel.LOCALES:
+        lvl = state.menu_level
+        if lvl == MenuLevel.MODULE_LIST:
+            handle_module_list_space()
+        elif lvl == MenuLevel.LOCALES:
             loc = AVAILABLE_LOCALES[state.menu_index]
             if loc.code == localization.primary:
                 log("Не можна вимкнути primary локаль.", "error")
@@ -442,15 +482,12 @@ def build_keybindings(
                 localization.selected.append(loc.code)
                 log(f"Увімкнено: {loc.code}", "action")
             localization.save()
-
-        elif state.menu_level == MenuLevel.MONITOR_TARGETS:
+        elif lvl == MenuLevel.MONITOR_TARGETS:
             items = get_monitor_menu_items()
-            if not items:
-                return
+            if not items: return
             normalize_menu_index(items)
             it = items[state.menu_index]
-            if not getattr(it, "selectable", False):
-                return
+            if not getattr(it, "selectable", False): return
             if it.key in state.monitor_targets:
                 state.monitor_targets.remove(it.key)
                 log(f"Monitor: OFF {it.label}", "action")
@@ -458,51 +495,8 @@ def build_keybindings(
                 state.monitor_targets.add(it.key)
                 log(f"Monitor: ON {it.label}", "action")
             force_ui_update()
-
-        elif state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
-            items = get_llm_sub_menu_items(state.menu_level)
-            if not items: return
-            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            itm = items[state.menu_index]
-            key = itm[1] if len(itm) > 1 else ""
-            
-            section = ""
-            if state.menu_level == MenuLevel.LLM_ATLAS: section = "atlas"
-            elif state.menu_level == MenuLevel.LLM_TETYANA: section = "tetyana"
-            elif state.menu_level == MenuLevel.LLM_GRISHA: section = "grisha"
-            elif state.menu_level == MenuLevel.LLM_VISION: section = "vision"
-            elif state.menu_level == MenuLevel.LLM_DEFAULTS: section = "defaults"
-            
-            from tui.tools import tool_llm_set, tool_llm_status
-            
-            if key == "provider":
-                start_status = tool_llm_status({"section": section})
-                cur_prov = start_status.get("provider", "copilot")
-                provs = ["copilot", "openai", "anthropic", "gemini"]
-                next_prov = provs[(provs.index(cur_prov) + 1) % len(provs)] if cur_prov in provs else "copilot"
-                tool_llm_set({"section": section, "provider": next_prov})
-                log(f"Provider set to: {next_prov}", "action")
-                force_ui_update()
-            elif key == "model" or key == "main_model":
-                start_status = tool_llm_status({"section": section})
-                # Check for model or main_model key
-                cur_mod = start_status.get("model") or start_status.get("main_model") or ""
-                models = ["gpt-4.1", "gpt-4o", "gpt-4", "claude-3-5-sonnet-latest", "gemini-1.5-pro-002", "mistral-large-latest"]
-                next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
-                if section == "defaults":
-                    tool_llm_set({"main_model": next_mod})
-                else:
-                    tool_llm_set({"section": section, "model": next_mod})
-                log(f"Model set to: {next_mod}", "action")
-                force_ui_update()
-            elif key == "vision_model":
-                start_status = tool_llm_status({"section": section})
-                cur_mod = start_status.get("vision_model", "")
-                models = ["gpt-4.1-vision", "gpt-4o", "claude-3-opus", "gemini-1.5-flash"]
-                next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
-                tool_llm_set({"vision_model": next_mod})
-                log(f"Vision model set to: {next_mod}", "action")
-                force_ui_update()
+        elif lvl in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
+            handle_llm_settings_space()
 
     @kb.add("s", filter=show_menu)
     def _(event):
@@ -529,240 +523,117 @@ def build_keybindings(
         save_monitor_settings()
         log(f"Monitoring sudo: {'ON' if state.monitor_use_sudo else 'OFF'}", "action")
 
+    def handle_automation_enter():
+        items = get_automation_permissions_menu_items()
+        if not items: return
+        state.menu_index = max(0, min(state.menu_index, len(items) - 1))
+        itm = items[state.menu_index]
+        _, perm_key = itm[0], itm[1]
+        if perm_key == "ui_execution_mode":
+            cur = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
+            state.ui_execution_mode = "gui" if cur == "native" else "native"
+            log(f"Execution mode: {state.ui_execution_mode}", "action")
+        elif perm_key == "automation_allow_shortcuts":
+            state.automation_allow_shortcuts = not bool(getattr(state, "automation_allow_shortcuts", False))
+            log(f"Shortcuts: {'ON' if state.automation_allow_shortcuts else 'OFF'}", "action")
+        save_ui_settings()
+
     @kb.add("enter", filter=show_menu)
     def handle_menu_enter(event=None):
-        if state.menu_level == MenuLevel.MAIN:
+        lvl = state.menu_level
+        if lvl == MenuLevel.MAIN:
             itm = MAIN_MENU_ITEMS[state.menu_index]
-            lvl = itm[1]
-            state.menu_level = lvl
-            state.menu_index = 0
-            return
-
-        if state.menu_level == MenuLevel.CUSTOM_TASKS:
+            state.menu_level, state.menu_index = itm[1], 0
+        elif lvl == MenuLevel.CUSTOM_TASKS:
             items = get_custom_tasks_menu_items()
-            if not items:
-                return
-            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            itm = items[state.menu_index]
-            _label, action = itm[0], itm[1]
-            try:
-                if not callable(action):
-                    return
-                ok, msg = action()
-                log(msg, "action" if ok else "error")
-            except Exception as e:
-                log(f"Custom task failed: {e}", "error")
-            return
-
-        if state.menu_level == MenuLevel.MONITORING:
+            if items:
+                action = items[max(0, min(state.menu_index, len(items) - 1))][1]
+                if callable(action):
+                    try: ok, msg = action(); log(msg, "action" if ok else "error")
+                    except Exception as e: log(f"Task failed: {e}", "error")
+        elif lvl == MenuLevel.MONITORING:
             items = get_monitoring_menu_items()
-            if not items:
-                return
-            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            itm = items[state.menu_index]
-            _, lvl = itm[0], itm[1]
-            state.menu_level = lvl
-            state.menu_index = 0
-            return
-
-        if state.menu_level == MenuLevel.SETTINGS:
+            if items: state.menu_level, state.menu_index = items[max(0, min(state.menu_index, len(items) - 1))][1], 0
+        elif lvl == MenuLevel.SETTINGS:
             items = get_settings_menu_items()
-            if not items:
-                return
-            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            state.menu_index = _settings_next_selectable_index(items, state.menu_index, 1)
-            item = items[state.menu_index]
-            if _is_section_item(item):
-                return
-            _, lvl = item[0], item[1]
-            state.menu_level = lvl
-            state.menu_index = 0
-            return
-
-        if state.menu_level == MenuLevel.LLM_SETTINGS:
+            if items:
+                idx = _settings_next_selectable_index(items, max(0, min(state.menu_index, len(items) - 1)), 1)
+                item = items[idx]
+                if not _is_section_item(item): state.menu_level, state.menu_index = item[1], 0
+        elif lvl == MenuLevel.LLM_SETTINGS:
             items = get_llm_menu_items()
-            if not items:
-                return
-            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            _, lvl = items[state.menu_index][0], items[state.menu_index][1]
-            state.menu_level = lvl
-            state.menu_index = 0
-            return
-            
-        if state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
+            if items: state.menu_level, state.menu_index = items[max(0, min(state.menu_index, len(items) - 1))][1], 0
+        elif lvl in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
              log("To edit model, use CLI: /llm set section=<name> model=<model>", "info")
-             return
-
-        if state.menu_level == MenuLevel.UNSAFE_MODE:
+        elif lvl == MenuLevel.UNSAFE_MODE:
             state.ui_unsafe_mode = not bool(getattr(state, "ui_unsafe_mode", False))
-            save_ui_settings()
-            log(f"Unsafe mode: {'ON' if state.ui_unsafe_mode else 'OFF'}", "action")
-            return
-
-        if state.menu_level == MenuLevel.SELF_HEALING:
+            save_ui_settings(); log(f"Unsafe: {'ON' if state.ui_unsafe_mode else 'OFF'}", "action")
+        elif lvl == MenuLevel.SELF_HEALING:
             state.ui_self_healing = not bool(getattr(state, "ui_self_healing", False))
-            save_ui_settings()
-            log(f"Self-healing: {'ON' if state.ui_self_healing else 'OFF'}", "action")
-            return
-
-        if state.menu_level == MenuLevel.LEARNING_MODE:
+            save_ui_settings(); log(f"Self-healing: {'ON' if state.ui_self_healing else 'OFF'}", "action")
+        elif lvl == MenuLevel.LEARNING_MODE:
             state.learning_mode = not bool(getattr(state, "learning_mode", False))
-            save_ui_settings()
-            log(f"Learning mode: {'ON' if state.learning_mode else 'OFF'}", "action")
-            return
-
-        if state.menu_level == MenuLevel.AUTOMATION_PERMISSIONS:
-            items = get_automation_permissions_menu_items()
-            if not items:
-                return
-            state.menu_index = max(0, min(state.menu_index, len(items) - 1))
-            itm = items[state.menu_index]
-            _, perm_key = itm[0], itm[1]
-            if perm_key == "ui_execution_mode":
-                cur = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
-                state.ui_execution_mode = "gui" if cur == "native" else "native"
-                log(f"Execution mode: {state.ui_execution_mode}", "action")
-            if perm_key == "automation_allow_shortcuts":
-                state.automation_allow_shortcuts = not bool(getattr(state, "automation_allow_shortcuts", False))
-                log(f"Shortcuts: {'ON' if state.automation_allow_shortcuts else 'OFF'}", "action")
-            save_ui_settings()
-            return
-
-        if state.menu_level == MenuLevel.DEV_SETTINGS:
-            # Toggle between vibe-cli and continue
+            save_ui_settings(); log(f"Learning: {'ON' if state.learning_mode else 'OFF'}", "action")
+        elif lvl == MenuLevel.AUTOMATION_PERMISSIONS:
+            handle_automation_enter()
+        elif lvl == MenuLevel.DEV_SETTINGS:
             cur = str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower()
             state.ui_dev_code_provider = "continue" if cur == "vibe-cli" else "vibe-cli"
-            save_ui_settings()
-            log(f"Dev code provider: {state.ui_dev_code_provider.upper()}", "action")
-            return
-
-        if state.menu_level == MenuLevel.APPEARANCE:
+            save_ui_settings(); log(f"Dev provider: {state.ui_dev_code_provider.upper()}", "action")
+        elif lvl == MenuLevel.APPEARANCE:
             themes = list(THEME_NAMES)
-            state.menu_index = max(0, min(state.menu_index, len(themes) - 1))
-            state.ui_theme = themes[state.menu_index]
-            save_ui_settings()
-            log(f"Theme set: {state.ui_theme}", "action")
-            return
-
-        if state.menu_level == MenuLevel.LANGUAGE:
+            state.ui_theme = themes[max(0, min(state.menu_index, len(themes) - 1))]
+            save_ui_settings(); log(f"Theme set: {state.ui_theme}", "action")
+        elif lvl == MenuLevel.LANGUAGE:
             langs = list(TOP_LANGS)
-            if not langs:
-                return
-            state.menu_index = max(0, min(state.menu_index, 1))
-            if state.menu_index == 0:
-                cur = state.ui_lang if state.ui_lang in langs else langs[0]
-                state.ui_lang = langs[(langs.index(cur) + 1) % len(langs)]
-                save_ui_settings()
-                log(f"UI language set: {state.ui_lang} ({lang_name(state.ui_lang)})", "action")
-                return
-
-            cur = state.chat_lang if state.chat_lang in langs else langs[0]
-            state.chat_lang = langs[(langs.index(cur) + 1) % len(langs)]
-            save_ui_settings()
-            reset_agent_llm()
-            log(f"Chat language set: {state.chat_lang} ({lang_name(state.chat_lang)})", "action")
-            return
-
-
-        if state.menu_level == MenuLevel.CLEANUP_EDITORS:
+            if langs:
+                idx = max(0, min(state.menu_index, 1))
+                if idx == 0:
+                    cur = state.ui_lang if state.ui_lang in langs else langs[0]
+                    state.ui_lang = langs[(langs.index(cur) + 1) % len(langs)]
+                    save_ui_settings(); log(f"UI lang: {state.ui_lang}", "action")
+                else:
+                    cur = state.chat_lang if state.chat_lang in langs else langs[0]
+                    state.chat_lang = langs[(langs.index(cur) + 1) % len(langs)]
+                    save_ui_settings(); reset_agent_llm(); log(f"Chat lang: {state.chat_lang}", "action")
+        elif lvl == MenuLevel.CLEANUP_EDITORS:
             editors = get_editors_list()
-            if not editors:
-                return
-            key = editors[state.menu_index][0]
-            state.selected_editor = key
-            
-            log(f"Запуск очистки {key}...", "info")
-            
-            # Run cleanup in background thread to not block UI
-            import threading
-            
-            def run_cleanup_thread():
-                import re
-                
-                def cleanup_log(line: str):
-                    # Strip ANSI color codes for cleaner display
-                    clean_line = re.sub(r'\x1b\[[0-9;]*m', '', line)
-                    if clean_line.strip():
-                        log(clean_line, "action")
-                        try:
-                            from tui.layout import force_ui_update
-                            force_ui_update()
-                        except Exception:
-                            pass
-                
-                cfg = load_cleanup_config()
-                ok, msg = run_cleanup(cfg, key, dry_run=False, log_callback=cleanup_log)
-                log(msg, "action" if ok else "error")
-                try:
-                    from tui.layout import force_ui_update
-                    force_ui_update()
-                except Exception:
-                    pass
-            
-            thread = threading.Thread(target=run_cleanup_thread, daemon=True)
-            thread.start()
-            return
-
-        if state.menu_level == MenuLevel.MODULE_EDITORS:
+            if editors:
+                key = editors[state.menu_index][0]
+                state.selected_editor = key; log(f"Clearing {key}...", "info")
+                import threading
+                def run_cleanup_thread():
+                    import re
+                    def cleanup_log(line: str):
+                        clean_line = re.sub(r'\x1b\[[0-9;]*m', '', line)
+                        if clean_line.strip(): log(clean_line, "action"); force_ui_update()
+                    ok, msg = run_cleanup(load_cleanup_config(), key, dry_run=False, log_callback=cleanup_log)
+                    log(msg, "action" if ok else "error"); force_ui_update()
+                threading.Thread(target=run_cleanup_thread, daemon=True).start()
+        elif lvl == MenuLevel.MODULE_EDITORS:
             editors = get_editors_list()
-            if not editors:
-                return
-            key = editors[state.menu_index][0]
-            state.selected_editor = key
-            set_cleanup_cfg(load_cleanup_config())
-            state.menu_level = MenuLevel.MODULE_LIST
-            state.menu_index = 0
-            return
-
-        if state.menu_level == MenuLevel.INSTALL_EDITORS:
+            if editors: state.selected_editor, state.menu_level, state.menu_index = editors[state.menu_index][0], MenuLevel.MODULE_LIST, 0
+        elif lvl == MenuLevel.INSTALL_EDITORS:
             editors = get_editors_list()
-            if not editors:
-                return
-            key = editors[state.menu_index][0]
-            state.selected_editor = key
-            ok, msg = perform_install(load_cleanup_config(), key)
-            log(msg, "action" if ok else "error")
-            return
-
-        if state.menu_level == MenuLevel.LOCALES:
+            if editors: ok, msg = perform_install(load_cleanup_config(), editors[state.menu_index][0]); log(msg, "action" if ok else "error")
+        elif lvl == MenuLevel.LOCALES:
             loc = AVAILABLE_LOCALES[state.menu_index]
             localization.primary = loc.code
-            if loc.code not in localization.selected:
-                localization.selected.insert(0, loc.code)
-            else:
-                localization.selected = [loc.code] + [c for c in localization.selected if c != loc.code]
-            localization.save()
-            log(f"Primary встановлено: {loc.code}", "action")
-            return
-
-        if state.menu_level == MenuLevel.MONITOR_TARGETS:
-            if save_monitor_targets():
-                log(f"Saved monitor targets: {', '.join(sorted(state.monitor_targets)) or '(none)'}", "action")
-            else:
-                log("Failed to save monitor targets.", "error")
-            state.menu_level = MenuLevel.MAIN
-            state.menu_index = 0
-            return
-
-        if state.menu_level == MenuLevel.MONITOR_CONTROL:
+            localization.selected = [loc.code] + [c for c in localization.selected if c != loc.code]
+            localization.save(); log(f"Primary set: {loc.code}", "action")
+        elif lvl == MenuLevel.MONITOR_TARGETS:
+            if save_monitor_targets(): log(f"Monitor targets saved", "action")
+            else: log("Failed to save", "error")
+            state.menu_level, state.menu_index = MenuLevel.MAIN, 0
+        elif lvl == MenuLevel.MONITOR_CONTROL:
             if state.monitor_active:
                 ok, msg = monitor_stop_selected()
                 state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
                 log(msg, "action" if ok else "error")
-                return
-
-            if not state.monitor_targets:
-                log("Monitoring: обери цілі у 'Monitoring Targets' (потрібні хрестики) і натисни Save.", "error")
-                return
-
-            watch_items = monitor_resolve_watch_items(state.monitor_targets)
-            if state.monitor_source == "watchdog" and not watch_items:
-                log("Monitoring: не вдалося знайти локальні директорії для вибраних цілей.", "error")
-                return
-
-            ok, msg = monitor_start_selected()
-            state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
-            log(msg, "action" if ok else "error")
-            return
+            elif state.monitor_targets:
+                ok, msg = monitor_start_selected()
+                state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
+                log(msg, "action" if ok else "error")
+            else: log("Select targets first", "error")
 
     return kb, handle_menu_enter

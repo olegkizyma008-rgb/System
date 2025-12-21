@@ -163,15 +163,26 @@ class MCPToolRegistry:
     Only tools registered here can be executed by the LLM.
     """
     
+    VISION_DISABLED_ERROR = "Vision tools disabled (TRINITY_DISABLE_VISION=1)"
+    LAST_RESPONSE_FILE = ".last_response.txt"
+
     def __init__(self):
         self._tools: Dict[str, Callable] = {}
         self._descriptions: Dict[str, str] = {}
         self._external_providers: Dict[str, ExternalMCPProvider] = {}
         self._external_tools_map: Dict[str, str] = {} # tool_name -> provider_name
-        self._register_defaults()
+        self._register_foundation_tools()
+        self._register_filesystem_tools()
+        self._register_dev_tools()
+        self._register_vision_tools()
+        self._register_system_and_desktop_tools()
+        self._register_memory_tools()
+        self._register_browser_tools()
+        self._register_recorder_tools()
+        self._register_response_tools()
         self._register_external_mcp()
-        
-    def _register_defaults(self):
+
+    def _register_foundation_tools(self):
         # Foundation Tools
         self.register_tool("run_shell", run_shell, "Execute shell command. Args: command (str), allow=True")
         self.register_tool("open_app", open_app, "Open MacOS Application. Args: name (str)")
@@ -192,113 +203,36 @@ class MCPToolRegistry:
         # Log confirmation of low-level tool availability (User Request)
         print("✅ [MCP] Low-level tools available: run_shell, run_applescript, open_app, run_shortcut")
 
-        def _get_recorder_service() -> Any:
-            # Optional integration with TUI recorder if running under that environment.
-            # Keep this import local to avoid hard dependency from core -> tui.
-            try:
-                from tui.cli import _get_recorder_service as _tui_get_recorder_service  # type: ignore
-
-                return _tui_get_recorder_service()
-            except Exception:
-                return None
-
-        def _record_automation_event(tool: str, args: Dict[str, Any], result: Any) -> None:
-            try:
-                rec = _get_recorder_service()
-                if rec is None:
-                    return
-                status = getattr(rec, "status", None)
-                if not bool(getattr(status, "running", False)):
-                    return
-                if not hasattr(rec, "_enqueue"):
-                    return
-
-                safe_args: Dict[str, Any] = {}
-                for k, v in (args or {}).items():
-                    if k == "script" and isinstance(v, str):
-                        safe_args[k] = v[:200]
-                    elif isinstance(v, str):
-                        safe_args[k] = v[:500]
-                    else:
-                        safe_args[k] = v
-
-                ev = {
-                    "type": "automation",
-                    "ts": time.time(),
-                    "tool": str(tool or ""),
-                    "args": safe_args,
-                    "result": result,
-                }
-                rec._enqueue(ev)
-            except Exception:
-                return
-
-        def _open_app_wrapped(name: str, **kwargs) -> Any:
-            res = open_app(name=name)
-            # Record with full kwargs for debugging
-            _record_automation_event("open_app", {"name": name, **kwargs}, res)
-            return res
-
-        def _run_applescript_wrapped(script: str, allow: bool = True, **kwargs) -> Any:
-            res = run_applescript(script=script, allow=allow)
-            _record_automation_event("run_applescript", {"script": script, "allow": allow, **kwargs}, res)
-            return res
-
-        def _run_shell_wrapped(command: str, allow: bool = True, **kwargs) -> Any:
-            # Handle potential 'cwd' or other kwargs passed by LLM
-            res = run_shell(command=command, allow=allow, **kwargs)
-            _record_automation_event("run_shell", {"command": command, "allow": allow, **kwargs}, res)
-            return res
-
-        def _run_shortcut_wrapped(name: str, allow: bool = True, **kwargs) -> Any:
-            res = run_shortcut(name=name, allow=allow)
-            _record_automation_event("run_shortcut", {"name": name, "allow": allow, **kwargs}, res)
-            return res
-
-        # Overwrite foundation tools with recorder-aware wrappers.
-        self.register_tool("run_shell", _run_shell_wrapped, "Execute shell command. Args: command (str), allow=True")
-        self.register_tool("open_app", _open_app_wrapped, "Open MacOS Application. Args: name (str)")
-        # run_applescript in automation.py already handles recording via driver, so direct registration is fine
-        # BUT we previously wrapped it for safety/logging in mcp.py.
-        # Let's keep using _run_applescript_wrapped to maintain consistent 'automation' event_type logging in recorder
-        # even if it means potential double logging (one 'automation' event from wrapper, one low-level from driver).
-        # Actually, double logging is noisy. automation.run_applescript(record=True) is sufficient.
+        self.register_tool("run_shell", self._run_shell_wrapped, "Execute shell command. Args: command (str), allow=True")
+        self.register_tool("open_app", self._open_app_wrapped, "Open MacOS Application. Args: name (str)")
         self.register_tool("run_applescript", lambda script, allow=True: run_applescript(script=script, allow=allow), "Run AppleScript. Args: script (str)")
-        self.register_tool("run_shortcut", _run_shortcut_wrapped, "Run Shortcuts automation. Args: name (str), allow=True")
+        self.register_tool("run_shortcut", self._run_shortcut_wrapped, "Run Shortcuts automation. Args: name (str), allow=True")
 
-        def _native() -> Any:
-            return create_automation_executor(recorder_service=_get_recorder_service())
-
-        # Removed _native_cmd as macos_commands is deprecated
-
-        # Native macOS automation (AppleScript-based)
         self.register_tool(
             "native_applescript",
-            lambda script: _native().execute_applescript(str(script or ""), record=True),
+            lambda script: self._native_executor().execute_applescript(str(script or ""), record=True),
             "Execute AppleScript via native automation (recordable if recorder is active). Args: script (str)",
         )
         self.register_tool(
             "native_click_ui",
-            lambda app_name, ui_path: _native().click_ui_element(str(app_name or ""), str(ui_path or ""), record=True),
+            lambda app_name, ui_path: self._native_executor().click_ui_element(str(app_name or ""), str(ui_path or ""), record=True),
             "Click UI element via AppleScript (recordable). Args: app_name (str), ui_path (str)",
         )
         self.register_tool(
             "native_type_text",
-            lambda text: _native().type_text(str(text or ""), record=True),
+            lambda text: self._native_executor().type_text(str(text or ""), record=True),
             "Type text via AppleScript (recordable). Args: text (str)",
         )
         self.register_tool(
             "native_wait",
-            lambda seconds=1.0: _native().wait(float(seconds or 0.0), record=True),
+            lambda seconds=1.0: self._native_executor().wait(float(seconds or 0.0), record=True),
             "Sleep/wait (recordable). Args: seconds (float)",
         )
         self.register_tool(
             "native_front_app",
-            lambda: _native().get_frontmost_app(),
+            lambda: self._native_executor().get_frontmost_app(),
             "Get frontmost application name. Args: none",
         )
-
-        # High-level commands (wrappers)
         self.register_tool(
             "native_open_app",
             lambda name: open_app(str(name or "")),
@@ -309,14 +243,65 @@ class MCPToolRegistry:
             lambda name: activate_app(str(name or "")),
             "Activate application (native). Args: name (str)",
         )
-        
-        # Filesystem
+
+    def _get_recorder_service(self) -> Any:
+        try:
+            from tui.cli import _get_recorder_service as _tui_get_recorder_service
+            return _tui_get_recorder_service()
+        except Exception:
+            return None
+
+    def _record_automation_event(self, tool: str, args: Dict[str, Any], result: Any) -> None:
+        try:
+            rec = self._get_recorder_service()
+            if rec is None or not bool(getattr(rec.status, "running", False)) or not hasattr(rec, "_enqueue"):
+                return
+
+            safe_args: Dict[str, Any] = {}
+            for k, v in (args or {}).items():
+                if k == "script" and isinstance(v, str):
+                    safe_args[k] = v[:200]
+                elif isinstance(v, str):
+                    safe_args[k] = v[:500]
+                else:
+                    safe_args[k] = v
+
+            ev = {
+                "type": "automation",
+                "ts": time.time(),
+                "tool": str(tool or ""),
+                "args": safe_args,
+                "result": result,
+            }
+            rec._enqueue(ev)
+        except Exception:
+            return
+
+    def _open_app_wrapped(self, name: str, **kwargs) -> Any:
+        res = open_app(name=name)
+        self._record_automation_event("open_app", {"name": name, **kwargs}, res)
+        return res
+
+    def _run_shell_wrapped(self, command: str, allow: bool = True, **kwargs) -> Any:
+        res = run_shell(command=command, allow=allow, **kwargs)
+        self._record_automation_event("run_shell", {"command": command, "allow": allow, **kwargs}, res)
+        return res
+
+    def _run_shortcut_wrapped(self, name: str, allow: bool = True, **kwargs) -> Any:
+        res = run_shortcut(name=name, allow=allow)
+        self._record_automation_event("run_shortcut", {"name": name, "allow": allow, **kwargs}, res)
+        return res
+
+    def _native_executor(self) -> Any:
+        return create_automation_executor(recorder_service=self._get_recorder_service())
+
+    def _register_filesystem_tools(self):
         self.register_tool("read_file", read_file, "Read file content. Args: path (str)")
         self.register_tool("write_file", write_file, "Write file content. Args: path (str), content (str)")
         self.register_tool("copy_file", copy_file, "Copy file (binary-safe). Args: src (str), dst (str), overwrite (bool)")
         self.register_tool("list_files", list_files, "List directory. Args: path (str)")
-        
-        # Dev Subsystem
+
+    def _register_dev_tools(self):
         self.register_tool("send_to_windsurf", send_to_windsurf, "Send message to Windsurf Chat. Args: message (str)")
         self.register_tool("open_file_in_windsurf", open_file_in_windsurf, "Open file in Windsurf. Args: path (str), line (int)")
         self.register_tool("is_windsurf_running", is_windsurf_running, "Check if Windsurf is running. Args: none")
@@ -330,14 +315,13 @@ class MCPToolRegistry:
             open_project_in_windsurf,
             "Open a project folder in Windsurf. Args: path (str), new_window (bool)",
         )
-        
-        # Vision/Input
+
+    def _register_vision_tools(self):
         self.register_tool("take_screenshot", take_screenshot, "Take screenshot of app or screen. Args: app_name (optional)")
         self.register_tool("capture_screen", take_screenshot, "Capture current screen state for verification. Args: app_name (optional)")
         self.register_tool("take_burst_screenshot", take_burst_screenshot, "Take multiple screenshots in a burst. Args: app_name (optional), count (int), interval (float)")
         self.register_tool("capture_screen_region", capture_screen_region, "Capture screenshot of screen region. Args: x,y,width,height")
 
-        # Vision tools are optional and can be heavy (OCR/model init). Lazy-import them.
         disable_vision = str(os.environ.get("TRINITY_DISABLE_VISION", "")).strip().lower() in {"1", "true", "yes", "on"}
         if not disable_vision:
             try:
@@ -347,12 +331,9 @@ class MCPToolRegistry:
                     find_image_on_screen as _find_image_on_screen,
                     compare_images as _compare_images,
                 )
-
                 global analyze_with_copilot, ocr_region, find_image_on_screen, compare_images
-                analyze_with_copilot = _analyze_with_copilot
-                ocr_region = _ocr_region
-                find_image_on_screen = _find_image_on_screen
-                compare_images = _compare_images
+                analyze_with_copilot, ocr_region = _analyze_with_copilot, _ocr_region
+                find_image_on_screen, compare_images = _find_image_on_screen, _compare_images
 
                 self.register_tool("vision_analyze", analyze_with_copilot, "Analyze screen with AI to get coordinates and text. Args: image_path (optional), prompt (str)")
                 self.register_tool("analyze_screen", analyze_with_copilot, "Analyze screen with AI to verify state, find elements, or solve tasks. Args: image_path (optional), prompt (str)")
@@ -360,94 +341,52 @@ class MCPToolRegistry:
                 self.register_tool("find_image_on_screen", find_image_on_screen, "Find an image template on screen. Args: template_path (str), tolerance (float)")
                 self.register_tool("compare_images", compare_images, "Compare two images (before/after) using vision. Args: path1 (str), path2 (str), prompt (str optional)")
             except Exception as e:
-                self.register_tool(
-                    "vision_analyze",
-                    lambda image_path=None, prompt=None, **_: {"status": "error", "error": f"Vision tools unavailable: {e}"},
-                    "Analyze screen with AI (unavailable)"
-                )
-                self.register_tool("analyze_screen", lambda image_path=None, prompt=None, **_: {"status": "error", "error": f"Vision tools unavailable: {e}"}, "Analyze screen with AI (unavailable)")
-                self.register_tool("ocr_region", lambda *_, **__: {"status": "error", "error": f"Vision tools unavailable: {e}"}, "OCR a screen region (unavailable)")
-                self.register_tool("find_image_on_screen", lambda *_, **__: {"status": "error", "error": f"Vision tools unavailable: {e}"}, "Find image on screen (unavailable)")
-                self.register_tool("compare_images", lambda *_, **__: {"status": "error", "error": f"Vision tools unavailable: {e}"}, "Compare images (unavailable)")
+                err_func = lambda *_, **__: {"status": "error", "error": f"Vision tools unavailable: {e}"}
+                self.register_tool("vision_analyze", err_func, "Analyze screen with AI (unavailable)")
+                self.register_tool("analyze_screen", err_func, "Analyze screen with AI (unavailable)")
+                self.register_tool("ocr_region", err_func, "OCR a screen region (unavailable)")
+                self.register_tool("find_image_on_screen", err_func, "Find image on screen (unavailable)")
+                self.register_tool("compare_images", err_func, "Compare images (unavailable)")
         else:
-            self.register_tool("vision_analyze", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "Analyze screen with AI (disabled)")
-            self.register_tool("analyze_screen", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "Analyze screen with AI (disabled)")
-            self.register_tool("ocr_region", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "OCR a screen region (disabled)")
-            self.register_tool("find_image_on_screen", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "Find image on screen (disabled)")
-            self.register_tool("compare_images", lambda *_, **__: {"status": "error", "error": "Vision tools disabled (TRINITY_DISABLE_VISION=1)"}, "Compare images (disabled)")
+            err_func = lambda *_, **__: {"status": "error", "error": self.VISION_DISABLED_ERROR}
+            self.register_tool("vision_analyze", err_func, "Analyze screen with AI (disabled)")
+            self.register_tool("analyze_screen", err_func, "Analyze screen with AI (disabled)")
+            self.register_tool("ocr_region", err_func, "OCR a screen region (disabled)")
+            self.register_tool("find_image_on_screen", err_func, "Find image on screen (disabled)")
+            self.register_tool("compare_images", err_func, "Compare images (disabled)")
 
+    def _register_system_and_desktop_tools(self):
         self.register_tool("move_mouse", move_mouse, "Move mouse to absolute coordinates. Args: x (int), y (int)")
         self.register_tool("click_mouse", click_mouse, "Click mouse (left/right/double) optionally at x,y. Args: button(str), x?(int), y?(int)")
         self.register_tool("click", click, "Mouse click. Args: x (int), y (int)")
         self.register_tool("type_text", type_text, "Type text. Args: text (str)")
         self.register_tool("press_key", press_key, "Press key. Args: key (str), command(bool), shift(bool)...")
-
-        # RAG Memory
-        self.register_tool("save_memory", save_memory_tool, "Save info to memory. Args: category (ui_patterns/strategies), content (str)")
-        self.register_tool("rag_query", query_memory_tool, "Query memory. Args: category (str), query (str)")
-
-        # System Tools
         self.register_tool("list_processes", list_processes, "List running processes. Args: limit (int), sort_by (cpu|memory|name)")
         self.register_tool("kill_process", kill_process, "Terminate a process. Args: pid (int)")
         self.register_tool("get_system_stats", get_system_stats, "Get system stats (CPU/Mem). Args: none")
-
-        # Desktop Tools
         self.register_tool("get_monitors_info", get_monitors_info, "Get info about connected displays. Args: none")
         self.register_tool("get_open_windows", get_open_windows, "List open windows. Args: on_screen_only (bool)")
         self.register_tool("get_clipboard", get_clipboard, "Read clipboard content. Args: none")
         self.register_tool("set_clipboard", set_clipboard, "Write to clipboard. Args: text (str)")
 
-        # Cleanup & Privacy (System Extensions)
         from system_ai.tools.cleanup import (
-            system_cleanup_stealth,
-            system_cleanup_windsurf,
-            system_spoof_hardware,
-            system_check_identifiers
+            system_cleanup_stealth, system_cleanup_windsurf,
+            system_spoof_hardware, system_check_identifiers
         )
         self.register_tool("system_cleanup_stealth", system_cleanup_stealth, "Run stealth cleanup (logs, caches). Args: allow=True")
         self.register_tool("system_cleanup_windsurf", system_cleanup_windsurf, "Run deep Windsurf cleanup. Args: allow=True")
         self.register_tool("system_spoof_hardware", system_spoof_hardware, "Spoof MAC/Hostname. Args: allow=True")
         self.register_tool("system_check_identifiers", system_check_identifiers, "Check system identifiers. Args: none")
 
-        # (vision tools registered above)
+    def _register_memory_tools(self):
+        self.register_tool("save_memory", save_memory_tool, "Save info to memory. Args: category (ui_patterns/strategies), content (str)")
+        self.register_tool("rag_query", query_memory_tool, "Query memory. Args: category (str), query (str)")
 
-        # Recorder Control
-        def _recorder_action(action: str) -> Any:
-            svc = _get_recorder_service()
-            if not svc:
-                return {"status": "error", "error": "Recorder service not available"}
-            
-            if action == "start":
-                success, msg = svc.start()
-                return {"status": "success" if success else "error", "message": msg}
-            elif action == "stop":
-                success, msg, path = svc.stop()
-                return {"status": "success" if success else "error", "message": msg, "path": path}
-            elif action == "status":
-                st = svc.get_status()
-                return {"status": "success", "running": st.running, "session_id": st.session_id, "events": st.events_count}
-            return {"status": "error", "error": "Unknown action"}
-
-        self.register_tool("recorder_start", lambda: _recorder_action("start"), "Start screen/event recording. Args: none")
-        self.register_tool("recorder_stop", lambda: _recorder_action("stop"), "Stop recording and save. Args: none")
-        self.register_tool("recorder_status", lambda: _recorder_action("status"), "Get recorder status. Args: none")
-
-
-        # Browser Tools (Local Playwright, routed to MCP when available)
-        # IMPORTANT: Use playwright.playwright_get_visible_html first to find correct selectors!
-        # Common selectors for popular sites:
-        # - YouTube search: [name="search_query"]
-        # - Google search: textarea[name="q"] or input[name="q"]
-        # - Generic search: input[type="search"], [role="searchbox"], #search
-        self.register_tool("browser_open_url", browser_open_url, 
-            "Open URL in browser. Args: url (str), headless (bool=False). Wait 3-5s after for page load.")
-        self.register_tool("browser_navigate", browser_navigate, 
-            "Navigate to URL. Args: url (str), headless (bool=False)")
-        self.register_tool("browser_click_element", browser_click_element, 
-            "Click element. Args: selector (CSS selector str). Use playwright.playwright_get_visible_html to find selectors first!")
-        self.register_tool("browser_type_text", browser_type_text, 
-            "Type text in input. Args: selector (str), text (str), press_enter (bool). "
-            "YouTube: [name='search_query'], Google: textarea[name='q']")
+    def _register_browser_tools(self):
+        self.register_tool("browser_open_url", browser_open_url, "Open URL in browser. Args: url (str), headless (bool=False). Wait 3-5s after for page load.")
+        self.register_tool("browser_navigate", browser_navigate, "Navigate to URL. Args: url (str), headless (bool=False)")
+        self.register_tool("browser_click_element", browser_click_element, "Click element. Args: selector (CSS selector str). Use playwright.playwright_get_visible_html to find selectors first!")
+        self.register_tool("browser_type_text", browser_type_text, "Type text in input. Args: selector (str), text (str), press_enter (bool). YouTube: [name='search_query'], Google: textarea[name='q']")
         self.register_tool("browser_press_key", browser_press_key, "Press a key in browser. Args: key (str)")
         self.register_tool("browser_screenshot", browser_screenshot, "Take screenshot of browser. Args: path (optional str)")
         self.register_tool("browser_snapshot", browser_snapshot, "Get visible text from page for verification. Args: none")
@@ -457,55 +396,43 @@ class MCPToolRegistry:
         self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready. Args: none")
         self.register_tool("browser_close", browser_close, "Close browser. Args: none")
 
+    def _register_recorder_tools(self):
+        def _recorder_action(action: str) -> Any:
+            from core.mcp import _get_recorder_service as get_rec
+            svc = get_rec()
+            if not svc: return {"status": "error", "error": "Recorder service not available"}
+            if action == "start":
+                success, msg = svc.start()
+                return {"status": "success" if success else "error", "message": msg}
+            if action == "stop":
+                success, msg, path = svc.stop()
+                return {"status": "success" if success else "error", "message": msg, "path": path}
+            if action == "status":
+                st = svc.get_status()
+                return {"status": "success", "running": st.running, "session_id": st.session_id, "events": st.events_count}
+            return {"status": "error", "error": "Unknown action"}
 
-        # Project Structure
+        self.register_tool("recorder_start", lambda: _recorder_action("start"), "Start screen/event recording. Args: none")
+        self.register_tool("recorder_stop", lambda: _recorder_action("stop"), "Stop recording and save. Args: none")
+        self.register_tool("recorder_status", lambda: _recorder_action("status"), "Get recorder status. Args: none")
+
+    def _register_response_tools(self):
         def _save_last_response_and_regenerate(text: str) -> Dict[str, Any]:
-            """Save response to .last_response.txt (preserving Trinity reports) and regenerate project_structure_final.txt"""
             try:
-                # Read existing content (Trinity reports)
                 existing_content = ""
-                try:
-                    with open(".last_response.txt", "r", encoding="utf-8") as f:
+                if os.path.exists(self.LAST_RESPONSE_FILE):
+                    with open(self.LAST_RESPONSE_FILE, "r", encoding="utf-8") as f:
                         existing_content = f.read().strip()
-                except FileNotFoundError:
-                    pass
-                
-                # Build new content: my response first, then existing Trinity reports
-                new_content = ""
-                if existing_content:
-                    # Prepend my response, keep Trinity reports below
-                    new_content = f"## My Last Response\n\n{text}\n\n---\n\n{existing_content}"
-                else:
-                    # First time: just my response
-                    new_content = f"## My Last Response\n\n{text}"
-                
-                with open(".last_response.txt", "w", encoding="utf-8") as f:
+                new_content = f"## My Last Response\n\n{text}\n\n---\n\n{existing_content}" if existing_content else f"## My Last Response\n\n{text}"
+                with open(self.LAST_RESPONSE_FILE, "w", encoding="utf-8") as f:
                     f.write(new_content)
-                
-                # Regenerate project structure
                 import subprocess
-                result = subprocess.run(
-                    ["python3", "generate_structure.py"],
-                    capture_output=True,
-                    text=True,
-                    timeout=30
-                )
-                return {
-                    "status": "success",
-                    "message": "Response saved (Trinity reports preserved) and project structure regenerated",
-                    "output": result.stdout[:500] if result.stdout else ""
-                }
+                result = subprocess.run(["python3", "generate_structure.py"], capture_output=True, text=True, timeout=30)
+                return {"status": "success", "message": "Response saved and project structure regenerated", "output": result.stdout[:500] if result.stdout else ""}
             except Exception as e:
-                return {
-                    "status": "error",
-                    "message": f"Failed to save response: {str(e)}"
-                }
+                return {"status": "error", "message": f"Failed to save response: {str(e)}"}
 
-        self.register_tool(
-            "save_last_response",
-            _save_last_response_and_regenerate,
-            "Save last response to .last_response.txt and regenerate project_structure_final.txt. Args: text (str)"
-        )
+        self.register_tool("save_last_response", _save_last_response_and_regenerate, f"Save last response to {self.LAST_RESPONSE_FILE} and regenerate project_structure_final.txt. Args: text (str)")
 
     def _register_external_mcp(self):
         """Register external MCP servers (Playwright, AppleScript, PyAutoGUI) - PRIORITY over local implementations."""
