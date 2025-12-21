@@ -2,18 +2,14 @@
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
 Outcome: completed
-Replans: 1
-Last agent: knowledge
+Replans: 10
+Last agent: meta_planner
 
 Last message:
-[VOICE] Досвід збережено. Завдання завершено.
+[VOICE] Ліміт перепланувань вичерпано (10).
 
 Changed files:
-- core/verification.py
-
-Diff stat:
-core/verification.py | 39 +--------------------------------------
- 1 file changed, 1 insertion(+), 38 deletions(-)
+- (no uncommitted changes detected)
 
 Verification:
 - status: unknown (no explicit signal)

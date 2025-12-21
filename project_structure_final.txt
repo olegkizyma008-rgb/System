@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Sun Dec 21 01:58:46  2025
+Generated: Sun Dec 21 02:03:17  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -20,20 +20,20 @@ Recent Task Logs:
 
 Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
 Outcome: completed
-Replans: 1
-Last agent: knowledge
+Replans: 10
+Last agent: meta_planner
 
 Last message:
-[VOICE] Досвід збережено. Завдання завершено.
+[VOICE] Ліміт перепланувань вичерпано (10).
 
 Changed files:
-- core/verification.py
+- (no uncommitted changes detected)
 
-Diff stat:
-core/verification.py | 39 +--------------------------------------
- 1 file changed, 1 insertion(+), 38 deletions(-)
+Verification:
+- status: unknown (no explicit signal)
 
-Verifi
+Tests:
+- not executed by Trinity (no deterministic test runner i
 [...скорочено...]
 ```
 
@@ -61,7 +61,8 @@ Verifi
 
 ## Git History (Last 10 Commits)
 ```
-  8d1cd2ed fix(core): resolve premature task completion, improve negation handling, and fix vision summary truncation
+  413ce7e2 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
+  042d8a16 fix(core): resolve premature task completion, improve negation handling, and fix vision summary truncation
   77f98f97 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
   f3f0c78f Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
   45a7de31 feat: enable dual-screen root logging to logs/left_screen.log and logs/right_screen.log
@@ -70,16 +71,17 @@ Verifi
   f626d9e1 feat: Implement memory management and fix tool error handling
   cdd5a36d Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
   f4fc1a6d fix(trinity): resolve Atlas planning recursion and NoneType crash
-  8fb94933 fix(tui): resolve keybindings syntax error and add self-healing toggle (disabled by default)
 ```
 
 ## Project Structure
 ```
 .
-├── README.md
 ├── archive
+│   ├── check_fastmcp.py
+│   ├── check_ssl.py
 │   ├── ERROR_ANALYSIS_REPORT.md
 │   ├── FINAL_MIGRATION_SUMMARY.md
+│   ├── generate_structure.py
 │   ├── PYTHON_311_MIGRATION_SUMMARY.md
 │   ├── RESPONSE_SAVING_WORKFLOW.md
 │   ├── SHELL_INTEGRATION_CONFIG.md
@@ -87,9 +89,6 @@ Verifi
 │   ├── SHELL_INTEGRATION_SETUP.md
 │   ├── SUPER_RAG_DEPENDENCY_ISSUE.md
 │   ├── TASK_ANALYSIS_GUIDE.md
-│   ├── check_fastmcp.py
-│   ├── check_ssl.py
-│   ├── generate_structure.py
 │   ├── task_analysis_system.py
 │   ├── test_integration.txt
 │   ├── test_loop_fix.py
@@ -120,199 +119,199 @@ Verifi
 ├── cli.sh
 ├── configs
 │   ├── Anna-Station
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Ariana-Server-01
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Avas-Work
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Bradley-Station-Plus
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Bradleys-MBA
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Bryan-Core
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Desktop-Billy
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Elijah-Personal
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Gary-Studio
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── George-Terminal-02
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Grace-MBP-Plus
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Home-Eugene
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Host-Penelope
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Instance-Layla
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Jeffrey-Workspace
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Jerrys-Air
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Laptop-Natalie
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Layla-Office
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Main-Vincent
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── My-Benjamin
-│   │   ├── User
-│   │   │   └── globalStorage
-│   │   │       └── storage.json
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   │           └── storage.json
 │   ├── My-Lucy
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Nicholas-Machine
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Office-Bobby
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   ├── original
+│   │   ├── hostname.txt
+│   │   ├── mac_address.txt
+│   │   ├── machineid
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   │           └── storage.json
 │   ├── Paul-Remote
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Penelope-Test-01
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Russell-Local-Plus
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Samanthas-Host
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Secondary-Tyler
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Steven-Backup-2
-│   │   ├── User
-│   │   │   └── globalStorage
-│   │   │       └── storage.json
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   │           └── storage.json
 │   ├── Timothy-Office
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Timothy-Tower
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Walters-Device
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Willie-Build-02
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
 │   ├── Workstation-Keith
-│   │   ├── User
-│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   └── metadata.json
-│   ├── Workstation-Logan
-│   │   ├── User
-│   │   │   └── globalStorage
-│   │   ├── hostname.txt
-│   │   └── metadata.json
-│   └── original
-│       ├── User
-│       │   └── globalStorage
-│       │       └── storage.json
+│   │   ├── metadata.json
+│   │   └── User
+│   │       └── globalStorage
+│   └── Workstation-Logan
 │       ├── hostname.txt
-│       ├── mac_address.txt
-│       ├── machineid
-│       └── metadata.json
+│       ├── metadata.json
+│       └── User
+│           └── globalStorage
 ├── configs_vscode
 │   └── original
-│       ├── User
-│       │   └── globalStorage
-│       │       └── storage.json
 │       ├── hostname.txt
 │       ├── mac_address.txt
 │       ├── machineid
-│       └── metadata.json
+│       ├── metadata.json
+│       └── User
+│           └── globalStorage
+│               └── storage.json
 ├── core
 │   ├── agent_protocol.py
 │   ├── agents
@@ -325,8 +324,8 @@ Verifi
 │   ├── parallel_executor.py
 │   ├── self_healing.py
 │   ├── state_logger.py
-│   ├── trinity.py
 │   ├── trinity_models.py
+│   ├── trinity.py
 │   ├── utils.py
 │   ├── verification.py
 │   ├── vibe_assistant.py
@@ -336,15 +335,15 @@ Verifi
 │   └── windsurf_registration.py
 ├── data
 ├── docs
+│   ├── analize.md
+│   ├── atlas.md
+│   ├── sonar.md
 │   ├── TRINITY_COMPLETE_REPORT.md
 │   ├── TRINITY_DOCUMENTATION_INDEX.md
 │   ├── TRINITY_FIXES_REPORT.md
 │   ├── TRINITY_IMPROVEMENTS_IMPLEMENTATION.md
 │   ├── TRINITY_IMPROVEMENTS_QUICKSTART.md
 │   ├── TRINITY_SUMMARY.md
-│   ├── analize.md
-│   ├── atlas.md
-│   ├── sonar.md
 │   └── vision.md
 ├── i18n.py
 ├── index.html
@@ -357,7 +356,6 @@ Verifi
 │   └── trinity_state_20251220.log
 ├── main.py
 ├── mcp_integration
-│   ├── README.md
 │   ├── __init__.py
 │   ├── config
 │   │   ├── mcp_config.json
@@ -366,38 +364,39 @@ Verifi
 │   │   └── mcp_manager.py
 │   ├── modes
 │   │   ├── atlas_healing_mode.py
-│   │   ├── dev_project_mode.py
 │   │   ├── dev_project_mode_fixed.py
-│   │   └── dev_project_mode_minimal.py
+│   │   ├── dev_project_mode_minimal.py
+│   │   └── dev_project_mode.py
+│   ├── README.md
 │   ├── test_integration.py
 │   ├── tests
 │   └── utils
 ├── project_structure_final.txt
 ├── projects
 │   ├── dev_20251220_201052
-│   │   ├── README.md
 │   │   ├── assets
 │   │   ├── config
 │   │   │   └── config.json
 │   │   ├── docs
+│   │   ├── README.md
 │   │   ├── scripts
 │   │   ├── src
 │   │   └── tests
 │   ├── dev_20251220_202728
-│   │   ├── README.md
 │   │   ├── assets
 │   │   ├── config
 │   │   │   └── config.json
 │   │   ├── docs
+│   │   ├── README.md
 │   │   ├── scripts
 │   │   ├── src
 │   │   └── tests
 │   └── dev_20251220_202833
-│       ├── README.md
 │       ├── assets
 │       ├── config
 │       │   └── config.json
 │       ├── docs
+│       ├── README.md
 │       ├── scripts
 │       ├── src
 │       └── tests
@@ -405,6 +404,7 @@ Verifi
 │   ├── __init__.py
 │   └── copilot.py
 ├── pytest.ini
+├── README.md
 ├── regenerate_structure.sh
 ├── requirements.txt
 ├── run_trinity_task.py
@@ -448,20 +448,20 @@ Verifi
 ├── task_analysis.log
 ├── task_logs
 │   ├── task_20251220_204318.log
-│   ├── task_20251220_204358.log
 │   ├── task_20251220_204358_data.json
-│   ├── task_20251220_204452.log
+│   ├── task_20251220_204358.log
 │   ├── task_20251220_204452_data.json
-│   ├── task_20251220_204516.log
+│   ├── task_20251220_204452.log
 │   ├── task_20251220_204516_data.json
-│   ├── task_20251220_204544.log
-│   └── task_20251220_204544_data.json
+│   ├── task_20251220_204516.log
+│   ├── task_20251220_204544_data.json
+│   └── task_20251220_204544.log
 ├── task_screenshots
 ├── templates
 │   ├── bootstrap
-│   │   ├── README.md
 │   │   ├── generate_structure.py
 │   │   ├── post-commit
+│   │   ├── README.md
 │   │   ├── regenerate_structure.sh
 │   │   └── save_response_and_commit.py
 │   └── bootstrap_new_project.sh
@@ -488,10 +488,10 @@ Verifi
 │   ├── agents.py
 │   ├── app.py
 │   ├── cleanup.py
-│   ├── cli.py
 │   ├── cli_defaults.py
 │   ├── cli_localization.py
 │   ├── cli_paths.py
+│   ├── cli.py
 │   ├── clipboard_utils.py
 │   ├── commands.py
 │   ├── constants.py
