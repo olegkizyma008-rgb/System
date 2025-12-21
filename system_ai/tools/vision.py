@@ -638,17 +638,24 @@ class DifferentialVisionAnalyzer:
             return {"status": "unavailable", "note": "PaddleOCR not installed"}
             
         try:
-            # Use predict() method (PaddleOCR 3.x API - without cls parameter)
+            # Use predict() method (PaddleOCR 3.x API)
             result = engine.predict(image_path)
             text_regions = []
             
-            if result and result[0]:
-                for line in result[0]:
-                    bbox = line[0]
-                    text, conf = line[1]
+            # PaddleOCR 3.x returns OCRResult objects
+            if result and len(result) > 0:
+                ocr_result = result[0]  # First page/image
+                rec_texts = ocr_result.get('rec_texts', [])
+                rec_scores = ocr_result.get('rec_scores', [])
+                rec_polys = ocr_result.get('rec_polys', [])
+                
+                for i, text in enumerate(rec_texts):
+                    confidence = rec_scores[i] if i < len(rec_scores) else 0.0
+                    bbox = rec_polys[i].tolist() if i < len(rec_polys) else []
+                    
                     text_regions.append({
                         "text": text,
-                        "confidence": float(conf),
+                        "confidence": float(confidence),
                         "bbox": bbox
                     })
 
