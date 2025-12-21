@@ -32,10 +32,16 @@ __author__ = "MCP Integration System"
 __license__ = "MIT"
 
 
-def create_mcp_integration(config_path: str = "config/mcp_config.json"):
+def create_mcp_integration(config_path: str = None):
     """
     Create a complete MCP integration instance with available modes
     """
+    # Default config path relative to this file
+    if config_path is None:
+        import os
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(base_dir, "config", "mcp_config.json")
+    
     # Initialize MCP Manager
     mcp_manager = MCPManager(config_path)
     

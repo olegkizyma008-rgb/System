@@ -22,8 +22,7 @@
         "SONARQUBE_ORG",
         "-e",
         "SONARQUBE_URL",
-        "mcp/sonarqube",
-        "stdio"
+        "mcp/sonarqube"
       ],
       "env": {
         "SONARQUBE_TOKEN": "${SONAR_API_KEY}",
@@ -33,6 +32,20 @@
       "description": "SonarQube MCP Server for code quality analysis",
       "timeout": 60000,
       "retryAttempts": 2
+    },
+    "context7-docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "description": "Context7 for SonarQube API documentation via Upstash",
+      "timeout": 30000,
+      "retryAttempts": 3,
+      "metadata": {
+        "purpose": "sonarqube-api-docs",
+        "library": "SonarSource/sonarqube"
+      }
     }
   },
   "defaultServer": "context7",

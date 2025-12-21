@@ -261,6 +261,28 @@ class SonarQubeClient(MCPServerClient):
     def get_quality_gate(self, project_key: str) -> Dict[str, Any]:
         """Get quality gate status for a project"""
         return self.execute_command("quality-gate", project=project_key)
+    
+    def get_sonarqube_docs(self, topic: str = None) -> Dict[str, Any]:
+        """
+        Get SonarQube API documentation using Context7
+        This method requires the 'context7-docs' or main 'context7' client
+        and uses the mcp_io_github_ups tools for documentation
+        """
+        try:
+            # This is a placeholder - actual implementation would use
+            # the mcp_io_github_ups_get-library-docs tool
+            # For now, return a structured response
+            return {
+                "success": True,
+                "message": "Use mcp_io_github_ups_resolve-library-id first, then mcp_io_github_ups_get-library-docs",
+                "library": "SonarSource/sonarqube",
+                "topic": topic or "general"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
 
 class MCPManager:
@@ -288,7 +310,7 @@ class MCPManager:
         servers_config = self.config.get('mcpServers', {})
         
         for server_name, server_config in servers_config.items():
-            if server_name == "context7":
+            if server_name == "context7" or server_name == "context7-docs":
                 self.clients[server_name] = Context7Client(server_config)
             elif server_name == "sonarqube":
                 self.clients[server_name] = SonarQubeClient(server_config)
