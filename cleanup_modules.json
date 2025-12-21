@@ -12,21 +12,21 @@
           "id": "deep_windsurf",
           "name": "Deep Windsurf Cleanup",
           "script": "./cleanup_scripts/deep_windsurf_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Глибоке очищення Windsurf (кеші, дані, профілі)"
         },
         {
           "id": "advanced_windsurf",
           "name": "Advanced Windsurf Identifier Cleanup",
           "script": "./cleanup_scripts/advanced_windsurf_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Розширене очищення ідентифікаторів / трекінгу Windsurf"
         },
         {
           "id": "windsurf_identifier_cleanup",
           "name": "Windsurf Identifier Quick Cleanup",
           "script": "./cleanup_scripts/windsurf_identifier_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Швидке точкове очищення ідентифікаторів"
         },
         {
