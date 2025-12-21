@@ -421,7 +421,7 @@ class MCPToolRegistry:
         )
 
     def _register_external_mcp(self):
-        """Register external MCP servers (Playwright & PyAutoGUI) - PRIORITY over local implementations."""
+        """Register external MCP servers (Playwright, AppleScript, PyAutoGUI) - PRIORITY over local implementations."""
         import os
         import platform
         
@@ -431,18 +431,16 @@ class MCPToolRegistry:
         
         # AppleScript MCP server for native macOS automation
         applescript_args = ["-y", "@mseep/applescript-mcp"]
-        disable_applescript = str(os.getenv("DISABLE_MCP_APPLESCRIPT", "1")).strip().lower() in {"1", "true", "yes", "on"}
+        
+        # PyAutoGUI MCP server for GUI automation
+        pyautogui_args = []
 
         providers = [
-            ("playwright", "npx", playwright_args),  # MCP server for browser automation (PRIORITY)
-            # ("pyautogui", "mcp-pyautogui-server", [])  # MCP server for GUI automation - enable when installed
+            ("playwright", "npx", playwright_args),  # MCP server for browser automation (PRIORITY 1)
+            ("applescript", "npx", applescript_args),  # MCP server for macOS automation (PRIORITY 2)
+            ("pyautogui", "mcp-pyautogui-server", pyautogui_args),  # MCP server for GUI automation (PRIORITY 3)
         ]
 
-        if not disable_applescript:
-            providers.append(("applescript", "npx", applescript_args))  # MCP server for AppleScript automation
-        else:
-            print("[MCP] Skipping applescript provider (disabled via DISABLE_MCP_APPLESCRIPT)")
-        
         for name, cmd, args in providers:
             try:
                 provider = ExternalMCPProvider(name, cmd, args)

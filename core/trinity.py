@@ -1861,15 +1861,23 @@ GLOBAL GOAL (for reference only): {original_task}
                 verdict_content += f"\n\n[VERDICT ERROR] Could not get verdict: {e}"
 
         # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
+        # Sanitize verdict content to avoid meta-instructions (from other agents) causing false failures
         lower_content = verdict_content.lower()
+        sanitized_lower_content = lower_content
+        # Remove known meta-instruction noise that may appear in agent messages
+        for noise in ["error: no tool call provided", "stop talking, use a tool"]:
+            sanitized_lower_content = sanitized_lower_content.replace(noise, "")
+        # Collapse whitespace for more robust keyword matching
+        sanitized_lower_content = " ".join(sanitized_lower_content.split())
         step_status = "uncertain"
         next_agent = "meta_planner"
 
         # 1. Check for explicit FAILURE markers first (Priority)
-        has_explicit_fail = any(f"[{m}]" in lower_content or m in lower_content for m in FAILURE_MARKERS)
+        # Use sanitized content for failure/success detection to avoid false positives
+        has_explicit_fail = any(f"[{m}]" in sanitized_lower_content or m in sanitized_lower_content for m in FAILURE_MARKERS)
         
         # 2. Check for explicit SUCCESS markers
-        has_explicit_complete = any(f"[{m}]" in lower_content or m in lower_content for m in SUCCESS_MARKERS)
+        has_explicit_complete = any(f"[{m}]" in sanitized_lower_content or m in sanitized_lower_content for m in SUCCESS_MARKERS)
         # 3. Check for tool execution errors in context
         latest_tools_result = "\n".join(executed_tools_results).lower()
         has_tool_error_in_context = '"status": "error"' in latest_tools_result
@@ -1938,7 +1946,7 @@ GLOBAL GOAL (for reference only): {original_task}
             current_streak = 0  # Reset on definite decision (success)
         
         # If 3+ consecutive uncertain decisions, consider forcing completion
-        vision_shows_failure = any(kw in lower_content for kw in VISION_FAILURE_KEYWORDS)
+        vision_shows_failure = any(kw in sanitized_lower_content for kw in VISION_FAILURE_KEYWORDS)
         
         if step_status == "uncertain" and current_streak >= 3:
             if vision_shows_failure or "[failed]" in lower_content:

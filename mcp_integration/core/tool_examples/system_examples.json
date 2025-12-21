@@ -1,0 +1,20 @@
+[
+  {
+    "tool": "run_shell",
+    "description": "Execute shell command using run_shell",
+    "category": "system",
+    "server": "local"
+  },
+  {
+    "tool": "open_app",
+    "description": "Open application using open_app",
+    "category": "system",
+    "server": "local"
+  },
+  {
+    "tool": "run_applescript",
+    "description": "Execute AppleScript using run_applescript",
+    "category": "system",
+    "server": "applescript"
+  }
+]

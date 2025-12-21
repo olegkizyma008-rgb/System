@@ -1,0 +1,26 @@
+[
+  {
+    "tool": "browser_navigate",
+    "description": "Navigate to URL using browser_navigate",
+    "category": "browser",
+    "server": "playwright"
+  },
+  {
+    "tool": "browser_click_element",
+    "description": "Click element using browser_click_element",
+    "category": "browser",
+    "server": "playwright"
+  },
+  {
+    "tool": "browser_type_text",
+    "description": "Type text using browser_type_text",
+    "category": "browser",
+    "server": "playwright"
+  },
+  {
+    "tool": "browser_screenshot",
+    "description": "Take screenshot using browser_screenshot",
+    "category": "browser",
+    "server": "playwright"
+  }
+]

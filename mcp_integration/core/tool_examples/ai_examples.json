@@ -1,0 +1,20 @@
+[
+  {
+    "tool": "anthropic_analyze",
+    "description": "Analyze data using anthropic_analyze",
+    "category": "ai",
+    "server": "anthropic"
+  },
+  {
+    "tool": "anthropic_decide",
+    "description": "Make decision using anthropic_decide",
+    "category": "ai",
+    "server": "anthropic"
+  },
+  {
+    "tool": "anthropic_generate",
+    "description": "Generate content using anthropic_generate",
+    "category": "ai",
+    "server": "anthropic"
+  }
+]

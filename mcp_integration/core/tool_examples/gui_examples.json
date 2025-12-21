@@ -1,0 +1,20 @@
+[
+  {
+    "tool": "gui_click",
+    "description": "Click GUI element using gui_click",
+    "category": "gui",
+    "server": "pyautogui"
+  },
+  {
+    "tool": "gui_type",
+    "description": "Type text using gui_type",
+    "category": "gui",
+    "server": "pyautogui"
+  },
+  {
+    "tool": "gui_screenshot",
+    "description": "Take GUI screenshot using gui_screenshot",
+    "category": "gui",
+    "server": "pyautogui"
+  }
+]
