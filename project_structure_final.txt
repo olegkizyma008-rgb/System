@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 01:34:53  2025
+Generated: Mon Dec 22 01:50:13  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  1df48126 Refactor: Finalize SonarQube cleanup and modularization
+  d26c14b0 Cleanup: Remove temporary test file
+  157e3968 Refactor: Finalize SonarQube cleanup and modularization
   67a5f439 Refactor: Modularize TUI keybindings and refine exception handling
   d3a82097 refactor(trinity): modularize _grisha_node to reduce cognitive complexity
   b2fa90d4 Refactor: Finalize SonarCloud alignment for olegkizima01 organization
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   93a05d40 feat: Add SonarCloud integration for critical issue tracking with new workflows, scripts, and core system updates.
   3ff9c2c0 chore: Update SonarCloud project key and name.
   2b3dff5a feat: Add SonarCloud project configuration and update gitignore.
-  46dad878 feat: Add Anthropic and local MCP servers, enhance RAG tool prioritization, integrate SonarQube scripts, and remove old project artifacts.
 ```
 
 ## Project Structure
@@ -624,30 +624,29 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── themes.py
 │   └── tools.py
 ├── verify_memory.py
-├── weapon_shop
-│   ├── IMPROVEMENTS_SUMMARY.md
-│   ├── INSTRUCTIONS.md
-│   ├── README.md
-│   ├── css
-│   │   ├── loading.css
-│   │   └── style.css
-│   ├── data
-│   ├── images
-│   │   └── placeholder.jpg
-│   ├── index.html
-│   ├── js
-│   │   ├── loading.js
-│   │   └── main.js
-│   ├── launch_website.py
-│   ├── products
-│   ├── server.py
-│   ├── start.sh
-│   ├── test_improvements.py
-│   ├── test_loading.html
-│   ├── test_modern_enhancements.py
-│   └── verify_website.py
-└── тест.тест
+└── weapon_shop
+    ├── IMPROVEMENTS_SUMMARY.md
+    ├── INSTRUCTIONS.md
+    ├── README.md
+    ├── css
+    │   ├── loading.css
+    │   └── style.css
+    ├── data
+    ├── images
+    │   └── placeholder.jpg
+    ├── index.html
+    ├── js
+    │   ├── loading.js
+    │   └── main.js
+    ├── launch_website.py
+    ├── products
+    ├── server.py
+    ├── start.sh
+    ├── test_improvements.py
+    ├── test_loading.html
+    ├── test_modern_enhancements.py
+    └── verify_website.py
 
-181 directories, 389 files
+181 directories, 388 files
 
 ```
