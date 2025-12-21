@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 05:20:53  2025
+Generated: Mon Dec 22 05:37:30  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  77cb437b Implement ChromaDB persistent client with backup and repair functionality
+  e311f361 feat: Update antigraviti_cleanup.sh to improve application checks and ensure compatibility with system commands
+  092ef9f6 Implement ChromaDB persistent client with backup and repair functionality
   3a3a73b3 feat: Enhance Grisha's verification logic and improve image loading function for Claude API compatibility
   7855d396 feat: Add disconnect method and async cleanup to ExternalMCPProvider for proper resource management
   47927e93 feat: Update AppleScript MCP server installation to use @iflow-mcp/applescript-mcp
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   30dcc2b1 feat: Update MCP server configurations and enhance health check logic for Playwright and AppleScript
   3cae3751 feat: Enhance LLM integration and testing framework; update PaddleOCR initialization and test cases
   8fd39cc2 feat: Add Copilot MCP client integration and testing framework
-  6563eda1 feat: Complete MCP integration with RAG system - 21,500+ tool examples
 ```
 
 ## Project Structure

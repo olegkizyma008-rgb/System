@@ -32,7 +32,6 @@ print_success "Antigravity зупинено"
 # 2. Перевірка додатків Antigravity
 print_step 2 10 "Перевірка додатків Antigravity..."
 ANTIGRAVITY_APPS=(
-ANTIGRAVITY_APPS=(
     "/Applications/Antigravity.app"
     "/Applications/Google Antigravity.app"
     "$HOME/Applications/Antigravity.app"
@@ -142,7 +141,7 @@ print_success "System defaults очищено"
 echo ""
 print_info "Пошук та видалення залишків..."
 
-REMAINING_PATHS=$(find "$HOME/Library" -iname "*antigravity*" 2>/dev/null | head -n 100)
+REMAINING_PATHS=$(find "$HOME/Library" -iname "*antigravity*" 2>/dev/null | /usr/bin/head -n 100)
 if [ -n "$REMAINING_PATHS" ]; then
     echo "$REMAINING_PATHS" | while read -r path; do
         [ -n "$path" ] && safe_remove "$path"
@@ -157,7 +156,7 @@ echo "${CYAN}══════════════════════�
 echo "${WHITE}📊 ЗВІТ ОЧИЩЕННЯ ANTIGRAVITY:${NC}"
 echo "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 
-REMAINING=$(find "$HOME/Library" -iname "*antigravity*" 2>/dev/null | wc -l | tr -d ' ')
+REMAINING=$(find "$HOME/Library" -iname "*antigravity*" 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
 
 if [ "$REMAINING" -eq 0 ]; then
     print_success "Antigravity ідентифікатори: ОЧИЩЕНО"
@@ -165,7 +164,7 @@ else
     print_warning "Знайдено $REMAINING залишкових файлів"
 fi
 
-KEYCHAIN_CHECK=$(security find-generic-password -s "Antigravity" 2>/dev/null | wc -l)
+KEYCHAIN_CHECK=$(security find-generic-password -s "Antigravity" 2>/dev/null | /usr/bin/wc -l)
 if [ "$KEYCHAIN_CHECK" -eq 0 ]; then
     print_success "Keychain: ОЧИЩЕНО"
 else
