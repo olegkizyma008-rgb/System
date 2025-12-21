@@ -638,8 +638,8 @@ class DifferentialVisionAnalyzer:
             return {"status": "unavailable", "note": "PaddleOCR not installed"}
             
         try:
-            # Use predict() instead of deprecated ocr()
-            result = engine.predict(image_path, cls=True)
+            # Use predict() method (PaddleOCR 3.x API - without cls parameter)
+            result = engine.predict(image_path)
             text_regions = []
             
             if result and result[0]:
