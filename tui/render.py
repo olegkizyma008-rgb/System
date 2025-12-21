@@ -259,7 +259,8 @@ def log(text: str, category: str = "info") -> None:
     # Log to root file (Left Screen)
     try:
         import logging
-        logging.getLogger("system_cli.left").info(f"[{category.upper()}] {text}")
+        # Pass category as extra for JSON analysis log
+        logging.getLogger("system_cli.left").info(f"[{category.upper()}] {text}", extra={"tui_category": category})
     except Exception:
         pass
 
@@ -279,14 +280,29 @@ def log(text: str, category: str = "info") -> None:
                 state.logs = state.logs[-1500:]
 
 
-def log_agent_message(agent: AgentType, text: str) -> None:
-    """Log agent message to clean display panel."""
-    # Log to root file (Right Screen)
+# Track last logged content per agent to avoid duplicate streaming logs
+_agent_last_logged: Dict[str, str] = {}
+_agent_last_logged_lock = threading.Lock()
+
+def log_agent_final(agent: AgentType, text: str) -> None:
+    """Log final agent message to analysis log (JSONL). Call ONLY when streaming is complete."""
     try:
         import logging
-        logging.getLogger("system_cli.right").info(f"[{agent.value}] {text}")
+        logging.getLogger("system_cli.right").info(
+            f"[{agent.value}] {text}", 
+            extra={"agent_type": agent.value, "is_final": True}
+        )
     except Exception:
         pass
+
+
+def log_agent_message(agent: AgentType, text: str) -> None:
+    """Log agent message to clean display panel.
+    
+    NOTE: This is called for EVERY streaming chunk. File logging is deferred
+    to log_agent_final() to avoid duplicate entries in analysis logs.
+    """
+    # Skip file logging here - it's handled by log_agent_final() after stream completes
 
     with _agent_messages_lock:
         try:

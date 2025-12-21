@@ -418,8 +418,8 @@ class MCPToolRegistry:
             playwright_args.append("--no-sandbox")
 
         providers = [
-            # ("playwright", "npx", playwright_args), # Disabled in favor of local browser tools for better session persistence
-            ("pyautogui", "mcp-pyautogui-server", [])
+            ("playwright", "npx", playwright_args),  # MCP server for browser automation (PRIORITY)
+            ("pyautogui", "mcp-pyautogui-server", [])  # MCP server for GUI automation
         ]
         
         for name, cmd, args in providers:

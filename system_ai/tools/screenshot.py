@@ -5,6 +5,105 @@ from typing import Any, Dict, Optional, Tuple, Union, List
 from PIL import Image, ImageChops
 import mss
 import mss.tools
+from datetime import datetime
+
+
+def get_frontmost_app() -> Dict[str, Any]:
+    """Get information about the currently active (frontmost) application on macOS.
+    
+    Returns:
+        dict with keys: app_name, window_title, bundle_id, or error
+    """
+    try:
+        # Get frontmost app name
+        script_app = '''
+        tell application "System Events"
+            set frontApp to first application process whose frontmost is true
+            set appName to name of frontApp
+            return appName
+        end tell
+        '''
+        proc_app = subprocess.run(["osascript", "-e", script_app], capture_output=True, text=True, timeout=3)
+        app_name = proc_app.stdout.strip() if proc_app.returncode == 0 else None
+        
+        if not app_name:
+            return {"status": "error", "error": "Cannot determine frontmost app"}
+        
+        # Get window title
+        script_title = f'''
+        tell application "System Events"
+            tell process "{app_name}"
+                try
+                    set winTitle to name of front window
+                    return winTitle
+                on error
+                    return ""
+                end try
+            end tell
+        end tell
+        '''
+        proc_title = subprocess.run(["osascript", "-e", script_title], capture_output=True, text=True, timeout=3)
+        window_title = proc_title.stdout.strip() if proc_title.returncode == 0 else ""
+        
+        return {
+            "status": "success",
+            "app_name": app_name,
+            "window_title": window_title
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+def get_all_windows() -> Dict[str, Any]:
+    """Get list of all visible windows on macOS.
+    
+    Returns:
+        dict with list of windows, each containing: app_name, window_title, position, size
+    """
+    try:
+        script = '''
+        set windowList to {}
+        tell application "System Events"
+            repeat with proc in (every process whose visible is true)
+                set procName to name of proc
+                try
+                    repeat with win in (every window of proc)
+                        try
+                            set winName to name of win
+                            set winPos to position of win
+                            set winSize to size of win
+                            set end of windowList to procName & "|" & winName & "|" & (item 1 of winPos as text) & "," & (item 2 of winPos as text) & "|" & (item 1 of winSize as text) & "," & (item 2 of winSize as text)
+                        end try
+                    end repeat
+                end try
+            end repeat
+        end tell
+        set AppleScript's text item delimiters to "\\n"
+        return windowList as text
+        '''
+        proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=5)
+        
+        if proc.returncode != 0:
+            return {"status": "error", "error": proc.stderr}
+        
+        windows = []
+        for line in proc.stdout.strip().split("\n"):
+            if "|" in line:
+                parts = line.split("|")
+                if len(parts) >= 4:
+                    pos_parts = parts[2].split(",")
+                    size_parts = parts[3].split(",")
+                    windows.append({
+                        "app_name": parts[0],
+                        "window_title": parts[1],
+                        "position": {"x": int(pos_parts[0]), "y": int(pos_parts[1])},
+                        "size": {"width": int(size_parts[0]), "height": int(size_parts[1])}
+                    })
+        
+        return {"status": "success", "windows": windows, "count": len(windows)}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
 
 class VisionDiffManager:
     """Manages screenshot lifecycle and calculates differences between frames."""
@@ -102,15 +201,24 @@ class VisionDiffManager:
             "bbox": bbox
         }
 
-def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] = None, activate: bool = False) -> Dict[str, Any]:
+def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] = None, activate: bool = False, use_frontmost: bool = False) -> Dict[str, Any]:
     """Takes a smart screenshot of an app or the full screen.
     
     Args:
         app_name: Name of the application (e.g. "Safari")
         window_title: Optional substring to filter specific windows (e.g. "Google")
         activate: If True, brings the application/window to the front before capturing.
+        use_frontmost: If True and no app_name provided, capture the frontmost app window.
     """
     try:
+        # Auto-detect frontmost app if requested
+        if use_frontmost and not app_name:
+            frontmost = get_frontmost_app()
+            if frontmost.get("status") == "success":
+                app_name = frontmost.get("app_name")
+                if not window_title:
+                    window_title = frontmost.get("window_title")
+        
         if activate and app_name:
             # Dynamic Focus: Bring app to front
             # If window_title is specific, we could try to raise just that window, but raising the App is safer/standard.

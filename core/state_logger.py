@@ -39,6 +39,39 @@ class StateInitLogger:
         handler.setFormatter(formatter)
         
         self.logger.addHandler(handler)
+
+        # Add Analysis JSONL Handler (Atlas Analysis)
+        try:
+            analysis_log = log_dir / "atlas_analysis.jsonl"
+            # Use RotatingFileHandler if available, else FileHandler
+            # But we don't want to import logging.handlers if not needed, though it is standard.
+            import logging.handlers
+            json_handler = logging.handlers.RotatingFileHandler(
+                analysis_log,
+                maxBytes=50 * 1024 * 1024,
+                backupCount=5,
+                encoding="utf-8"
+            )
+            json_handler.setLevel(logging.DEBUG)
+            
+            class JSONFormatter(logging.Formatter):
+                def format(self, record):
+                    log_obj = {
+                        "timestamp": datetime.fromtimestamp(record.created).isoformat(),
+                        "level": record.levelname,
+                        "logger": record.name,
+                        "message": record.getMessage(),
+                        "module": record.module,
+                        "func": record.funcName,
+                        "line": record.lineno,
+                    }
+                    return json.dumps(log_obj, ensure_ascii=False)
+            
+            json_handler.setFormatter(JSONFormatter())
+            self.logger.addHandler(json_handler)
+        except Exception:
+            pass # Fail silently if we can't set up analysis log
+
         self.logger.setLevel(logging.DEBUG)
 
     def log_initial_state(self, task: str, state: Dict[str, Any]) -> None:

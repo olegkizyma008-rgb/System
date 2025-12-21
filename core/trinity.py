@@ -29,6 +29,7 @@ from core.constants import (
     NEGATION_PATTERNS, VISION_FAILURE_KEYWORDS, MESSAGES,
     TERMINATION_MARKERS
 )
+import threading
 
 @dataclass
 class TrinityPermissions:
@@ -112,6 +113,9 @@ class TrinityRuntime:
         self.preferred_language = preferred_language
         # Callback for streaming deltas: (agent_name, text_delta)
         self.on_stream = on_stream
+        # Thread lock to prevent duplicate streaming output
+        self._stream_lock = threading.Lock()
+        self._last_stream_content = {}  # Per-agent deduplication
         self.workflow = self._build_graph()
         
         # Hyper mode for unlimited permissions during testing
@@ -141,15 +145,28 @@ class TrinityRuntime:
         # Register core tools including enhanced vision
         self._register_tools()
 
+    def _deduplicated_stream(self, agent: str, content: str) -> None:
+        """Thread-safe streaming with deduplication to prevent duplicate log entries."""
+        if not self.on_stream or not content:
+            return
+        with self._stream_lock:
+            # Check for duplicate content (exact match or prefix match)
+            last = self._last_stream_content.get(agent, "")
+            if content == last or (len(content) < len(last) and last.startswith(content)):
+                return  # Skip duplicate
+            self._last_stream_content[agent] = content
+        self.on_stream(agent, content)
+
     def _register_tools(self) -> None:
         """Register all local tools and MCP tools."""
         from system_ai.tools.vision import EnhancedVisionTools
+        from system_ai.tools.screenshot import get_frontmost_app, get_all_windows
         
         # Core Vision Tools
         self.registry.register_tool(
             "enhanced_vision_analysis",
             EnhancedVisionTools.capture_and_analyze,
-            description="Capture screen and perform differential visual/OCR analysis"
+            description="Capture screen and perform differential visual/OCR analysis. Args: app_name (optional), window_title (optional)"
         )
         
         self.registry.register_tool(
@@ -159,6 +176,19 @@ class TrinityRuntime:
                 self.vision_context_manager
             ),
             description="Analyze image and update global visual context"
+        )
+        
+        # Window detection utilities
+        self.registry.register_tool(
+            "get_frontmost_app",
+            lambda args: get_frontmost_app(),
+            description="Get the currently active (frontmost) application name and window title on macOS"
+        )
+        
+        self.registry.register_tool(
+            "get_all_windows",
+            lambda args: get_all_windows(),
+            description="Get list of all visible windows with their app names, titles, positions and sizes"
         )
 
     def _initialize_self_healing(self) -> None:
@@ -835,10 +865,24 @@ class TrinityRuntime:
                 if self.verbose: print(f"⚠️ [Meta-Planner] Error: {e}")
 
             # Signal Atlas if we need plan changes
+            # REPAIR MODE: Keep remaining plan, only regenerate the FAILED step
+            # REPLAN MODE: Regenerate entire plan from scratch
+            if action == "repair" and plan:
+                # Mark the current (failed) step for regeneration, keep the rest
+                failed_step_desc = plan[0].get("description", "Unknown") if plan else ""
+                meta_config["repair_mode"] = True
+                meta_config["failed_step"] = failed_step_desc
+                if self.verbose: print(f"🔧 [Meta-Planner] REPAIR MODE: Regenerating only step '{failed_step_desc[:50]}...'")
+                # Remove the failed step, Atlas will generate a replacement
+                plan_for_atlas = plan[1:] if len(plan) > 1 else []
+            else:
+                plan_for_atlas = None  # Full replan
+                meta_config["repair_mode"] = False
+                
             return {
                 "current_agent": "atlas",
                 "meta_config": meta_config,
-                "plan": None if action == "replan" else plan,
+                "plan": plan_for_atlas,
                 "current_step_fail_count": current_step_fail_count,
                 "gui_fallback_attempted": False if action == "replan" else state.get("gui_fallback_attempted"),
                 "summary": summary,
@@ -860,9 +904,18 @@ class TrinityRuntime:
         plan = state.get("plan")
         meta_config = state.get("meta_config") or {}
 
-        # If we already have a plan (e.g. from Meta 'repair' mode), we just dispatch
-        if plan:
+        # ANTI-LOOP: If we already have a valid plan with steps, dispatch directly to execution
+        if plan and len(plan) > 0:
+            if self.verbose: print(f"🌐 [Atlas] Using existing plan ({len(plan)} steps). Dispatching to execution.")
             return self._atlas_dispatch(state, plan)
+
+        # ANTI-LOOP: Check if we're stuck in replan loop (too many replans without progress)
+        last_status = state.get("last_step_status", "success")
+        if replan_count >= 3 and last_status != "success":
+            if self.verbose: print(f"⚠️ [Atlas] Replan loop detected (#{replan_count}). Forcing simple execution.")
+            # Create minimal fallback plan to break the loop
+            fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana", "tools": ["browser_open_url"]}]
+            return self._atlas_dispatch(state, fallback, replan_count=replan_count)
 
         # Generate new plan
         replan_count += 1
@@ -902,16 +955,31 @@ class TrinityRuntime:
             vision_context=self.vision_context_manager.current_context
         )
         
-        # Inject ANTI-LOOP reinforcement if replanning after failure
-        if state.get("last_step_status") == "failed":
+        # Inject REPAIR or REPLAN mode instructions
+        if meta_config.get("repair_mode"):
+            failed_step = meta_config.get("failed_step", "Unknown")
+            remaining_plan = plan if plan else []
+            remaining_desc = ", ".join([s.get("description", "?")[:30] for s in remaining_plan[:3]]) if remaining_plan else "none"
+            prompt.messages.append(HumanMessage(content=f"""🔧 REPAIR MODE: Generate ONLY ONE alternative step to replace the failed step.
+
+FAILED STEP: {failed_step}
+
+REMAINING PLAN (do NOT regenerate these): {remaining_desc}
+
+Generate ONE step that achieves the same goal as the failed step but uses a DIFFERENT approach:
+- If browser tool failed → try pyautogui or applescript
+- If selector failed → try different selector or coordinate-based click
+- If URL failed → try alternative URL or Google search
+
+Return JSON with ONLY the replacement step. I will prepend it to the remaining plan."""))
+        elif state.get("last_step_status") == "failed":
             prompt.messages.append(HumanMessage(content=f"PREVIOUS ATTEMPT FAILED. Current history shows what didn't work. AVOID REPEATING FAILED ACTIONS. Respecify the plan starting from the current state to achieve the goal. RESUME, DO NOT RESTART."))
         elif state.get("last_step_status") == "uncertain":
             prompt.messages.append(HumanMessage(content=f"PREVIOUS STEP WAS UNCERTAIN. Review the last action's output and verify if you need to retry it differently or try an alternative approach to confirm success."))
 
         try:
             def on_delta(chunk):
-                if self.on_stream:
-                    self.on_stream("atlas", chunk)
+                self._deduplicated_stream("atlas", chunk)
 
             # Use Atlas-specific LLM
             atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
@@ -934,12 +1002,24 @@ class TrinityRuntime:
 
             if not raw_plan: raise ValueError("No steps generated")
 
-            # Optimize with Grisha (Verifier) using GRISHA settings
-            grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            grisha_llm = CopilotLLM(model_name=grisha_model)
-            local_verifier = AdaptiveVerifier(grisha_llm)
-            
-            optimized_plan = local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
+            # REPAIR MODE: Prepend the new step to remaining plan
+            if meta_config.get("repair_mode") and plan:
+                # Take only the first step from generated plan (repair step)
+                repair_step = raw_plan[0] if raw_plan else None
+                if repair_step:
+                    optimized_plan = [repair_step] + list(plan)
+                    if self.verbose: print(f"🔧 [Atlas] REPAIR: Prepended new step to {len(plan)} remaining steps")
+                else:
+                    optimized_plan = list(plan)
+                meta_config["repair_mode"] = False  # Reset flag
+            else:
+                # Full replan: optimize entire new plan
+                # Optimize with Grisha (Verifier) using GRISHA settings
+                grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+                grisha_llm = CopilotLLM(model_name=grisha_model)
+                local_verifier = AdaptiveVerifier(grisha_llm)
+                
+                optimized_plan = local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
             
             return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
 
@@ -1084,8 +1164,7 @@ class TrinityRuntime:
         try:
             # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
             def on_delta(chunk):
-                if self.on_stream:
-                    self.on_stream("tetyana", chunk)
+                self._deduplicated_stream("tetyana", chunk)
             
             # Use Tetyana's local bound LLM
             response = tetyana_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
@@ -1384,6 +1463,26 @@ class TrinityRuntime:
         # Preserve existing messages and add new one
         updated_messages = list(context) + [AIMessage(content=content)]
         
+        # Extract tool context for Grisha's vision verification
+        used_tools = [t.get("name") for t in tool_calls] if tool_calls else []
+        tool_args_context = {}
+        for t in (tool_calls or []):
+            name = t.get("name", "")
+            args = t.get("args", {})
+            # Extract app/window context from tool arguments
+            if "app" in args or "app_name" in args:
+                tool_args_context["app_name"] = args.get("app_name") or args.get("app")
+            if "window" in args or "window_title" in args:
+                tool_args_context["window_title"] = args.get("window_title") or args.get("window")
+            if "url" in args:
+                tool_args_context["url"] = args.get("url")
+            # Playwright tools
+            if name.startswith("playwright."):
+                tool_args_context["browser_tool"] = True
+            # PyAutoGUI tools
+            if name.startswith("pyautogui."):
+                tool_args_context["gui_tool"] = True
+        
         try:
             trace(self.logger, "tetyana_exit", {
                 "next_agent": "grisha",
@@ -1391,6 +1490,7 @@ class TrinityRuntime:
                 "execution_mode": execution_mode,
                 "gui_mode": gui_mode,
                 "dev_edit_mode": dev_edit_mode,
+                "used_tools": used_tools,
             })
         except Exception:
             pass
@@ -1402,6 +1502,8 @@ class TrinityRuntime:
             "gui_fallback_attempted": gui_fallback_attempted,
             "dev_edit_mode": dev_edit_mode,
             "last_step_status": "failed" if had_failure else "success",
+            "tetyana_used_tools": used_tools,
+            "tetyana_tool_context": tool_args_context,
         }
 
     def _grisha_node(self, state: TrinityState):
@@ -1516,8 +1618,7 @@ class TrinityRuntime:
             trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
             # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
             def on_delta(chunk):
-                if self.on_stream:
-                    self.on_stream("grisha", chunk)
+                self._deduplicated_stream("grisha", chunk)
             
             # Use Grisha-specific LLM
             grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
@@ -1568,14 +1669,85 @@ class TrinityRuntime:
                 content += test_results
                 executed_tools_results.append(test_results)
 
-            # Deterministic verification hook: capture + analyze for GUI OR Browser tasks.
-            is_browser_task = "browser_" in content.lower() or "браузер" in content.lower()
+            # --- SMART VISION VERIFICATION ---
+            # Determine if and how to capture screen based on Tetyana's actions
+            tetyana_tools = state.get("tetyana_used_tools") or []
+            tetyana_context = state.get("tetyana_tool_context") or {}
+            
+            # Define tool categories for smart detection
+            gui_visual_tools = {"click", "type_text", "move_mouse", "press_key", "find_image_on_screen"}
+            browser_tools = {"browser_open_url", "browser_click", "browser_type", "browser_get_links", "browser_screenshot"}
+            playwright_tools = {t for t in tetyana_tools if t.startswith("playwright.")}
+            pyautogui_tools = {t for t in tetyana_tools if t.startswith("pyautogui.")}
+            
+            # Check if visual verification is needed
+            used_gui_tools = bool(set(tetyana_tools) & gui_visual_tools) or bool(pyautogui_tools)
+            used_browser_tools = bool(set(tetyana_tools) & browser_tools) or bool(playwright_tools)
+            is_browser_task = "browser_" in content.lower() or "браузер" in content.lower() or tetyana_context.get("browser_tool")
+            needs_visual_verification = used_gui_tools or used_browser_tools or is_browser_task
+            
+            # Determine the best screenshot method
+            vision_args = {}
+            vision_method = "full_screen"  # default
+            
+            if tetyana_context.get("app_name"):
+                # Specific app was used - capture that app's window
+                vision_args["app_name"] = tetyana_context["app_name"]
+                vision_method = "app_window"
+                if tetyana_context.get("window_title"):
+                    vision_args["window_title"] = tetyana_context["window_title"]
+                    vision_method = "specific_window"
+            elif used_browser_tools or playwright_tools or is_browser_task:
+                # Browser task - try to capture browser window
+                vision_args["app_name"] = "Safari"  # Default browser, could be detected
+                vision_method = "browser"
+                # Try to detect actual browser from tool results
+                for browser in ["Chrome", "Safari", "Firefox", "Arc", "Brave"]:
+                    if browser.lower() in content.lower():
+                        vision_args["app_name"] = browser
+                        break
+            elif pyautogui_tools or used_gui_tools:
+                # GUI automation - need to detect active window
+                vision_method = "active_window"
+                # We'll use full screen but could enhance to get frontmost app
+            
             forced_verification_run = False
             
-            if (gui_mode in {"auto", "on"} and execution_mode == "gui") or is_browser_task:
-                # Use the new enhanced vision tool instead of basic capture
-                analysis = self.registry.execute("enhanced_vision_analysis", {"app_name": None})
-                analysis_res = f"\n[GUI_BROWSER_VERIFY] enhanced_vision_analysis:\n{analysis}"
+            if needs_visual_verification or (gui_mode in {"auto", "on"} and execution_mode == "gui"):
+                if self.verbose:
+                    print(f"👁️ [Grisha] Vision verification: method={vision_method}, args={vision_args}")
+                
+                # CRITICAL: Wait for browser/GUI to settle after Tetyana's actions
+                # Without this delay, Grisha captures stale screenshots before page updates
+                browser_action_tools = {"browser_type_text", "browser_click", "browser_open_url", "browser_navigate"}
+                used_browser_actions = bool(set(tetyana_tools or []) & browser_action_tools)
+                
+                if used_browser_actions:
+                    import time
+                    wait_time = 1.5  # seconds - allow page to load/update after actions
+                    if self.verbose:
+                        print(f"👁️ [Grisha] Waiting {wait_time}s for browser to settle...")
+                    try:
+                        trace(self.logger, "grisha_browser_wait", {"wait_time": wait_time, "reason": "browser_action_detected"})
+                    except Exception:
+                        pass
+                    time.sleep(wait_time)
+                
+                # Use enhanced vision with smart context
+                analysis = self.registry.execute("enhanced_vision_analysis", vision_args)
+                
+                # CRITICAL: Update vision context manager with fresh analysis data
+                # This ensures Grisha's prompt has accurate, current visual context
+                if isinstance(analysis, dict) and analysis.get("status") == "success":
+                    try:
+                        self.vision_context_manager.update_context(analysis)
+                        if self.verbose:
+                            print(f"👁️ [Grisha] Vision context updated successfully")
+                    except Exception as ve:
+                        if self.verbose:
+                            print(f"👁️ [Grisha] Vision context update failed: {ve}")
+                
+                analysis_res = f"\n[GUI_BROWSER_VERIFY] enhanced_vision_analysis (method={vision_method}):\n{analysis}"
                 content += analysis_res
                 executed_tools_results.append(analysis_res)
                 forced_verification_run = True

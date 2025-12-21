@@ -693,7 +693,9 @@ class EnhancedVisionTools:
         image_path: str = None, 
         reference_path: str = None,
         generate_diff_image: bool = False,
-        multi_monitor: bool = True
+        multi_monitor: bool = True,
+        app_name: str = None,
+        window_title: str = None
     ) -> dict:
         """Tool implementation for differential vision analysis.
         
@@ -702,12 +704,19 @@ class EnhancedVisionTools:
             reference_path: Optional reference image for comparison
             generate_diff_image: Generate visualization of changes
             multi_monitor: Use multi-monitor capture (default True)
+            app_name: Optional app name to capture specific window (e.g., "Safari", "Chrome")
+            window_title: Optional window title substring to filter specific window
         """
         analyzer = EnhancedVisionTools.get_analyzer()
         
         # If no image path, take a screenshot
         if not image_path:
-            if multi_monitor:
+            # Smart capture based on context
+            if app_name:
+                # Capture specific app window
+                from system_ai.tools.screenshot import take_screenshot
+                snap = take_screenshot(app_name=app_name, window_title=window_title, activate=False)
+            elif multi_monitor:
                 snap = analyzer.capture_all_monitors()
             else:
                 from system_ai.tools.screenshot import take_screenshot
@@ -717,7 +726,16 @@ class EnhancedVisionTools:
                 return snap
             image_path = snap.get("path")
 
-        return analyzer.analyze_frame(image_path, reference_path, generate_diff_image)
+        result = analyzer.analyze_frame(image_path, reference_path, generate_diff_image)
+        
+        # Add capture context to result
+        result["capture_context"] = {
+            "method": "app_window" if app_name else ("multi_monitor" if multi_monitor else "primary"),
+            "app_name": app_name,
+            "window_title": window_title
+        }
+        
+        return result
 
     @staticmethod
     def analyze_with_context(image_path: str, context_manager: Any) -> dict:

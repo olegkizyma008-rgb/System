@@ -190,17 +190,18 @@ class MessageFormatter:
     def format_message(msg: AgentMessage) -> List[Tuple[str, str]]:
         """Format agent message with compact direct communication style for TTS.
         
-        Format: 
-        [EMOJI NAME] Message text...
+        STRICT: Only [VOICE] messages are displayed in agent panel.
+        This panel is for verbal communication between agents that will be
+        spoken via TTS - short, natural dialogue.
         
         Returns list of (style, text) tuples for prompt_toolkit.
         """
         result: List[Tuple[str, str]] = []
         
-        # Skip technical messages unless they contain [VOICE]
+        # STRICT TTS FILTER: Only show [VOICE] messages
+        # Agent panel is for verbal communication only, not technical logs
         if "[VOICE]" not in msg.text:
-            if msg.is_technical or MessageFilter.is_technical(msg.text):
-                return result
+            return result  # Skip ALL non-voice messages
 
         if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
             return result
@@ -259,16 +260,22 @@ class MessageFormatter:
         # Clean the message for TTS - remove unnecessary tags and make it more natural
         clean_text = MessageFilter.clean_message(msg.text)
         
-        # Remove [VOICE] tag for display, keep it for TTS processing
+        # Remove [VOICE] tag for display
         display_text = clean_text.replace("[VOICE]", "").strip()
+        
+        # Clean up any remaining technical artifacts
+        # Remove markers like [STEP_COMPLETED], [VERIFIED], etc.
+        import re
+        display_text = re.sub(r'\[(?:STEP_COMPLETED|VERIFIED|FAILED|UNCERTAIN|NOT VERIFIED)\]', '', display_text).strip()
+        
         if not display_text:
             return result
         
-        # Ultra-compact format: EMOJI Message (no brackets, minimal spacing)
+        # TTS-optimized format: EMOJI Message (natural speech)
         emoji = MessageFormatter.AGENT_EMOJIS.get(msg.agent, "")
         color = MessageFormatter.AGENT_COLORS.get(msg.agent, "class:agent.system")
 
-        # Format: EMOJI Message text (single line, no extra spacing)
+        # Format: EMOJI Message text (single line, clean for TTS)
         result.append((color, f"{emoji} ")) # Just emoji as prefix
         
         # Message text with @mentions highlighted - optimized for TTS

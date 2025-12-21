@@ -757,6 +757,10 @@ def run_graph_agent_task(
                     }
                     agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
                     log_agent_message(agent_type, content)
+                    
+                    # Log FINAL content to analysis log (only here, not in streaming)
+                    from tui.render import log_agent_final
+                    log_agent_final(agent_type, content)
                 except Exception:
                     pass
                 

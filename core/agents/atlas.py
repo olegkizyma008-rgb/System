@@ -100,6 +100,14 @@ Your task: Transform the strategic policy (meta_config) and context into a clear
 AVAILABLE TOOLS:
 {tools_desc}
 
+� TOOL PRIORITY (CRITICAL):
+1. **MCP SERVERS FIRST**: ALWAYS prefer MCP tools (playwright.*, pyautogui.*) over native/local tools for browser and GUI automation.
+   - For browser: Use `playwright.*` tools (e.g., playwright.browser_navigate, playwright.browser_click) - they are more reliable.
+   - For GUI automation: Use `pyautogui.*` tools for mouse/keyboard control.
+   - ONLY if MCP tools fail or are unavailable, fallback to native tools (browser_*, click, type_text).
+2. **LOCAL BROWSER**: Only use local browser_* tools if playwright.* is unavailable or you need persistent session.
+3. **NATIVE TOOLS**: Use run_shell, run_applescript as last resort for system-level operations.
+
 🚀 YOUR TASKS:
 1. **ALIGN WITH GLOBAL GOAL**: Always check if the current steps serve the "Global Goal". If the goal is "Find movie", don't just "Open Google" and stop. You MUST plan all the way to opening the content in fullscreen if requested.
 2. Follow Policy: Use tools according to Meta-Planner's 'tool_preference' and 'verification_rigor'.
@@ -112,9 +120,11 @@ AVAILABLE TOOLS:
 
 Rules:
 - Steps must be actionable (Tool Calls). Use ONLY the tools listed above.
+- ⚠️ PREFER MCP TOOLS: Use playwright.* for browser, pyautogui.* for GUI. Fallback to local tools only if MCP unavailable.
 - ⚠️ NO REDUNDANT VERIFICATION: Do not plan steps like "Verify the previous step succeeded" or "Confirm that X was checked". Trinity already verifies every step automatically via Grisha. Only plan a 'verify' step if it requires a specific check NOT covered by the action itself (e.g. status code, file content).
-- If 'tool_preference' = 'gui', prioritize pyautogui and screenshots.
+- If 'tool_preference' = 'gui', prioritize pyautogui.* MCP tools and screenshots.
 - If 'tool_preference' = 'native', prioritize shell and applescript.
+- If 'tool_preference' = 'hybrid' (default), prioritize playwright.* MCP for browser, then pyautogui.* for GUI.
 - No conditional jumps in step descriptions.
 - **Media Strategy**: When searching for content to watch/read, prioritize known free/accessible sources (e.g., UASerials, YouTube, Open Archives) and avoid subscription services (Netflix, Amazon, HBO) unless user credentials are known.
 - **Site Rotation**: If a specific site (e.g., UASerials) fails to load or returns an error, plan to try a different known site or perform a broad Google search with exclusions.
