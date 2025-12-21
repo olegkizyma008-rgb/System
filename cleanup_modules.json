@@ -112,6 +112,24 @@
           "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
           "order": 999,
           "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./cleanup_scripts/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./cleanup_scripts/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
+          "requires_password": true
         }
       ]
     },
@@ -198,6 +216,24 @@
           "enabled": true,
           "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
           "order": 999,
+          "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./cleanup_scripts/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./cleanup_scripts/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
           "requires_password": true
         }
       ]
@@ -286,6 +322,24 @@
           "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
           "order": 999,
           "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./cleanup_scripts/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./cleanup_scripts/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
+          "requires_password": true
         }
       ]
     },
@@ -344,6 +398,24 @@
           "enabled": true,
           "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
           "order": 999,
+          "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./cleanup_scripts/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./cleanup_scripts/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
           "requires_password": true
         }
       ]
@@ -410,6 +482,24 @@
           "enabled": true,
           "description": "ОСТАННІЙ МОДУЛЬ: Випадково змінює WiFi SSID, IP-адресу та MAC-адресу (перевизначає все попереднє)",
           "order": 999,
+          "requires_password": true
+        },
+        {
+          "id": "m1_max_spoof",
+          "name": "M1 Max Fingerprint Spoof",
+          "script": "./cleanup_scripts/m1_max_spoof.sh",
+          "enabled": true,
+          "description": "Спуфує M1 Max як M2/M3, криє Apple Silicon маркери, рандомізує GPU/RAM",
+          "order": 25,
+          "requires_password": true
+        },
+        {
+          "id": "sonoma_detection_bypass",
+          "name": "Sonoma Detection Bypass",
+          "script": "./cleanup_scripts/sonoma_detection_bypass.sh",
+          "enabled": true,
+          "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
+          "order": 35,
           "requires_password": true
         }
       ]

@@ -26,9 +26,9 @@
         "stdio"
       ],
       "env": {
-        "SONARQUBE_TOKEN": "fa7de4618ee39599212686503e636ddc7c2a4321",
-        "SONARQUBE_URL": "",
-        "SONARQUBE_ORG": "olegkizyma008-rgb"
+        "SONARQUBE_TOKEN": "${SONAR_API_KEY}",
+        "SONARQUBE_URL": "${SONAR_URL}",
+        "SONARQUBE_ORG": "${SONAR_ORG_KEY}"
       },
       "description": "SonarQube MCP Server for code quality analysis",
       "timeout": 60000,
