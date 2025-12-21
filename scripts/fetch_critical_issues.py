@@ -6,7 +6,7 @@ import json
 SONAR_URL = os.getenv('SONAR_URL', 'https://sonarcloud.io')
 SONAR_API_KEY = os.getenv('SONAR_API_KEY')
 SONAR_ORG_KEY = os.getenv('SONAR_ORG_KEY')
-PROJECT_KEY = 'olegkizima01_System'
+PROJECT_KEY = 'olegkizima01_System2'
 
 def get_critical_issues():
     url = f"{SONAR_URL}/api/issues/search"

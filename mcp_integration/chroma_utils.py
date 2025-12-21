@@ -71,6 +71,8 @@ def create_persistent_client(
         client = chromadb.PersistentClient(path=str(persist_dir))
         return ChromaInitResult(client=client, persisted=True, persist_dir=persist_dir)
     except BaseException as exc:  # includes pyo3_runtime.PanicException
+        if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+            raise
         logger.warning(
             f"⚠️ ChromaDB PersistentClient failed ({type(exc).__name__}); "
             f"persist_dir={persist_dir}"
@@ -96,6 +98,8 @@ def create_persistent_client(
             logger.info("✅ ChromaDB PersistentClient recovered after repair")
             return ChromaInitResult(client=client, persisted=True, persist_dir=persist_dir)
         except BaseException as repair_exc:
+            if isinstance(repair_exc, (KeyboardInterrupt, SystemExit)):
+                raise
             logger.error(
                 f"❌ ChromaDB PersistentClient repair retry failed ({type(repair_exc).__name__}); "
                 f"persist_dir={persist_dir}"

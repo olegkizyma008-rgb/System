@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 01:25:07  2025
+Generated: Mon Dec 22 01:33:11  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  16c1370b refactor(trinity): modularize _grisha_node to reduce cognitive complexity
+  26b3c17e Refactor: Modularize TUI keybindings and refine exception handling
+  d3a82097 refactor(trinity): modularize _grisha_node to reduce cognitive complexity
   b2fa90d4 Refactor: Finalize SonarCloud alignment for olegkizima01 organization
   7f547212 feat: Update critical issues count and effort totals, and add a new critical issue for `python:S3776` in `core/trinity.py`.
   bb652666 Refactor: Address SonarCloud critical issues in core/mcp.py, core/trinity.py, and TUI modules
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   2b3dff5a feat: Add SonarCloud project configuration and update gitignore.
   46dad878 feat: Add Anthropic and local MCP servers, enhance RAG tool prioritization, integrate SonarQube scripts, and remove old project artifacts.
   012eb491 feat: Implement the initial weapon shop website, including a terminal-themed loading screen, core UI, and backend setup.
-  5ab1533a refactor(tui/cli): remove 583 lines of duplicate and dead code
 ```
 
 ## Project Structure
@@ -419,6 +419,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 ├── i18n.py
 ├── index.html
 ├── issues.json
+├── keybindings_extracted.txt
 ├── logs
 │   ├── atlas_analysis.jsonl
 │   ├── left_screen.log
@@ -647,6 +648,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   └── verify_website.py
 └── тест.тест
 
-181 directories, 388 files
+181 directories, 389 files
 
 ```
