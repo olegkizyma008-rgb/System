@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Armory - Premium Weaponry</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/loading.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <span class="terminal-title">ELITE ARMORY OS v3.14</span>
+                <span class="terminal-buttons">
+                    <span class="close"></span>
+                    <span class="minimize"></span>
+                    <span class="maximize"></span>
+                </span>
+            </div>
+            <div class="terminal-content">
+                <div class="terminal-text" id="terminal-text"></div>
+                <div class="ascii-art" id="ascii-art"></div>
+                <div class="pistol-drawing" id="pistol-drawing"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Website Content -->
+    <div id="main-content" style="display: none;">
+        <header>
+            <div class="logo">
+                <h1>ELITE ARMORY</h1>
+                <p>Premium Weaponry & Tactical Gear</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active">Home</a></li>
+                    <li><a href="#products">Products</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            <section class="hero">
+                <h2>Welcome to Elite Armory</h2>
+                <p>Your trusted source for premium firearms and tactical equipment</p>
+            </section>
+            
+            <section id="products" class="products">
+                <h2>Our Featured Products</h2>
+                <div class="product-grid" id="product-grid">
+                    <!-- Products will be loaded here -->
+                </div>
+            </section>
+            
+            <section id="about" class="about">
+                <h2>About Us</h2>
+                <p>Elite Armory has been serving professionals and enthusiasts since 2010. We specialize in high-quality firearms, tactical gear, and accessories. Our team consists of former military and law enforcement professionals who understand the importance of reliability and performance.</p>
+            </section>
+        </main>
+        
+        <footer id="contact">
+            <div class="footer-content">
+                <div class="contact-info">
+                    <h3>Contact Information</h3>
+                    <p>Email: sales@elitearmory.com</p>
+                    <p>Phone: +1 (555) 123-4567</p>
+                    <p>Address: 123 Tactical Lane, Security City, USA</p>
+                </div>
+                <div class="legal">
+                    <h3>Legal Information</h3>
+                    <p>All sales are subject to local, state, and federal laws. Proper licensing and background checks required.</p>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Elite Armory. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="js/loading.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Fallback in case the loading animation doesn't work
+        setTimeout(function() {
+            var loadingScreen = document.getElementById('loading-screen');
+            var mainContent = document.getElementById('main-content');
+            if (loadingScreen && mainContent) {
+                loadingScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+            }
+        }, 15000); // 15 second timeout
+    </script>
+</body>
+</html>

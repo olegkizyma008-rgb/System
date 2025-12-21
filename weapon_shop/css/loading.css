@@ -1,0 +1,376 @@
+/* Loading Screen Styles */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.terminal-container {
+    width: 800px;
+    height: 500px;
+    background-color: #111;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+}
+
+.terminal-header {
+    background-color: #222;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #00ff00;
+}
+
+.terminal-title {
+    color: #00ff00;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.terminal-buttons span {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-left: 5px;
+    border-radius: 50%;
+}
+
+.close { background-color: #ff5555; }
+.minimize { background-color: #ffff55; }
+.maximize { background-color: #55ff55; }
+
+.terminal-content {
+    padding: 20px;
+    height: calc(100% - 50px);
+    overflow-y: auto;
+    color: #00ff00;
+}
+
+.terminal-text {
+    font-size: 16px;
+    line-height: 1.4;
+    margin-bottom: 20px;
+}
+
+.ascii-art {
+    font-size: 14px;
+    line-height: 1.2;
+    margin: 20px 0;
+    white-space: pre;
+}
+
+.pistol-drawing {
+    width: 100%;
+    height: 200px;
+    position: relative;
+    margin-top: 20px;
+}
+
+.pistol-line {
+    position: absolute;
+    background-color: #00ff00;
+    height: 2px;
+}
+
+/* Blinking cursor effect */
+.blinking-cursor {
+    display: inline-block;
+    width: 10px;
+    height: 20px;
+    background-color: #00ff00;
+    animation: blink 0.8s infinite;
+    vertical-align: middle;
+    box-shadow: 0 0 5px #00ff00;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Terminal text typing effect */
+.terminal-text {
+    font-size: 16px;
+    line-height: 1.4;
+    margin-bottom: 20px;
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+}
+
+/* ASCII art styling */
+.ascii-art {
+    font-size: 14px;
+    line-height: 1.2;
+    margin: 20px 0;
+    white-space: pre;
+    color: #00ff00;
+    text-shadow: 0 0 3px rgba(0, 255, 0, 0.5);
+    font-weight: bold;
+}
+
+/* Pistol drawing container */
+.pistol-drawing {
+    width: 100%;
+    height: 200px;
+    position: relative;
+    margin-top: 20px;
+    border: 1px solid rgba(0, 255, 0, 0.1);
+    background: linear-gradient(45deg, rgba(0, 255, 0, 0.02) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(0, 255, 0, 0.02) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(0, 255, 0, 0.02) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(0, 255, 0, 0.02) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Enhanced pistol lines */
+.pistol-line {
+    position: absolute;
+    background-color: #00ff00;
+    height: 2px;
+    box-shadow: 0 0 5px #00ff00;
+    transition: all 0.3s;
+}
+
+.pistol-line:hover {
+    background-color: #00cc00;
+    box-shadow: 0 0 8px #00cc00;
+}
+
+/* Scanline effect enhancement */
+#loading-screen::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0.1) 50%,
+        rgba(0, 0, 0, 0.25) 50%
+    );
+    background-size: 100% 2px;
+    pointer-events: none;
+    animation: scanlines 0.1s infinite;
+}
+
+@keyframes scanlines {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+/* Terminal header glow */
+.terminal-header {
+    background-color: #222;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #00ff00;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.terminal-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.1), transparent);
+    animation: headerGlow 3s linear infinite;
+}
+
+@keyframes headerGlow {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Modern terminal text effects */
+.terminal-text {
+    font-size: 16px;
+    line-height: 1.4;
+    margin-bottom: 20px;
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+    font-family: 'Courier New', monospace;
+}
+
+.terminal-text span {
+    opacity: 0;
+    transform: translateY(10px);
+    display: inline-block;
+    animation: textReveal 0.5s ease forwards;
+}
+
+@keyframes textReveal {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced ASCII art with modern effects */
+.ascii-art {
+    font-size: 14px;
+    line-height: 1.2;
+    margin: 20px 0;
+    white-space: pre;
+    color: #00ff00;
+    text-shadow: 0 0 3px rgba(0, 255, 0, 0.5);
+    font-weight: bold;
+    position: relative;
+}
+
+.ascii-art::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00ff00, transparent);
+    animation: underlineGlow 2s ease infinite;
+}
+
+@keyframes underlineGlow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+/* Modern pistol drawing container */
+.pistol-drawing {
+    width: 100%;
+    height: 200px;
+    position: relative;
+    margin-top: 20px;
+    border: 1px solid rgba(0, 255, 0, 0.1);
+    background: linear-gradient(45deg, rgba(0, 255, 0, 0.02) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(0, 255, 0, 0.02) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(0, 255, 0, 0.02) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(0, 255, 0, 0.02) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    overflow: hidden;
+    position: relative;
+}
+
+.pistol-drawing::before {
+    content: "PISTOL RENDERING...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(0, 255, 0, 0.3);
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    animation: fadeText 1s ease infinite alternate;
+}
+
+@keyframes fadeText {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.7; }
+}
+
+/* Enhanced pistol lines with modern effects */
+.pistol-line {
+    position: absolute;
+    background-color: #00ff00;
+    height: 2px;
+    box-shadow: 0 0 5px #00ff00;
+    transition: all 0.3s;
+    transform-origin: 0 0;
+    animation: lineDraw 0.5s ease forwards;
+}
+
+@keyframes lineDraw {
+    from {
+        width: 0;
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.pistol-line:hover {
+    background-color: #00cc00;
+    box-shadow: 0 0 8px #00cc00;
+    transform: scaleX(1.05);
+}
+
+/* Modern scanline effect */
+#loading-screen::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: 
+        repeating-linear-gradient(
+            to bottom,
+            rgba(18, 16, 16, 0.1) 0px,
+            rgba(0, 0, 0, 0.25) 1px,
+            transparent 2px
+        );
+    background-size: 100% 2px;
+    pointer-events: none;
+    animation: scanlines 0.1s infinite;
+    opacity: 0.5;
+}
+
+@keyframes scanlines {
+    0% { opacity: 0.4; }
+    50% { opacity: 0.6; }
+    100% { opacity: 0.4; }
+}
+
+/* Modern terminal container */
+.terminal-container {
+    width: 800px;
+    height: 500px;
+    background-color: #111;
+    border-radius: 8px;
+    box-shadow: 
+        0 0 20px rgba(0, 255, 0, 0.3),
+        0 0 40px rgba(0, 255, 0, 0.2);
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+    position: relative;
+    animation: containerGlow 2s ease infinite alternate;
+}
+
+@keyframes containerGlow {
+    0% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.3), 0 0 40px rgba(0, 255, 0, 0.2); }
+    100% { box-shadow: 0 0 25px rgba(0, 255, 0, 0.4), 0 0 50px rgba(0, 255, 0, 0.3); }
+}
+
+/* Scanline effect */
+#loading-screen::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0.1) 50%,
+        rgba(0, 0, 0, 0.25) 50%
+    );
+    background-size: 100% 2px;
+    pointer-events: none;
+}
