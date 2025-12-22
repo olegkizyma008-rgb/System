@@ -8,6 +8,44 @@ Trinity has a built-in plugin system that allows you to automatically create and
 
 ---
 
+## 🎯 Doctor Vibe Auto-Plugin System
+
+**ВАЖЛИВО**: Doctor Vibe може **автоматично створювати плагіни** коли стандартні інструменти Trinity не можуть виконати завдання!
+
+**IMPORTANT**: Doctor Vibe can **auto-generate plugins** when standard Trinity tools cannot accomplish a task!
+
+### Коли Doctor Vibe створює плагін автоматично / When Doctor Vibe Auto-Creates Plugins
+
+Doctor Vibe аналізує кожне завдання і автоматично створює спеціалізований плагін коли:
+
+Doctor Vibe analyzes each task and automatically creates a specialized plugin when:
+
+1. **Стандартні інструменти провалились** / Standard tools failed
+2. **Потрібні API інтеграції** / API integrations needed (REST, GraphQL, webhooks)
+3. **Спеціалізовані формати файлів** / Specialized file formats (PDF, Excel, complex CSV)
+4. **База даних операції** / Database operations (SQL, MongoDB, etc.)
+5. **Хмарні сервіси** / Cloud services (AWS, Azure, GCP)
+6. **Автоматизація** / Automation (workflows, scheduling)
+7. **Складна обробка даних** / Complex data processing
+
+### Workflow автоматичного створення / Auto-Creation Workflow
+
+```mermaid
+graph LR
+    A[Завдання] --> B{Стандартні інструменти?}
+    B -->|Не можуть| C[vibe_analyze_task_requirements]
+    C --> D[vibe_create_plugin]
+    D --> E[Doctor Vibe імплементує]
+    E --> F[Плагін готовий]
+    B -->|Можуть| G[Використати стандартні]
+```
+
+Дивіться `plugins/doctor_vibe_extensions/` для деталей реалізації.
+
+See `plugins/doctor_vibe_extensions/` for implementation details.
+
+---
+
 ## Швидкий старт / Quick Start
 
 ### 1. Створення плагіна / Creating a Plugin

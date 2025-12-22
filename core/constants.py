@@ -18,6 +18,25 @@ DEV_KEYWORDS = [
     "плагін", "plugin", "модуль", "module", "розширення", "extension"
 ]
 
+# Keywords that indicate need for auto-plugin generation
+# Used by Doctor Vibe to detect when standard tools are insufficient
+AUTO_PLUGIN_INDICATORS = [
+    # API/Integration keywords
+    "rest api", "graphql", "webhook", "oauth", "api integration", "endpoint",
+    "інтеграція api", "веб-хук", "точка доступу",
+    # Database keywords
+    "postgresql", "mongodb", "mysql", "redis", "database query", "запит до бази",
+    # File format keywords
+    "pdf parsing", "excel processing", "csv transform", "парсинг pdf", "обробка excel",
+    # Cloud keywords
+    "aws", "s3", "lambda", "azure", "gcp", "cloud storage", "хмарне сховище",
+    # Automation keywords
+    "cron job", "scheduled task", "pipeline", "workflow automation", "автоматизація",
+    # Complex operations
+    "image processing", "video processing", "ocr", "machine learning",
+    "обробка зображень", "обробка відео", "машинне навчання"
+]
+
 GENERAL_KEYWORDS = [
     "фільм", "movie", "video", "youtube", "netflix", "браузер", "browser",
     "музика", "music", "spotify", "apple music", "відкрий", "open",
