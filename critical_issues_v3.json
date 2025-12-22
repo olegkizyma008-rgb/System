@@ -7,9 +7,273 @@
     "pageSize": 100,
     "total": 173
   },
-  "effortTotal": 3286,
-  "debtTotal": 3286,
+  "effortTotal": 3215,
+  "debtTotal": 3215,
   "issues": [
+    {
+      "key": "AZtDZmHwZri46hs2Lrh6",
+      "rule": "python:S3776",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/agents.py",
+      "project": "olegkizima01_System2",
+      "line": 739,
+      "hash": "27dc92d8d600f0a2a4c647e23842276a",
+      "textRange": {
+        "startLine": 739,
+        "endLine": 739,
+        "startOffset": 4,
+        "endOffset": 21
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 741,
+                "endLine": 741,
+                "startOffset": 28,
+                "endOffset": 30
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 745,
+                "endLine": 745,
+                "startOffset": 4,
+                "endOffset": 6
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 746,
+                "endLine": 746,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 748,
+                "endLine": 748,
+                "startOffset": 8,
+                "endOffset": 12
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 750,
+                "endLine": 750,
+                "startOffset": 4,
+                "endOffset": 8
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 750,
+                "endLine": 750,
+                "startOffset": 32,
+                "endOffset": 35
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 750,
+                "endLine": 750,
+                "startOffset": 57,
+                "endOffset": 59
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 752,
+                "endLine": 752,
+                "startOffset": 4,
+                "endOffset": 8
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 754,
+                "endLine": 754,
+                "startOffset": 4,
+                "endOffset": 8
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 754,
+                "endLine": 754,
+                "startOffset": 30,
+                "endOffset": 32
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 756,
+                "endLine": 756,
+                "startOffset": 4,
+                "endOffset": 8
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 756,
+                "endLine": 756,
+                "startOffset": 27,
+                "endOffset": 29
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 758,
+                "endLine": 758,
+                "startOffset": 4,
+                "endOffset": 8
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 761,
+                "endLine": 761,
+                "startOffset": 4,
+                "endOffset": 6
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 762,
+                "endLine": 762,
+                "startOffset": 4,
+                "endOffset": 6
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 767,
+                "endLine": 767,
+                "startOffset": 4,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.",
+      "effort": "7min",
+      "debt": "7min",
+      "assignee": "olegkizima01-pSUd5@github",
+      "author": "olegkizima01@gmail.com",
+      "tags": [
+        "brain-overload"
+      ],
+      "creationDate": "2025-12-22T00:11:22+0000",
+      "updateDate": "2025-12-22T00:11:22+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "FOCUSED",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
     {
       "key": "AZtDZHSffM8W-tnGrRGN",
       "rule": "python:S3776",
@@ -1559,87 +1823,6 @@
       "type": "CODE_SMELL",
       "organization": "olegkizima01",
       "cleanCodeAttribute": "FOCUSED",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa-aIamWuOZABWXn",
-      "rule": "python:S1192",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:mcp_integration/utils/sonarqube_context7_helper.py",
-      "project": "olegkizima01_System2",
-      "line": 43,
-      "hash": "11ced242ee1b813cf41731e6d644a353",
-      "textRange": {
-        "startLine": 43,
-        "endLine": 43,
-        "startOffset": 30,
-        "endOffset": 54
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/utils/sonarqube_context7_helper.py",
-              "textRange": {
-                "startLine": 77,
-                "endLine": 77,
-                "startOffset": 30,
-                "endOffset": 54
-              },
-              "msg": "Duplication"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/utils/sonarqube_context7_helper.py",
-              "textRange": {
-                "startLine": 130,
-                "endLine": 130,
-                "startOffset": 41,
-                "endOffset": 65
-              },
-              "msg": "Duplication"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/utils/sonarqube_context7_helper.py",
-              "textRange": {
-                "startLine": 183,
-                "endLine": 183,
-                "startOffset": 37,
-                "endOffset": 61
-              },
-              "msg": "Duplication"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Define a constant instead of duplicating this literal \"/SonarSource/sonarqube\" 4 times.",
-      "effort": "8min",
-      "debt": "8min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "design"
-      ],
-      "creationDate": "2025-12-21T04:42:23+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "DISTINCT",
       "cleanCodeAttributeCategory": "ADAPTABLE",
       "impacts": [
         {
@@ -5387,12 +5570,12 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 545,
-                "endLine": 545,
+                "startLine": 548,
+                "endLine": 548,
                 "startOffset": 12,
                 "endOffset": 14
               },
-              "msg": "+2 (incl 1 for nesting)"
+              "msg": "+1"
             }
           ]
         },
@@ -5401,22 +5584,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 552,
-                "endLine": 552,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 556,
-                "endLine": 556,
+                "startLine": 551,
+                "endLine": 551,
                 "startOffset": 63,
                 "endOffset": 65
               },
@@ -5429,78 +5598,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 556,
-                "endLine": 556,
-                "startOffset": 33,
-                "endOffset": 35
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 573,
-                "endLine": 573,
-                "startOffset": 12,
-                "endOffset": 18
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 579,
-                "endLine": 579,
-                "startOffset": 12,
-                "endOffset": 18
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 582,
-                "endLine": 582,
-                "startOffset": 46,
-                "endOffset": 48
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 583,
-                "endLine": 583,
-                "startOffset": 63,
-                "endOffset": 65
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 583,
-                "endLine": 583,
+                "startLine": 551,
+                "endLine": 551,
                 "startOffset": 36,
                 "endOffset": 38
               },
@@ -5513,10 +5612,38 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 595,
-                "endLine": 595,
+                "startLine": 562,
+                "endLine": 562,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 565,
+                "endLine": 565,
                 "startOffset": 12,
-                "endOffset": 14
+                "endOffset": 18
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/agents.py",
+              "textRange": {
+                "startLine": 593,
+                "endLine": 593,
+                "startOffset": 8,
+                "endOffset": 10
               },
               "msg": "+1"
             }
@@ -5529,356 +5656,6 @@
               "textRange": {
                 "startLine": 597,
                 "endLine": 597,
-                "startOffset": 8,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 602,
-                "endLine": 602,
-                "startOffset": 12,
-                "endOffset": 17
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 604,
-                "endLine": 604,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 609,
-                "endLine": 609,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 616,
-                "endLine": 616,
-                "startOffset": 24,
-                "endOffset": 27
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 617,
-                "endLine": 617,
-                "startOffset": 28,
-                "endOffset": 30
-              },
-              "msg": "+5 (incl 4 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 622,
-                "endLine": 622,
-                "startOffset": 28,
-                "endOffset": 30
-              },
-              "msg": "+5 (incl 4 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 624,
-                "endLine": 624,
-                "startOffset": 28,
-                "endOffset": 32
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 631,
-                "endLine": 631,
-                "startOffset": 28,
-                "endOffset": 30
-              },
-              "msg": "+5 (incl 4 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 633,
-                "endLine": 633,
-                "startOffset": 32,
-                "endOffset": 34
-              },
-              "msg": "+6 (incl 5 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 637,
-                "endLine": 637,
-                "startOffset": 32,
-                "endOffset": 36
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 640,
-                "endLine": 640,
-                "startOffset": 28,
-                "endOffset": 32
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 640,
-                "endLine": 640,
-                "startOffset": 56,
-                "endOffset": 59
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 640,
-                "endLine": 640,
-                "startOffset": 81,
-                "endOffset": 83
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 643,
-                "endLine": 643,
-                "startOffset": 28,
-                "endOffset": 32
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 646,
-                "endLine": 646,
-                "startOffset": 28,
-                "endOffset": 32
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 646,
-                "endLine": 646,
-                "startOffset": 54,
-                "endOffset": 56
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 648,
-                "endLine": 648,
-                "startOffset": 28,
-                "endOffset": 32
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 648,
-                "endLine": 648,
-                "startOffset": 51,
-                "endOffset": 53
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 650,
-                "endLine": 650,
-                "startOffset": 28,
-                "endOffset": 32
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 654,
-                "endLine": 654,
-                "startOffset": 28,
-                "endOffset": 30
-              },
-              "msg": "+5 (incl 4 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 657,
-                "endLine": 657,
-                "startOffset": 28,
-                "endOffset": 30
-              },
-              "msg": "+5 (incl 4 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 664,
-                "endLine": 664,
-                "startOffset": 24,
-                "endOffset": 30
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 667,
-                "endLine": 667,
-                "startOffset": 16,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 694,
-                "endLine": 694,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/agents.py",
-              "textRange": {
-                "startLine": 698,
-                "endLine": 698,
                 "startOffset": 13,
                 "endOffset": 19
               },
@@ -5891,8 +5668,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 701,
-                "endLine": 701,
+                "startLine": 600,
+                "endLine": 600,
                 "startOffset": 8,
                 "endOffset": 10
               },
@@ -5905,8 +5682,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 702,
-                "endLine": 702,
+                "startLine": 601,
+                "endLine": 601,
                 "startOffset": 12,
                 "endOffset": 15
               },
@@ -5919,8 +5696,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 708,
-                "endLine": 708,
+                "startLine": 607,
+                "endLine": 607,
                 "startOffset": 99,
                 "endOffset": 101
               },
@@ -5933,8 +5710,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 708,
-                "endLine": 708,
+                "startLine": 607,
+                "endLine": 607,
                 "startOffset": 70,
                 "endOffset": 72
               },
@@ -5947,8 +5724,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 715,
-                "endLine": 715,
+                "startLine": 614,
+                "endLine": 614,
                 "startOffset": 8,
                 "endOffset": 14
               },
@@ -5961,8 +5738,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 720,
-                "endLine": 720,
+                "startLine": 619,
+                "endLine": 619,
                 "startOffset": 8,
                 "endOffset": 11
               },
@@ -5975,8 +5752,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 723,
-                "endLine": 723,
+                "startLine": 622,
+                "endLine": 622,
                 "startOffset": 12,
                 "endOffset": 15
               },
@@ -5989,8 +5766,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 724,
-                "endLine": 724,
+                "startLine": 623,
+                "endLine": 623,
                 "startOffset": 16,
                 "endOffset": 18
               },
@@ -6003,8 +5780,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 724,
-                "endLine": 724,
+                "startLine": 623,
+                "endLine": 623,
                 "startOffset": 36,
                 "endOffset": 38
               },
@@ -6017,8 +5794,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 729,
-                "endLine": 729,
+                "startLine": 628,
+                "endLine": 628,
                 "startOffset": 80,
                 "endOffset": 82
               },
@@ -6031,8 +5808,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 729,
-                "endLine": 729,
+                "startLine": 628,
+                "endLine": 628,
                 "startOffset": 50,
                 "endOffset": 52
               },
@@ -6045,8 +5822,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 731,
-                "endLine": 731,
+                "startLine": 630,
+                "endLine": 630,
                 "startOffset": 40,
                 "endOffset": 42
               },
@@ -6059,8 +5836,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 734,
-                "endLine": 734,
+                "startLine": 633,
+                "endLine": 633,
                 "startOffset": 16,
                 "endOffset": 18
               },
@@ -6073,8 +5850,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 735,
-                "endLine": 735,
+                "startLine": 634,
+                "endLine": 634,
                 "startOffset": 20,
                 "endOffset": 22
               },
@@ -6087,8 +5864,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 736,
-                "endLine": 736,
+                "startLine": 635,
+                "endLine": 635,
                 "startOffset": 55,
                 "endOffset": 57
               },
@@ -6101,8 +5878,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 737,
-                "endLine": 737,
+                "startLine": 636,
+                "endLine": 636,
                 "startOffset": 20,
                 "endOffset": 24
               },
@@ -6115,8 +5892,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 739,
-                "endLine": 739,
+                "startLine": 638,
+                "endLine": 638,
                 "startOffset": 20,
                 "endOffset": 24
               },
@@ -6129,8 +5906,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 742,
-                "endLine": 742,
+                "startLine": 641,
+                "endLine": 641,
                 "startOffset": 16,
                 "endOffset": 18
               },
@@ -6143,8 +5920,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 744,
-                "endLine": 744,
+                "startLine": 643,
+                "endLine": 643,
                 "startOffset": 16,
                 "endOffset": 20
               },
@@ -6157,8 +5934,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 746,
-                "endLine": 746,
+                "startLine": 645,
+                "endLine": 645,
                 "startOffset": 20,
                 "endOffset": 22
               },
@@ -6171,8 +5948,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 764,
-                "endLine": 764,
+                "startLine": 663,
+                "endLine": 663,
                 "startOffset": 16,
                 "endOffset": 22
               },
@@ -6185,8 +5962,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 768,
-                "endLine": 768,
+                "startLine": 667,
+                "endLine": 667,
                 "startOffset": 16,
                 "endOffset": 18
               },
@@ -6199,8 +5976,8 @@
             {
               "component": "olegkizima01_System2:tui/agents.py",
               "textRange": {
-                "startLine": 775,
-                "endLine": 775,
+                "startLine": 674,
+                "endLine": 674,
                 "startOffset": 4,
                 "endOffset": 10
               },
@@ -6210,15 +5987,15 @@
         }
       ],
       "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 123 to the 15 allowed.",
-      "effort": "1h53min",
-      "debt": "1h53min",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 53 to the 15 allowed.",
+      "effort": "43min",
+      "debt": "43min",
       "author": "olegkizyma008@gmail.com",
       "tags": [
         "brain-overload"
       ],
       "creationDate": "2025-12-20T22:59:25+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
+      "updateDate": "2025-12-22T00:11:22+0000",
       "type": "CODE_SMELL",
       "organization": "olegkizima01",
       "cleanCodeAttribute": "FOCUSED",
@@ -21469,16 +21246,6 @@
       "name": "test_vision_system.py",
       "longName": "tests/test_vision_system.py",
       "path": "tests/test_vision_system.py"
-    },
-    {
-      "organization": "olegkizima01",
-      "key": "olegkizima01_System2:mcp_integration/utils/sonarqube_context7_helper.py",
-      "uuid": "AZtDBaYkIamWuOZABWKo",
-      "enabled": true,
-      "qualifier": "FIL",
-      "name": "sonarqube_context7_helper.py",
-      "longName": "mcp_integration/utils/sonarqube_context7_helper.py",
-      "path": "mcp_integration/utils/sonarqube_context7_helper.py"
     },
     {
       "organization": "olegkizima01",
