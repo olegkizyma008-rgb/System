@@ -2337,7 +2337,12 @@ Return JSON with ONLY the replacement step.'''))
                 # created during this pass), prefer to report the current HEAD
                 # commit hash if one exists so the final report always references
                 # a concrete commit when repository changes were previously made.
-                h = self._run_git_command(["git", "rev-parse", "HEAD"], cwd, os.environ.copy())
+                git_root = None
+                if isinstance(repo_changes, dict):
+                    git_root = repo_changes.get("git_root")
+                if not git_root:
+                    git_root = self._get_git_root()
+                h = self._run_git_command(["git", "rev-parse", "HEAD"], git_root or os.getcwd(), os.environ.copy())
                 if h.returncode == 0:
                     commit_hash = (h.stdout or "").strip() or None
                 repo_changes = self._get_repo_changes()
