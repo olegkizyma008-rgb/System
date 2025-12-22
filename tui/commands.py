@@ -322,127 +322,140 @@ def handle_input(buff: Any) -> None:
     handle_command(f"/task {text}")
 
 def handle_command(cmd: str, wait: bool = False) -> None:
-    """Handle a slash command from the user.
-    
-    Args:
-        cmd: The command string.
-        wait: If True, waits for the command thread to finish (useful for CLI/tools).
-    """
-    from tui.render import log, trim_logs_if_needed
-    from tui.agents import agent_session, agent_send, run_graph_agent_task
-    from tui.cleanup import load_cleanup_config, run_cleanup, find_module, set_module_enabled, perform_install
-    from tui.monitoring import (
-        tool_monitor_status, tool_monitor_start, tool_monitor_stop, 
-        tool_monitor_set_source, tool_monitor_set_use_sudo
-    )
-    import threading
-    import os
-    
+    """Handle a slash command from the user."""
     parts = str(cmd or "").strip().split()
     if not parts:
         return
     command = parts[0].lower().strip()
     args = parts[1:]
 
-    if command == "/help" or command == "/h":
-        log("/help | /resume", "info")
-        log("/run <editor> [--dry] | /modules <editor> | /enable <editor> <id> | /disable <editor> <id>", "info")
-        log("/install <editor> | /locales <codes...>", "info")
-        log("/monitor status|start|stop|source <watchdog|fs_usage|opensnoop>|sudo <on|off>", "info")
-        log("/monitor-targets list|add <key>|remove <key>|clear|save", "info")
-        log("/llm status|set provider <copilot>|set main <model>|set vision <model>", "info")
-        log("/theme status|set <monaco|dracula|nord|gruvbox>", "info")
-        log("/lang status|set ui <code>|set chat <code>", "info")
-        log("/streaming status|on|off", "info")
-        log("/gui_mode status|on|off|auto", "info")
-        log("/task <task> | /trinity <task> | /autopilot <task>", "info")
-        log("/chat <message> (discussion only; execution via /task)", "info")
-        log("/bootstrap <project_name> [parent_dir]", "info")
-        log("/agent-reset | /agent-on | /agent-off", "info")
-        return
+    # Command dispatcher
+    dispatch = {
+        "/help": _cmd_help,
+        "/h": _cmd_help,
+        "/resume": lambda c, a, w: resume_paused_agent(),
+        "/chat": _cmd_chat,
+        "/trinity": _cmd_trinity_task,
+        "/autopilot": _cmd_trinity_task,
+        "/task": _cmd_trinity_task,
+        "/agent-reset": _cmd_agent_reset,
+        "/agent-on": _cmd_agent_on,
+        "/agent-off": _cmd_agent_off,
+        "/memory-clear": _cmd_memory_clear,
+    }
 
-    if command == "/resume":
-        resume_paused_agent()
-        return
+    handler = dispatch.get(command)
+    if handler:
+        handler(command, args, wait)
+    else:
+        from tui.render import log
+        log(f"Unknown command: {command}", "error")
 
-    if command == "/chat":
-        msg = " ".join(args).strip()
-        if not msg:
-            log("Usage: /chat <message>", "error")
-            return
-        log(msg, "user")
-        def _run_chat():
-            state.agent_processing = True
-            try:
-                ok, answer = agent_send(msg)
-                if answer:
-                    log(answer, "action" if ok else "error")
-            finally:
-                state.agent_processing = False
-                trim_logs_if_needed()
-        threading.Thread(target=_run_chat, daemon=True).start()
-        return
 
-    if command in {"/trinity", "/autopilot", "/task"}:
-        task = " ".join(args).strip()
-        if not task:
-            log(f"Usage: {command} <task>", "error")
-            return
-        log(f"{command} {task}", "user")
-        def _run_trinity():
-            state.agent_processing = True
-            try:
-                run_graph_agent_task(
-                    task,
-                    allow_file_write=True,
-                    allow_shell=True,
-                    allow_applescript=True,
-                    allow_gui=True,
-                    allow_shortcuts=True,
-                )
-            finally:
-                state.agent_processing = False
-                trim_logs_if_needed()
-        
-        t = threading.Thread(target=_run_trinity, daemon=not wait)
-        t.start()
-        if wait:
-            t.join()
-        return
+def _cmd_help(cmd, args, wait):
+    from tui.render import log
+    log("/help | /resume", "info")
+    log("/run <editor> [--dry] | /modules <editor> | /enable <editor> <id> | /disable <editor> <id>", "info")
+    log("/install <editor> | /locales <codes...>", "info")
+    log("/monitor status|start|stop|source <watchdog|fs_usage|opensnoop>|sudo <on|off>", "info")
+    log("/monitor-targets list|add <key>|remove <key>|clear|save", "info")
+    log("/llm status|set provider <copilot>|set main <model>|set vision <model>", "info")
+    log("/theme status|set <monaco|dracula|nord|gruvbox>", "info")
+    log("/lang status|set ui <code>|set chat <code>", "info")
+    log("/streaming status|on|off", "info")
+    log("/gui_mode status|on|off|auto", "info")
+    log("/task <task> | /trinity <task> | /autopilot <task>", "info")
+    log("/chat <message> (discussion only; execution via /task)", "info")
+    log("/bootstrap <project_name> [parent_dir]", "info")
+    log("/agent-reset | /agent-on | /agent-off", "info")
 
-    if command == "/agent-reset":
-        agent_session.reset()
-        log("Agent session reset.", "action")
-        return
 
-    if command == "/agent-on":
-        agent_session.enabled = True
-        log("Agent chat enabled.", "action")
+def _cmd_chat(cmd, args, wait):
+    from tui.render import log, trim_logs_if_needed
+    from tui.agents import agent_send
+    import threading
+    msg = " ".join(args).strip()
+    if not msg:
+        log("Usage: /chat <message>", "error")
         return
-
-    if command == "/agent-off":
-        agent_session.enabled = False
-        log("Agent chat disabled.", "action")
-        return
-
-    if command == "/memory-clear":
-        target = "working"
-        if args:
-            target = args[0].lower().strip()
-        
+    log(msg, "user")
+    
+    def _run_chat():
+        state.agent_processing = True
         try:
-            from core.memory import clear_memory_tool
-            res = clear_memory_tool(target)
-            if res.get("status") == "success":
-                log(f"Memory cleared: {res}", "action")
-            else:
-                log(f"Memory clear failed: {res.get('error')}", "error")
-        except Exception as e:
-            log(f"Error clearing memory: {e}", "error")
-        return
+            ok, answer = agent_send(msg)
+            if answer:
+                log(answer, "action" if ok else "error")
+        finally:
+            state.agent_processing = False
+            trim_logs_if_needed()
+    threading.Thread(target=_run_chat, daemon=True).start()
 
-    # More commands can be added here...
-    log(f"Unknown command: {command}", "error")
+
+def _cmd_trinity_task(cmd, args, wait):
+    from tui.render import log, trim_logs_if_needed
+    from tui.agents import run_graph_agent_task
+    import threading
+    task = " ".join(args).strip()
+    if not task:
+        log(f"Usage: {cmd} <task>", "error")
+        return
+    log(f"{cmd} {task}", "user")
+    
+    def _run_trinity():
+        state.agent_processing = True
+        try:
+            run_graph_agent_task(
+                task,
+                allow_file_write=True,
+                allow_shell=True,
+                allow_applescript=True,
+                allow_gui=True,
+                allow_shortcuts=True,
+            )
+        finally:
+            state.agent_processing = False
+            trim_logs_if_needed()
+    
+    t = threading.Thread(target=_run_trinity, daemon=not wait)
+    t.start()
+    if wait:
+        t.join()
+
+
+def _cmd_agent_reset(cmd, args, wait):
+    from tui.render import log
+    from tui.agents import agent_session
+    agent_session.reset()
+    log("Agent session reset.", "action")
+
+
+def _cmd_agent_on(cmd, args, wait):
+    from tui.render import log
+    from tui.agents import agent_session
+    agent_session.enabled = True
+    log("Agent chat enabled.", "action")
+
+
+def _cmd_agent_off(cmd, args, wait):
+    from tui.render import log
+    from tui.agents import agent_session
+    agent_session.enabled = False
+    log("Agent chat disabled.", "action")
+
+
+def _cmd_memory_clear(cmd, args, wait):
+    from tui.render import log
+    target = args[0].lower().strip() if args else "working"
+    try:
+        from core.memory import clear_memory_tool
+        res = clear_memory_tool(target)
+        if res.get("status") == "success":
+            log(f"Memory cleared: {res}", "action")
+        else:
+            log(f"Memory clear failed: {res.get('error')}", "error")
+    except Exception as e:
+        log(f"Error clearing memory: {e}", "error")
 
 
 def tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:
