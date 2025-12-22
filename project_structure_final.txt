@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 02:11:12  2025
+Generated: Mon Dec 22 02:23:24  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  6b589d21 Refactor: Final cleanup of SonarCloud issues (complexity and literals)
+  f7283044 Refactor CLI and TUI components to reduce cognitive complexity
+  e47ec988 Refactor: Final cleanup of SonarCloud issues (complexity and literals)
   5abe4c1f Chore: Update project key and scanner command in sonar script
   7b5520b2 Refactor: Decompose complex functions and fix broad exceptions for SonarCloud compliance
   906e8adf Refactor: Broad SonarQube cleanup and complexity reduction
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   67a5f439 Refactor: Modularize TUI keybindings and refine exception handling
   d3a82097 refactor(trinity): modularize _grisha_node to reduce cognitive complexity
   b2fa90d4 Refactor: Finalize SonarCloud alignment for olegkizima01 organization
-  7f547212 feat: Update critical issues count and effort totals, and add a new critical issue for `python:S3776` in `core/trinity.py`.
 ```
 
 ## Project Structure

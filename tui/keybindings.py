@@ -336,7 +336,11 @@ def _handle_menu_enter_dispatch(ctx):
 
     _llm_sub_hint = lambda: ctx["log"]("To edit model, use CLI: /llm set section=<name> model=<model>", "info")
     
-    dispatch = {
+    dispatch = _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint)
+    if lvl in dispatch: dispatch[lvl]()
+
+def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
+    return {
         MenuLevel.MAIN: lambda: _set_menu(state, ctx["MAIN_MENU_ITEMS"][state.menu_index][1]),
         MenuLevel.CUSTOM_TASKS: lambda: _run_custom_task(ctx),
         MenuLevel.MONITORING: lambda: _set_menu_from_items(state, ctx["get_monitoring_menu_items"]()),
@@ -357,7 +361,6 @@ def _handle_menu_enter_dispatch(ctx):
         MenuLevel.MONITOR_CONTROL: lambda: _handle_monitor_control_enter_ctx(ctx),
         **{ml: _llm_sub_hint for ml in [MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS]}
     }
-    if lvl in dispatch: dispatch[lvl]()
 
 def _set_menu(state, new_lvl):
     state.menu_level, state.menu_index = new_lvl, 0
@@ -523,8 +526,15 @@ def _get_menu_max_index(state: Any, MenuLevel: Any, MAIN_MENU_ITEMS: Sequence[An
                         get_llm_sub_menu_items: Callable, get_agent_menu_items: Callable) -> int:
     lvl = state.menu_level
     
+    
     # Registry of calculations for most menu levels
-    calc_map = {
+    calc_map = _get_menu_param_calculators(MenuLevel, MAIN_MENU_ITEMS, get_custom_tasks_menu_items, get_monitoring_menu_items, AVAILABLE_LOCALES, get_settings_menu_items, get_automation_permissions_menu_items, get_monitor_menu_items, get_llm_menu_items, get_agent_menu_items)
+    
+    if lvl in calc_map:
+        return calc_map[lvl]()
+
+def _get_menu_param_calculators(MenuLevel, MAIN_MENU_ITEMS, get_custom_tasks_menu_items, get_monitoring_menu_items, AVAILABLE_LOCALES, get_settings_menu_items, get_automation_permissions_menu_items, get_monitor_menu_items, get_llm_menu_items, get_agent_menu_items):
+    return {
         MenuLevel.MAIN: lambda: len(MAIN_MENU_ITEMS) - 1,
         MenuLevel.CUSTOM_TASKS: lambda: max(0, len(get_custom_tasks_menu_items()) - 1),
         MenuLevel.MONITORING: lambda: max(0, len(get_monitoring_menu_items()) - 1),
@@ -537,9 +547,6 @@ def _get_menu_max_index(state: Any, MenuLevel: Any, MAIN_MENU_ITEMS: Sequence[An
         MenuLevel.APPEARANCE: lambda: max(0, len(THEME_NAMES) - 1),
         MenuLevel.LANGUAGE: lambda: 1,
     }
-    
-    if lvl in calc_map:
-        return calc_map[lvl]()
         
     # Handle composite or dynamic levels
     if lvl in {MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}:

@@ -614,62 +614,8 @@ def run_graph_agent_task(
         except Exception:
             pass
         
-        event_count = 0
-        # Increased recursion limit for complex tasks
-        for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode, recursion_limit=500):
-            event_count += 1
-            print(f"DEBUG: Event {event_count} received")
-            for node_name, state_update in event.items():
-                if not state_update or not isinstance(state_update, dict):
-                    continue
-                
-                print(f"DEBUG: Processing node {node_name}")
-                agent_name = node_name.capitalize()
-                tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
-                messages = state_update.get("messages", [])
-                last_msg = messages[-1] if messages else None
-                
-                content = ""
-                if last_msg:
-                    if hasattr(last_msg, "content"):
-                        content = str(last_msg.content or "")
-                    elif isinstance(last_msg, dict):
-                        content = str(last_msg.get("content", ""))
-                    else:
-                        content = str(last_msg)
-                
-                if not use_stream:
-                    log(f"[{tag}] {content}", "info")
-                else:
-                    idx = stream_line_by_agent.get(agent_name)
-                    if idx is None:
-                        idx = log_reserve_line("action")
-                        stream_line_by_agent[agent_name] = idx
-                    log_replace_at(idx, f"[{tag}] {content}", "action")
-
-                # Always update agent message panel for the final state of the node
-                try:
-                    agent_type_map = {
-                        "atlas": AgentType.ATLAS,
-                        "tetyana": AgentType.TETYANA,
-                        "grisha": AgentType.GRISHA,
-                    }
-                    agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
-                    log_agent_message(agent_type, content)
-                    
-                    # Log FINAL content to analysis log (only here, not in streaming)
-                    from tui.render import log_agent_final
-                    log_agent_final(agent_type, content)
-                except Exception:
-                    pass
-                
-                pause_info = state_update.get("pause_info")
-                if pause_info:
-                    perm = pause_info.get("permission", "unknown")
-                    msg = pause_info.get("message", "Permission required")
-                    set_agent_pause(pending_text=user_text, permission=perm, message=msg)
-                    log(f"[{tag}] ⚠️ PAUSED: {msg}", "error")
-                    return
+        # Process the event loop in a separate helper to reduce complexity
+        _process_graph_events(runtime, user_text, gui_mode_val, exec_mode, use_stream, stream_line_by_agent)
                 
     except Exception as e:
         err_msg = traceback.format_exc()
@@ -777,3 +723,66 @@ _agent_send = agent_send
 _agent_send_with_stream = _agent_send_with_stream
 _agent_send_no_stream = _agent_send_no_stream
 _run_graph_agent_task = run_graph_agent_task
+
+def _process_graph_events(runtime, user_text, gui_mode_val, exec_mode, use_stream, stream_line_by_agent):
+    from tui.render import log, log_agent_message, log_reserve_line, log_replace_at
+    from tui.commands import set_agent_pause
+    from tui.messages import AgentType
+    
+    event_count = 0
+    # Increased recursion limit for complex tasks
+    for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode, recursion_limit=500):
+        event_count += 1
+        print(f"DEBUG: Event {event_count} received")
+        for node_name, state_update in event.items():
+            if not state_update or not isinstance(state_update, dict):
+                continue
+            
+            print(f"DEBUG: Processing node {node_name}")
+            agent_name = node_name.capitalize()
+            tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
+            messages = state_update.get("messages", [])
+            last_msg = messages[-1] if messages else None
+            
+            content = ""
+            if last_msg:
+                if hasattr(last_msg, "content"):
+                    content = str(last_msg.content or "")
+                elif isinstance(last_msg, dict):
+                    content = str(last_msg.get("content", ""))
+                else:
+                    content = str(last_msg)
+            
+            if not use_stream:
+                log(f"[{tag}] {content}", "info")
+            else:
+                idx = stream_line_by_agent.get(agent_name)
+                if idx is None:
+                    idx = log_reserve_line("action")
+                    stream_line_by_agent[agent_name] = idx
+                log_replace_at(idx, f"[{tag}] {content}", "action")
+
+            # Always update agent message panel for the final state of the node
+            try:
+                agent_type_map = {
+                    "atlas": AgentType.ATLAS,
+                    "tetyana": AgentType.TETYANA,
+                    "grisha": AgentType.GRISHA,
+                }
+                agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
+                log_agent_message(agent_type, content)
+                
+                # Log FINAL content to analysis log (only here, not in streaming)
+                from tui.render import log_agent_final
+                log_agent_final(agent_type, content)
+            except Exception:
+                pass
+            
+            pause_info = state_update.get("pause_info")
+            if pause_info:
+                perm = pause_info.get("permission", "unknown")
+                msg = pause_info.get("message", "Permission required")
+                set_agent_pause(pending_text=user_text, permission=perm, message=msg)
+                log(f"[{tag}] ⚠️ PAUSED: {msg}", "error")
+                return
+

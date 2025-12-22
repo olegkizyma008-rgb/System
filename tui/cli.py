@@ -1952,250 +1952,257 @@ def cli_main(argv: List[str]) -> None:
     logger.debug(f"Parsed command: {args.command}")
 
     if not args.command or args.command == "tui":
-        logger.info("Starting TUI mode")
-        try:
-            run_tui()
-            logger.info("TUI mode exited successfully")
-        except Exception as e:
-            log_exception(logger, e, "TUI mode")
-            raise
-        return
+        return _handle_tui_command(logger)
 
     try:
         cfg = _load_cleanup_config()
-        logger.debug(f"Cleanup config loaded successfully")
+        logger.debug("Cleanup config loaded successfully")
 
-        resolved_editor: Optional[str] = None
-        editor_note: Optional[str] = None
-        if hasattr(args, "editor"):
-            resolved_editor, editor_note = _resolve_editor_arg(cfg, getattr(args, "editor", None))
-            if editor_note:
-                logger.warning(editor_note)
-                try:
-                    print(editor_note, file=sys.stderr)
-                except Exception:
-                    pass
-
-        if args.command == "list-editors":
-            logger.info("Listing editors")
-            for key, label in _list_editors(cfg):
-                print(f"{key}: {label}")
-            logger.info("Editors listed successfully")
+        resolved_editor, editor_note = _get_resolved_editor(args, cfg, logger)
+        
+        # Dispatch command
+        handlers = {
+            "list-editors": lambda: _handle_list_editors(cfg, logger),
+            "list-modules": lambda: _handle_list_modules(args, cfg, resolved_editor, logger),
+            "run": lambda: _handle_run_command(args, cfg, resolved_editor, logger),
+            "enable": lambda: _handle_module_toggle(args, cfg, resolved_editor, logger, True),
+            "disable": lambda: _handle_module_toggle(args, cfg, resolved_editor, logger, False),
+            "install": lambda: _handle_install_command(args, cfg, resolved_editor, logger),
+            "smart-plan": lambda: _handle_smart_plan(args, cfg, resolved_editor, logger),
+            "ask": lambda: _handle_ask_command(args, cfg, logger),
+        }
+        
+        if args.command in handlers:
+            handlers[args.command]()
             return
 
-        if args.command == "list-modules":
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"Listing modules for editor: {editor}")
-            meta = cfg.get("editors", {}).get(editor)
-            if not meta:
-                logger.error(f"Unknown editor: {editor}")
-                print(f"Unknown editor: {editor}")
-                raise SystemExit(1)
-            for m in meta.get("modules", []):
-                mark = "ON" if m.get("enabled") else "OFF"
-                print(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})")
-            logger.info(f"Modules listed for {editor}")
-            return
-
-        if args.command == "run":
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"Running cleanup for editor: {editor}, dry_run={args.dry_run}")
-            ok, msg = _run_cleanup(cfg, editor, dry_run=args.dry_run)
-            print(msg)
-            logger.info(f"Cleanup completed: {msg}")
-            raise SystemExit(0 if ok else 1)
-
-        if args.command in {"enable", "disable"}:
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"{args.command.capitalize()} module {args.id} for editor {editor}")
-            ref = _find_module(cfg, editor, args.id)
-            if not ref:
-                logger.error(f"Module not found: {args.id}")
-                print("Module not found")
-                raise SystemExit(1)
-            enabled = args.command == "enable"
-            if _set_module_enabled(cfg, ref, enabled):
-                logger.info(f"Module {args.id} {args.command}d successfully")
-                print("OK")
-                raise SystemExit(0)
-            logger.error(f"Failed to {args.command} module {args.id}")
-            print("Failed")
-            raise SystemExit(1)
-
-        if args.command == "install":
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"Starting installation for editor: {editor}")
-            ok, msg = _perform_install(cfg, editor)
-            print(msg)
-            logger.info(f"Installation completed: {msg}")
-            raise SystemExit(0 if ok else 1)
-
-        if args.command == "smart-plan":
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"Running smart-plan for editor {editor} with query: {args.query}")
-            ok, msg = _llm_smart_plan(cfg, editor, args.query)
-            print(msg)
-            logger.info(f"Smart-plan completed: {msg}")
-            raise SystemExit(0 if ok else 1)
-
-        if args.command == "ask":
-            logger.info(f"Running LLM ask with question: {args.question}")
-            ok, msg = _llm_ask(cfg, args.question)
-            print(msg)
-            logger.info(f"LLM ask completed: {msg}")
-            raise SystemExit(0 if ok else 1)
     except SystemExit:
         raise
     except Exception as e:
         log_exception(logger, e, f"Command execution: {args.command}")
         raise
 
-    if args.command == "agent-reset":
-        logger.info("Resetting agent session")
-        agent_session.reset()
-        logger.info("Agent session reset successfully")
-        print("OK")
-        return
+    # Secondary Dispatch
+    sec_dispatch = {
+        "agent-reset": lambda: _handle_agent_reset(logger),
+        "agent-on": lambda: _handle_agent_toggle(logger, True),
+        "agent-off": lambda: _handle_agent_toggle(logger, False),
+        "self-healing-status": lambda: _handle_self_healing_status(logger),
+        "self-healing-scan": lambda: _handle_self_healing_scan(logger),
+        "vibe-status": lambda: _handle_vibe_command(logger, "status"),
+        "vibe-continue": lambda: _handle_vibe_command(logger, "continue"),
+        "vibe-cancel": lambda: _handle_vibe_command(logger, "cancel"),
+        "vibe-help": lambda: _handle_vibe_command(logger, "help"),
+        "eternal-engine": lambda: _handle_eternal_engine(args, logger),
+    }
 
-    if args.command == "agent-on":
-        logger.info("Enabling agent chat")
-        agent_session.enabled = True
-        logger.info("Agent chat enabled")
-        print("OK")
-        return
-
-    if args.command == "agent-off":
-        logger.info("Disabling agent chat")
-        agent_session.enabled = False
-        logger.info("Agent chat disabled")
-        print("OK")
-        return
-
-    if args.command == "self-healing-status":
-        logger.info("Checking self-healing status")
-        from tui.commands import check_self_healing_status
-        check_self_healing_status()
-        return
-    
-    if args.command == "self-healing-scan":
-        logger.info("Triggering self-healing scan")
-        from tui.commands import trigger_self_healing_scan
-        trigger_self_healing_scan()
-        return
-    
-    if args.command == "vibe-status":
-        logger.info("Checking Vibe CLI Assistant status")
-        from tui.commands import check_vibe_assistant_status
-        check_vibe_assistant_status()
-        return
-    
-    if args.command == "vibe-continue":
-        logger.info("Vibe CLI Assistant continue command")
-        from tui.commands import handle_vibe_continue_command
-        handle_vibe_continue_command()
-        return
-    
-    if args.command == "vibe-cancel":
-        logger.info("Vibe CLI Assistant cancel command")
-        from tui.commands import handle_vibe_cancel_command
-        handle_vibe_cancel_command()
-        return
-    
-    if args.command == "vibe-help":
-        logger.info("Vibe CLI Assistant help command")
-        from tui.commands import handle_vibe_help_command
-        handle_vibe_help_command()
-        return
-    
-    if args.command == "eternal-engine":
-        logger.info(f"Starting eternal engine mode with task: {args.task}")
-        from tui.commands import start_eternal_engine_mode
-        start_eternal_engine_mode(args.task, args.hyper)
+    if args.command in sec_dispatch:
+        sec_dispatch[args.command]()
         return
 
     if args.command == "screenshots":
-        if args.action == "list":
-            from tui.tools import tool_list_screenshots
-            out = tool_list_screenshots({"count": getattr(args, "count", 10)})
-            if not out.get("ok"):
-                print(out.get("error") or "Error listing screenshots")
-                raise SystemExit(1)
-            items = out.get("items") or []
-            if not items:
-                print(f"No screenshots found in {out.get('root')}.")
-                raise SystemExit(0)
-            for i in items:
-                sz = i.get("size")
-                print(f"{i.get('name')}  {sz} bytes")
-            raise SystemExit(0)
-        elif args.action == "open":
-            from tui.tools import tool_open_screenshots
-            out = tool_open_screenshots({})
-            if not out.get("ok"):
-                print(out.get("error") or "Error opening screenshots directory")
-                raise SystemExit(1)
-            print(f"Opened {out.get('root')} in Finder")
-            raise SystemExit(0)
-    
+        return _handle_screenshots_command(args)
+        
     if args.command == "agent-chat":
-        logger.info(f"Agent chat message: {args.message}")
-        msg = str(args.message or "").strip()
+        return _handle_agent_chat_command(args, logger)
 
-        try:
-            # Deterministic CLI behavior for in-app slash commands.
-            parts = msg.split()
-            cmd_idx = next((i for i, p in enumerate(parts) if p.startswith("/")), None)
-            if cmd_idx is not None:
-                cmd = " ".join(parts[cmd_idx:]).strip()
-                logger.debug(f"Processing slash command: {cmd}")
-                _load_ui_settings()
-                out = _tool_app_command({"command": cmd})
-                if not out.get("ok"):
-                    error_msg = str(out.get("error") or "Unknown error")
-                    logger.error(f"Slash command failed: {error_msg}")
-                    print(error_msg)
-                    raise SystemExit(1)
-                for category, line in (out.get("lines") or []):
-                    _ = category
-                    if line:
-                        print(line)
-                logger.info("Slash command executed successfully")
-                raise SystemExit(0)
 
-            # Keep a stable, friendly greeting.
-            if _is_greeting(msg):
-                logger.debug("Greeting detected")
-                print("Привіт! Чим можу допомогти?")
-                raise SystemExit(0)
+# --- CLI Command Handlers ---
 
-            # Check for complex task execution
-            if _is_complex_task(msg):
-                logger.info("Complex task detected, delegating to Trinity Graph Agent...")
-                # Enable full permissions for CLI "run" mode
-                from tui.agents import run_graph_agent_task
-                run_graph_agent_task(
-                    msg,
-                    allow_file_write=True,
-                    allow_shell=True,
-                    allow_applescript=True,
-                    allow_gui=True, # Assuming CLI user wants action
-                    allow_shortcuts=True,
-                    gui_mode="auto"
-                )
-                logger.info("Graph task completed")
-                raise SystemExit(0)
+def _handle_tui_command(logger: Any):
+    logger.info("Starting TUI mode")
+    try:
+        run_tui()
+        logger.info("TUI mode exited successfully")
+    except Exception as e:
+        log_exception(logger, e, "TUI mode")
+        raise
+    return
 
-            logger.info("Sending message to agent")
-            ok, answer = _agent_send_no_stream(msg)
-            print(answer)
-            logger.info(f"Agent response sent, status: {ok}")
-            raise SystemExit(0 if ok else 1)
-        except SystemExit:
-            raise
-        except Exception as e:
-            log_exception(logger, e, "Agent chat")
-            raise
+def _get_resolved_editor(args: Any, cfg: Dict[str, Any], logger: Any) -> Tuple[Optional[str], Optional[str]]:
+    if not hasattr(args, "editor"): return None, None
+    res, note = _resolve_editor_arg(cfg, getattr(args, "editor", None))
+    if note:
+        logger.warning(note)
+        try: print(note, file=sys.stderr)
+        except Exception: pass
+    return res, note
 
+def _handle_list_editors(cfg: Dict[str, Any], logger: Any):
+    logger.info("Listing editors")
+    for key, label in _list_editors(cfg): print(f"{key}: {label}")
+    logger.info("Editors listed successfully")
+
+def _handle_list_modules(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"Listing modules for editor: {editor}")
+    meta = cfg.get("editors", {}).get(editor)
+    if not meta:
+        logger.error(f"Unknown editor: {editor}")
+        print(f"Unknown editor: {editor}")
+        raise SystemExit(1)
+    for m in meta.get("modules", []):
+        mark = "ON" if m.get("enabled") else "OFF"
+        print(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})")
+    logger.info(f"Modules listed for {editor}")
+
+def _handle_run_command(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"Running cleanup for editor: {editor}, dry_run={args.dry_run}")
+    ok, msg = _run_cleanup(cfg, editor, dry_run=args.dry_run)
+    print(msg); logger.info(f"Cleanup completed: {msg}")
+    raise SystemExit(0 if ok else 1)
+
+def _handle_module_toggle(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any, enabled: bool):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"{'Enable' if enabled else 'Disable'} module {args.id} for editor {editor}")
+    ref = _find_module(cfg, editor, args.id)
+    if not ref:
+        logger.error(f"Module not found: {args.id}"); print("Module not found")
+        raise SystemExit(1)
+    if _set_module_enabled(cfg, ref, enabled):
+        logger.info(f"Module {args.id} {'enabled' if enabled else 'disabled'} successfully")
+        print("OK"); raise SystemExit(0)
+    logger.error(f"Failed to {'enable' if enabled else 'disable'} module {args.id}")
+    print("Failed"); raise SystemExit(1)
+
+def _handle_install_command(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"Starting installation for editor: {editor}")
+    ok, msg = _perform_install(cfg, editor)
+    print(msg); logger.info(f"Installation completed: {msg}")
+    raise SystemExit(0 if ok else 1)
+
+def _handle_smart_plan(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"Running smart-plan for editor {editor} with query: {args.query}")
+    ok, msg = _llm_smart_plan(cfg, editor, args.query)
+    print(msg); logger.info(f"Smart-plan completed: {msg}")
+    raise SystemExit(0 if ok else 1)
+
+def _handle_ask_command(args: Any, cfg: Dict[str, Any], logger: Any):
+    logger.info(f"Running LLM ask with question: {args.question}")
+    ok, msg = _llm_ask(cfg, args.question)
+    print(msg); logger.info(f"LLM ask completed: {msg}")
+    raise SystemExit(0 if ok else 1)
+
+def _handle_agent_reset(logger: Any):
+    logger.info("Resetting agent session"); agent_session.reset()
+    logger.info("Agent session reset successfully"); print("OK")
+
+def _handle_agent_toggle(logger: Any, enabled: bool):
+    logger.info(f"{'Enabling' if enabled else 'Disabling'} agent chat")
+    agent_session.enabled = enabled
+    logger.info(f"Agent chat {'enabled' if enabled else 'disabled'}"); print("OK")
+
+def _handle_self_healing_status(logger: Any):
+    logger.info("Checking self-healing status")
+    from tui.commands import check_self_healing_status
+    check_self_healing_status()
+
+def _handle_self_healing_scan(logger: Any):
+    logger.info("Triggering self-healing scan")
+    from tui.commands import trigger_self_healing_scan
+    trigger_self_healing_scan()
+
+def _handle_vibe_command(logger: Any, action: str):
+    logger.info(f"Vibe CLI Assistant {action} command")
+    from tui.commands import (
+        check_vibe_assistant_status, handle_vibe_continue_command,
+        handle_vibe_cancel_command, handle_vibe_help_command
+    )
+    if action == "status": check_vibe_assistant_status()
+    elif action == "continue": handle_vibe_continue_command()
+    elif action == "cancel": handle_vibe_cancel_command()
+    elif action == "help": handle_vibe_help_command()
+
+def _handle_eternal_engine(args: Any, logger: Any):
+    logger.info(f"Starting eternal engine mode with task: {args.task}")
+    from tui.commands import start_eternal_engine_mode
+    start_eternal_engine_mode(args.task, args.hyper)
+
+def _handle_screenshots_command(args: Any):
+    if args.action == "list":
+        from tui.tools import tool_list_screenshots
+        out = tool_list_screenshots({"count": getattr(args, "count", 10)})
+        if not out.get("ok"):
+            print(out.get("error") or "Error listing screenshots")
+            raise SystemExit(1)
+        items = out.get("items") or []
+        if not items:
+            print(f"No screenshots found in {out.get('root')}.")
+            raise SystemExit(0)
+        for i in items:
+            sz = i.get("size")
+            print(f"{i.get('name')}  {sz} bytes")
+        raise SystemExit(0)
+    elif args.action == "open":
+        from tui.tools import tool_open_screenshots
+        out = tool_open_screenshots({})
+        if not out.get("ok"):
+            print(out.get("error") or "Error opening screenshots directory")
+            raise SystemExit(1)
+        print(f"Opened {out.get('root')} in Finder")
+        raise SystemExit(0)
+
+def _handle_agent_chat_command(args: Any, logger: Any):
+    logger.info(f"Agent chat message: {args.message}")
+    msg = str(args.message or "").strip()
+
+    try:
+        # Deterministic CLI behavior for in-app slash commands.
+        parts = msg.split()
+        cmd_idx = next((i for i, p in enumerate(parts) if p.startswith("/")), None)
+        if cmd_idx is not None:
+            cmd = " ".join(parts[cmd_idx:]).strip()
+            logger.debug(f"Processing slash command: {cmd}")
+            _load_ui_settings()
+            out = _tool_app_command({"command": cmd})
+            if not out.get("ok"):
+                error_msg = str(out.get("error") or "Unknown error")
+                logger.error(f"Slash command failed: {error_msg}")
+                print(error_msg)
+                raise SystemExit(1)
+            for category, line in (out.get("lines") or []):
+                _ = category
+                if line:
+                    print(line)
+            logger.info("Slash command executed successfully")
+            raise SystemExit(0)
+
+        # Keep a stable, friendly greeting.
+        if _is_greeting(msg):
+            logger.debug("Greeting detected")
+            print("Привіт! Чим можу допомогти?")
+            raise SystemExit(0)
+
+        # Check for complex task execution
+        if _is_complex_task(msg):
+            logger.info("Complex task detected, delegating to Trinity Graph Agent...")
+            # Enable full permissions for CLI "run" mode
+            from tui.agents import run_graph_agent_task
+            run_graph_agent_task(
+                msg,
+                allow_file_write=True,
+                allow_shell=True,
+                allow_applescript=True,
+                allow_gui=True, # Assuming CLI user wants action
+                allow_shortcuts=True,
+                gui_mode="auto"
+            )
+            logger.info("Graph task completed")
+            raise SystemExit(0)
+
+        logger.info("Sending message to agent")
+        ok, answer = _agent_send_no_stream(msg)
+        print(answer)
+        logger.info(f"Agent response sent, status: {ok}")
+        raise SystemExit(0 if ok else 1)
+    except SystemExit:
+        raise
+    except Exception as e:
+        log_exception(logger, e, "Agent chat")
+        raise
 
 def main() -> None:
     try:
