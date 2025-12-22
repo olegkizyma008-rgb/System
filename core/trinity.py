@@ -1492,7 +1492,7 @@ Return JSON with ONLY the replacement step.'''))
             # TRINITY_VIBE_AUTO_APPLY: when set to a truthy value, Doctor Vibe will auto-apply
             # approved dev edits (write_file/copy_file) instead of pausing for manual approval.
             # This can be enabled via env var or by setting state["vibe_auto_apply"]. Default: off.
-            vibe_auto = bool(state.get("vibe_auto_apply") or self._is_env_true("TRINITY_VIBE_AUTO_APPLY"))
+            vibe_auto = bool(state.get("vibe_auto_apply") or self._is_env_true("TRINITY_VIBE_AUTO_APPLY", False))
 
             if dev_mode == "vibe" and name in {"open_file_in_windsurf", "send_to_windsurf", "open_project_in_windsurf"}:
                 # Skip opening Windsurf; either create a pause or auto-apply changes
@@ -1637,16 +1637,6 @@ Return JSON with ONLY the replacement step.'''))
             return f"{content}\n\n{STEP_COMPLETED_MARKER} {msg}"
         return content
 
-    def _is_env_true(self, name: str) -> bool:
-        """Helper to check boolean-ish environment variables.
-
-        Accepts common truthy values: 1, true, yes, on (case-insensitive).
-        """
-        try:
-            return str(os.getenv(name, "")).strip().lower() in {"1", "true", "yes", "on"}
-        except Exception:
-            return False
-
     def _finalize_tetyana_state(self, state, context, content, tool_calls, had_failure, pause_info):
         # Sanitize LLM messages that reference Windsurf when Doctor Vibe handles dev edits
         try:
@@ -1663,7 +1653,7 @@ Return JSON with ONLY the replacement step.'''))
         # create a pause so human can intervene instead of proceeding.
         try:
             # Consider environment override in addition to state value
-            if self._is_env_true("TRINITY_DEV_BY_VIBE"):
+            if self._is_env_true("TRINITY_DEV_BY_VIBE", False):
                 dev_mode = "vibe"
             else:
                 dev_mode = str(state.get("dev_edit_mode") or "").strip().lower()
@@ -1965,7 +1955,7 @@ Return JSON with ONLY the replacement step.'''))
                 # Doctor Vibe to auto-apply dev edits without creating a pause.
                 # This is controlled by env var (TRINITY_VIBE_AUTO_APPLY) or by
                 # state["vibe_auto_apply"] set earlier.
-                auto_apply = self._is_env_true("TRINITY_VIBE_AUTO_APPLY")
+                auto_apply = self._is_env_true("TRINITY_VIBE_AUTO_APPLY", False)
                 if dev_mode == "vibe" and plan:
                     first = plan[0] if isinstance(plan, list) and plan else None
                     if first:

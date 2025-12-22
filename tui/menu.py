@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 import time
 from typing import Any, Callable, List, Sequence, Tuple
 from prompt_toolkit.filters import Condition
@@ -425,15 +426,33 @@ def _render_automation_permissions_menu(ctx: dict) -> List[Tuple[str, str]]:
     for i, itm in enumerate(items):
         label, key = itm[0], itm[1]
         prefix, style = _get_item_style(i, state.menu_index)
-        result.append((style, f"{prefix}{label} ", make_click(i)))
+        
+        # Build complete line with label and status
+        line = f"{prefix}{label} "
         
         if key == "ui_execution_mode":
             mode = str(getattr(state, "ui_execution_mode", "native")).upper()
-            result.append((STYLE_MENU_ITEM, f"[{mode}]"))
+            line += f"[{mode}]"
         elif key == "automation_allow_shortcuts":
-            result.extend(_get_toggle_text(bool(getattr(state, "automation_allow_shortcuts", False))))
+            on_off = "ON" if getattr(state, "automation_allow_shortcuts", False) else "OFF"
+            line += f"[{on_off}]"
+        elif key.startswith("env_"):
+            # Show status for env vars
+            var_map = {
+                "env_shell": "TRINITY_ALLOW_SHELL",
+                "env_write": "TRINITY_ALLOW_WRITE",
+                "env_applescript": "TRINITY_ALLOW_APPLESCRIPT",
+                "env_gui": "TRINITY_ALLOW_GUI",
+                "env_hyper": "TRINITY_HYPER_MODE",
+            }
+            var = var_map.get(key)
+            if var:
+                val = str(os.getenv(var) or ("1" if var == "TRINITY_ALLOW_WRITE" else "0")).strip().lower()
+                status = "ON" if val in {"1", "true", "yes", "on"} else "OFF"
+                line += f"[{status}]"
         
-        result.append(("", "\n"))
+        result.append((style, line + "\n", make_click(i)))
+    
     return result
 
 
