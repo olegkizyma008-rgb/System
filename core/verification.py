@@ -106,16 +106,9 @@ Return the FULL updated JSON list of steps (original + verify steps).
             return enhanced
     
     def _ensure_verify_steps(self, plan: List[Dict[str, Any]], rigor: str = "medium") -> List[Dict[str, Any]]:
-        """
-        Fallback: manually ensure verify steps according to rigor.
-        """
+        """Fallback: manually ensure verify steps according to rigor."""
         if rigor == "low":
-            # Only ensure one verify at the very end
-            if not plan:
-                return []
-            if plan[-1].get("type") == "verify":
-                return plan
-            return plan + [{"type": "verify", "description": "Final task verification"}]
+            return self._ensure_low_rigor_verify(plan)
 
         critical_keywords = [
             "create", "delete", "remove", "git", "commit", "push", "pull",
@@ -130,53 +123,63 @@ Return the FULL updated JSON list of steps (original + verify steps).
             step_type = step.get("type", "execute").lower()
             description = step.get("description", "").lower()
             
-            # CRITICAL: Force verification after search/navigation to prevent blind loops
-            is_search_step = any(kw in description for kw in ["find", "search", "google", "navigate", "browser", "url", "click"])
-            if is_search_step and "verify" not in step_type:
-                 # Check if next step is already verify
-                 if i + 1 < len(plan) and plan[i+1].get("type") == "verify":
-                     continue
-                 
-                 # Dynamic description based on context
-                 v_desc = "Verify result of action"
-                 if "search" in description or "google" in description:
-                     v_desc = "Verify search results are visible and contain relevant links."
-                 elif "click" in description or "open" in description:
-                     v_desc = "Verify that the target page/element is loaded and visible."
-                 elif "play" in description or "video" in description:
-                     v_desc = "Verify that the video player is active and content is playable."
-                 
-                 enhanced_plan.append({
-                     "type": "verify",
-                     "description": v_desc
-                 })
-                 continue
-
-            if step_type == "verify":
+            # 1. Handle search/navigation steps specially
+            if self._handle_search_navigation_step(i, step, plan, enhanced_plan, description):
                 continue
-            
+
+            # 2. Skip if current step is verify or not execute
             if step_type != "execute":
                 continue
                 
+            # 3. Handle critical steps based on rigor
             is_critical = any(kw in description for kw in critical_keywords)
-            
-            # Decide if we need to add verify
-            need_verify = (rigor == "high") or (rigor == "medium" and is_critical)
-            
-            if need_verify:
-                # Check if next step is already verify
-                next_is_verify = False
-                if i + 1 < len(plan):
-                    next_is_verify = plan[i+1].get("type") == "verify"
-                
-                if not next_is_verify:
-                    verify_step = {
-                        "type": "verify",
-                        "description": f"Verify result: {step.get('description', 'action')}"
-                    }
-                    enhanced_plan.append(verify_step)
+            if (rigor == "high") or (rigor == "medium" and is_critical):
+                self._append_verify_if_needed(i, step, plan, enhanced_plan)
         
         return enhanced_plan
+
+    def _ensure_low_rigor_verify(self, plan: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Ensure one verify at the end for low rigor."""
+        if not plan:
+            return []
+        if plan[-1].get("type") == "verify":
+            return plan
+        return plan + [{"type": "verify", "description": "Final task verification"}]
+
+    def _handle_search_navigation_step(self, i, step, original_plan, enhanced_plan, description) -> bool:
+        """Add verification for search steps to prevent blind loops."""
+        if not any(kw in description for kw in ["find", "search", "google", "navigate", "browser", "url", "click"]):
+            return False
+            
+        if step.get("type", "").lower() == "verify":
+            return False
+
+        # Check if next step is already verify
+        if i + 1 < len(original_plan) and original_plan[i+1].get("type") == "verify":
+            return True
+
+        v_desc = self._get_dynamic_verify_desc(description)
+        enhanced_plan.append({"type": "verify", "description": v_desc})
+        return True
+
+    def _get_dynamic_verify_desc(self, description: str) -> str:
+        """Generate descriptive verification message based on action."""
+        if "search" in description or "google" in description:
+            return "Verify search results are visible and contain relevant links."
+        if "click" in description or "open" in description:
+            return "Verify that the target page/element is loaded and visible."
+        if "play" in description or "video" in description:
+            return "Verify that the video player is active and content is playable."
+        return "Verify result of action"
+
+    def _append_verify_if_needed(self, i, current_step, original_plan, enhanced_plan):
+        """Append a generic verify step if one doesn't exist next."""
+        next_is_verify = (i + 1 < len(original_plan) and original_plan[i+1].get("type") == "verify")
+        if not next_is_verify:
+            enhanced_plan.append({
+                "type": "verify",
+                "description": f"Verify result: {current_step.get('description', 'action')}"
+            })
 
     def get_diff_strategy(self, current_image_path: str, previous_image_path: str) -> float:
         """
