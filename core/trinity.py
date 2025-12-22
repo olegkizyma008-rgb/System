@@ -1223,13 +1223,26 @@ Return JSON with ONLY the replacement step.'''))
         try:
             res_dict = json.loads(res_str)
             if isinstance(res_dict, dict):
-                if str(res_dict.get("status", "")).lower() == "error": return True
-                if res_dict.get("has_captcha"): return True
-                output = str(res_dict.get("output", "") or res_dict.get("url", ""))
-                if any(k in output.lower() for k in ["sorry/index", "recaptcha"]): return True
+                status = str(res_dict.get("status", "")).lower()
+                # Check for error, captcha, or warning statuses
+                if status in {"error", "captcha"}:
+                    return True
+                # Warning with empty links is a failure (blocked page)
+                if status == "warning" and not res_dict.get("links"):
+                    return True
+                # Check has_captcha flag for backward compatibility
+                if res_dict.get("has_captcha"):
+                    return True
+                # Check for captcha/blocked indicators in output or URL
+                output = str(res_dict.get("output", "") or res_dict.get("url", "") or res_dict.get("error", ""))
+                captcha_markers = ["sorry/index", "recaptcha", "hcaptcha", "unusual traffic", "captcha"]
+                if any(k in output.lower() for k in captcha_markers):
+                    return True
         except Exception:
-            if str(res_str).strip().startswith("Error"): return True
-        return "sorry/index" in str(res_str) or "recaptcha" in str(res_str).lower()
+            if str(res_str).strip().startswith("Error"):
+                return True
+        res_lower = str(res_str).lower()
+        return "sorry/index" in res_lower or "recaptcha" in res_lower or "captcha" in res_lower
 
     def _append_success_marker(self, content):
         if STEP_COMPLETED_MARKER not in content:
@@ -1347,8 +1360,12 @@ Return JSON with ONLY the replacement step.'''))
         content = getattr(resp, "content", "") if resp else ""
         tool_calls = getattr(resp, "tool_calls", []) if resp and hasattr(resp, 'tool_calls') else []
         
-        # Override if Grisha fails without evidence
-        if any(m in content.lower() for m in ["failed", "не виконано"]) and not tool_calls and STEP_COMPLETED_MARKER.lower() in last_msg.lower():
+        # Override if Grisha fails without evidence, BUT NOT if there are captcha/error indicators
+        last_msg_lower = last_msg.lower()
+        captcha_indicators = ["captcha", "sorry/index", "recaptcha", "blocked", "status\": \"error", "status\": \"captcha", "status\": \"warning", "links\": []"]
+        has_captcha_evidence = any(ind in last_msg_lower for ind in captcha_indicators)
+        
+        if not has_captcha_evidence and any(m in content.lower() for m in ["failed", "не виконано"]) and not tool_calls and STEP_COMPLETED_MARKER.lower() in last_msg_lower:
             if self.verbose: print("⚠️ [Grisha] Overriding FAILED without evidence.")
             content = f"{VOICE_MARKER} Tetyana reported success. Tools confirmed. {STEP_COMPLETED_MARKER}"
             tool_calls = []

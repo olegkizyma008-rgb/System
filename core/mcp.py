@@ -56,7 +56,8 @@ from system_ai.tools.browser import (
     browser_snapshot,
     browser_navigate,
     browser_get_links,
-    browser_close
+    browser_close,
+    browser_search_duckduckgo
 )
 
 class ExternalMCPProvider:
@@ -396,6 +397,7 @@ class MCPToolRegistry:
         self.register_tool("browser_execute_script", browser_execute_script, "Run JS in browser. Args: script (str)")
         self.register_tool("browser_ensure_ready", browser_ensure_ready, "Check if browser is ready. Args: none")
         self.register_tool("browser_close", browser_close, "Close browser. Args: none")
+        self.register_tool("browser_search_duckduckgo", browser_search_duckduckgo, "Search using DuckDuckGo (CAPTCHA-resistant, use when Google blocked). Args: query (str), headless (bool=False). Returns search result links.")
 
     def _register_recorder_tools(self):
         def _recorder_action(action: str) -> Any:

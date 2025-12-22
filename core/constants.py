@@ -77,7 +77,10 @@ VISION_FAILURE_KEYWORDS = [
     "the task was not completed", "goal not achieved", "not playing",
     "not in fullscreen", "no active video", "no evidence of", "does not show",
     "не відтворюється", "відео не грає", "сторінка порожня", 
-    "помилка завантаження", "завдання не виконано", "ціль не досягнута"
+    "помилка завантаження", "завдання не виконано", "ціль не досягнута",
+    # CAPTCHA detection keywords
+    "captcha", "sorry/index", "unusual traffic", "blocked", "recaptcha",
+    "hcaptcha", "links: []", "empty links", "no search results", "verify you are human"
 ]
 
 # -----------------------------------------------------------------------------
