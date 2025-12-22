@@ -847,10 +847,10 @@ class TrinityRuntime:
             }
             msg = verbals.get(action, "Аналізую стратегію.")
             state["messages"] = list(context) + [AIMessage(content=f"[VOICE] {msg}")]
-            return self._handle_meta_action(state, action, plan, last_msg, meta_config, fail_count, summary)
+            return self._handle_meta_action(state, action, plan, last_msg, meta_config, fail_count, summary, last_status=last_status)
 
         # 6. Default flow: Atlas dispatch
-        out = self._atlas_dispatch(state, plan)
+        out = self._atlas_dispatch(state, plan, last_status=last_status, fail_count=fail_count)
         out["summary"] = summary
         return out
 
@@ -935,7 +935,7 @@ class TrinityRuntime:
         return "proceed"
 
     def _handle_meta_action(self, state: TrinityState, action: str, plan: List[Dict], last_msg: str, 
-                           meta_config: Dict, fail_count: int, summary: str):
+                           meta_config: Dict, fail_count: int, summary: str, last_status: str = "success"):
         from core.agents.atlas import get_meta_planner_prompt
         task_ctx = f"Goal: {state.get('original_task')}\nReq: {last_msg}\nStep: {state.get('step_count')}\nStatus: {state.get('last_step_status')}"
         prompt = get_meta_planner_prompt(task_ctx, preferred_language=self.preferred_language)
@@ -956,6 +956,7 @@ class TrinityRuntime:
         return {
             "current_agent": "atlas", "meta_config": meta_config, "plan": plan_for_atlas,
             "current_step_fail_count": fail_count, "summary": summary,
+            "last_step_status": last_status,
             "gui_fallback_attempted": False if action == "replan" else state.get("gui_fallback_attempted"),
             "retrieved_context": state.get("retrieved_context", "")
         }
@@ -1019,7 +1020,7 @@ class TrinityRuntime:
                     if self.verbose: print("⚠️ [Atlas] LLM claimed completion but global goal not achieved. Forcing continuation.")
                     forced_plan = self._force_continuation_plan(state, context)
                     if forced_plan:
-                        return self._atlas_dispatch(state, forced_plan, replan_count=replan_count)
+                        return self._atlas_dispatch(state, forced_plan, replan_count=replan_count, fail_count=state.get("current_step_fail_count", 0))
                     # If no forced plan, try to re-prompt with stronger instruction
                     raw_plan_data = None
                 
@@ -1028,7 +1029,7 @@ class TrinityRuntime:
             # 8. Optimize or Repair Plan
             optimized_plan = self._process_atlas_plan(raw_plan, plan, meta_config)
             
-            return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
+            return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count, fail_count=state.get("current_step_fail_count", 0))
 
         except Exception as e:
             err_msg = f"[VOICE] Вибачте, у мене виникла помилка під час планування: {str(e)[:100]}. Спробую ще раз."
@@ -1041,7 +1042,7 @@ class TrinityRuntime:
         if replan_count >= 3 and last_status != "success":
             if self.verbose: print(f"⚠️ [Atlas] Replan loop detected (#{replan_count}). Forcing simple execution.")
             fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana", "tools": ["browser_open_url"]}]
-            return self._atlas_dispatch(state, fallback, replan_count=replan_count)
+            return self._atlas_dispatch(state, fallback, replan_count=replan_count, fail_count=state.get("current_step_fail_count", 0))
         return None
 
     def _prepare_atlas_prompt(self, state, last_msg, meta_config):
@@ -1260,11 +1261,14 @@ Return JSON with ONLY the replacement step.'''))
         
         return None  # Let normal replan handle it
 
-    def _atlas_dispatch(self, state, plan, replan_count=None):
+    def _atlas_dispatch(self, state, plan, replan_count=None, fail_count=None, last_status=None, uncertain_streak=None):
         """Internal helper to format the dispatch message and return state."""
         context = state.get("messages", [])
         step_count = state.get("step_count", 0) + 1
         replan_count = replan_count or state.get("replan_count", 0)
+        fail_count = fail_count if fail_count is not None else state.get("current_step_fail_count", 0)
+        last_status = last_status if last_status is not None else state.get("last_step_status", "success")
+        streak = uncertain_streak if uncertain_streak is not None else state.get("uncertain_streak", 0)
         
         current_step = plan[0] if plan else None
         if not current_step:
@@ -1284,7 +1288,9 @@ Return JSON with ONLY the replacement step.'''))
             "step_count": step_count,
             "replan_count": replan_count,
             "meta_config": state.get("meta_config"),
-            "current_step_fail_count": state.get("current_step_fail_count"),
+            "current_step_fail_count": fail_count,
+            "last_step_status": last_status,
+            "uncertain_streak": streak,
             "gui_mode": state.get("gui_mode"),
             "execution_mode": state.get("execution_mode"),
             "task_type": state.get("task_type"),
@@ -1819,9 +1825,10 @@ Return JSON with ONLY the replacement step.'''))
     def _handle_grisha_streak(self, state, status, content):
         streak = (int(state.get("uncertain_streak") or 0) + 1) if status == "uncertain" else 0
         if streak >= 3:
-            if any(k in content.lower() for k in VISION_FAILURE_KEYWORDS) or "[failed]" in content.lower():
-                return 0 
-            return 0
+            # If we've been uncertain for 3 times, don't reset, but maybe it will escalate naturally
+            # in meta_planner via current_step_fail_count.
+            # We preserve the streak to avoid flip-flopping.
+            return streak
         return streak
 
 
