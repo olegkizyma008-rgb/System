@@ -1531,69 +1531,64 @@ Return JSON with ONLY the replacement step.'''))
     # _extract_json_object was moved to the top of the class to avoid duplication.
 
     def _knowledge_node(self, state: TrinityState):
-        """Final node to extract and store knowledge (success or failure) from completion."""
-        if self.verbose: print("🧠 [Learning] Extracting structured experience...")
+        """Final node to extract and store knowledge from completion."""
+        if self.verbose:
+            print("🧠 [Learning] Extracting structured experience...")
+        
         context = state.get("messages", [])
         plan = state.get("plan") or []
         summary = state.get("summary", "")
         replan_count = state.get("replan_count", 0)
-        last_status = state.get("last_step_status", "success")
         
-        # Determine status: if we are here via 'success' tags, it's a win.
-        # But we should also be able to learn from failures.
-        actual_status = "success"
-        if last_status == "failed":
-            actual_status = "failed"
-        elif context and len(context) > 0 and context[-1] is not None:
+        actual_status = self._determine_knowledge_status(state, context)
+        confidence = self._calculate_confidence(actual_status, replan_count, len(plan))
+        
+        self._store_experience(summary, actual_status, plan, confidence, replan_count)
+        
+        final_msg = "[VOICE] Досвід збережено. Завдання завершено." if self.preferred_language == "uk" else "[VOICE] Experience stored. Task completed."
+        return {"current_agent": "end", "messages": context + [AIMessage(content=final_msg)]}
+
+    def _determine_knowledge_status(self, state: TrinityState, context: list) -> str:
+        """Determine actual status for knowledge storage."""
+        if state.get("last_step_status") == "failed":
+            return "failed"
+        if context and context[-1] is not None:
             last_content = getattr(context[-1], "content", "").lower()
             if "failed" in last_content:
-                actual_status = "failed"
-            
-        # Self-evaluation of confidence
-        if actual_status == "success":
-            confidence = 1.0 - (min(replan_count, 5) * 0.1) - (min(len(plan), 10) * 0.02)
-        else:
-            confidence = 0.5 # Failures have neutral confidence (they are certain warnings)
-            
-        confidence = max(0.1, round(confidence, 2))
-        
+                return "failed"
+        return "success"
+
+    def _calculate_confidence(self, status: str, replan_count: int, plan_len: int) -> float:
+        """Calculate confidence score."""
+        if status != "success":
+            return 0.5
+        confidence = 1.0 - (min(replan_count, 5) * 0.1) - (min(plan_len, 10) * 0.02)
+        return max(0.1, round(confidence, 2))
+
+    def _store_experience(self, summary: str, status: str, plan: list, confidence: float, replan_count: int):
+        """Store experience in knowledge base."""
         try:
-            # Create a structured memory entry
-            experience = f"Task: {summary}\nStatus: {actual_status}\nSteps: {len(plan)}\n"
+            experience = f"Task: {summary}\nStatus: {status}\nSteps: {len(plan)}\n"
             if plan:
                 experience += "Plan Summary:\n" + "\n".join([f"- {s.get('description')}" for s in plan])
             
-            # Save to knowledge_base
             self.memory.add_memory(
                 category="knowledge_base",
                 content=experience,
                 metadata={
-                    "type": "experience_log",
-                    "status": actual_status,
-                    "source": "trinity_runtime",
-                    "timestamp": int(time.time()),
-                    "confidence": confidence,
-                    "replan_count": replan_count
+                    "type": "experience_log", "status": status, "source": "trinity_runtime",
+                    "timestamp": int(time.time()), "confidence": confidence, "replan_count": replan_count
                 }
             )
-            
-            if self.verbose: 
-                stored_msg = f"🧠 [Learning] {actual_status.upper()} experience stored (conf: {confidence})"
-                print(stored_msg)
-            
+            if self.verbose:
+                print(f"🧠 [Learning] {status.upper()} experience stored (conf: {confidence})")
             try:
-                trace(self.logger, "knowledge_stored", {"status": actual_status, "confidence": confidence})
+                trace(self.logger, "knowledge_stored", {"status": status, "confidence": confidence})
             except Exception:
                 pass
-                
         except Exception as e:
-            if self.verbose: print(f"⚠️ [Learning] Error: {e}")
-            
-        final_msg = "[VOICE] Досвід збережено. Завдання завершено." if self.preferred_language == "uk" else "[VOICE] Experience stored. Task completed."
-        return {
-            "current_agent": "end",
-            "messages": context + [AIMessage(content=final_msg)]
-        }
+            if self.verbose:
+                print(f"⚠️ [Learning] Error: {e}")
 
     def _get_git_root(self) -> Optional[str]:
         try:
@@ -1712,61 +1707,50 @@ Return JSON with ONLY the replacement step.'''))
             return False
 
     def _get_repo_changes(self) -> Dict[str, Any]:
+        """Get git repository changes."""
         root = self._get_git_root()
         if not root:
             return {"ok": False, "error": "not_a_git_repo"}
 
         try:
-            diff_name = subprocess.run(
-                ["git", "diff", "--name-only"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-            )
-            status = subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-            )
-            diff_stat = subprocess.run(
-                ["git", "diff", "--stat"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-            )
+            diff_name = subprocess.run(["git", "diff", "--name-only"], cwd=root, capture_output=True, text=True)
+            status = subprocess.run(["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True)
+            diff_stat = subprocess.run(["git", "diff", "--stat"], cwd=root, capture_output=True, text=True)
 
-            changed_files: List[str] = []
-            if diff_name.returncode == 0:
-                changed_files.extend([l.strip() for l in (diff_name.stdout or "").splitlines() if l.strip()])
-
-            if status.returncode == 0:
-                for line in (status.stdout or "").splitlines():
-                    s = line.strip()
-                    if not s:
-                        continue
-                    parts = s.split(maxsplit=1)
-                    if len(parts) == 2:
-                        changed_files.append(parts[1].strip())
-
-            # de-dup while preserving order
-            seen = set()
-            deduped: List[str] = []
-            for f in changed_files:
-                if f in seen:
-                    continue
-                seen.add(f)
-                deduped.append(f)
+            changed_files = self._collect_changed_files(diff_name, status)
+            deduped = self._dedupe_files(changed_files)
 
             return {
-                "ok": True,
-                "git_root": root,
-                "changed_files": deduped,
+                "ok": True, "git_root": root, "changed_files": deduped,
                 "diff_stat": (diff_stat.stdout or "").strip() if diff_stat.returncode == 0 else "",
                 "status_porcelain": (status.stdout or "").strip() if status.returncode == 0 else "",
             }
         except Exception as e:
             return {"ok": False, "error": str(e)}
+
+    def _collect_changed_files(self, diff_name, status) -> List[str]:
+        """Collect changed files from git commands."""
+        files = []
+        if diff_name.returncode == 0:
+            files.extend([l.strip() for l in (diff_name.stdout or "").splitlines() if l.strip()])
+        if status.returncode == 0:
+            for line in (status.stdout or "").splitlines():
+                s = line.strip()
+                if s:
+                    parts = s.split(maxsplit=1)
+                    if len(parts) == 2:
+                        files.append(parts[1].strip())
+        return files
+
+    def _dedupe_files(self, files: List[str]) -> List[str]:
+        """Deduplicate file list while preserving order."""
+        seen = set()
+        result = []
+        for f in files:
+            if f not in seen:
+                seen.add(f)
+                result.append(f)
+        return result
 
     def _short_task_for_commit(self, task: str, max_len: int = 72) -> str:
         t = re.sub(r"\s+", " ", str(task or "").strip())
@@ -1882,53 +1866,43 @@ Return JSON with ONLY the replacement step.'''))
             return amend.returncode == 0
         return False
 
-    def _format_final_report(
-        self,
-        *,
-        task: str,
-        outcome: str,
-        repo_changes: Dict[str, Any],
-        last_agent: str,
-        last_message: str,
-        replan_count: int = 0,
-        commit_hash: Optional[str] = None,
-    ) -> str:
-        lines: List[str] = []
-        lines.append("[Atlas] Final report")
-        lines.append("")
-        lines.append(f"Task: {str(task or '').strip()}")
-        lines.append(f"Outcome: {outcome}")
-        lines.append(f"Replans: {replan_count}")
+    def _format_final_report(self, *, task: str, outcome: str, repo_changes: Dict[str, Any],
+                             last_agent: str, last_message: str, replan_count: int = 0,
+                             commit_hash: Optional[str] = None) -> str:
+        """Format final task report."""
+        lines = self._build_report_header(task, outcome, replan_count, commit_hash, last_agent, last_message)
+        lines.extend(self._build_report_changes(repo_changes))
+        lines.extend(self._build_report_verification(last_message))
+        lines.extend(["", "Tests:", "- not executed by Trinity (no deterministic test runner in pipeline)"])
+        return "\n".join(lines).strip() + "\n"
+
+    def _build_report_header(self, task, outcome, replan_count, commit_hash, last_agent, last_message) -> List[str]:
+        """Build report header section."""
+        lines = ["[Atlas] Final report", "", f"Task: {str(task or '').strip()}", f"Outcome: {outcome}", f"Replans: {replan_count}"]
         if commit_hash:
             lines.append(f"Зміни закомічені: {commit_hash}")
         lines.append(f"Last agent: {last_agent}")
         if last_message:
-            lines.append("")
-            lines.append("Last message:")
-            lines.append(str(last_message).strip())
+            lines.extend(["", "Last message:", str(last_message).strip()])
+        return lines
 
-        lines.append("")
+    def _build_report_changes(self, repo_changes: Dict[str, Any]) -> List[str]:
+        """Build changed files section."""
+        lines = [""]
         if repo_changes.get("ok") is True:
             files = repo_changes.get("changed_files") or []
             lines.append("Changed files:")
-            if files:
-                for f in files:
-                    lines.append(f"- {f}")
-            else:
-                lines.append("- (no uncommitted changes detected)")
-
+            lines.extend([f"- {f}" for f in files] if files else ["- (no uncommitted changes detected)"])
             stat = str(repo_changes.get("diff_stat") or "").strip()
             if stat:
-                lines.append("")
-                lines.append("Diff stat:")
-                lines.append(stat)
+                lines.extend(["", "Diff stat:", stat])
         else:
-            lines.append("Changed files:")
-            lines.append(f"- (unavailable: {repo_changes.get('error')})")
+            lines.extend(["Changed files:", f"- (unavailable: {repo_changes.get('error')})"])
+        return lines
 
-        lines.append("")
-        lines.append("Verification:")
-        # Best-effort heuristic based on last message content.
+    def _build_report_verification(self, last_message: str) -> List[str]:
+        """Build verification section."""
+        lines = ["", "Verification:"]
         msg_l = (last_message or "").lower()
         if any(k in msg_l for k in SUCCESS_MARKERS):
             lines.append("- status: passed (heuristic)")
@@ -1936,11 +1910,7 @@ Return JSON with ONLY the replacement step.'''))
             lines.append("- status: failed (heuristic)")
         else:
             lines.append("- status: unknown (no explicit signal)")
-
-        lines.append("")
-        lines.append("Tests:")
-        lines.append("- not executed by Trinity (no deterministic test runner in pipeline)")
-        return "\n".join(lines).strip() + "\n"
+        return lines
 
     # ============ run() helper methods ============
 
@@ -2086,20 +2056,31 @@ Return JSON with ONLY the replacement step.'''))
 
     def _determine_outcome(self, last_state_update: Dict[str, Any], last_agent_message: str) -> str:
         """Determine task outcome from state and message."""
+        outcome = self._get_base_outcome(last_state_update, last_agent_message)
+        if outcome in {"paused", "blocked", "limit_reached"}:
+            return outcome
+        return self._check_needs_input(outcome, last_agent_message)
+
+    def _get_base_outcome(self, last_state_update: Dict[str, Any], last_agent_message: str) -> str:
+        """Get base outcome from status."""
         outcome = "completed"
         task_status = str((last_state_update or {}).get("task_status") or "").strip().lower()
         if task_status:
             outcome = task_status
-        if "limit" in (last_agent_message or "").lower():
-            outcome = "limit_reached"
-        if "paused" in (last_agent_message or "").lower() or "пауза" in (last_agent_message or "").lower():
-            outcome = "paused"
+        lower_msg = (last_agent_message or "").lower()
+        if "limit" in lower_msg:
+            return "limit_reached"
+        if "paused" in lower_msg or "пауза" in lower_msg:
+            return "paused"
+        return outcome
 
+    def _check_needs_input(self, outcome: str, last_agent_message: str) -> str:
+        """Check if outcome should be needs_input."""
         lower_msg = (last_agent_message or "").lower()
         needs_input_markers = ["уточни", "уточнити", "підтверди", "підтвердження", "confirm", "confirmation", "clarify", "need уточ", "чи "]
-        if outcome not in {"paused", "blocked", "limit_reached"}:
-            if any(m in lower_msg for m in needs_input_markers) and ("[verified]" not in lower_msg and "[confirmed]" not in lower_msg):
-                outcome = "needs_input"
+        if any(m in lower_msg for m in needs_input_markers):
+            if "[verified]" not in lower_msg and "[confirmed]" not in lower_msg:
+                return "needs_input"
         return outcome
 
     def _check_artifact_sanity(self, input_text: str, outcome: str) -> tuple:

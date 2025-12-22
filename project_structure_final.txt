@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 03:23:10  2025
+Generated: Mon Dec 22 03:33:00  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  7b211827 Refactor TUI agents and reduce cognitive complexity
+  94f10edb Major refactoring: reduce cognitive complexity across multiple functions
+  a6b6cad8 Refactor TUI agents and reduce cognitive complexity
   81649f38 Refactor TrinityRuntime: reduce complexity in _router and _auto_commit_on_success
   f496d234 Major refactoring: reduce cognitive complexity in TrinityRuntime
   0315ae04 feat: Display more critical issues with line numbers, add Trinity runtime constants, and update critical issues data.
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   56cc249c chore: Update critical issues by adding a cognitive complexity issue and removing a string duplication issue, adjusting total effort and debt.
   5d6b0867 Fix syntax errors in core files preventing test collection
   cc47e420 Refactor CLI and TUI components to reduce cognitive complexity
-  e47ec988 Refactor: Final cleanup of SonarCloud issues (complexity and literals)
 ```
 
 ## Project Structure

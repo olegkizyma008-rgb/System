@@ -134,29 +134,45 @@ def _register_layout_keys(kb: KeyBindings, state: Any, save_ui_settings: Callabl
 def _register_clipboard_keys(kb: KeyBindings, state: Any, log: Callable):
     @kb.add("c-k")
     def _(event):
-        try:
-            from tui.clipboard_utils import copy_to_clipboard
-            from tui.render import get_logs, get_agent_messages
-            target = str(getattr(state, "ui_scroll_target", "log") or "log")
-            if target == "log":
-                content = "".join(str(t or "") for _, t in get_logs())
-                pname = "LOG"
-            else:
-                content = "".join(str(t or "") for _, t in get_agent_messages())
-                pname = "АГЕНТИ"
-            if content:
-                if not copy_to_clipboard(content, log): log(f"Помилка: не вдалося скопіювати з панелі {pname}", "error")
-            else: log(f"Панель {pname} порожня", "info")
-        except Exception as e: log(f"Помилка копіювання: {str(e)}", "error")
+        _handle_copy_to_clipboard(state, log)
 
     @kb.add("c-o")
     def _(event):
-        try:
-            from tui.selection_tracker import set_auto_copy_enabled, get_selection_stats
-            en = not get_selection_stats().get("auto_copy_enabled", True)
-            set_auto_copy_enabled(en)
-            log(f"Автокопіювання: {'Увімкнено' if en else 'Вимкнено'}", "action")
-        except Exception as e: log(f"Помилка: {str(e)}", "error")
+        _toggle_auto_copy(log)
+
+
+def _handle_copy_to_clipboard(state: Any, log: Callable):
+    """Handle Ctrl+K: copy current panel content to clipboard."""
+    try:
+        from tui.clipboard_utils import copy_to_clipboard
+        from tui.render import get_logs, get_agent_messages
+        target = str(getattr(state, "ui_scroll_target", "log") or "log")
+        
+        if target == "log":
+            content = "".join(str(t or "") for _, t in get_logs())
+            pname = "LOG"
+        else:
+            content = "".join(str(t or "") for _, t in get_agent_messages())
+            pname = "АГЕНТИ"
+        
+        if not content:
+            log(f"Панель {pname} порожня", "info")
+            return
+        if not copy_to_clipboard(content, log):
+            log(f"Помилка: не вдалося скопіювати з панелі {pname}", "error")
+    except Exception as e:
+        log(f"Помилка копіювання: {str(e)}", "error")
+
+
+def _toggle_auto_copy(log: Callable):
+    """Toggle auto-copy mode."""
+    try:
+        from tui.selection_tracker import set_auto_copy_enabled, get_selection_stats
+        enabled = not get_selection_stats().get("auto_copy_enabled", True)
+        set_auto_copy_enabled(enabled)
+        log(f"Автокопіювання: {'Увімкнено' if enabled else 'Вимкнено'}", "action")
+    except Exception as e:
+        log(f"Помилка: {str(e)}", "error")
 
 def _register_menu_movement_keys(kb: KeyBindings, ctx: Dict[str, Any]):
     state, show_menu = ctx["state"], ctx["show_menu"]
@@ -245,22 +261,44 @@ def _register_action_keys(kb: KeyBindings, ctx: Dict[str, Any]):
             ctx["save_monitor_settings"](); log(f"Monitoring sudo: {'ON' if state.monitor_use_sudo else 'OFF'}", "action")
 
 def _handle_menu_escape(ctx, event):
+    """Handle escape/q key press in menu navigation."""
     state, MenuLevel = ctx["state"], ctx["MenuLevel"]
-    if state.menu_level == MenuLevel.MAIN:
-        state.menu_level, state.menu_index, state.ui_scroll_target = MenuLevel.NONE, 0, "agents"
-    elif state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
-        state.menu_level, state.menu_index = MenuLevel.LLM_SETTINGS, 0
-    elif state.menu_level in {MenuLevel.LLM_SETTINGS, MenuLevel.AGENT_SETTINGS, MenuLevel.APPEARANCE, MenuLevel.LANGUAGE, MenuLevel.LAYOUT, MenuLevel.UNSAFE_MODE, MenuLevel.AUTOMATION_PERMISSIONS, MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING, MenuLevel.LEARNING_MODE}:
-        state.menu_level, state.menu_index = MenuLevel.SETTINGS, 0
-    elif state.menu_level in {MenuLevel.SETTINGS, MenuLevel.CUSTOM_TASKS, MenuLevel.MONITORING, MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}:
-        state.menu_level, state.menu_index = MenuLevel.MAIN, 0
-    elif state.menu_level == MenuLevel.MODULE_LIST:
-        state.menu_level, state.menu_index = MenuLevel.MODULE_EDITORS, 0
-    elif state.menu_level in {MenuLevel.MONITOR_CONTROL, MenuLevel.MONITOR_TARGETS}:
-        state.menu_level, state.menu_index = MenuLevel.MONITORING, 0
+    
+    # Level -> Parent level mapping
+    llm_submenus = {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}
+    settings_submenus = {MenuLevel.LLM_SETTINGS, MenuLevel.AGENT_SETTINGS, MenuLevel.APPEARANCE, MenuLevel.LANGUAGE, 
+                         MenuLevel.LAYOUT, MenuLevel.UNSAFE_MODE, MenuLevel.AUTOMATION_PERMISSIONS, 
+                         MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING, MenuLevel.LEARNING_MODE}
+    main_submenus = {MenuLevel.SETTINGS, MenuLevel.CUSTOM_TASKS, MenuLevel.MONITORING, 
+                     MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}
+    
+    target_level, target_scroll = _get_escape_target(state.menu_level, MenuLevel, llm_submenus, settings_submenus, main_submenus)
+    
+    if target_level is not None:
+        state.menu_level, state.menu_index = target_level, 0
+        if target_scroll:
+            state.ui_scroll_target = target_scroll
     else:
         w = _find_window_by_name(event, "input")
-        if w: event.app.layout.focus(w)
+        if w:
+            event.app.layout.focus(w)
+
+
+def _get_escape_target(current_level, MenuLevel, llm_submenus, settings_submenus, main_submenus):
+    """Get target menu level after escape. Returns (level, scroll_target)."""
+    if current_level == MenuLevel.MAIN:
+        return MenuLevel.NONE, "agents"
+    if current_level in llm_submenus:
+        return MenuLevel.LLM_SETTINGS, None
+    if current_level in settings_submenus:
+        return MenuLevel.SETTINGS, None
+    if current_level in main_submenus:
+        return MenuLevel.MAIN, None
+    if current_level == MenuLevel.MODULE_LIST:
+        return MenuLevel.MODULE_EDITORS, None
+    if current_level in {MenuLevel.MONITOR_CONTROL, MenuLevel.MONITOR_TARGETS}:
+        return MenuLevel.MONITORING, None
+    return None, None
 
 def _handle_module_list_space(ctx):
     state, log = ctx["state"], ctx["log"]
