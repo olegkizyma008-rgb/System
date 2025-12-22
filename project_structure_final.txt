@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 02:07:07  2025
+Generated: Mon Dec 22 02:09:04  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  b5fb5491 Refactor: Decompose complex functions and fix broad exceptions for SonarCloud compliance
+  116add20 Chore: Update project key and scanner command in sonar script
+  7b5520b2 Refactor: Decompose complex functions and fix broad exceptions for SonarCloud compliance
   906e8adf Refactor: Broad SonarQube cleanup and complexity reduction
   a30ef7db Cleanup: Remove temporary test file
   157e3968 Refactor: Finalize SonarQube cleanup and modularization
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   b2fa90d4 Refactor: Finalize SonarCloud alignment for olegkizima01 organization
   7f547212 feat: Update critical issues count and effort totals, and add a new critical issue for `python:S3776` in `core/trinity.py`.
   bb652666 Refactor: Address SonarCloud critical issues in core/mcp.py, core/trinity.py, and TUI modules
-  93a05d40 feat: Add SonarCloud integration for critical issue tracking with new workflows, scripts, and core system updates.
 ```
 
 ## Project Structure
