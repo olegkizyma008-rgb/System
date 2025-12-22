@@ -265,10 +265,6 @@ def _render_settings_menu(ctx: dict) -> List[Tuple[str, str]]:
     result.append((STYLE_MENU_TITLE, f" {tr('menu.settings.title', state.ui_lang)}\n\n"))
     
     items = ctx["get_settings_menu_items"]()
-    
-    # Add MCP Client Settings item
-    items.append(("MCP Client Settings", "mcp_settings"))
-    
     _clamp_menu_index(state, len(items))
     
     for i, item in enumerate(items):

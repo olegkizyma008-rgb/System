@@ -517,7 +517,13 @@ def _handle_settings_enter(ctx):
     if not items: return
     idx = _settings_next_selectable_index(items, ctx["state"].menu_index, 1)
     item = items[idx]
-    if not _is_section_item(item): _set_menu(ctx["state"], item[1])
+    if not _is_section_item(item):
+        action = item[1]
+        # Handle special actions (non-MenuLevel items)
+        if action == "mcp_settings":
+            ctx["log"]("MCP Client Settings: not yet implemented", "info")
+        else:
+            _set_menu(ctx["state"], action)
 
 def _handle_general_toggle_ctx(ctx, attr, label):
     new_val = not bool(getattr(ctx["state"], attr, False))

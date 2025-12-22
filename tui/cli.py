@@ -1722,6 +1722,9 @@ def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
         ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
         ("menu.settings.self_healing", MenuLevel.SELF_HEALING, None),
         ("menu.settings.memory_manager", MenuLevel.MEMORY_MANAGER, None),
+        ("menu.settings.section.automation", None, "section"),
+        ("menu.settings.automation_permissions", MenuLevel.AUTOMATION_PERMISSIONS, None),
+        ("menu.settings.mcp_settings", "mcp_settings", None),
     ]
 
 
