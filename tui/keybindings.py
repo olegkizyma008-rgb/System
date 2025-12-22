@@ -175,27 +175,30 @@ def _toggle_auto_copy(log: Callable):
         log(f"Помилка: {str(e)}", "error")
 
 def _register_menu_movement_keys(kb: KeyBindings, ctx: Dict[str, Any]):
+    """Register menu navigation keys (f2, up/down, etc.)."""
     state, show_menu = ctx["state"], ctx["show_menu"]
     MenuLevel, force_ui_update = ctx["MenuLevel"], ctx["force_ui_update"]
 
     @kb.add("f2")
-    def _(event):
+    def _handle_f2(event):
         if state.menu_level == MenuLevel.NONE:
             state.menu_level, state.menu_index = MenuLevel.MAIN, 0
             w = _find_window_by_name(event, "menu")
-            if w: event.app.layout.focus(w)
+            if w:
+                event.app.layout.focus(w)
         else:
             state.menu_level, state.menu_index, state.ui_scroll_target = MenuLevel.NONE, 0, "agents"
             w = _find_window_by_name(event, "input")
-            if w: event.app.layout.focus(w)
+            if w:
+                event.app.layout.focus(w)
 
     @kb.add("escape")
     @kb.add("q")
-    def _(event):
+    def _handle_esc_q(event):
         _handle_menu_escape(ctx, event)
 
     @kb.add("up", filter=show_menu)
-    def _(event):
+    def _handle_up(event):
         state.menu_index = max(0, state.menu_index - 1)
         if state.menu_level == MenuLevel.SETTINGS:
             state.menu_index = _settings_next_selectable_index(ctx["get_settings_menu_items"](), state.menu_index, -1)
@@ -204,7 +207,7 @@ def _register_menu_movement_keys(kb: KeyBindings, ctx: Dict[str, Any]):
         force_ui_update()
 
     @kb.add("down", filter=show_menu)
-    def _(event):
+    def _handle_down(event):
         state.menu_index = min(_get_menu_max_index_from_ctx(ctx), state.menu_index + 1)
         if state.menu_level == MenuLevel.SETTINGS:
             state.menu_index = _settings_next_selectable_index(ctx["get_settings_menu_items"](), state.menu_index, 1)
@@ -213,52 +216,83 @@ def _register_menu_movement_keys(kb: KeyBindings, ctx: Dict[str, Any]):
         force_ui_update()
 
     @kb.add("left", filter=show_menu)
-    def _(event):
+    def _handle_left(event):
         if state.menu_level == MenuLevel.LAYOUT and state.menu_index == 0:
             state.ui_left_panel_ratio = max(0.2, float(getattr(state, "ui_left_panel_ratio", 0.6)) - 0.05)
             ctx["save_ui_settings"]()
 
     @kb.add("right", filter=show_menu)
-    def _(event):
+    def _handle_right(event):
         if state.menu_level == MenuLevel.LAYOUT and state.menu_index == 0:
             state.ui_left_panel_ratio = min(0.8, float(getattr(state, "ui_left_panel_ratio", 0.6)) + 0.05)
             ctx["save_ui_settings"]()
 
+
 def _register_action_keys(kb: KeyBindings, ctx: Dict[str, Any]):
+    """Register menu action keys (space, d, s, u)."""
     state, show_menu, log = ctx["state"], ctx["show_menu"], ctx["log"]
     MenuLevel = ctx["MenuLevel"]
 
     @kb.add("space", filter=show_menu)
-    def _(event):
-        lvl = state.menu_level
-        if lvl == MenuLevel.MODULE_LIST: _handle_module_list_space(ctx)
-        elif lvl == MenuLevel.LOCALES: _handle_locales_toggle(ctx)
-        elif lvl == MenuLevel.MONITOR_TARGETS: _handle_monitor_targets_toggle(ctx)
-        elif lvl in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
-            _handle_llm_settings_space(ctx)
+    def _handle_space(event):
+        _process_menu_space_action(ctx)
 
     @kb.add("d", filter=show_menu)
-    def _(event):
+    def _handle_d(event):
         if state.menu_level == MenuLevel.CLEANUP_EDITORS:
-            editors = ctx["get_editors_list"]()
-            if editors:
-                state.selected_editor = editors[state.menu_index][0]
-                ok, msg = ctx["run_cleanup"](ctx["load_cleanup_config"](), state.selected_editor, dry_run=True)
-                log(msg, "action" if ok else "error")
+            _execute_dry_run_cleanup(ctx)
 
     @kb.add("s", filter=show_menu)
-    def _(event):
+    def _handle_s(event):
         if state.menu_level == MenuLevel.MONITOR_CONTROL and not state.monitor_active:
-            order = ["watchdog", "fs_usage", "opensnoop"]
-            cur = state.monitor_source if state.monitor_source in order else "watchdog"
-            state.monitor_source = order[(order.index(cur) + 1) % len(order)]
-            ctx["save_monitor_settings"](); log(f"Monitoring source: {state.monitor_source}", "action")
+            _cycle_monitor_source(ctx)
 
     @kb.add("u", filter=show_menu)
-    def _(event):
+    def _handle_u(event):
         if state.menu_level == MenuLevel.MONITOR_CONTROL and not state.monitor_active:
-            state.monitor_use_sudo = not state.monitor_use_sudo
-            ctx["save_monitor_settings"](); log(f"Monitoring sudo: {'ON' if state.monitor_use_sudo else 'OFF'}", "action")
+            _toggle_monitor_sudo(ctx)
+
+
+def _process_menu_space_action(ctx: Dict[str, Any]):
+    """Process space key in menu."""
+    state, MenuLevel = ctx["state"], ctx["MenuLevel"]
+    lvl = state.menu_level
+    if lvl == MenuLevel.MODULE_LIST:
+        _handle_module_list_space(ctx)
+    elif lvl == MenuLevel.LOCALES:
+        _handle_locales_toggle(ctx)
+    elif lvl == MenuLevel.MONITOR_TARGETS:
+        _handle_monitor_targets_toggle(ctx)
+    elif lvl in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
+        _handle_llm_settings_space(ctx)
+
+
+def _execute_dry_run_cleanup(ctx: Dict[str, Any]):
+    """Execute dry-run cleanup."""
+    state, log = ctx["state"], ctx["log"]
+    editors = ctx["get_editors_list"]()
+    if editors:
+        state.selected_editor = editors[state.menu_index][0]
+        ok, msg = ctx["run_cleanup"](ctx["load_cleanup_config"](), state.selected_editor, dry_run=True)
+        log(msg, "action" if ok else "error")
+
+
+def _cycle_monitor_source(ctx: Dict[str, Any]):
+    """Cycle monitoring data source."""
+    state, log = ctx["state"], ctx["log"]
+    order = ["watchdog", "fs_usage", "opensnoop"]
+    cur = state.monitor_source if state.monitor_source in order else "watchdog"
+    state.monitor_source = order[(order.index(cur) + 1) % len(order)]
+    ctx["save_monitor_settings"]()
+    log(f"Monitoring source: {state.monitor_source}", "action")
+
+
+def _toggle_monitor_sudo(ctx: Dict[str, Any]):
+    """Toggle sudo for monitoring."""
+    state, log = ctx["state"], ctx["log"]
+    state.monitor_use_sudo = not state.monitor_use_sudo
+    ctx["save_monitor_settings"]()
+    log(f"Monitoring sudo: {'ON' if state.monitor_use_sudo else 'OFF'}", "action")
 
 def _handle_menu_escape(ctx, event):
     """Handle escape/q key press in menu navigation."""

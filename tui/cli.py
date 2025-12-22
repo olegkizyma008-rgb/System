@@ -2146,63 +2146,86 @@ def _handle_screenshots_command(args: Any):
         raise SystemExit(0)
 
 def _handle_agent_chat_command(args: Any, logger: Any):
+    """Handle chat messages from CLI."""
     logger.info(f"Agent chat message: {args.message}")
     msg = str(args.message or "").strip()
 
     try:
-        # Deterministic CLI behavior for in-app slash commands.
-        parts = msg.split()
-        cmd_idx = next((i for i, p in enumerate(parts) if p.startswith("/")), None)
-        if cmd_idx is not None:
-            cmd = " ".join(parts[cmd_idx:]).strip()
-            logger.debug(f"Processing slash command: {cmd}")
-            _load_ui_settings()
-            out = _tool_app_command({"command": cmd})
-            if not out.get("ok"):
-                error_msg = str(out.get("error") or "Unknown error")
-                logger.error(f"Slash command failed: {error_msg}")
-                print(error_msg)
-                raise SystemExit(1)
-            for category, line in (out.get("lines") or []):
-                _ = category
-                if line:
-                    print(line)
-            logger.info("Slash command executed successfully")
+        # 1. Slash commands
+        if _try_process_slash_command(msg, logger):
             raise SystemExit(0)
 
-        # Keep a stable, friendly greeting.
+        # 2. Greetings
         if _is_greeting(msg):
             logger.debug("Greeting detected")
             print("Привіт! Чим можу допомогти?")
             raise SystemExit(0)
 
-        # Check for complex task execution
+        # 3. Complex tasks
         if _is_complex_task(msg):
-            logger.info("Complex task detected, delegating to Trinity Graph Agent...")
-            # Enable full permissions for CLI "run" mode
-            from tui.agents import run_graph_agent_task
-            run_graph_agent_task(
-                msg,
-                allow_file_write=True,
-                allow_shell=True,
-                allow_applescript=True,
-                allow_gui=True, # Assuming CLI user wants action
-                allow_shortcuts=True,
-                gui_mode="auto"
-            )
-            logger.info("Graph task completed")
+            _handle_complex_task_cli(msg, logger)
             raise SystemExit(0)
 
-        logger.info("Sending message to agent")
-        ok, answer = _agent_send_no_stream(msg)
-        print(answer)
-        logger.info(f"Agent response sent, status: {ok}")
-        raise SystemExit(0 if ok else 1)
+        # 4. Standard message
+        _handle_standard_agent_message(msg, logger)
+        raise SystemExit(0)
+        
     except SystemExit:
         raise
     except Exception as e:
         log_exception(logger, e, "Agent chat")
         raise
+
+
+def _try_process_slash_command(msg: str, logger: Any) -> bool:
+    """Detect and execute slash command. Returns True if handled."""
+    parts = msg.split()
+    cmd_idx = next((i for i, p in enumerate(parts) if p.startswith("/")), None)
+    if cmd_idx is None:
+        return False
+        
+    cmd = " ".join(parts[cmd_idx:]).strip()
+    logger.debug(f"Processing slash command: {cmd}")
+    _load_ui_settings()
+    out = _tool_app_command({"command": cmd})
+    
+    if not out.get("ok"):
+        error_msg = str(out.get("error") or "Unknown error")
+        logger.error(f"Slash command failed: {error_msg}")
+        print(error_msg)
+        raise SystemExit(1)
+        
+    for _, line in (out.get("lines") or []):
+        if line:
+            print(line)
+    logger.info("Slash command executed successfully")
+    return True
+
+
+def _handle_complex_task_cli(msg: str, logger: Any):
+    """Delegate complex task to Trinity Graph Agent."""
+    logger.info("Complex task detected, delegating to Trinity Graph Agent...")
+    from tui.agents import run_graph_agent_task
+    run_graph_agent_task(
+        msg,
+        allow_file_write=True,
+        allow_shell=True,
+        allow_applescript=True,
+        allow_gui=True,
+        allow_shortcuts=True,
+        gui_mode="auto"
+    )
+    logger.info("Graph task completed")
+
+
+def _handle_standard_agent_message(msg: str, logger: Any):
+    """Send standard message to agent."""
+    logger.info("Sending message to agent")
+    ok, answer = _agent_send_no_stream(msg)
+    print(answer)
+    logger.info(f"Agent response sent, status: {ok}")
+    if not ok:
+        raise SystemExit(1)
 
 def main() -> None:
     try:

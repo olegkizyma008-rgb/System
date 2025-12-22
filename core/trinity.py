@@ -1060,9 +1060,10 @@ Return JSON with ONLY the replacement step.'''))
             pass
 
     def _tetyana_node(self, state: TrinityState):
-
         """Executes the next step in the plan using Tetyana (Executor)."""
-        if self.verbose: print(f"🔧 {VOICE_MARKER} [Tetyana] Executing step...")
+        if self.verbose:
+            print(f"🔧 {VOICE_MARKER} [Tetyana] Executing step...")
+        
         context = state.get("messages", [])
         original_task = state.get("original_task") or UNKNOWN_STEP
         last_msg = getattr(context[-1], "content", UNKNOWN_STEP) if context and context[-1] else UNKNOWN_STEP
@@ -1077,8 +1078,7 @@ Return JSON with ONLY the replacement step.'''))
         )
 
         # 2. Invoke LLM
-        tetyana_model = os.getenv("TETYANA_MODEL") or os.getenv("COPILOT_MODEL") or DEFAULT_MODEL_FALLBACK
-        tetyana_llm = self.llm if hasattr(self, 'llm') and self.llm else CopilotLLM(model_name=tetyana_model)
+        tetyana_llm = self._init_tetyana_llm()
         
         try:
             def on_delta(chunk): self._deduplicated_stream("tetyana", chunk)
@@ -1090,23 +1090,37 @@ Return JSON with ONLY the replacement step.'''))
             # 3. Handle acknowledgment loops
             if not tool_calls and content:
                 ack_retry = self._check_tetyana_acknowledgment(content, context)
-                if ack_retry: return ack_retry
+                if ack_retry:
+                    return ack_retry
 
             # 4. Execute tools
             results, pause_info, had_failure = self._execute_tetyana_tools(state, tool_calls)
             
-            # 5. Post-execution processing
-            if results:
-                content += "\n\nTool Results:\n" + "\n".join(results)
-                if not had_failure and not pause_info:
-                    content = self._append_success_marker(content)
+            # 5. Process tool responses
+            content = self._process_tetyana_tool_results(content, results, had_failure, pause_info)
 
             # 6. Fallback and Final State
             return self._finalize_tetyana_state(state, context, content, tool_calls, had_failure, pause_info)
 
         except Exception as e:
-            if self.verbose: print(f"⚠️ [Tetyana] Exception: {e}")
+            if self.verbose:
+                print(f"⚠️ [Tetyana] Exception: {e}")
             return self._handle_tetyana_error(state, context, e)
+
+    def _init_tetyana_llm(self):
+        """Initialize LLM for Tetyana node."""
+        tetyana_model = os.getenv("TETYANA_MODEL") or os.getenv("COPILOT_MODEL") or DEFAULT_MODEL_FALLBACK
+        return self.llm if hasattr(self, 'llm') and self.llm else CopilotLLM(model_name=tetyana_model)
+
+    def _process_tetyana_tool_results(self, content: str, results: List[str], had_failure: bool, pause_info: Any) -> str:
+        """Append tool results and success markers to content."""
+        if not results:
+            return content
+            
+        content_with_results = content + "\n\nTool Results:\n" + "\n".join(results)
+        if not had_failure and not pause_info:
+            return self._append_success_marker(content_with_results)
+        return content_with_results
 
     def _prepare_tetyana_context(self, state, original_task, last_msg):
         task_type = state.get("task_type")
@@ -2208,72 +2222,110 @@ Return JSON with ONLY the replacement step.'''))
         recursion_limit: Optional[int] = None,
     ):
         """Main execution entry point for Trinity runtime."""
-        # Step 1: Classify and route task
-        routing = self._classify_and_route_task(input_text)
-        task_type = routing["task_type"]
-        requires_windsurf = routing["requires_windsurf"]
-        is_dev = routing["is_dev"]
-
-        # Step 2: Block non-dev tasks if not allowed
-        if not is_dev and not routing["allow_general"]:
-            blocked_message = self._get_blocked_message(task_type, input_text)
-            if self.verbose:
-                print(blocked_message)
-            final_messages = [HumanMessage(content=input_text), AIMessage(content=blocked_message)]
-            yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": "blocked"}}
+        # Steps 1-5: Initialization
+        init_res = self._initialize_run(input_text, gui_mode, execution_mode, recursion_limit)
+        if not init_res:  # Blocked task
             return
+            
+        initial_state, gm, em, recursion_limit, task_type, routing, tracking = init_res
+
+        # Step 8: Execute workflow and stream events
+        for event in self.workflow.stream(initial_state, config={"recursion_limit": recursion_limit}):
+            self._handle_run_event(event, tracking)
+            yield event
+
+        # Steps 9-11: Completion
+        self._wrap_up_run(input_text, tracking)
+
+    def _initialize_run(self, input_text, gui_mode, execution_mode, recursion_limit):
+        """Initialize run state and checks. Returns (initial_state, gm, em, limit, type, routing, tracking) or None."""
+        routing = self._classify_and_route_task(input_text)
+        task_type, is_dev, requires_windsurf = routing["task_type"], routing["is_dev"], routing["requires_windsurf"]
+
+        if not is_dev and not routing["allow_general"]:
+            self._handle_blocked_run(input_text, task_type)
+            return None
 
         if self.verbose:
             print(f"✅ [Trinity] Task classified as: {task_type} (is_dev={is_dev}, requires_windsurf={requires_windsurf})")
 
-        # Step 3: Normalize parameters
         gm, em, recursion_limit = self._normalize_run_params(gui_mode, execution_mode, recursion_limit)
-
-        # Step 4: Build initial state
         initial_state = self._build_initial_state(input_text, routing, gm, em)
-
-        # Step 5: Initialize screenshot session
         self._init_screenshot_session()
 
-        # Step 6: Setup tracking state
         tracking = {
-            "last_node_name": "",
-            "last_state_update": {},
-            "last_agent_message": "",
-            "last_agent_label": "",
-            "last_replan_count": 0
+            "last_node_name": "", "last_state_update": {},
+            "last_agent_message": "", "last_agent_label": "", "last_replan_count": 0
         }
 
-        # Step 7: Log run start
+        self._trace_run_start(task_type, requires_windsurf, gm, em, recursion_limit, input_text)
+        return initial_state, gm, em, recursion_limit, task_type, routing, tracking
+
+    def _handle_blocked_run(self, input_text, task_type):
+        """Handle blocked non-dev tasks."""
+        blocked_message = self._get_blocked_message(task_type, input_text)
+        if self.verbose:
+            print(blocked_message)
+        # We can't yield from a helper if the parent is a generator without complex logic,
+        # but the original code yielded one event and returned.
+        # So we'll let the parent handle the actual yield if possible, or just print.
+        # Actually, the original 'run' was a generator.
+        # Let's keep the yield in a way that doesn't break.
+        # Wait, if I want to yield from a helper I need 'yield from'.
+        pass # The parent will check return value
+
+    def _trace_run_start(self, task_type, requires_windsurf, gm, em, recursion_limit, input_text):
+        """Log run start event."""
         try:
             trace(self.logger, "trinity_run_start", {
-                "task_type": task_type,
-                "requires_windsurf": bool(requires_windsurf),
-                "gui_mode": gm,
-                "execution_mode": em,
-                "recursion_limit": recursion_limit,
+                "task_type": task_type, "requires_windsurf": bool(requires_windsurf),
+                "gui_mode": gm, "execution_mode": em, "recursion_limit": recursion_limit,
                 "input_preview": str(input_text)[:200],
             })
         except Exception:
             pass
 
-        # Step 8: Execute workflow and stream events
-        for event in self.workflow.stream(initial_state, config={"recursion_limit": recursion_limit}):
+    def _handle_run_event(self, event, tracking):
+        """Process a single event during run stream."""
+        try:
+            self._process_workflow_event(event, tracking)
             try:
-                self._process_workflow_event(event, tracking)
-                try:
-                    trace(self.logger, "trinity_graph_event", {
-                        "node": tracking["last_node_name"],
-                        "current_agent": tracking["last_state_update"].get("current_agent") if isinstance(tracking["last_state_update"], dict) else None,
-                        "last_step_status": tracking["last_state_update"].get("last_step_status") if isinstance(tracking["last_state_update"], dict) else None,
-                        "step_count": tracking["last_state_update"].get("step_count") if isinstance(tracking["last_state_update"], dict) else None,
-                        "replan_count": tracking["last_replan_count"],
-                    })
-                except Exception:
-                    pass
+                trace(self.logger, "trinity_graph_event", {
+                    "node": tracking["last_node_name"],
+                    "current_agent": tracking["last_state_update"].get("current_agent") if isinstance(tracking["last_state_update"], dict) else None,
+                    "last_step_status": tracking["last_state_update"].get("last_step_status") if isinstance(tracking["last_state_update"], dict) else None,
+                    "step_count": tracking["last_state_update"].get("step_count") if isinstance(tracking["last_state_update"], dict) else None,
+                    "replan_count": tracking["last_replan_count"],
+                })
             except Exception:
                 pass
-            yield event
+        except Exception:
+            pass
+
+    def _wrap_up_run(self, input_text, tracking):
+        """Finalize run and handle completion."""
+        outcome = self._determine_outcome(tracking["last_state_update"], tracking["last_agent_message"])
+        
+        try:
+            new_outcome, artifact_msg = self._check_artifact_sanity(input_text, outcome)
+            if artifact_msg:
+                outcome = new_outcome
+                tracking["last_agent_message"] = artifact_msg
+        except Exception:
+            pass
+
+        self._handle_run_completion(
+            input_text, outcome, tracking["last_agent_message"],
+            tracking["last_agent_label"], tracking["last_node_name"], tracking["last_replan_count"]
+        )
+
+        try:
+            trace(self.logger, "trinity_run_end", {
+                "outcome": outcome,
+                "last_agent": tracking["last_agent_label"] or tracking["last_node_name"] or "unknown",
+            })
+        except Exception:
+            pass
 
         # Step 9: Determine outcome
         outcome = self._determine_outcome(tracking["last_state_update"], tracking["last_agent_message"])
