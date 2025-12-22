@@ -4,7 +4,7 @@ This project was bootstrapped with Trinity's automatic continual development set
 
 ## Quick Start
 
-1. **Open in Windsurf or your IDE**
+1. **Open in your editor (e.g., Windsurf, VS Code, etc.)**
    ```bash
    cd <project_name>
    ```
@@ -39,7 +39,7 @@ This project was bootstrapped with Trinity's automatic continual development set
 ### Git Hooks
 - Post-commit hook automatically updates `project_structure_final.txt`
 - Prevents infinite loops with safety checks
-- Works seamlessly with Windsurf and other IDEs
+- Works seamlessly with your editor (Windsurf, VS Code, etc.)
 
 ## Helper Scripts
 

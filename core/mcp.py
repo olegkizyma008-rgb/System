@@ -182,6 +182,7 @@ class MCPToolRegistry:
         self._register_browser_tools()
         self._register_recorder_tools()
         self._register_response_tools()
+        self._register_plugin_tools()
         self._register_external_mcp()
 
     def _register_foundation_tools(self):
@@ -436,6 +437,29 @@ class MCPToolRegistry:
                 return {"status": "error", "message": f"Failed to save response: {str(e)}"}
 
         self.register_tool("save_last_response", _save_last_response_and_regenerate, f"Save last response to {self.LAST_RESPONSE_FILE} and regenerate project_structure_final.txt. Args: text (str)")
+
+    def _register_plugin_tools(self):
+        """Register plugin creation and management tools."""
+        from plugins.plugin_creator import tool_create_plugin
+        
+        self.register_tool(
+            "create_plugin",
+            tool_create_plugin,
+            "Create a new Trinity plugin with scaffolding. Automatically triggers DEV mode with Doctor Vibe for development. Args: plugin_name (str), description (str, optional)"
+        )
+        
+        # Auto-discover and load existing plugins
+        try:
+            from plugins import load_all_plugins, discover_plugins
+            
+            # Load all plugins
+            load_results = load_all_plugins(self)
+            loaded_count = sum(1 for success in load_results.values() if success)
+            
+            if loaded_count > 0:
+                print(f"✅ [MCP] Loaded {loaded_count} custom plugin(s)")
+        except Exception as e:
+            print(f"⚠️ [MCP] Plugin auto-discovery failed: {e}")
 
     def _register_external_mcp(self):
         """Register external MCP servers (Playwright, AppleScript, PyAutoGUI) - PRIORITY over local implementations."""

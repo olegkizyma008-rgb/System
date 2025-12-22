@@ -229,7 +229,7 @@ mypy core/ --config-file=setup.cfg
 | `logs/trinity_state_*.log` | Детальні логи Trinity |
 | `.last_response.txt` | Остання відповідь агента |
 | `task_logs/` | Лог-файли завдань |
-| `~/Library/.../Windsurf/logs/` | Логи Windsurf |
+| `~/Library/.../<editor>/logs/` | Логи редактора (наприклад, Windsurf, VS Code) |
 
 ```bash
 ./regenerate_structure.sh           # Ручне оновлення
@@ -241,7 +241,7 @@ tail -f logs/trinity_state_*.log    # Логи Trinity
 
 ## 11. Editor Integration
 
-### Windsurf, Copilot, VS Code
+### Editor integrations (Windsurf, Copilot, VS Code)
 - **Windsurf**: `~/Library/Application Support/Windsurf/logs/`
 - **VS Code**: `~/Library/Application Support/Code/logs/`
 

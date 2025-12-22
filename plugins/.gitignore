@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Temporary
+*.tmp
+*.bak
+.DS_Store
+
+# Plugin-specific
+# Add any plugin-specific ignores here

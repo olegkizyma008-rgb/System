@@ -14,7 +14,8 @@ DEV_KEYWORDS = [
     "код", "code", "python", "javascript", "typescript", "script", "function",
     "рефакторинг", "refactor", "тест", "test", "git", "commit", "branch",
     "архітектура", "architecture", "api", "database", "db", "sql",
-    "windsurf", "editor", "ide", "файл", "file", "write", "create"
+    "windsurf", "editor", "ide", "файл", "file", "write", "create",
+    "плагін", "plugin", "модуль", "module", "розширення", "extension"
 ]
 
 GENERAL_KEYWORDS = [
