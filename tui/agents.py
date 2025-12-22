@@ -799,11 +799,23 @@ def _process_single_event(node_name, state_update, use_stream, stream_line_by_ag
     last_msg = messages[-1] if messages else None
     content = _extract_message_content(last_msg)
     
-    # Log to TUI
+    # Log to TUI (Left Panel - General Log)
     _log_to_tui(tag, content, agent_name, use_stream, stream_line_by_agent)
     
-    # Update agent panel
-    _update_agent_panel(agent_name, content)
+    # Update agent panel (Right Panel - Chat)
+    # Filter out ToolMessages and empty content to keep chat "natural"
+    show_in_chat = True
+    try:
+        # Use global references from module imports
+        if ToolMessage and isinstance(last_msg, ToolMessage):
+            show_in_chat = False
+        elif not content.strip():
+            show_in_chat = False
+    except Exception:
+        pass
+
+    if show_in_chat:
+        _update_agent_panel(agent_name, content)
     
     # Check for pause
     pause_info = state_update.get("pause_info")

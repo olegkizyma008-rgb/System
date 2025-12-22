@@ -101,7 +101,7 @@ class TrinityRuntime:
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
-        self.logger = get_logger("system_cli.trinity")
+        self.logger = get_logger("trinity.core")
         self.registry = MCPToolRegistry()
         self.learning_mode = learning_mode
         

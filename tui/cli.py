@@ -609,6 +609,7 @@ def _save_ui_settings() -> bool:
             "self_healing": bool(getattr(state, "ui_self_healing", False)),
             "learning_mode": bool(getattr(state, "learning_mode", False)),
             "recursion_limit": int(getattr(state, "ui_recursion_limit", 100)),
+            "mcp_client_type": str(getattr(state, "mcp_client_type", "open_mcp")).strip().lower(),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -2063,7 +2064,7 @@ def _tool_ui_theme_set(args: Dict[str, Any]) -> Dict[str, Any]:
 def cli_main(argv: List[str]) -> None:
     # Setup logging
     verbose = "--verbose" in argv or "-v" in argv
-    logger = setup_logging(verbose=verbose, name="system_cli.cli")
+    logger = setup_logging(verbose=verbose, name="trinity.cli")
     logger.info(f"CLI started with arguments: {argv}")
     
     parser = argparse.ArgumentParser(prog="cli.py", description="System CLI")
@@ -2199,7 +2200,8 @@ def _get_resolved_editor(args: Any, cfg: Dict[str, Any], logger: Any) -> Tuple[O
     if note:
         logger.warning(note)
         try: print(note, file=sys.stderr)
-        except Exception: pass
+        except Exception as e:
+            logger.debug(f"Failed to print editor note to stderr: {e}")
     return res, note
 
 def _handle_list_editors(cfg: Dict[str, Any], logger: Any):
@@ -2405,7 +2407,7 @@ def main() -> None:
     try:
         cli_main(sys.argv[1:])
     except Exception as e:
-        logger = get_logger("system_cli.cli")
+        logger = get_logger("trinity.cli")
         log_exception(logger, e, "main()")
         sys.exit(1)
 

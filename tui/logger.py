@@ -102,7 +102,7 @@ class JSONFormatter(logging.Formatter):
             log_obj["exception"] = self.formatException(record.exc_info)
         return json.dumps(log_obj, ensure_ascii=False)
 
-def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Logger:
+def setup_logging(verbose: bool = False, name: str = "trinity") -> logging.Logger:
     """Setup comprehensive logging system.
     
     Args:
@@ -210,7 +210,7 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
     return logger
 
 
-def get_logger(name: str = "system_cli") -> logging.Logger:
+def get_logger(name: str = "trinity") -> logging.Logger:
     """Get or create logger."""
     return logging.getLogger(name)
 
@@ -309,7 +309,7 @@ def setup_root_file_logging(root_dir: str) -> None:
         print(f"Failed to setup analysis log handler: {e}", file=sys.stderr)
 
     # Left Screen Logger (Main Logs)
-    left_logger = logging.getLogger("system_cli.left")
+    left_logger = logging.getLogger("trinity.left")
     left_logger.setLevel(logging.DEBUG)
     left_logger.propagate = False
     
@@ -328,7 +328,7 @@ def setup_root_file_logging(root_dir: str) -> None:
         print(f"Failed to setup left screen log: {e}", file=sys.stderr)
 
     # Right Screen Logger (Agent Messages)
-    right_logger = logging.getLogger("system_cli.right")
+    right_logger = logging.getLogger("trinity.right")
     right_logger.setLevel(logging.DEBUG)
     right_logger.propagate = False
 

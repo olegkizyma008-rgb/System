@@ -127,14 +127,18 @@ class MCPClientManager:
             open_mcp_cfg = clients_config.get("open_mcp", {})
             self._clients[MCPClientType.OPEN_MCP] = OpenMCPClient(open_mcp_cfg)
         except ImportError as e:
-            logger.warning(f"OpenMCPClient not available: {e}")
+            logger.warning(f"OpenMCPClient not available (ImportError): {e}")
+        except Exception as e:
+            logger.error(f"Failed to initialize OpenMCPClient: {e}")
         
         try:
             from .continue_mcp_client import ContinueMCPClient
             continue_cfg = clients_config.get("continue", {})
             self._clients[MCPClientType.CONTINUE] = ContinueMCPClient(continue_cfg)
         except ImportError as e:
-            logger.warning(f"ContinueMCPClient not available: {e}")
+            logger.warning(f"ContinueMCPClient not available (ImportError): {e}")
+        except Exception as e:
+            logger.error(f"Failed to initialize ContinueMCPClient: {e}")
     
     @property
     def active_client(self) -> MCPClientType:
@@ -213,7 +217,13 @@ class MCPClientManager:
                         "error": "Failed to connect to MCP client"
                     }
             
-            return client.execute_tool(tool_name, args)
+            logger.info(f"Executing MCP Tool '{tool_name}' via {self.active_client_name} args={json.dumps(args, default=str)[:100]}")
+            result = client.execute_tool(tool_name, args)
+            if result.get("success"):
+                logger.info(f"MCP Tool '{tool_name}' executed successfully.")
+            else:
+                logger.error(f"MCP Tool '{tool_name}' failed: {result.get('error')}")
+            return result
         except Exception as e:
             logger.error(f"Error executing tool via MCP client: {e}")
             return {
@@ -292,6 +302,6 @@ def reset_mcp_client_manager() -> None:
             if client and client.is_connected:
                 try:
                     client.disconnect()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error disconnecting client {client}: {e}")
     _manager_instance = None
