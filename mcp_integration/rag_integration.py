@@ -61,7 +61,12 @@ class MCPToolSelector:
 
     def _init_chroma(self):
         persist_dir = get_default_chroma_persist_dir() / "mcp_integration"
-        init_res = create_persistent_client(persist_dir=persist_dir, logger=logger)
+        try:
+            init_res = create_persistent_client(persist_dir=persist_dir, logger=logger)
+        except BaseException as e:
+            # Catch pyo3_runtime.PanicException and other fatal errors from chromadb
+            logger.error(f"❌ Chroma PersistentClient init failed (panic or error): {e}")
+            init_res = None
         
         if init_res is not None:
             self.chroma_client = init_res.client

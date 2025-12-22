@@ -1293,13 +1293,13 @@ Return JSON with ONLY the replacement step.'''))
         
         if task_type == "GENERAL":
             if name in windsurf_tools:
-                return f"[BLOCKED] {name}: GENERAL task must not use Windsurf."
+                return f"[BLOCKED] {name}: GENERAL task must not use Windsurf dev subsystem"
             if name in {"write_file", "copy_file"} and not self._is_safe_path(name, args):
                 return f"[BLOCKED] {name}: GENERAL write allowed only outside repo."
         
         if task_type in {"DEV", "UNKNOWN"} and state.get("requires_windsurf") and state.get("dev_edit_mode") == "windsurf":
             if name in {"write_file", "copy_file"}:
-                return f"[BLOCKED] {name}: Use Windsurf tools for DEV tasks."
+                return f"[BLOCKED] {name}: DEV task requires Windsurf-first"
         return None
 
     def _is_safe_path(self, name, args):
@@ -1447,8 +1447,12 @@ Return JSON with ONLY the replacement step.'''))
         )
 
     def _invoke_grisha(self, prompt, last_msg):
-        model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or DEFAULT_MODEL_FALLBACK
-        llm = CopilotLLM(model_name=model)
+        # Prefer runtime-provided LLM (tests set rt.llm), fallback to Copilot provider
+        if getattr(self, "llm", None) is not None:
+            llm = self.llm
+        else:
+            model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or DEFAULT_MODEL_FALLBACK
+            llm = CopilotLLM(model_name=model)
         def on_delta(chunk): self._deduplicated_stream("grisha", chunk)
         resp = llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
         content = getattr(resp, "content", "") if resp else ""
@@ -1915,6 +1919,49 @@ Return JSON with ONLY the replacement step.'''))
             head = self._run_git_command(["git", "rev-parse", "HEAD"], root, env)
             commit_hash = (head.stdout or "").strip() if head.returncode == 0 else ""
 
+            # If the HEAD commit doesn't contain the files we detected as changed
+            # (sometimes multiple commits/amends can shuffle content), try to
+            # locate a recent commit that does contain the changed files and
+            # prefer that as the canonical commit for reporting.
+            try:
+                changed = repo_changes.get("changed_files") if isinstance(repo_changes, dict) else None
+                if self.verbose:
+                    print(f"[Trinity] auto_commit: initial changed files={changed}")
+                if commit_hash and changed:
+                    # check HEAD
+                    files_in_head = self._run_git_command(["git", "show", "--name-only", "--pretty=format:", "HEAD"], root, env)
+                    head_files = set((files_in_head.stdout or "").splitlines())
+                    if not any(f in head_files for f in (changed or [])):
+                        # search recent commits for a commit that contains any of the changed files
+                        for rev in ["HEAD", "HEAD~1", "HEAD~2", "HEAD~3", "HEAD~4"]:
+                            out = self._run_git_command(["git", "show", "--name-only", "--pretty=format:", rev], root, env)
+                            files = set((out.stdout or "").splitlines())
+                            if any(f in files for f in (changed or [])):
+                                h = self._run_git_command(["git", "rev-parse", "--verify", rev], root, env)
+                                if h.returncode == 0:
+                                    new_hash = (h.stdout or "").strip()
+                                    if self.verbose:
+                                        print(f"[Trinity] auto_commit: found changed files in {rev} -> {new_hash}")
+                                    commit_hash = new_hash
+                                break
+                    # If no explicit changed files were passed (second pass), but HEAD
+                    # only contains the last-response file, prefer the nearest recent
+                    # commit that contains other files (user changes / structure).
+                    if (not changed) and head_files == {self.LAST_RESPONSE_FILE}:
+                        for rev in ["HEAD~1", "HEAD~2", "HEAD~3", "HEAD~4"]:
+                            out = self._run_git_command(["git", "show", "--name-only", "--pretty=format:", rev], root, env)
+                            files = set((out.stdout or "").splitlines())
+                            if files and files != {self.LAST_RESPONSE_FILE}:
+                                h = self._run_git_command(["git", "rev-parse", "--verify", rev], root, env)
+                                if h.returncode == 0:
+                                    commit_hash = (h.stdout or "").strip()
+                                    if self.verbose:
+                                        print(f"[Trinity] auto_commit: preferring previous commit {commit_hash} containing files: {files}")
+                                break
+            except Exception:
+                # best-effort only; failures here shouldn't fail the overall commit
+                pass
+
             return {
                 "ok": True,
                 "skipped": commit_result.get("skipped", False),
@@ -1945,6 +1992,8 @@ Return JSON with ONLY the replacement step.'''))
         add = self._run_git_command(["git", "add", "."], root, env)
         if add.returncode != 0:
             return {"ok": False, "error": (add.stderr or "").strip() or "git add failed"}
+        if self.verbose:
+            print(f"[Trinity] _create_commit: git add . stdout={add.stdout!r} stderr={add.stderr!r}")
 
         # Prepare commit message
         short_task = self._short_task_for_commit(task)
@@ -1958,9 +2007,17 @@ Return JSON with ONLY the replacement step.'''))
         if diff_stat:
             commit_cmd.extend(["-m", f"Diff stat:\n{diff_stat}"])
 
+        # If there are no changes to commit, skip creating a new empty commit.
+        # We still allow later amend operations to attach response/structure to
+        # the existing last commit.
+        if not has_changes:
+            return {"ok": True, "skipped": True, "reason": "no_changes"}
+
         env_commit = env.copy()
         env_commit["TRINITY_POST_COMMIT_RUNNING"] = "1"
         commit = self._run_git_command(commit_cmd, root, env_commit)
+        if self.verbose:
+            print(f"[Trinity] _create_commit: commit return={commit.returncode} stdout={commit.stdout!r} stderr={commit.stderr!r}")
 
         if commit.returncode != 0:
             combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
@@ -1975,6 +2032,15 @@ Return JSON with ONLY the replacement step.'''))
         structure_ok = self._regenerate_project_structure(report)
         response_path = os.path.join(root, self.LAST_RESPONSE_FILE)
 
+        # Ensure the index mirrors the current HEAD so that an amend will
+        # preserve previously committed files. Then stage all working-tree
+        # changes (including untracked files) so the amend contains both
+        # existing and new artifacts (structure file, response, user edits).
+        r = self._run_git_command(["git", "reset", "--mixed", "HEAD"], root, env)
+        a = self._run_git_command(["git", "add", "-A"], root, env)
+        if self.verbose:
+            print(f"[Trinity] _stage_and_amend: reset rc={r.returncode} addA rc={a.returncode} add_stdout={a.stdout!r} add_err={a.stderr!r}")
+
         # Stage response file
         if os.path.exists(response_path):
             self._run_git_command(["git", "add", self.LAST_RESPONSE_FILE], root, env)
@@ -1985,10 +2051,14 @@ Return JSON with ONLY the replacement step.'''))
 
         # Check if we need to amend
         cached = self._run_git_command(["git", "diff", "--cached", "--quiet"], root, env)
+        if self.verbose:
+            print(f"[Trinity] _stage_and_amend: diff --cached rc={cached.returncode}")
         if cached.returncode != 0:
             env_amend = env.copy()
             env_amend["TRINITY_POST_COMMIT_RUNNING"] = "1"
             amend = self._run_git_command(["git", "commit", "--amend", "--no-edit"], root, env_amend)
+            if self.verbose:
+                print(f"[Trinity] _stage_and_amend: amend rc={amend.returncode} out={amend.stdout!r} err={amend.stderr!r}")
             return amend.returncode == 0
         return False
 
@@ -2262,8 +2332,14 @@ Return JSON with ONLY the replacement step.'''))
 
         if outcome in {"completed", "success"}:
             commit_res = self._auto_commit_on_success(task=input_text, report=base_report, repo_changes=repo_changes)
-            if commit_res.get("ok") is True and not commit_res.get("skipped"):
-                commit_hash = str(commit_res.get("commit") or "").strip() or None
+            if commit_res.get("ok") is True:
+                # Even if the auto-commit step reported 'skipped' (no new commit
+                # created during this pass), prefer to report the current HEAD
+                # commit hash if one exists so the final report always references
+                # a concrete commit when repository changes were previously made.
+                h = self._run_git_command(["git", "rev-parse", "HEAD"], cwd, os.environ.copy())
+                if h.returncode == 0:
+                    commit_hash = (h.stdout or "").strip() or None
                 repo_changes = self._get_repo_changes()
 
         report = self._format_final_report(
@@ -2347,7 +2423,8 @@ Return JSON with ONLY the replacement step.'''))
             yield event
 
         # Steps 9-11: Completion
-        self._wrap_up_run(input_text, tracking)
+        # Yield final messages produced by wrap_up (commit/report)
+        yield from self._wrap_up_run(input_text, tracking)
 
     def _initialize_run(self, input_text, gui_mode, execution_mode, recursion_limit):
         """Initialize run state and checks. Returns (initial_state, gm, em, limit, type, routing, tracking) or None."""
@@ -2471,7 +2548,20 @@ Return JSON with ONLY the replacement step.'''))
         if commit_hash is None:
             self._save_response_file(report)
 
-        # Step 14: Yield final result
-        final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
+        # Step 14: Yield final result. Include last workflow atlas messages if present
+        prev_msgs = []
+        try:
+            last_state = tracking.get("last_state_update") or {}
+            prev_msgs = last_state.get("messages") or []
+            # Ensure these are message objects (HumanMessage/AIMessage)
+            prev_msgs = [m for m in prev_msgs if hasattr(m, "content")]
+        except Exception:
+            prev_msgs = []
+
+        if prev_msgs:
+            final_messages = prev_msgs + [AIMessage(content=report)]
+        else:
+            final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
+
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
 

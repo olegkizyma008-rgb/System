@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 13:30:43  2025
+Generated: Mon Dec 22 15:43:09  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -56,14 +56,15 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 
 ### Project Statistics
-  - Python files: 20373
-  - Test files: 17
-  - Documentation files: 13
+  - Python files: 20375
+  - Test files: 18
+  - Documentation files: 14
   - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  9a0f606c feat: Enhance cleanup scripts with unmounting functionality and improved app removal process
+  fadf1de7 feat: Enable universal editor cleanup and improve error handling in various modules
+  6429924b feat: Enhance cleanup scripts with unmounting functionality and improved app removal process
   73c5357c feat: Enhance cleanup functionality with optional keyword arguments and improved logging in cleanup thread
   1e42fbc8 feat: Enhance Atlas planning with critical anti-premature-completion rules and improve global goal validation in Trinity
   26b7465f fix: CAPTCHA detection and Grisha override bug for film search
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   8f211b97 Refactor handle_command in commands.py to reduce cognitive complexity
   7b50c245 Refactor verification.py and utils.py for lower cognitive complexity
   911e7ffd Refactor test_logic.py to reduce cognitive complexity
-  f5306a10 Refactor high complexity functions: _tetyana_node, trinity.run, cli_command handlers, and keybindings
 ```
 
 ## Project Structure
@@ -405,6 +405,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── atlas2.md
 │   ├── COMPREHENSIVE_ANONYMITY_SYSTEM.md
 │   ├── MIKROTIK_WIFI_SPOOFING.md
+│   ├── SETUP_CHROMA.md
 │   ├── sonar.md
 │   ├── TRINITY_COMPLETE_REPORT.md
 │   ├── TRINITY_DOCUMENTATION_INDEX.md
@@ -507,6 +508,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── demo_sonarqube_atlas.py
 │   ├── fetch_critical_issues.py
 │   ├── fix_mcp_server.py
+│   ├── setup_chroma.sh
 │   └── test_sonar_connection.py
 ├── server_registration.log
 ├── setup.cfg
@@ -590,6 +592,7 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── test_intent_routing.py
 │   ├── test_mcp_browser.py
 │   ├── test_mcp_registry.py
+│   ├── test_monitoring_trace.py
 │   ├── test_parallel_executor.py
 │   ├── test_trinity_autocommit.py
 │   ├── test_trinity_models.py
@@ -597,6 +600,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── test_vision_find_image.py
 │   ├── test_vision_system.py
 │   └── verify_vision_fix.py
+├── tmp
+│   └── run_trinity_test.py
 ├── tui
 │   ├── __init__.py
 │   ├── agents.py
@@ -648,6 +653,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
     ├── test_modern_enhancements.py
     └── verify_website.py
 
-181 directories, 389 files
+182 directories, 393 files
 
 ```
