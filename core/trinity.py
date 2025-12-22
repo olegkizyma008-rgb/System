@@ -1035,7 +1035,10 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
                 "last_msg_preview": str(last_msg)[:200],
             })
         except Exception:
-        def _tetyana_node(self, state: TrinityState):
+            pass
+
+    def _tetyana_node(self, state: TrinityState):
+
         """Executes the next step in the plan using Tetyana (Executor)."""
         if self.verbose: print(f"🔧 {VOICE_MARKER} [Tetyana] Executing step...")
         context = state.get("messages", [])
@@ -1365,7 +1368,7 @@ Return JSON with ONLY the replacement step. I will prepend it to the remaining p
         lower = content.lower()
         res_str = "\n".join(executed_results).lower()
         
-        if any(m in lower for f"[{m}]" in lower or m in lower for m in FAILURE_MARKERS) or "[test_verification]" in lower and "failed" in lower:
+        if any(m in lower or f"[{m}]" in lower for m in FAILURE_MARKERS) or ("[test_verification]" in lower and "failed" in lower):
             return "failed", "meta_planner"
         if '"status": "error"' in res_str:
             return "failed", "meta_planner"

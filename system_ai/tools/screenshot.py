@@ -314,8 +314,7 @@ def _build_success_response(tool: str, res: Dict[str, Any], focus_id: str) -> Di
         "focus": focus_id,
         "diff_bbox": res["bbox"]
     }
-    except Exception as e:
-        return {"tool": "take_screenshot", "status": "error", "error": str(e)}
+
 
 def _get_app_geometry(app_name: str, window_title: Optional[str] = None) -> Optional[Dict[str, int]]:
     # If window_title provided, filter by it. otherwise get window 1.
