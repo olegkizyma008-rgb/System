@@ -235,6 +235,12 @@ EDITOR_PROCESS_NAMES[windsurf]="Windsurf"
 EDITOR_PROCESS_NAMES[cursor]="Cursor"
 EDITOR_PROCESS_NAMES[antigravity]="Antigravity"
 
+# Hidden paths to clean for specific editors
+declare -A EDITOR_HIDDEN_PATHS
+EDITOR_HIDDEN_PATHS[antigravity]="$HOME/.antigravity"
+EDITOR_HIDDEN_PATHS[windsurf]="$HOME/.codeium"
+EDITOR_HIDDEN_PATHS[vscode]="$HOME/.vscode"
+
 declare -A EDITOR_BUNDLE_IDS
 EDITOR_BUNDLE_IDS[vscode]="com.microsoft.VSCode"
 EDITOR_BUNDLE_IDS[windsurf]="com.exafunction.windsurf"
@@ -334,6 +340,12 @@ cleanup_editor_caches() {
     for path in "${cache_paths[@]}"; do
         safe_remove "$path"
     done
+
+    # Clean hidden paths if defined
+    local hidden_path="${EDITOR_HIDDEN_PATHS[$editor]}"
+    if [ -n "$hidden_path" ]; then
+        safe_remove "$hidden_path"
+    fi
 }
 
 cleanup_editor_keychain() {

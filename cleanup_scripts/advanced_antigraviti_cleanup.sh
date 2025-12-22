@@ -20,7 +20,7 @@ print_info "Розширене очищення всіх ідентифікат�
 echo ""
 
 # Загальна кількість кроків: 12
-TOTAL_STEPS=12
+TOTAL_STEPS=13
 
 # 1. Зупинка всіх процесів та відмонтування DMG
 print_step 1 $TOTAL_STEPS "Зупинка всіх пов'язаних процесів..."
@@ -73,6 +73,7 @@ ANTIGRAVITY_PATHS=(
     "$HOME/Library/Caches/Google/Antigravity"
     "$HOME/Library/Preferences/com.google.antigravity.plist"
     "$HOME/Library/Saved Application State/com.google.antigravity.savedState"
+    "$HOME/.antigravity"
 )
 
 for path in "${ANTIGRAVITY_PATHS[@]}"; do
@@ -85,10 +86,32 @@ safe_remove_glob "$HOME/Library/Group Containers/*antigravity*"
 safe_remove_glob "$HOME/Library/Application Scripts/*antigravity*"
 safe_remove_glob "$HOME/Library/HTTPStorages/*antigravity*"
 safe_remove_glob "$HOME/Library/WebKit/*antigravity*"
-print_success "Базові директорії очищено"
+print_success "Базові директорії очищено (включаючи .antigravity)"
 
-# 3. Видалення Chrome IndexedDB даних
-print_step 3 $TOTAL_STEPS "Очищення Chrome IndexedDB даних..."
+# 3. Аналіз бази даних моніторингу для пошуку динамічних слідів
+print_step 3 $TOTAL_STEPS "Аналіз бази даних моніторингу..."
+MONITOR_DB="${SYSTEM_MONITOR_EVENTS_DB_PATH:-$HOME/.system_cli/monitor_events.db}"
+if [ -f "$MONITOR_DB" ]; then
+    print_info "Пошук додаткових слідів у $MONITOR_DB"
+    # Шукаємо шляхи, які Antigravity відкривав, але яких немає у стандартному списку
+    DYNAMIC_TRACES=$(sqlite3 "$MONITOR_DB" "SELECT DISTINCT src_path FROM events WHERE src_path LIKE '%antigravity%' OR process LIKE '%antigravity%' LIMIT 500;" 2>/dev/null)
+    if [ -n "$DYNAMIC_TRACES" ]; then
+        echo "$DYNAMIC_TRACES" | while read -r trace; do
+            if [[ "$trace" == /Users/* ]] || [[ "$trace" == /private/var/* ]] || [[ "$trace" == /tmp/* ]]; then
+                if [ -e "$trace" ]; then
+                   print_info "Видалення динамічного сліду: $trace"
+                   safe_remove "$trace"
+                fi
+            fi
+        done
+    fi
+    print_success "Динамічні сліди з моніторингу оброблено"
+else
+    print_warning "Базу даних моніторингу не знайдено, пропускаємо динамічний аналіз"
+fi
+
+# 4. Видалення Chrome IndexedDB даних
+print_step 4 $TOTAL_STEPS "Очищення Chrome IndexedDB даних..."
 CHROME_DIR="$HOME/Library/Application Support/Google/Chrome"
 if [ -d "$CHROME_DIR" ]; then
     find "$CHROME_DIR" -iname "*antigravity*" -type d -exec rm -rf {} + 2>/dev/null
@@ -100,15 +123,15 @@ else
     print_info "Chrome не встановлено"
 fi
 
-# 4. Очищення браузерних даних Safari та Firefox
-print_step 4 $TOTAL_STEPS "Очищення браузерних даних Safari/Firefox..."
+# 5. Очищення браузерних даних Safari та Firefox
+print_step 5 $TOTAL_STEPS "Очищення браузерних даних Safari/Firefox..."
 safe_remove_glob "$HOME/Library/Safari/Databases/*antigravity*"
 safe_remove_glob "$HOME/Library/Safari/LocalStorage/*antigravity*"
 find "$HOME/Library/Application Support/Firefox" -iname "*antigravity*" -exec rm -rf {} + 2>/dev/null
 print_success "Браузерні дані очищено"
 
-# 5. Очищення Keychain
-print_step 5 $TOTAL_STEPS "Видалення токенів з Keychain..."
+# 6. Очищення Keychain
+print_step 6 $TOTAL_STEPS "Видалення токенів з Keychain..."
 ANTIGRAVITY_KEYCHAIN_SERVICES=(
     "Antigravity" "antigravity" "Google Antigravity"
     "antigravity.google.com" "api.antigravity.google.com"
@@ -122,50 +145,50 @@ for service in "${ANTIGRAVITY_KEYCHAIN_SERVICES[@]}"; do
 done
 print_success "Keychain очищено"
 
-# 6. Очищення системних логів та історії
-print_step 6 $TOTAL_STEPS "Очищення логів та історії..."
+# 7. Очищення системних логів та історії
+print_step 7 $TOTAL_STEPS "Очищення логів та історії..."
 safe_remove_glob "$HOME/Library/Logs/Antigravity*"
 safe_remove_glob "$HOME/Library/Logs/Google/Antigravity*"
 sed -i '' '/antigravity/Id' ~/.bash_history 2>/dev/null
 sed -i '' '/antigravity/Id' ~/.zsh_history 2>/dev/null
 print_success "Логи та історія очищено"
 
-# 7. Очищення тимчасових файлів та crash reports
-print_step 7 $TOTAL_STEPS "Очищення тимчасових файлів..."
+# 8. Очищення тимчасових файлів та crash reports
+print_step 8 $TOTAL_STEPS "Очищення тимчасових файлів..."
 safe_remove_glob "/tmp/*antigravity*"
 safe_remove_glob "/var/tmp/*antigravity*"
 safe_remove_glob "$HOME/Library/Application Support/CrashReporter/*antigravity*"
 safe_remove_glob "$HOME/Library/Application Support/CrashReporter/*Antigravity*"
 print_success "Тимчасові файли очищено"
 
-# 8. Очищення Gemini-пов'язаних даних
-print_step 8 $TOTAL_STEPS "Очищення Gemini-пов'язаних даних..."
+# 9. Очищення Gemini-пов'язаних даних
+print_step 9 $TOTAL_STEPS "Очищення Gemini-пов'язаних даних..."
 safe_remove_glob "$HOME/Library/Application Support/Gemini/Antigravity"
 safe_remove_glob "$HOME/Library/Application Support/Google/Gemini/Antigravity"
 safe_remove_glob "$HOME/Library/Caches/Gemini/Antigravity"
 safe_remove_glob "$HOME/Library/Caches/Google/Gemini/Antigravity"
 print_success "Gemini-дані очищено"
 
-# 9. Очищення пошукових індексів Spotlight
-print_step 9 $TOTAL_STEPS "Очищення пошукових індексів..."
+# 10. Очищення пошукових індексів Spotlight
+print_step 10 $TOTAL_STEPS "Очищення пошукових індексів..."
 mdimport -r "$HOME/Library/Application Support/Antigravity" 2>/dev/null
 mdimport -r "$HOME/Library/Application Support/Google/Antigravity" 2>/dev/null
 print_success "Пошукові індекси оновлено"
 
-# 10. Очищення системних preferences та defaults
-print_step 10 $TOTAL_STEPS "Очищення системних preferences..."
+# 11. Очищення системних preferences та defaults
+print_step 11 $TOTAL_STEPS "Очищення системних preferences..."
 defaults delete com.google.antigravity 2>/dev/null
 defaults delete com.google.Antigravity 2>/dev/null
 print_success "System preferences очищено"
 
-# 11. Очищення Gatekeeper quarantine атрибутів
-print_step 11 $TOTAL_STEPS "Очищення Gatekeeper quarantine..."
+# 12. Очищення Gatekeeper quarantine атрибутів
+print_step 12 $TOTAL_STEPS "Очищення Gatekeeper quarantine..."
 xattr -d com.apple.quarantine "/Applications/Antigravity.app" 2>/dev/null
 xattr -d com.apple.quarantine "$HOME/Applications/Antigravity.app" 2>/dev/null
 print_success "Gatekeeper атрибути очищено"
 
-# 12. Фінальне очищення залишків
-print_step 12 $TOTAL_STEPS "Фінальне очищення залишків..."
+# 13. Фінальне очищення залишків
+print_step 13 $TOTAL_STEPS "Фінальне очищення залишків..."
 REMAINING_PATHS=$(find "$HOME/Library" -iname "*antigravity*" 2>/dev/null | /usr/bin/head -n 100)
 if [ -n "$REMAINING_PATHS" ]; then
     echo "$REMAINING_PATHS" | while read -r path; do

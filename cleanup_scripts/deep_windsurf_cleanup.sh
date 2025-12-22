@@ -53,7 +53,7 @@ NEW_HOSTNAME=$(generate_hostname)
 ORIGINAL_HOSTNAME=$(scutil --get HostName 2>/dev/null || echo "DEVs-Mac-Studio")
 mkdir -p "$CONFIGS_DIR"
 
-TOTAL_STEPS=14
+TOTAL_STEPS=15
 
 WINDSURF_PATH="${EDITOR_PATHS[windsurf]}"
 
@@ -99,40 +99,61 @@ safe_remove ~/.config/Windsurf
 safe_remove ~/Library/Saved\ Application\ State/Windsurf.savedState
 safe_remove ~/Library/Saved\ Application\ State/com.windsurf.savedState
 
-# 2. ВИДАЛЕННЯ ДОДАТКУ
-print_step 2 $TOTAL_STEPS "Видалення додатку Windsurf..."
+# 2. Аналіз бази даних моніторингу для пошуку динамічних слідів
+print_step 2 $TOTAL_STEPS "Аналіз бази даних моніторингу..."
+MONITOR_DB="${SYSTEM_MONITOR_EVENTS_DB_PATH:-$HOME/.system_cli/monitor_events.db}"
+if [ -f "$MONITOR_DB" ]; then
+    print_info "Пошук додаткових слідів у $MONITOR_DB"
+    DYNAMIC_TRACES=$(sqlite3 "$MONITOR_DB" "SELECT DISTINCT src_path FROM events WHERE src_path LIKE '%windsurf%' OR process LIKE '%Windsurf%' LIMIT 500;" 2>/dev/null)
+    if [ -n "$DYNAMIC_TRACES" ]; then
+        echo "$DYNAMIC_TRACES" | while read -r trace; do
+            if [[ "$trace" == /Users/* ]] || [[ "$trace" == /private/var/* ]] || [[ "$trace" == /tmp/* ]]; then
+                if [ -e "$trace" ]; then
+                   print_info "Видалення динамічного сліду: $trace"
+                   safe_remove "$trace"
+                fi
+            fi
+        done
+    fi
+    print_success "Динамічні сліди з моніторингу оброблено"
+else
+    print_warning "Базу даних моніторингу не знайдено, пропускаємо динамічний аналіз"
+fi
+
+# 3. ВИДАЛЕННЯ ДОДАТКУ
+print_step 3 $TOTAL_STEPS "Видалення додатку Windsurf..."
 safe_remove /Applications/Windsurf.app
 print_success "Додаток видалено"
 
-# 3. КЕШІ
-print_step 3 $TOTAL_STEPS "Очищення кешів..."
+# 4. КЕШІ
+print_step 4 $TOTAL_STEPS "Очищення кешів..."
 safe_remove ~/Library/Caches/Windsurf
 safe_remove ~/Library/Caches/windsurf
 safe_remove_glob ~/Library/Caches/com.windsurf.*
 find ~/Library/Caches -iname "*windsurf*" -maxdepth 2 -exec rm -rf {} + 2>/dev/null
 print_success "Кеші очищено"
 
-# 4. CONTAINERS
-print_step 4 $TOTAL_STEPS "Видалення контейнерів..."
+# 5. CONTAINERS
+print_step 5 $TOTAL_STEPS "Видалення контейнерів..."
 find ~/Library/Containers -iname "*windsurf*" -exec rm -rf {} + 2>/dev/null
 find ~/Library/Group\ Containers -iname "*windsurf*" -exec rm -rf {} + 2>/dev/null
 print_success "Контейнери видалено"
 
-# 5. COOKIES
-print_step 5 $TOTAL_STEPS "Очищення cookies та веб-даних..."
+# 6. COOKIES
+print_step 6 $TOTAL_STEPS "Очищення cookies та веб-даних..."
 find ~/Library/Cookies -iname "*windsurf*" -exec rm -rf {} + 2>/dev/null
 safe_remove ~/Library/WebKit/Windsurf
 print_success "Cookies очищено"
 
-# 6. PLIST
-print_step 6 $TOTAL_STEPS "Видалення plist-файлів..."
+# 7. PLIST
+print_step 7 $TOTAL_STEPS "Видалення plist-файлів..."
 find ~/Library/Preferences -iname "*windsurf*.plist" -delete 2>/dev/null
 safe_remove ~/Library/Preferences/com.windsurf.plist
 safe_remove ~/Library/Preferences/com.windsurf.helper.plist
 print_success "Plist файли видалено"
 
-# 7. KEYCHAIN
-print_step 7 $TOTAL_STEPS "Очищення Keychain..."
+# 8. KEYCHAIN
+print_step 8 $TOTAL_STEPS "Очищення Keychain..."
 cleanup_editor_keychain "windsurf"
 # Додаткові сервіси
 for service in "codeium" "codeium.com" "api.codeium.com" "windsurf.com" "auth.windsurf.com" "codeium-windsurf" "Codeium Editor"; do
@@ -150,8 +171,8 @@ if [ "${UNSAFE_MODE}" != "1" ]; then
     exit 0
 fi
 
-# 8. Підміна ідентифікаторів
-print_step 8 $TOTAL_STEPS "Резервування та підміна ідентифікаторів..."
+# 9. Підміна ідентифікаторів
+print_step 9 $TOTAL_STEPS "Резервування та підміна ідентифікаторів..."
 BACKUP_DIR="/tmp/windsurf_backup_$(date +%s)"
 mkdir -p "$BACKUP_DIR"
 print_info "Директорія бекапів: $BACKUP_DIR"
@@ -187,8 +208,8 @@ cat > "$NEW_CONFIG_PATH/metadata.json" << EOF
 EOF
 print_success "Нову конфігурацію збережено: $NEW_HOSTNAME"
 
-# 9. РОЗШИРЕННЯ
-print_step 9 $TOTAL_STEPS "Видалення розширень..."
+# 10. РОЗШИРЕННЯ
+print_step 10 $TOTAL_STEPS "Видалення розширень..."
 safe_remove ~/.windsurf/extensions
 safe_remove ~/.vscode-windsurf
 safe_remove "$WINDSURF_PATH/extensions"
@@ -199,20 +220,20 @@ safe_remove "$WINDSURF_PATH/IndexedDB"
 safe_remove "$WINDSURF_PATH/Session Storage"
 print_success "Розширення видалено"
 
-# 10. HOSTNAME (видалено дублікат - використовуйте hostname_spoof.sh)
-print_step 10 $TOTAL_STEPS "Hostname..."
+# 11. HOSTNAME (видалено дублікат - використовуйте hostname_spoof.sh)
+print_step 11 $TOTAL_STEPS "Hostname..."
 print_info "Для зміни hostname використовуйте: ./hostname_spoof.sh"
 print_info "Поточний hostname: $(scutil --get HostName 2>/dev/null || echo 'не встановлено')"
 
-# 11. МЕРЕЖА
-print_step 11 $TOTAL_STEPS "Мережеві ідентифікатори..."
+# 12. МЕРЕЖА
+print_step 12 $TOTAL_STEPS "Мережеві ідентифікатори..."
 sudo dscacheutil -flushcache 2>/dev/null
 sudo killall -HUP mDNSResponder 2>/dev/null
 sudo arp -a -d 2>/dev/null
 print_success "Мережу оновлено"
 
-# 12. ФІНАЛЬНЕ ОЧИЩЕННЯ
-print_step 12 $TOTAL_STEPS "Фінальне очищення..."
+# 13. ФІНАЛЬНЕ ОЧИЩЕННЯ
+print_step 13 $TOTAL_STEPS "Фінальне очищення..."
 find ~/Library -iname "*windsurf*" -maxdepth 3 -not -path "*/Trash/*" -exec rm -rf {} + 2>/dev/null
 find ~/.config -iname "*windsurf*" -exec rm -rf {} + 2>/dev/null
 sudo rm -rf /var/log/*windsurf* 2>/dev/null
@@ -220,13 +241,13 @@ sudo rm -rf /Library/Logs/*windsurf* 2>/dev/null
 safe_remove "$WINDSURF_PATH"
 print_success "Фінальне очищення завершено"
 
-# 13. КЕШІ ІНСТРУМЕНТІВ
-print_step 13 $TOTAL_STEPS "Очищення кешів інструментів..."
+# 14. КЕШІ ІНСТРУМЕНТІВ
+print_step 14 $TOTAL_STEPS "Очищення кешів інструментів..."
 xcrun --kill-cache 2>/dev/null
 print_success "Кеші інструментів очищено"
 
-# 14. ІНСТАЛЯЦІЯ WINDSURF
-print_step 14 $TOTAL_STEPS "Інсталяція Windsurf..."
+# 15. ІНСТАЛЯЦІЯ WINDSURF
+print_step 15 $TOTAL_STEPS "Інсталяція Windsurf..."
 WINDSURF_DMG="$REPO_ROOT/Windsurf.dmg"
 WINDSURF_APP="$REPO_ROOT/Windsurf.app"
 
