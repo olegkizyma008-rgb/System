@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 02:49:04  2025
+Generated: Mon Dec 22 02:57:48  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -63,7 +63,8 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 ## Git History (Last 10 Commits)
 ```
-  000f4f5f Refactor _atlas_node in TrinityRuntime to reduce cognitive complexity
+  6840b73b Refactor TrinityRuntime: fix constant duplication and reduce complexity
+  3322b916 Refactor _atlas_node in TrinityRuntime to reduce cognitive complexity
   56cc249c chore: Update critical issues by adding a cognitive complexity issue and removing a string duplication issue, adjusting total effort and debt.
   5d6b0867 Fix syntax errors in core files preventing test collection
   cc47e420 Refactor CLI and TUI components to reduce cognitive complexity
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   7b5520b2 Refactor: Decompose complex functions and fix broad exceptions for SonarCloud compliance
   906e8adf Refactor: Broad SonarQube cleanup and complexity reduction
   a30ef7db Cleanup: Remove temporary test file
-  157e3968 Refactor: Finalize SonarQube cleanup and modularization
 ```
 
 ## Project Structure

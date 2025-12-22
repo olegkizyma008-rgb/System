@@ -76,6 +76,7 @@ class TrinityState(TypedDict):
 class TrinityRuntime:
     MAX_REPLANS = 10
     MAX_STEPS = 50
+    PROJECT_STRUCTURE_FILE = "project_structure_final.txt"
     
     # Dev task keywords (allow execution)
     DEV_KEYWORDS = set(DEV_KEYWORDS)
@@ -1592,56 +1593,57 @@ Return JSON with ONLY the replacement step.'''))
             if not git_root:
                 return ""
             
-            structure_file = os.path.join(git_root, "project_structure_final.txt")
+            structure_file = os.path.join(git_root, self.PROJECT_STRUCTURE_FILE)
             if not os.path.exists(structure_file):
                 return ""
             
             # Read only first part of file to avoid memory issues with huge files
-            # then process carefully
             with open(structure_file, 'r', encoding='utf-8') as f:
-                # Read up to 100kb of the file
                 content = f.read(100000)
             
-            # Extract key sections for context (Metadata, Program Execution Logs, Project Structure)
-            lines = content.split('\n')
-            context_lines = []
-            current_section = None
-            section_count = 0
-            
-            for line in lines:
-                # Each line limited to 500 chars to avoid prompt blowup
-                line = line[:500]
-                
-                # Identify sections
-                lstrip = line.strip()
-                if lstrip.startswith('## Metadata'):
-                    current_section = 'metadata'
-                    section_count = 0
-                elif '## Program Execution Logs' in lstrip:
-                    current_section = 'logs'
-                    section_count = 0
-                elif '## Project Structure' in lstrip:
-                    current_section = 'structure'
-                    section_count = 0
-                elif lstrip.startswith('## ') and current_section:
-                    # If it's a new section we don't care about, stop capturing
-                    if not any(x in lstrip for x in ['Metadata', 'Logs', 'Structure']):
-                        current_section = None
-                
-                # Collect lines (limit per section to avoid bias)
-                if current_section:
-                    if section_count < 30: # Max 30 lines per section
-                         if lstrip and not lstrip.startswith('```'):
-                            context_lines.append(line)
-                            section_count += 1
-            
-            # Final safety cut
-            return '\n'.join(context_lines[:150]) 
+            return self._parse_context_sections(content)
             
         except Exception as e:
             if self.verbose:
                 print(f"⚠️ [Trinity] Error reading project structure: {e}")
             return ""
+
+    def _parse_context_sections(self, content: str) -> str:
+        """Extract key sections (Metadata, Logs, Structure) from project structure file."""
+        lines = content.split('\n')
+        context_lines = []
+        current_section = None
+        section_count = 0
+        
+        for line in lines:
+            # Each line limited to 500 chars to avoid prompt blowup
+            line = line[:500]
+            lstrip = line.strip()
+            
+            # Identify or switch sections
+            new_section = self._identify_structure_section(lstrip, current_section)
+            if new_section != current_section:
+                current_section = new_section
+                section_count = 0
+            
+            # Collect lines
+            if current_section and section_count < 30:
+                 if lstrip and not lstrip.startswith('```'):
+                    context_lines.append(line)
+                    section_count += 1
+        
+        return '\n'.join(context_lines[:150])
+
+    def _identify_structure_section(self, lstrip: str, current_section: Optional[str]) -> Optional[str]:
+        """Identify which section a line belongs to."""
+        if lstrip.startswith('## Metadata'): return 'metadata'
+        if '## Program Execution Logs' in lstrip: return 'logs'
+        if '## Project Structure' in lstrip: return 'structure'
+        
+        if lstrip.startswith('## ') and current_section:
+            # New section that isn't one of the known ones -> exit section
+            return None
+        return current_section
 
     def _regenerate_project_structure(self, response_text: str) -> bool:
         """Regenerate project_structure_final.txt with last response."""
@@ -1839,9 +1841,9 @@ Return JSON with ONLY the replacement step.'''))
                     env=env,
                 )
 
-            if structure_ok and os.path.exists(os.path.join(root, "project_structure_final.txt")):
+            if structure_ok and os.path.exists(os.path.join(root, self.PROJECT_STRUCTURE_FILE)):
                 subprocess.run(
-                    ["git", "add", "-f", "project_structure_final.txt"],
+                    ["git", "add", "-f", self.PROJECT_STRUCTURE_FILE],
                     cwd=root,
                     capture_output=True,
                     text=True,
