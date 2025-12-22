@@ -400,8 +400,11 @@ class CodeSelfHealer:
                         continue
                     match = re.search(pattern, line, re.IGNORECASE)
                     if match:
-                        # Skip if current file should be ignored
+                        # Skip if current file should be ignored (temp/test files filtered out)
                         if current_file is None:
+                            # File was filtered - clear stack and skip this error entirely
+                            current_stack = []
+                            current_line = None
                             break
                         
                         # Prefer the more descriptive capture group when available
