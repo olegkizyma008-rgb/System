@@ -13,6 +13,13 @@ from datetime import datetime
 # Module logger
 logger = logging.getLogger(__name__)
 
+# Simple in-memory metrics for observability
+METRICS = {
+    "screenshot_total": 0,
+    "screenshot_success": 0,
+    "screenshot_failure": 0
+}
+
 
 def get_frontmost_app() -> Dict[str, Any]:
     """Get information about the currently active (frontmost) application on macOS.
@@ -224,9 +231,17 @@ def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] 
         img, mss_error = _capture_with_mss(region)
         
         if img is None:
-            return _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id)
+            fallback_res = _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id)
+            # If fallback failed, count it in metrics
+            if fallback_res.get("status") == "error":
+                METRICS["screenshot_total"] += 1
+                METRICS["screenshot_failure"] += 1
+            return fallback_res
 
         res = manager.process_screenshot(img, focus_id)
+        # success metrics
+        METRICS["screenshot_total"] += 1
+        METRICS["screenshot_success"] += 1
         return _build_success_response("take_screenshot", res, focus_id)
         
     except Exception as e:
@@ -236,12 +251,20 @@ def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] 
             logger.exception("take_screenshot failed")
         except Exception:
             pass
+        # failure metrics
+        METRICS["screenshot_total"] += 1
+        METRICS["screenshot_failure"] += 1
         return {
             "tool": "take_screenshot",
             "status": "error",
             "error": str(e),
             "traceback": tb
         }
+
+
+def get_metrics() -> Dict[str, int]:
+    """Return a copy of the current simple metrics."""
+    return dict(METRICS)
 
 def _auto_detect_frontmost(window_title: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
     frontmost = get_frontmost_app()
