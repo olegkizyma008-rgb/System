@@ -183,7 +183,6 @@ class MCPToolRegistry:
         self._register_recorder_tools()
         self._register_response_tools()
         self._register_plugin_tools()
-        self._register_plugin_tools()
         
         # Initialize Dual Client Manager
         from mcp_integration.core.mcp_client_manager import get_mcp_client_manager, MCPClientType
@@ -225,10 +224,6 @@ class MCPToolRegistry:
         # Log confirmation of low-level tool availability (User Request)
         print("✅ [MCP] Low-level tools available: run_shell, run_applescript, open_app, run_shortcut")
 
-        self.register_tool("run_shell", self._run_shell_wrapped, "Execute shell command. Args: command (str), allow=True")
-        self.register_tool("open_app", self._open_app_wrapped, "Open MacOS Application. Args: name (str)")
-        self.register_tool("run_applescript", lambda script, allow=True: run_applescript(script=script, allow=allow), "Run AppleScript. Args: script (str)")
-        self.register_tool("run_shortcut", self._run_shortcut_wrapped, "Run Shortcuts automation. Args: name (str), allow=True")
 
         self.register_tool(
             "native_applescript",
@@ -485,31 +480,48 @@ class MCPToolRegistry:
         import platform
         
         # Use the installed executeautomation playwright-mcp-server
-        # -y flag auto-confirms installation if needed
-        playwright_args = ["-y", "@executeautomation/playwright-mcp-server"]
+    def _register_external_mcp(self):
+        """Register external MCP servers (Playwright, AppleScript, etc.) from config."""
+        import os
+        import json
         
-        # AppleScript MCP server for native macOS automation
-        # NOTE: @mseep/applescript-mcp has no bin file, use @iflow-mcp/applescript-mcp instead
-        applescript_args = ["-y", "@iflow-mcp/applescript-mcp"]
+        # Path to MCP config
+        config_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "mcp_integration", "config", "mcp_config.json"
+        )
         
-        # PyAutoGUI MCP server for GUI automation
-        pyautogui_args = []
+        if not os.path.exists(config_path):
+            print(f"⚠️ [MCP] Config not found at {config_path}")
+            return
 
-        providers = [
-            ("playwright", "npx", playwright_args),  # MCP server for browser automation (PRIORITY 1)
-            ("applescript", "npx", applescript_args),  # MCP server for macOS automation (PRIORITY 2)
-            ("pyautogui", "mcp-pyautogui-server", pyautogui_args),  # MCP server for GUI automation (PRIORITY 3)
-        ]
-
-        for name, cmd, args in providers:
-            try:
-                provider = ExternalMCPProvider(name, cmd, args)
-                self._external_providers[name] = provider
-                # Lazy loading: we don't connect yet, just register the intent
-                # Note: list_tools() will trigger connection if needed to get descriptions
-                print(f"[MCP] Registered external provider: {name}")
-            except Exception as e:
-                print(f"[MCP] Failed to initialize external provider {name}: {e}")
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                mcp_servers = config.get("mcpServers", {})
+            
+            # Register servers from config
+            for name, s_config in mcp_servers.items():
+                if name == "copilot" or name == "local_fallback":
+                    # Internal/client-side servers are handled by manager directly
+                    continue
+                    
+                cmd = s_config.get("command")
+                args = s_config.get("args", [])
+                
+                if cmd:
+                    try:
+                        # Skip if already registered (e.g. by a plugin)
+                        if name in self._external_providers:
+                            continue
+                            
+                        provider = ExternalMCPProvider(name, cmd, args)
+                        self._external_providers[name] = provider
+                        print(f"[MCP] Registered external provider: {name}")
+                    except Exception as e:
+                        print(f"[MCP] Failed to initialize external provider {name}: {e}")
+        except Exception as e:
+            print(f"⚠️ [MCP] Error loading external servers from config: {e}")
 
     def _adapt_args_for_mcp(self, local_name: str, mcp_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """Adapt local tool arguments to MCP server format."""

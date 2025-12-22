@@ -1282,54 +1282,6 @@ Return JSON with ONLY the replacement step.'''))
             "vision_context": self.vision_context_manager.get_context_for_api()
         }
 
-    def _tetyana_node(self, state: TrinityState):
-        if self.verbose: print("💻 [Tetyana] Developing...")
-        context = state.get("messages", [])
-        if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для виконання.")]}
-        # Safe content extraction - check for None and missing attribute
-        last_msg = getattr(context[-1], "content", "") if context and context[-1] is not None else ""
-        original_task = state.get("original_task") or ""
-
-        gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
-        execution_mode = str(state.get("execution_mode") or "native").strip().lower()
-        gui_fallback_attempted = bool(state.get("gui_fallback_attempted") or False)
-        task_type = str(state.get("task_type") or "").strip().upper()
-        requires_windsurf = bool(state.get("requires_windsurf") or False)
-        dev_edit_mode = str(state.get("dev_edit_mode") or ("windsurf" if requires_windsurf else "cli")).strip().lower()
-
-        # Respect global Doctor Vibe preference: if TRINITY_DEV_BY_VIBE is set,
-        # force dev edit handling to 'vibe' so Doctor Vibe becomes authoritative
-        try:
-            if self._is_env_true("TRINITY_DEV_BY_VIBE"):
-                dev_edit_mode = "vibe"
-                # Persist into state so downstream code and other checks see the mode
-                try:
-                    state["dev_edit_mode"] = "vibe"
-                    state["requires_windsurf"] = False
-                except Exception:
-                    pass
-                # Also ensure we don't require Windsurf when Vibe handles dev edits
-                requires_windsurf = False
-        except Exception:
-            pass
-        had_failure = False # Initialize for scope safety
-        # (no-op) start debug removed
-        
-        try:
-            plan_preview = state.get("plan")
-            trace(self.logger, "tetyana_enter", {
-                "task_type": task_type,
-                "requires_windsurf": requires_windsurf,
-                "dev_edit_mode": dev_edit_mode,
-                "execution_mode": execution_mode,
-                "gui_mode": gui_mode,
-                "gui_fallback_attempted": gui_fallback_attempted,
-                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
-                "last_msg_preview": str(last_msg)[:200],
-            })
-        except Exception:
-            pass
 
     def _tetyana_node(self, state: TrinityState):
         """Executes the next step in the plan using Tetyana (Executor)."""
