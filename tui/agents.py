@@ -328,7 +328,7 @@ def init_agent_tools() -> None:
     from tui.commands import tool_app_command
     from tui.monitoring import (
         tool_monitor_status, tool_monitor_set_source, tool_monitor_set_use_sudo,
-        tool_monitor_start, tool_monitor_stop
+        tool_monitor_start, tool_monitor_stop, tool_monitor_set_mode
     )
 
     agent_session.tools = [
@@ -374,6 +374,11 @@ def init_agent_tools() -> None:
             name="monitor_set_use_sudo",
             description="Toggle sudo usage for monitoring source fs_usage. args: {use_sudo: true|false}",
             handler=tool_monitor_set_use_sudo,
+        ),
+        AgentTool(
+            name="monitor_set_mode",
+            description="Set monitoring mode. args: {mode: auto|manual}",
+            handler=lambda args: tool_monitor_set_mode(args),
         ),
         AgentTool(
             name="monitor_start",

@@ -1398,10 +1398,77 @@ Return JSON with ONLY the replacement step.'''))
                 continue
 
             # Execution
+            # If Doctor Vibe is in charge for DEV edits, handle dev tools specially
+            dev_mode = str(state.get("dev_edit_mode") or "").strip().lower()
+            # TRINITY_VIBE_AUTO_APPLY: when set to a truthy value, Doctor Vibe will auto-apply
+            # approved dev edits (write_file/copy_file) instead of pausing for manual approval.
+            # This can be enabled via env var or by setting state["vibe_auto_apply"]. Default: off.
+            vibe_auto = bool(state.get("vibe_auto_apply") or self._is_env_true("TRINITY_VIBE_AUTO_APPLY"))
+
+            if dev_mode == "vibe" and name in {"open_file_in_windsurf", "send_to_windsurf", "open_project_in_windsurf"}:
+                # Skip opening Windsurf; either create a pause or auto-apply changes
+                if vibe_auto:
+                    results.append(f"[VIBE-AUTO] Skipped opening Windsurf for {args.get('path','')}")
+                    continue
+                results.append(f"[BLOCKED] {name}: Doctor Vibe required")
+                pause_info = {"permission": "doctor_vibe", "message": "Doctor Vibe: Manual dev intervention required"}
+                continue
+
+            if name in {"write_file", "copy_file"} and dev_mode == "vibe":
+                # Show diff preview and let Doctor Vibe auto-apply if enabled
+                path = args.get("path") or args.get("dst") or ""
+                old_content = ""
+                try:
+                    full = path if os.path.isabs(path) else os.path.join(self._get_git_root() or os.getcwd(), path)
+                    if os.path.exists(full):
+                        with open(full, "r", encoding="utf-8", errors="ignore") as f:
+                            old_content = f.read()
+                except Exception:
+                    old_content = ""
+
+                new_content = args.get("content") or ""
+                import difflib
+                diff = "\n".join(difflib.unified_diff(old_content.splitlines(), str(new_content).splitlines(), lineterm="", n=3))
+
+                # Notify Doctor Vibe with diagnostics before applying
+                diag = {"files": [path], "diffs": [{"file": path, "diff": diff}], "stack_trace": None}
+                self.vibe_assistant.handle_pause_request({"reason": "doctor_vibe_edit", "message": f"Doctor Vibe: Applying changes to {path}", "diagnostics": diag})
+
+                if not vibe_auto:
+                    # Pause execution to wait for human approval
+                    pause_info = {"permission": "doctor_vibe", "message": "Doctor Vibe: Awaiting human approval for edit"}
+                    results.append(f"[PENDING VIBE] {path}")
+                    continue
+
+                # auto-apply: execute write via registry
+                try:
+                    res_str = self.registry.execute(name, args)
+                except Exception as e:
+                    res_str = f"Error: {e}"
+
+                # after apply, show confirmation with diff
+                self.vibe_assistant.handle_pause_request({"reason": "doctor_vibe_edit_done", "message": f"Doctor Vibe: Applied changes to {path}", "diagnostics": {"files": [path], "diffs": [{"file": path, "diff": diff}]}})
+                results.append(f"Result for {name}: {res_str}")
+                if self._is_execution_failure(res_str):
+                    had_failure = True
+                continue
+
             if name in {"browser_get_links", "browser_get_text", "browser_get_visible_html", "browser_screenshot"}:
                 time.sleep(2.0)
-            
-            res_str = self.registry.execute(name, args)
+
+            # For run_shell, inject sudo password if requested and available
+            if name == "run_shell":
+                if args.get("use_sudo") and str(os.getenv("SUDO_PASSWORD") or "").strip():
+                    cmd = args.get("cmd") or args.get("command") or ""
+                    if cmd:
+                        sudo_prefix = f"echo {os.getenv('SUDO_PASSWORD')} | sudo -S "
+                        args = {**args, "cmd": sudo_prefix + cmd}
+
+            res_str = None
+            try:
+                res_str = self.registry.execute(name, args)
+            except Exception as e:
+                res_str = f"Error: {e}"
             results.append(f"Result for {name}: {res_str}")
             
             # Failure tracking
@@ -1480,6 +1547,16 @@ Return JSON with ONLY the replacement step.'''))
             msg = "Actions completed." if self.preferred_language != "uk" else "Дії виконано."
             return f"{content}\n\n{STEP_COMPLETED_MARKER} {msg}"
         return content
+
+    def _is_env_true(self, name: str) -> bool:
+        """Helper to check boolean-ish environment variables.
+
+        Accepts common truthy values: 1, true, yes, on (case-insensitive).
+        """
+        try:
+            return str(os.getenv(name, "")).strip().lower() in {"1", "true", "yes", "on"}
+        except Exception:
+            return False
 
     def _finalize_tetyana_state(self, state, context, content, tool_calls, had_failure, pause_info):
         updated_messages = list(context) + [AIMessage(content=content)]
@@ -1751,6 +1828,42 @@ Return JSON with ONLY the replacement step.'''))
         """Check if new intervention is needed and handle it."""
         pause_context = self._check_for_vibe_assistant_intervention(state)
         if not pause_context:
+            # If there's no explicit pause context, check whether the next
+            # planned execution step would perform DEV edits via Windsurf or
+            # direct file writes while the runtime is configured to let
+            # Doctor Vibe handle DEV work. In that case, pre-emptively pause
+            # and notify Doctor Vibe so a human can intervene instead of
+            # launching Windsurf.
+            try:
+                dev_mode = str(state.get("dev_edit_mode") or "").strip().lower()
+                plan = state.get("plan") or []
+                # When TRINITY_VIBE_AUTO_APPLY is enabled, runtime will mark
+                # Doctor Vibe to auto-apply dev edits without creating a pause.
+                # This is controlled by env var (TRINITY_VIBE_AUTO_APPLY) or by
+                # state["vibe_auto_apply"] set earlier.
+                auto_apply = self._is_env_true("TRINITY_VIBE_AUTO_APPLY")
+                if dev_mode == "vibe" and plan:
+                    first = plan[0] if isinstance(plan, list) and plan else None
+                    if first:
+                        tools = first.get("tools") or []
+                        dev_tools = {"send_to_windsurf", "open_file_in_windsurf", "open_project_in_windsurf", "write_file", "copy_file"}
+                        if any((t.get("name") in dev_tools) for t in (tools or [])):
+                            if auto_apply:
+                                # Mark state to indicate Doctor Vibe will auto-apply dev changes
+                                state["vibe_auto_apply"] = True
+                                state["vibe_assistant_context"] = "AUTO-APPLY: Doctor Vibe will apply dev changes automatically"
+                                if self.verbose:
+                                    self.logger.info("🚀 Doctor Vibe: Auto-apply enabled, proceeding without opening Windsurf (dev_edit_mode=vibe)")
+                                return None
+                            else:
+                                new_state = self._create_vibe_assistant_pause_state(state, "doctor_vibe_dev", "Doctor Vibe: Manual dev intervention required for this step")
+                                # push the pause into the runtime state for handling
+                                state.update(new_state)
+                                if self.verbose:
+                                    self.logger.info("🚨 Doctor Vibe: Pre-emptive pause created to avoid Windsurf edits (dev_edit_mode=vibe)")
+                                return current
+            except Exception:
+                pass
             return None
 
         # Try pre-emptive repair

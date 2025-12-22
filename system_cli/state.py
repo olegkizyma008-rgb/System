@@ -46,6 +46,7 @@ class AppState:
     monitor_active: bool = False
     monitor_source: str = "watchdog"
     monitor_use_sudo: bool = False
+    monitor_mode: str = "auto"
     ui_theme: str = "monaco"
     ui_lang: str = "uk"
     chat_lang: str = "uk"

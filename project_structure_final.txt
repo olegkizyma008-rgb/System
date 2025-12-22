@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 15:53:17  2025
+Generated: Mon Dec 22 16:21:16  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -56,14 +56,15 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 
 ### Project Statistics
-  - Python files: 20377
-  - Test files: 20
+  - Python files: 20384
+  - Test files: 27
   - Documentation files: 14
   - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  d43c7d94 feat: Implement diagnostics collection for Vibe pauses and add tests for DEV task handling
+  35f9beff feat: Enhance Doctor Vibe integration for DEV edits, including auto-apply functionality and diagnostics support
+  df41d689 feat: Implement diagnostics collection for Vibe pauses and add tests for DEV task handling
   5c302099 fix: Improve git root detection for repository changes in TrinityRuntime
   11d15421 feat: Enable universal editor cleanup and improve error handling in various modules
   6429924b feat: Enhance cleanup scripts with unmounting functionality and improved app removal process
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   26b7465f fix: CAPTCHA detection and Grisha override bug for film search
   3524b2d5 feat: Add MAX_REPLANS constant, refactor JSON extraction utility, and update critical issues report totals.
   f9beb344 Refactor copy_to_clipboard to reduce cognitive complexity
-  8f211b97 Refactor handle_command in commands.py to reduce cognitive complexity
 ```
 
 ## Project Structure
@@ -593,14 +593,21 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── test_intent_routing.py
 │   ├── test_mcp_browser.py
 │   ├── test_mcp_registry.py
+│   ├── test_monitor_auto_select.py
 │   ├── test_monitoring_trace.py
 │   ├── test_parallel_executor.py
+│   ├── test_router_vibe_pause.py
+│   ├── test_self_healing_quick_repair.py
 │   ├── test_trinity_autocommit.py
+│   ├── test_trinity_env_helper.py
 │   ├── test_trinity_models.py
 │   ├── test_tui_menu_struct.py
+│   ├── test_vibe_auto_apply.py
 │   ├── test_vibe_diagnostics.py
+│   ├── test_vibe_ui_hint.py
 │   ├── test_vision_find_image.py
 │   ├── test_vision_system.py
+│   ├── test_windsurf_vibe_block.py
 │   └── verify_vision_fix.py
 ├── tmp
 │   └── run_trinity_test.py
@@ -655,6 +662,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
     ├── test_modern_enhancements.py
     └── verify_website.py
 
-182 directories, 395 files
+182 directories, 402 files
 
 ```

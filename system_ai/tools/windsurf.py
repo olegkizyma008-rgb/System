@@ -97,6 +97,13 @@ def open_project_in_windsurf(path: str, new_window: bool = True) -> Dict[str, An
     if not p:
         return {"tool": "open_project_in_windsurf", "status": "error", "error": "Missing path"}
 
+    # If operator prefers Doctor Vibe to handle DEV edits, do not open Windsurf directly.
+    try:
+        if str(__import__("os").environ.get("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
+            return {"tool": "open_project_in_windsurf", "status": "blocked", "error": "Blocked by TRINITY_DEV_BY_VIBE: Doctor Vibe should handle opening projects"}
+    except Exception:
+        pass
+
     p = os.path.abspath(os.path.expanduser(p))
     tool_path = shutil.which("windsurf")
 
@@ -164,6 +171,9 @@ def send_to_windsurf(message: str) -> Dict[str, Any]:
     
     # We sanitize the script execution
     try:
+        # If Doctor Vibe mode is enabled, block direct sends to Windsurf
+        if str(__import__("os").environ.get("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
+            return {"tool": "send_to_windsurf", "status": "blocked", "error": "Blocked by TRINITY_DEV_BY_VIBE: Doctor Vibe should handle chat sends"}
         result = run_applescript(script, allow=True)
         if result.get("status") == "success":
              return {"tool": "send_to_windsurf", "status": "success", "message_sent": True}
@@ -180,6 +190,9 @@ def open_file_in_windsurf(path: str, line: int = 0) -> Dict[str, Any]:
     tool_path = shutil.which("windsurf")
     
     try:
+        # Respect Doctor Vibe preference and avoid opening Windsurf directly
+        if str(__import__("os").environ.get("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
+            return {"tool": "open_file_in_windsurf", "status": "blocked", "error": "Blocked by TRINITY_DEV_BY_VIBE: Doctor Vibe should handle file opens"}
         if tool_path:
             cmd = [tool_path, path]
             if line > 0:

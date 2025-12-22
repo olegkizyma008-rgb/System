@@ -485,6 +485,7 @@ def _render_monitor_control_menu(ctx: dict) -> List[Tuple[str, str]]:
     state_line = "ACTIVE" if state.monitor_active else "INACTIVE"
     result.append((STYLE_MENU_ITEM, f" State: {state_line}\n"))
     result.append((STYLE_MENU_ITEM, f" Source: {state.monitor_source}\n"))
+    result.append((STYLE_MENU_ITEM, f" Mode: {state.monitor_mode}\n"))
     
     if state.monitor_source in {"fs_usage", "opensnoop"}:
         sudo_line = "ON" if state.monitor_use_sudo else "OFF"

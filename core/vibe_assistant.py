@@ -79,6 +79,35 @@ class VibeCLIAssistant:
                 print(f"     Серйозність: {issue_severity}")
                 print(f"     Повідомлення: {issue_message}...")
         
+        # Diagnostics: diffs, files, stack traces (if available)
+        diagnostics = pause_context.get('diagnostics') or {}
+        if diagnostics:
+            print("\n🔍 Діагностика:")
+            files = diagnostics.get('files') or []
+            if files:
+                print(f"  Файли: {', '.join(files[:10])}{'...' if len(files)>10 else ''}")
+
+            diffs = diagnostics.get('diffs') or []
+            if diffs:
+                print("  Diff preview:")
+                for d in diffs[:2]:
+                    fname = d.get('file') or '<unknown>'
+                    diff_text = d.get('diff') or ''
+                    # show up to first 6 lines of diff preview
+                    preview_lines = '\n'.join((diff_text or '').splitlines()[:6])
+                    print(f"  --- {fname} ---")
+                    for l in preview_lines.splitlines():
+                        print(f"    {l}")
+                    if len((diff_text or '').splitlines()) > 6:
+                        print("    ...diff truncated...")
+
+            stack = diagnostics.get('stack_trace')
+            if stack:
+                print("  Stack trace (tail):")
+                tail = '\n'.join(str(stack).splitlines()[-6:])
+                for l in tail.splitlines():
+                    print(f"    {l}")
+
         print("\n💡 Doctor Vibe рекомендує:")
         print("   - Перевірте виявлені помилки")
         print("   - Виправте проблеми в коді або конфігурації")

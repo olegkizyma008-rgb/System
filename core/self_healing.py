@@ -366,15 +366,26 @@ class CodeSelfHealer:
                         continue
                     match = re.search(pattern, line, re.IGNORECASE)
                     if match:
-                        severity = self._classify_severity(
-                            issue_type, current_file, match.group(1) if match.lastindex else ""
-                        )
+                        # Prefer the more descriptive capture group when available
+                        msg = None
+                        try:
+                            groups = match.groups()
+                            if len(groups) >= 2 and groups[1]:
+                                msg = groups[1]
+                            elif groups:
+                                msg = groups[-1]
+                        except Exception:
+                            msg = None
+
+                        msg = msg or line
+
+                        severity = self._classify_severity(issue_type, current_file, msg)
                         issue = CodeIssue(
                             issue_type=issue_type,
                             severity=severity,
                             file_path=current_file or "unknown",
                             line_number=current_line,
-                            message=match.group(1) if match.lastindex else line,
+                            message=msg,
                             stack_trace="\n".join(current_stack[-10:]),
                         )
                         issues.append(issue)
@@ -1093,7 +1104,7 @@ Output your repair plan as JSON with this structure:
     def _quick_fix_undefined_name(self, file_path: str, line_number: Optional[int], message: str) -> bool:
         """Fix undefined name errors."""
         # Extract the undefined name
-        match = re.search(r"name '([^']+)' is not defined", message)
+        match = re.search(r"name ['\"]([^'\"]+)['\"] is not defined", message)
         if not match:
             return False
         

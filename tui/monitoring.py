@@ -45,9 +45,21 @@ def load_monitor_settings() -> None:
         src = str(data.get("source") or "").strip().lower()
         if src in {"watchdog", "fs_usage", "opensnoop"}:
             state.monitor_source = src
+        # mode can be 'auto' or 'manual' (default auto)
+        mode = str(data.get("mode") or "auto").strip().lower()
+        if mode in {"auto", "manual"}:
+            state.monitor_mode = mode
+        else:
+            state.monitor_mode = "auto"
         use_sudo = data.get("use_sudo")
         if isinstance(use_sudo, bool):
             state.monitor_use_sudo = use_sudo
+        # If mode is auto, let the system choose sensible targets
+        try:
+            if state.monitor_mode == "auto":
+                monitor_auto_select_targets()
+        except Exception:
+            pass
     except Exception:
         return
 
@@ -59,6 +71,8 @@ def save_monitor_settings() -> bool:
         payload = {
             "source": state.monitor_source,
             "use_sudo": bool(state.monitor_use_sudo),
+            # mode: 'auto' or 'manual'
+            "mode": str(state.monitor_mode or "auto").strip().lower(),
         }
         with open(MONITOR_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -79,6 +93,63 @@ def load_monitor_targets() -> None:
             state.monitor_targets = {str(x) for x in selected if x}
     except Exception:
         return
+
+
+def monitor_auto_select_targets() -> None:
+    """Auto-select monitor targets based on running processes and common editors/browsers.
+
+    Populates `state.monitor_targets` with entries like `editor:Code`, `browser:Google Chrome`, and `network:all`.
+    This is a best-effort heuristic and is safe to call repeatedly.
+    """
+    try:
+        import subprocess
+
+        proc = subprocess.run(["ps", "-ax", "-o", "comm="], capture_output=True, text=True)
+        out = (proc.stdout or "").strip().splitlines()
+        names = [os.path.basename(x).strip() for x in out if x]
+
+        editors = set()
+        browsers = set()
+
+        for n in names:
+            ln = n.lower()
+            if any(k in ln for k in ["code", "vscode", "sublime", "pycharm", "idea", "windsurf"]):
+                editors.add(n)
+            if any(k in ln for k in ["chrome", "safari", "firefox", "chromium"]):
+                browsers.add(n)
+
+        new_targets = set()
+        for e in sorted(editors)[:3]:
+            new_targets.add(f"editor:{e}")
+        for b in sorted(browsers)[:3]:
+            new_targets.add(f"browser:{b}")
+
+        # Add a generic network target to allow network-level monitoring where supported
+        new_targets.add("network:all")
+
+        # If nothing found, include the home dir as fallback
+        if not new_targets:
+            new_targets.add("home:~/")
+
+        state.monitor_targets = new_targets
+        save_monitor_targets()
+    except Exception:
+        return
+
+
+def tool_monitor_set_mode(args: dict) -> dict:
+    """Agent tool: set monitoring mode to 'auto' or 'manual'.
+
+    If set to 'auto', this will run the auto target selection immediately.
+    """
+    mode = str((args or {}).get("mode") or "auto").strip().lower()
+    if mode not in {"auto", "manual"}:
+        return {"status": "error", "error": "mode must be 'auto' or 'manual'"}
+    state.monitor_mode = mode
+    saved = save_monitor_settings()
+    if mode == "auto":
+        monitor_auto_select_targets()
+    return {"status": "success", "mode": mode, "saved": bool(saved)}
 
 
 def save_monitor_targets() -> bool:
