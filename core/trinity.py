@@ -3093,6 +3093,44 @@ Return JSON with ONLY the replacement step.'''))
         except Exception as e:
             self.logger.exception(f"Trace run_end (phase 2) failed: {e}")
 
+        # Step 12.5: Record to learning memory if learning_mode is enabled and task succeeded
+        if self.learning_mode and outcome in {"completed", "success"}:
+            try:
+                from core.learning_memory import get_learning_memory
+                
+                # Extract execution history from tracking
+                history = tracking.get("last_state_update", {}).get("history_plan_execution", [])
+                steps = []
+                tools_used = set()
+                
+                for item in (history or []):
+                    if isinstance(item, dict):
+                        steps.append({
+                            "action": item.get("action", ""),
+                            "result": item.get("result", ""),
+                            "status": item.get("status", ""),
+                        })
+                        if item.get("tool"):
+                            tools_used.add(item.get("tool"))
+                
+                learn_mem = get_learning_memory()
+                learn_mem.record_successful_execution(
+                    task=input_text,
+                    steps=steps,
+                    tools_used=list(tools_used),
+                    outcome=outcome,
+                    duration_ms=0,  # Could track timing if needed
+                    metadata={
+                        "task_type": tracking.get("last_state_update", {}).get("task_type", ""),
+                        "replan_count": tracking["last_replan_count"],
+                        "commit_hash": commit_hash,
+                    }
+                )
+                if self.verbose:
+                    print(f"📚 [Trinity] Learning: recorded successful execution for learning")
+            except Exception as e:
+                self.logger.exception(f"Learning memory recording failed: {e}")
+
         # Step 13: Save response file if no commit
         if commit_hash is None:
             self._save_response_file(report)

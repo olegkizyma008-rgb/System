@@ -342,6 +342,7 @@ def handle_command(cmd: str, wait: bool = False) -> None:
         "/agent-on": _cmd_agent_on,
         "/agent-off": _cmd_agent_off,
         "/memory-clear": _cmd_memory_clear,
+        "/memory": _cmd_memory,
     }
 
     handler = dispatch.get(command)
@@ -368,6 +369,7 @@ def _cmd_help(cmd, args, wait):
     log("/chat <message> (discussion only; execution via /task)", "info")
     log("/bootstrap <project_name> [parent_dir]", "info")
     log("/agent-reset | /agent-on | /agent-off", "info")
+    log("/memory stats|history|import|export|clear|help", "info")
 
 
 def _cmd_chat(cmd, args, wait):
@@ -456,6 +458,23 @@ def _cmd_memory_clear(cmd, args, wait):
             log(f"Memory clear failed: {res.get('error')}", "error")
     except Exception as e:
         log(f"Error clearing memory: {e}", "error")
+
+
+def _cmd_memory(cmd, args, wait):
+    """Handle /memory commands for memory manager."""
+    from tui.render import log
+    try:
+        from tui.memory_manager import handle_memory_chat_command
+        result = handle_memory_chat_command(args)
+        if result.get("status") == "success":
+            message = result.get("message", "OK")
+            log(message, "info")
+        else:
+            log(result.get("error", "Unknown error"), "error")
+    except ImportError:
+        log("Memory manager module not available", "error")
+    except Exception as e:
+        log(f"Memory command error: {e}", "error")
 
 
 def tool_app_command(args: Dict[str, Any]) -> Dict[str, Any]:

@@ -113,7 +113,7 @@ def build_menu(
             MenuLevel.LANGUAGE: _render_language_menu,
             MenuLevel.UNSAFE_MODE: _render_toggle_menu,
             MenuLevel.SELF_HEALING: _render_toggle_menu,
-            MenuLevel.LEARNING_MODE: _render_toggle_menu,
+            MenuLevel.MEMORY_MANAGER: _render_memory_manager_menu,
             MenuLevel.AUTOMATION_PERMISSIONS: _render_automation_permissions_menu,
             MenuLevel.LAYOUT: _render_layout_menu,
             MenuLevel.DEV_SETTINGS: _render_dev_settings_menu,
@@ -379,7 +379,7 @@ def _render_language_menu(ctx: dict) -> List[Tuple[str, str]]:
 
 
 def _render_toggle_menu(ctx: dict) -> List[Tuple[str, str]]:
-    """Render toggle menu (unsafe mode, self-healing, learning mode)."""
+    """Render toggle menu (unsafe mode, self-healing)."""
     state, tr, make_click = ctx["state"], ctx["tr"], ctx["make_click"]
     MenuLevel = ctx["MenuLevel"]
     
@@ -392,8 +392,8 @@ def _render_toggle_menu(ctx: dict) -> List[Tuple[str, str]]:
         title_key, label_key, attr = "menu.unsafe_mode.title", "menu.unsafe_mode.label", "ui_unsafe_mode"
     elif level == MenuLevel.SELF_HEALING:
         title_key, label_key, attr = "menu.self_healing.title", "menu.self_healing.label", "ui_self_healing"
-    else:  # LEARNING_MODE
-        title_key, label_key, attr = "menu.learning_mode.title", "menu.learning_mode.label", "learning_mode"
+    else:
+        return [(STYLE_MENU_ITEM, "(unknown toggle)")]
     
     result.append((STYLE_MENU_TITLE, f" {tr(title_key, state.ui_lang)}\n\n"))
     on = bool(getattr(state, attr, False))
@@ -620,3 +620,48 @@ def _render_locales_menu(ctx: dict) -> List[Tuple[str, str]]:
         
         result.append((style, f"{prefix}[P:{primary_mark}] [A:{active_mark}] {loc.code} - {loc.name} ({loc.group})\n", make_click(idx)))
     return result
+
+
+def _render_memory_manager_menu(ctx: dict) -> List[Tuple[str, str]]:
+    """Render memory manager menu."""
+    state, tr, make_click = ctx["state"], ctx["tr"], ctx["make_click"]
+    
+    result = []
+    _add_back_btn(result, ctx)
+    result.append((STYLE_MENU_TITLE, f" {tr('menu.memory_manager.title', state.ui_lang)}\n\n"))
+    
+    # Memory manager menu items
+    items = [
+        ("📊 Memory Statistics", "stats"),
+        ("📚 Learning History", "learning_history"),
+        ("🧠 Semantic Memory", "semantic"),
+        ("🎬 Episodic Memory", "episodic"),
+        ("⬇️ Import Examples", "import"),
+        ("⬆️ Export Data", "export"),
+        ("💾 Vector DB Management", "vector_db"),
+    ]
+    
+    _clamp_menu_index(state, len(items))
+    
+    for i, (label, _) in enumerate(items):
+        prefix, style = _get_item_style(i, state.menu_index)
+        result.append((style, f"{prefix}{label}\n", make_click(i)))
+    
+    result.append(("", "\n"))
+    
+    # Show memory stats summary at bottom
+    try:
+        from core.memory import get_hierarchical_memory
+        mem = get_hierarchical_memory()
+        stats = mem.get_stats()
+        
+        working = stats.get("working_memory", {}).get("active_items", 0)
+        episodic = stats.get("episodic_memory", {}).get("total_items", 0)
+        semantic = stats.get("semantic_memory", {}).get("total_items", 0)
+        
+        result.append((STYLE_MENU_ITEM, f" Working: {working} | Episodic: {episodic} | Semantic: {semantic}\n"))
+    except Exception:
+        result.append((STYLE_MENU_ITEM, " [Memory stats unavailable]\n"))
+    
+    return result
+

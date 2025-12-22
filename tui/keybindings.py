@@ -304,7 +304,7 @@ def _handle_menu_escape(ctx, event):
     llm_submenus = {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}
     settings_submenus = {MenuLevel.LLM_SETTINGS, MenuLevel.AGENT_SETTINGS, MenuLevel.APPEARANCE, MenuLevel.LANGUAGE, 
                          MenuLevel.LAYOUT, MenuLevel.UNSAFE_MODE, MenuLevel.AUTOMATION_PERMISSIONS, 
-                         MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING, MenuLevel.LEARNING_MODE}
+                         MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING, MenuLevel.MEMORY_MANAGER}
     main_submenus = {MenuLevel.SETTINGS, MenuLevel.CUSTOM_TASKS, MenuLevel.MONITORING, 
                      MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}
     
@@ -423,7 +423,7 @@ def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
         MenuLevel.AGENT_SETTINGS: lambda: _handle_agent_settings_enter(ctx),
         MenuLevel.UNSAFE_MODE: lambda: _handle_general_toggle_ctx(ctx, "ui_unsafe_mode", "Unsafe"),
         MenuLevel.SELF_HEALING: lambda: _handle_general_toggle_ctx(ctx, "ui_self_healing", "Self-healing"),
-        MenuLevel.LEARNING_MODE: lambda: _handle_general_toggle_ctx(ctx, "learning_mode", "Learning"),
+        MenuLevel.MEMORY_MANAGER: lambda: _handle_memory_manager_enter(ctx),
         MenuLevel.AUTOMATION_PERMISSIONS: lambda: None, # Placeholder, original had handle_automation_enter
         MenuLevel.DEV_SETTINGS: lambda: _toggle_dev_provider(ctx),
         MenuLevel.APPEARANCE: lambda: _set_theme(ctx),
@@ -562,6 +562,44 @@ def _handle_locales_enter(ctx):
     ctx["localization"].primary = loc.code
     ctx["localization"].selected = [loc.code] + [c for c in ctx["localization"].selected if c != loc.code]
     ctx["localization"].save(); ctx["log"](f"Primary set: {loc.code}", "action")
+
+def _handle_memory_manager_enter(ctx):
+    """Handle enter key in memory manager menu."""
+    state, log = ctx["state"], ctx["log"]
+    idx = state.menu_index
+    
+    # Memory manager menu items mapping
+    actions = [
+        "stats",           # 0: Memory Statistics
+        "learning_history", # 1: Learning History  
+        "semantic",        # 2: Semantic Memory
+        "episodic",        # 3: Episodic Memory
+        "import",          # 4: Import Examples
+        "export",          # 5: Export Data
+        "vector_db",       # 6: Vector DB Management
+    ]
+    
+    if idx >= len(actions):
+        return
+    
+    action = actions[idx]
+    
+    try:
+        from core.memory import get_hierarchical_memory
+        from tui.memory_manager import handle_memory_action
+        
+        result = handle_memory_action(action, get_hierarchical_memory())
+        if result.get("status") == "success":
+            log(result.get("message", f"Memory action '{action}' completed"), "action")
+        else:
+            log(result.get("error", f"Memory action '{action}' failed"), "error")
+    except ImportError:
+        # memory_manager module not yet created, show placeholder
+        log(f"Memory Manager: {action} (module not yet implemented)", "info")
+    except Exception as e:
+        log(f"Memory error: {e}", "error")
+    
+    ctx["force_ui_update"]()
 
 def _handle_monitor_targets_enter(ctx):
     if ctx["save_monitor_targets"](): ctx["log"](f"Monitor targets saved", "action")

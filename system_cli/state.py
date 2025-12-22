@@ -33,6 +33,7 @@ class MenuLevel(Enum):
     DEV_SETTINGS = "dev_settings"
     SELF_HEALING = "self_healing"
     LEARNING_MODE = "learning_mode"
+    MEMORY_MANAGER = "memory_manager"
 
 
 @dataclass

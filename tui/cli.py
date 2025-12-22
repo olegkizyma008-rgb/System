@@ -1630,7 +1630,7 @@ def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
         ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
         ("menu.settings.self_healing", MenuLevel.SELF_HEALING, None),
-        ("menu.settings.learning_mode", MenuLevel.LEARNING_MODE, None),
+        ("menu.settings.memory_manager", MenuLevel.MEMORY_MANAGER, None),
     ]
 
 
