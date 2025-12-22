@@ -682,35 +682,47 @@ def _tail_log_file(tail_active: threading.Event, log_file_path: Any, last_positi
         except Exception: pass
         threading.Event().wait(0.3)
 
-def _process_log_line(line: str, log: Callable):
-    parts = line.split('|')
-    msg = parts[-1].strip() if len(parts) >= 2 else line.strip()
+def _categorize_log_message(msg: str, line: str) -> tuple:
+    """Categorize log message and return (category, formatted_message)."""
     msg_lower = msg.lower()
     
-    # Categorization
     if 'result for' in msg_lower:
-        if any(x in msg_lower for x in ['error', 'failed', 'exception', '"status": "error"', 'permission_required']):
-            cat, msg = 'tool_fail', '✗ ' + msg
-        else:
-            cat, msg = 'tool_success', '✓ ' + msg
-    elif 'execute' in msg_lower and ('tool' in msg_lower or 'name' in msg_lower):
-        cat, msg = 'tool_run', '⚙ ' + msg
-    elif '[blocked]' in msg_lower:
-        cat, msg = 'tool_fail', '✗ ' + msg
-    elif 'error' in msg_lower or 'ERROR' in line:
-        cat = 'error'
-    elif '[TRACE]' in line or 'DEBUG' in line:
-        cat = 'info'
-    else:
-        cat = 'action'
+        has_error = any(x in msg_lower for x in ['error', 'failed', 'exception', '"status": "error"', 'permission_required'])
+        return ('tool_fail', '✗ ' + msg) if has_error else ('tool_success', '✓ ' + msg)
     
-    if len(msg) > 150: msg = msg[:147] + '...'
-    if msg: log(msg, cat)
+    if 'execute' in msg_lower and ('tool' in msg_lower or 'name' in msg_lower):
+        return 'tool_run', '⚙ ' + msg
+    
+    if '[blocked]' in msg_lower:
+        return 'tool_fail', '✗ ' + msg
+    
+    if 'error' in msg_lower or 'ERROR' in line:
+        return 'error', msg
+    
+    if '[TRACE]' in line or 'DEBUG' in line:
+        return 'info', msg
+    
+    return 'action', msg
+
+
+def _process_log_line(line: str, log: Callable):
+    """Process a log line and display in TUI."""
+    parts = line.split('|')
+    msg = parts[-1].strip() if len(parts) >= 2 else line.strip()
+    
+    cat, formatted_msg = _categorize_log_message(msg, line)
+    
+    if len(formatted_msg) > 150:
+        formatted_msg = formatted_msg[:147] + '...'
+    
+    if formatted_msg:
+        log(formatted_msg, cat)
     
     try:
         from tui.layout import force_ui_update
         force_ui_update()
-    except Exception: pass
+    except Exception:
+        pass
 
 # Backward compatibility aliases
 _load_env = load_env
@@ -725,64 +737,94 @@ _agent_send_no_stream = _agent_send_no_stream
 _run_graph_agent_task = run_graph_agent_task
 
 def _process_graph_events(runtime, user_text, gui_mode_val, exec_mode, use_stream, stream_line_by_agent):
+    """Process Trinity graph events and update TUI."""
     from tui.render import log, log_agent_message, log_reserve_line, log_replace_at
     from tui.commands import set_agent_pause
     from tui.messages import AgentType
-    
+
     event_count = 0
-    # Increased recursion limit for complex tasks
     for event in runtime.run(user_text, gui_mode=gui_mode_val, execution_mode=exec_mode, recursion_limit=500):
         event_count += 1
         print(f"DEBUG: Event {event_count} received")
+        
         for node_name, state_update in event.items():
             if not state_update or not isinstance(state_update, dict):
                 continue
             
             print(f"DEBUG: Processing node {node_name}")
-            agent_name = node_name.capitalize()
-            tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
-            messages = state_update.get("messages", [])
-            last_msg = messages[-1] if messages else None
-            
-            content = ""
-            if last_msg:
-                if hasattr(last_msg, "content"):
-                    content = str(last_msg.content or "")
-                elif isinstance(last_msg, dict):
-                    content = str(last_msg.get("content", ""))
-                else:
-                    content = str(last_msg)
-            
-            if not use_stream:
-                log(f"[{tag}] {content}", "info")
-            else:
-                idx = stream_line_by_agent.get(agent_name)
-                if idx is None:
-                    idx = log_reserve_line("action")
-                    stream_line_by_agent[agent_name] = idx
-                log_replace_at(idx, f"[{tag}] {content}", "action")
-
-            # Always update agent message panel for the final state of the node
-            try:
-                agent_type_map = {
-                    "atlas": AgentType.ATLAS,
-                    "tetyana": AgentType.TETYANA,
-                    "grisha": AgentType.GRISHA,
-                }
-                agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
-                log_agent_message(agent_type, content)
-                
-                # Log FINAL content to analysis log (only here, not in streaming)
-                from tui.render import log_agent_final
-                log_agent_final(agent_type, content)
-            except Exception:
-                pass
-            
-            pause_info = state_update.get("pause_info")
-            if pause_info:
-                perm = pause_info.get("permission", "unknown")
-                msg = pause_info.get("message", "Permission required")
-                set_agent_pause(pending_text=user_text, permission=perm, message=msg)
-                log(f"[{tag}] ⚠️ PAUSED: {msg}", "error")
+            result = _process_single_event(node_name, state_update, use_stream, stream_line_by_agent, user_text)
+            if result == "paused":
                 return
 
+
+def _extract_message_content(last_msg) -> str:
+    """Extract content string from message object."""
+    if not last_msg:
+        return ""
+    if hasattr(last_msg, "content"):
+        return str(last_msg.content or "")
+    if isinstance(last_msg, dict):
+        return str(last_msg.get("content", ""))
+    return str(last_msg)
+
+
+def _process_single_event(node_name, state_update, use_stream, stream_line_by_agent, user_text) -> str:
+    """Process a single graph event. Returns 'paused' if execution should stop."""
+    from tui.render import log, log_agent_message, log_reserve_line, log_replace_at, log_agent_final
+    from tui.commands import set_agent_pause
+    from tui.messages import AgentType
+    
+    agent_name = node_name.capitalize()
+    tag = str(node_name or agent_name or "TRINITY").strip().upper() or "TRINITY"
+    messages = state_update.get("messages", [])
+    last_msg = messages[-1] if messages else None
+    content = _extract_message_content(last_msg)
+    
+    # Log to TUI
+    _log_to_tui(tag, content, agent_name, use_stream, stream_line_by_agent)
+    
+    # Update agent panel
+    _update_agent_panel(agent_name, content)
+    
+    # Check for pause
+    pause_info = state_update.get("pause_info")
+    if pause_info:
+        perm = pause_info.get("permission", "unknown")
+        msg = pause_info.get("message", "Permission required")
+        set_agent_pause(pending_text=user_text, permission=perm, message=msg)
+        log(f"[{tag}] ⚠️ PAUSED: {msg}", "error")
+        return "paused"
+    
+    return "continue"
+
+
+def _log_to_tui(tag: str, content: str, agent_name: str, use_stream: bool, stream_line_by_agent: dict):
+    """Log event to TUI using appropriate method."""
+    from tui.render import log, log_reserve_line, log_replace_at
+    
+    if not use_stream:
+        log(f"[{tag}] {content}", "info")
+    else:
+        idx = stream_line_by_agent.get(agent_name)
+        if idx is None:
+            idx = log_reserve_line("action")
+            stream_line_by_agent[agent_name] = idx
+        log_replace_at(idx, f"[{tag}] {content}", "action")
+
+
+def _update_agent_panel(agent_name: str, content: str):
+    """Update agent message panel."""
+    try:
+        from tui.render import log_agent_message, log_agent_final
+        from tui.messages import AgentType
+        
+        agent_type_map = {
+            "atlas": AgentType.ATLAS,
+            "tetyana": AgentType.TETYANA,
+            "grisha": AgentType.GRISHA,
+        }
+        agent_type = agent_type_map.get(agent_name.lower(), AgentType.SYSTEM)
+        log_agent_message(agent_type, content)
+        log_agent_final(agent_type, content)
+    except Exception:
+        pass
