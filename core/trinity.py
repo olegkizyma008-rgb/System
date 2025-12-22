@@ -844,7 +844,17 @@ class TrinityRuntime:
             
             # 7. Check for completion or valid plan
             if isinstance(raw_plan_data, dict) and raw_plan_data.get("status") == "completed":
-                return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {raw_plan_data.get('message', 'Done.')}")]}
+                # Only accept "completed" if global goal is truly achieved
+                if self._is_global_goal_achieved(state, context):
+                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {raw_plan_data.get('message', 'Done.')}")]}
+                else:
+                    # Force LLM to generate remaining steps
+                    if self.verbose: print("⚠️ [Atlas] LLM claimed completion but global goal not achieved. Forcing continuation.")
+                    forced_plan = self._force_continuation_plan(state, context)
+                    if forced_plan:
+                        return self._atlas_dispatch(state, forced_plan, replan_count=replan_count)
+                    # If no forced plan, try to re-prompt with stronger instruction
+                    raw_plan_data = None
                 
             raw_plan = self._extract_raw_plan(raw_plan_data, meta_config)
             
@@ -997,6 +1007,90 @@ Return JSON with ONLY the replacement step.'''))
                 print(f"🔄 [Atlas] Using fallback plan due to error: {e}")
             fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana"}]
             return self._atlas_dispatch(state, fallback, replan_count=replan_count)
+
+    def _is_global_goal_achieved(self, state: TrinityState, context: list) -> bool:
+        """Check if the global goal was actually achieved based on task type and history."""
+        original_task = str(state.get("original_task", "")).lower()
+        is_media = state.get("is_media", False)
+        
+        # For media tasks, check if video/content is actually playing
+        if is_media:
+            history = state.get("history_plan_execution", [])
+            history_str = " ".join(str(h) for h in history).lower()
+            
+            # Media tasks require: search + select + play (+ optional fullscreen)
+            required_actions = ["search", "пошук", "google", "click", "відкри"]
+            completion_actions = ["play", "відтвор", "fullscreen", "весь екран", "video", "відео"]
+            
+            has_search = any(a in history_str for a in required_actions)
+            has_playback = any(a in history_str for a in completion_actions)
+            
+            # If only search/open was done but no playback, goal not achieved
+            if has_search and not has_playback:
+                if self.verbose: print(f"⚠️ [Atlas] Media task: search done but playback not confirmed")
+                return False
+                
+            # Check step count - media tasks typically need 4+ steps
+            step_count = state.get("step_count", 0)
+            if step_count < 3:
+                if self.verbose: print(f"⚠️ [Atlas] Media task: only {step_count} steps completed, likely incomplete")
+                return False
+        
+        # Check if last message indicates actual completion
+        if context:
+            last_content = str(getattr(context[-1], "content", "")).lower() if context[-1] else ""
+            completion_indicators = ["fullscreen", "весь екран", "playing", "відтворюється", "watching", "дивимось", "video started", "відео запущено"]
+            if any(ind in last_content for ind in completion_indicators):
+                return True
+        
+        # Default: check if plan was fully executed AND enough steps were done
+        plan = state.get("plan", [])
+        step_count = state.get("step_count", 0)
+        return len(plan) == 0 and step_count > 3
+
+    def _force_continuation_plan(self, state: TrinityState, context: list) -> list:
+        """Generate continuation plan when LLM incorrectly claims completion."""
+        original_task = str(state.get("original_task", "")).lower()
+        is_media = state.get("is_media", False)
+        history = state.get("history_plan_execution", [])
+        history_str = " ".join(str(h) for h in history).lower()
+        
+        if is_media:
+            # Check what stage we're at based on history
+            has_open = any(k in history_str for k in ["google", "browser", "браузер", "open", "відкри"])
+            has_search = any(k in history_str for k in ["search", "type", "пошук", "ввести"])
+            has_links = any(k in history_str for k in ["link", "result", "результат", "get_links"])
+            has_click = any(k in history_str for k in ["click", "select", "вибр", "відкри"])
+            has_play = any(k in history_str for k in ["play", "відтвор"])
+            
+            if has_open and not has_search:
+                return [
+                    {"id": 1, "type": "execute", "description": "Ввести пошуковий запит у Google", "agent": "tetyana", "tools": ["browser_type_text", "press_key"]},
+                    {"id": 2, "type": "execute", "description": "Отримати результати пошуку", "agent": "tetyana", "tools": ["browser_get_links"]},
+                    {"id": 3, "type": "execute", "description": "Відкрити перший релевантний результат", "agent": "tetyana", "tools": ["browser_click"]},
+                    {"id": 4, "type": "execute", "description": "Запустити відео на весь екран", "agent": "tetyana", "tools": ["press_key"]}
+                ]
+            elif has_search and not has_links:
+                return [
+                    {"id": 1, "type": "execute", "description": "Отримати посилання з результатів пошуку", "agent": "tetyana", "tools": ["browser_get_links"]},
+                    {"id": 2, "type": "execute", "description": "Відкрити перший безкоштовний сайт", "agent": "tetyana", "tools": ["browser_click"]},
+                    {"id": 3, "type": "execute", "description": "Запустити відео на весь екран", "agent": "tetyana", "tools": ["press_key"]}
+                ]
+            elif has_links and not has_click:
+                return [
+                    {"id": 1, "type": "execute", "description": "Вибрати та відкрити перший релевантний результат", "agent": "tetyana", "tools": ["browser_click"]},
+                    {"id": 2, "type": "execute", "description": "Запустити відео та увімкнути повноекранний режим", "agent": "tetyana", "tools": ["browser_click", "press_key"]}
+                ]
+            elif has_click and not has_play:
+                return [
+                    {"id": 1, "type": "execute", "description": "Знайти кнопку відтворення та натиснути", "agent": "tetyana", "tools": ["browser_click"]},
+                    {"id": 2, "type": "execute", "description": "Перемкнути на повноекранний режим (натиснути F)", "agent": "tetyana", "tools": ["press_key"]}
+                ]
+            elif has_play:
+                return [{"id": 1, "type": "execute", "description": "Перемкнути на повноекранний режим (натиснути F)", "agent": "tetyana", "tools": ["press_key"]}]
+        
+        return None  # Let normal replan handle it
+
     def _atlas_dispatch(self, state, plan, replan_count=None):
         """Internal helper to format the dispatch message and return state."""
         context = state.get("messages", [])

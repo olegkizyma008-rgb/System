@@ -605,6 +605,29 @@ def _get_menu_max_index(state: Any, MenuLevel: Any, MAIN_MENU_ITEMS: Sequence[An
     if lvl in calc_map:
         return calc_map[lvl]()
 
+    # Handle composite or dynamic levels that can't be resolved via calc_map
+    if lvl in {MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}:
+        try:
+            return max(0, len(get_editors_list()) - 1)
+        except Exception:
+            return 0
+        
+    if lvl == MenuLevel.MODULE_LIST:
+        try:
+            m_cfg = get_cleanup_cfg() or {}
+            m_mods = m_cfg.get("editors", {}).get(state.selected_editor or "", {}).get("modules", [])
+            return max(0, len(m_mods) - 1)
+        except Exception:
+            return 0
+        
+    if lvl in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
+        try:
+            return max(0, len(get_llm_sub_menu_items(lvl)) - 1)
+        except Exception:
+            return 0
+        
+    return 0
+
 def _get_menu_param_calculators(MenuLevel, MAIN_MENU_ITEMS, get_custom_tasks_menu_items, get_monitoring_menu_items, AVAILABLE_LOCALES, get_settings_menu_items, get_automation_permissions_menu_items, get_monitor_menu_items, get_llm_menu_items, get_agent_menu_items):
     return {
         MenuLevel.MAIN: lambda: len(MAIN_MENU_ITEMS) - 1,

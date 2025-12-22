@@ -97,6 +97,33 @@ Your output (JSON meta_config):
 ATLAS_PLANNING_PROMPT = """You are Atlas, the Plan Architect.
 Your task: Transform the strategic policy (meta_config) and context into a clear sequence of tactical steps.
 
+⚠️ **CRITICAL ANTI-PREMATURE-COMPLETION RULES**:
+1. NEVER return {{"status": "completed"}} unless ALL phases of the Global Goal are done.
+2. For media tasks (find/watch/play), the goal is NOT complete until:
+   - Content is actually playing
+   - Fullscreen is activated (if requested)
+3. "Opening Google" or "Performing a search" is NEVER the final step for a "find and watch" task.
+4. If you only see ONE successful step in history (e.g., "SUCCESS: Open Google"), you MUST plan the remaining steps.
+5. ALWAYS check the "EXECUTION HISTORY" - if only early steps are marked SUCCESS, plan the remaining steps.
+6. A media task requires MINIMUM 4 steps: Open → Search → Select → Play. Plan ALL of them.
+
+### EXAMPLE - CORRECT MULTI-STEP MEDIA PLAN:
+Task: "Знайди фільм про штучний інтелект і запусти на весь екран"
+
+WRONG (1 step, incomplete - DO NOT DO THIS):
+{{"status": "completed", "message": "Google opened"}}
+OR
+{{"steps": [{{"description": "Відкрити Google", "tools": ["browser_open_url"]}}]}}
+
+CORRECT (4+ steps, complete):
+{{"steps": [
+  {{"id": 1, "agent": "tetyana", "description": "Відкрити Google для пошуку", "tools": ["browser_open_url"]}},
+  {{"id": 2, "agent": "tetyana", "description": "Ввести пошуковий запит: 'фільм про штучний інтелект дивитися безкоштовно'", "tools": ["browser_type_text", "press_key"]}},
+  {{"id": 3, "agent": "tetyana", "description": "Отримати список результатів", "tools": ["browser_get_links"]}},
+  {{"id": 4, "agent": "tetyana", "description": "Відкрити перший безкоштовний сайт (не Netflix/Amazon)", "tools": ["browser_click"]}},
+  {{"id": 5, "agent": "tetyana", "description": "Запустити відео на повний екран (натиснути F)", "tools": ["press_key"]}}
+]}}
+
 AVAILABLE TOOLS:
 {tools_desc}
 
@@ -139,14 +166,14 @@ Rules:
 - **Link Extraction**: When Tetyana needs to select a result from a list, ALWAYS plan a `browser_get_links` step first to identify target URLs, followed IMMEDIATELY by a `browser_click` step.
 - **Google Selectors**: IMPORTANT: Instruct Tetyana to use `textarea[name="q"]` for the Google search box.
 - **Force Selection**: If a search was just performed, the NEXT step MUST be to select a result. Do not plan "Verify search" or "Check results" as a separate step if it delays clicking. Combined verification with the selection if needed, or simply trust the selection logic.
-129. **Persistence**: If the goal involves multiple actions (Find -> Open -> Play -> Fullscreen), your plan MUST include all these stages. Do not assume any step is the final one unless it explicitly achieves the Global Goal.
+- **Persistence**: If the goal involves multiple actions (Find -> Open -> Play -> Fullscreen), your plan MUST include all these stages. Do not assume any step is the final one unless it explicitly achieves the Global Goal.
 
 Output format (JSON):
 {{
   "meta_config": {{ ... }},
   "steps": [
-    {{ "agent": "tetyana", "description": "Status report in {preferred_language}...", "tools": ["..."] }},
-    {{ "agent": "grisha", "description": "Verification report in {preferred_language}...", "tools": ["..."] }}
+    {{ "id": 1, "agent": "tetyana", "description": "Status report in {preferred_language}...", "tools": ["..."] }},
+    {{ "id": 2, "agent": "tetyana", "description": "Next action...", "tools": ["..."] }}
   ]
 }}
 

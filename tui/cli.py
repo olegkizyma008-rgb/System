@@ -640,7 +640,14 @@ def _scan_traces(editor: str) -> Dict[str, List[str]]:
 
 
 def _get_editors_list() -> List[Tuple[str, str]]:
-    return _get_editors_list_new()
+    # The underlying implementation expects a cleanup config dict argument.
+    # Load current cleanup config and forward it to the function so the
+    # TUI can render editors without error.
+    try:
+        cfg = _load_cleanup_config()
+    except Exception:
+        cfg = {}
+    return _get_editors_list_new(cfg)
 
 
 def _apply_default_monitor_targets() -> None:
