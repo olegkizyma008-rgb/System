@@ -149,11 +149,11 @@ class Context7Client(MCPServerClient):
                     error_msg = result.stderr if result.stderr else "Unknown error"
 
                     # Check for common Context7 errors
-                        if "too many arguments" in error_msg:
-                            # record fallback metric
-                            global CONTEXT7_FALLBACK_COUNT
-                            CONTEXT7_FALLBACK_COUNT += 1
-                            logger.warning("Context7 argument error - trying simplified command")
+                    if "too many arguments" in error_msg:
+                        # record fallback metric
+                        global CONTEXT7_FALLBACK_COUNT
+                        CONTEXT7_FALLBACK_COUNT += 1
+                        logger.warning("Context7 argument error - trying simplified command")
                         # Try with just the basic command (no kwargs)
                         simple_cmd = [self.command] + self.args + [command]
                         simple_result = self._run_command(simple_cmd)
