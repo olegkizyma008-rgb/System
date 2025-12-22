@@ -1,583 +1,15 @@
 {
-  "total": 187,
+  "total": 175,
   "p": 1,
   "ps": 100,
   "paging": {
     "pageIndex": 1,
     "pageSize": 100,
-    "total": 187
+    "total": 175
   },
-  "effortTotal": 3716,
-  "debtTotal": 3716,
+  "effortTotal": 3574,
+  "debtTotal": 3574,
   "issues": [
-    {
-      "key": "AZtDRTPf-JPgH9NPCHMG",
-      "rule": "python:S3776",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-      "project": "olegkizima01_System2",
-      "line": 46,
-      "hash": "083227de2e8971d7e59b0998e1a0a3a7",
-      "textRange": {
-        "startLine": 46,
-        "endLine": 46,
-        "startOffset": 8,
-        "endOffset": 19
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 51,
-                "endLine": 51,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 61,
-                "endLine": 61,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 63,
-                "endLine": 63,
-                "startOffset": 12,
-                "endOffset": 16
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 68,
-                "endLine": 68,
-                "startOffset": 16,
-                "endOffset": 22
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 69,
-                "endLine": 69,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 74,
-                "endLine": 74,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 79,
-                "endLine": 79,
-                "startOffset": 16,
-                "endOffset": 22
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 86,
-                "endLine": 86,
-                "startOffset": 20,
-                "endOffset": 26
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 100,
-                "endLine": 100,
-                "startOffset": 12,
-                "endOffset": 18
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 104,
-                "endLine": 104,
-                "startOffset": 8,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.",
-      "effort": "6min",
-      "debt": "6min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "brain-overload"
-      ],
-      "creationDate": "2025-12-21T23:35:03+0000",
-      "updateDate": "2025-12-21T23:35:03+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "FOCUSED",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDRTEI-JPgH9NPCHMF",
-      "rule": "python:S3776",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:tui/layout.py",
-      "project": "olegkizima01_System2",
-      "line": 99,
-      "hash": "94826badb4473880b64195eb6f53f64b",
-      "textRange": {
-        "startLine": 99,
-        "endLine": 99,
-        "startOffset": 4,
-        "endOffset": 25
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 107,
-                "endLine": 107,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 108,
-                "endLine": 108,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 111,
-                "endLine": 111,
-                "startOffset": 12,
-                "endOffset": 16
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 117,
-                "endLine": 117,
-                "startOffset": 12,
-                "endOffset": 15
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 118,
-                "endLine": 118,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 123,
-                "endLine": 123,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 124,
-                "endLine": 124,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 126,
-                "endLine": 126,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 128,
-                "endLine": 128,
-                "startOffset": 12,
-                "endOffset": 16
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 130,
-                "endLine": 130,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 135,
-                "endLine": 135,
-                "startOffset": 12,
-                "endOffset": 15
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 136,
-                "endLine": 136,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 138,
-                "endLine": 138,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 141,
-                "endLine": 141,
-                "startOffset": 20,
-                "endOffset": 24
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 146,
-                "endLine": 146,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 147,
-                "endLine": 147,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 147,
-                "endLine": 147,
-                "startOffset": 46,
-                "endOffset": 49
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 151,
-                "endLine": 151,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 151,
-                "endLine": 151,
-                "startOffset": 37,
-                "endOffset": 40
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 152,
-                "endLine": 152,
-                "startOffset": 48,
-                "endOffset": 50
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 153,
-                "endLine": 153,
-                "startOffset": 20,
-                "endOffset": 24
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 153,
-                "endLine": 153,
-                "startOffset": 42,
-                "endOffset": 45
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 154,
-                "endLine": 154,
-                "startOffset": 48,
-                "endOffset": 50
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 155,
-                "endLine": 155,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/layout.py",
-              "textRange": {
-                "startLine": 157,
-                "endLine": 157,
-                "startOffset": 16,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 47 to the 15 allowed.",
-      "effort": "37min",
-      "debt": "37min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "brain-overload"
-      ],
-      "creationDate": "2025-12-21T23:35:03+0000",
-      "updateDate": "2025-12-21T23:35:03+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "FOCUSED",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
     {
       "key": "AZtDQ6VGIamWuOZACTfu",
       "rule": "python:S3776",
@@ -2166,68 +1598,12 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 418,
-                "endLine": 418,
-                "startOffset": 8,
-                "endOffset": 10
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 421,
-                "endLine": 421,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 423,
-                "endLine": 423,
+                "startLine": 425,
+                "endLine": 425,
                 "startOffset": 12,
                 "endOffset": 14
               },
               "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 425,
-                "endLine": 425,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 426,
-                "endLine": 426,
-                "startOffset": 63,
-                "endOffset": 65
-              },
-              "msg": "+5 (incl 4 for nesting)"
             }
           ]
         },
@@ -2238,34 +1614,6 @@
               "textRange": {
                 "startLine": 427,
                 "endLine": 427,
-                "startOffset": 20,
-                "endOffset": 26
-              },
-              "msg": "+5 (incl 4 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 428,
-                "endLine": 428,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 430,
-                "endLine": 430,
                 "startOffset": 12,
                 "endOffset": 14
               },
@@ -2278,12 +1626,26 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 431,
-                "endLine": 431,
-                "startOffset": 8,
-                "endOffset": 12
+                "startLine": 428,
+                "endLine": 428,
+                "startOffset": 59,
+                "endOffset": 61
               },
-              "msg": "+1"
+              "msg": "+4 (incl 3 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/keybindings.py",
+              "textRange": {
+                "startLine": 429,
+                "endLine": 429,
+                "startOffset": 16,
+                "endOffset": 22
+              },
+              "msg": "+4 (incl 3 for nesting)"
             }
           ]
         },
@@ -2306,36 +1668,8 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 436,
-                "endLine": 436,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
                 "startLine": 437,
                 "endLine": 437,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 439,
-                "endLine": 439,
                 "startOffset": 12,
                 "endOffset": 14
               },
@@ -2350,38 +1684,10 @@
               "textRange": {
                 "startLine": 440,
                 "endLine": 440,
-                "startOffset": 8,
-                "endOffset": 12
+                "startOffset": 12,
+                "endOffset": 14
               },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 442,
-                "endLine": 442,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 443,
-                "endLine": 443,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
+              "msg": "+3 (incl 2 for nesting)"
             }
           ]
         },
@@ -2392,38 +1698,10 @@
               "textRange": {
                 "startLine": 444,
                 "endLine": 444,
-                "startOffset": 8,
-                "endOffset": 12
+                "startOffset": 12,
+                "endOffset": 14
               },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 445,
-                "endLine": 445,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 446,
-                "endLine": 446,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
+              "msg": "+3 (incl 2 for nesting)"
             }
           ]
         },
@@ -2460,62 +1738,6 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 450,
-                "endLine": 450,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 454,
-                "endLine": 454,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 455,
-                "endLine": 455,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 456,
-                "endLine": 456,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
                 "startLine": 458,
                 "endLine": 458,
                 "startOffset": 12,
@@ -2530,40 +1752,12 @@
             {
               "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 459,
-                "endLine": 459,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 461,
-                "endLine": 461,
+                "startLine": 462,
+                "endLine": 462,
                 "startOffset": 12,
                 "endOffset": 14
               },
               "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 461,
-                "endLine": 461,
-                "startOffset": 122,
-                "endOffset": 124
-              },
-              "msg": "+4 (incl 3 for nesting)"
             }
           ]
         },
@@ -2574,52 +1768,10 @@
               "textRange": {
                 "startLine": 462,
                 "endLine": 462,
-                "startOffset": 8,
-                "endOffset": 12
+                "startOffset": 118,
+                "endOffset": 120
               },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 467,
-                "endLine": 467,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 468,
-                "endLine": 468,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:tui/keybindings.py",
-              "textRange": {
-                "startLine": 469,
-                "endLine": 469,
-                "startOffset": 12,
-                "endOffset": 16
-              },
-              "msg": "+1"
+              "msg": "+4 (incl 3 for nesting)"
             }
           ]
         },
@@ -2630,436 +1782,8 @@
               "textRange": {
                 "startLine": 471,
                 "endLine": 471,
-                "startOffset": 8,
-                "endOffset": 12
-              },
-              "msg": "+1"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 271 to the 15 allowed.",
-      "effort": "4h21min",
-      "debt": "4h21min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "brain-overload"
-      ],
-      "creationDate": "2025-12-21T23:33:23+0000",
-      "updateDate": "2025-12-21T23:33:23+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "FOCUSED",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa96IamWuOZABWXI",
-      "rule": "python:S3776",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-      "project": "olegkizima01_System2",
-      "line": 192,
-      "hash": "474c697061a810911bb5c8328e71647c",
-      "textRange": {
-        "startLine": 192,
-        "endLine": 192,
-        "startOffset": 8,
-        "endOffset": 28
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 207,
-                "endLine": 207,
-                "startOffset": 8,
-                "endOffset": 11
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 214,
-                "endLine": 214,
                 "startOffset": 12,
                 "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 216,
-                "endLine": 216,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 219,
-                "endLine": 219,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 221,
-                "endLine": 221,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 223,
-                "endLine": 223,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 226,
-                "endLine": 226,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 228,
-                "endLine": 228,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 230,
-                "endLine": 230,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 233,
-                "endLine": 233,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 236,
-                "endLine": 236,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 239,
-                "endLine": 239,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 241,
-                "endLine": 241,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 243,
-                "endLine": 243,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 245,
-                "endLine": 245,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 248,
-                "endLine": 248,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 251,
-                "endLine": 251,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 254,
-                "endLine": 254,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-              "textRange": {
-                "startLine": 256,
-                "endLine": 256,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 37 to the 15 allowed.",
-      "effort": "27min",
-      "debt": "27min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "brain-overload"
-      ],
-      "creationDate": "2025-12-21T09:02:57+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "FOCUSED",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa-QIamWuOZABWXl",
-      "rule": "python:S3776",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-      "project": "olegkizima01_System2",
-      "line": 107,
-      "hash": "1b88eb862959b4c70ae8254b40c85627",
-      "textRange": {
-        "startLine": 107,
-        "endLine": 107,
-        "startOffset": 8,
-        "endOffset": 19
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 121,
-                "endLine": 121,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 123,
-                "endLine": 123,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 127,
-                "endLine": 127,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 134,
-                "endLine": 134,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 134,
-                "endLine": 134,
-                "startOffset": 52,
-                "endOffset": 55
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 135,
-                "endLine": 135,
-                "startOffset": 20,
-                "endOffset": 23
               },
               "msg": "+3 (incl 2 for nesting)"
             }
@@ -3068,173 +1792,10 @@
         {
           "locations": [
             {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
+              "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 147,
-                "endLine": 147,
-                "startOffset": 85,
-                "endOffset": 87
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 152,
-                "endLine": 152,
-                "startOffset": 16,
-                "endOffset": 18
-              },
-              "msg": "+2 (incl 1 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 152,
-                "endLine": 152,
-                "startOffset": 37,
-                "endOffset": 40
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-              "textRange": {
-                "startLine": 159,
-                "endLine": 159,
-                "startOffset": 8,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        }
-      ],
-      "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 18 to the 15 allowed.",
-      "effort": "8min",
-      "debt": "8min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "brain-overload"
-      ],
-      "creationDate": "2025-12-21T09:02:57+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "FOCUSED",
-      "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa-QIamWuOZABWXm",
-      "rule": "python:S5754",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:mcp_integration/rag_integration.py",
-      "project": "olegkizima01_System2",
-      "line": 290,
-      "hash": "3e264f5fbab10735799511f21ca70842",
-      "textRange": {
-        "startLine": 290,
-        "endLine": 290,
-        "startOffset": 12,
-        "endOffset": 18
-      },
-      "flows": [],
-      "status": "OPEN",
-      "message": "Specify an exception class to catch or reraise the exception",
-      "effort": "5min",
-      "debt": "5min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "bad-practice",
-        "error-handling",
-        "suspicious"
-      ],
-      "creationDate": "2025-12-21T09:02:57+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "COMPLETE",
-      "cleanCodeAttributeCategory": "INTENTIONAL",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa-FIamWuOZABWXf",
-      "rule": "python:S3776",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-      "project": "olegkizima01_System2",
-      "line": 135,
-      "hash": "74dbbaf9bd60c9cf1467130d2d4397db",
-      "textRange": {
-        "startLine": 135,
-        "endLine": 135,
-        "startOffset": 8,
-        "endOffset": 22
-      },
-      "flows": [
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-              "textRange": {
-                "startLine": 163,
-                "endLine": 163,
-                "startOffset": 12,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-              "textRange": {
-                "startLine": 168,
-                "endLine": 168,
-                "startOffset": 63,
-                "endOffset": 65
-              },
-              "msg": "+1"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-              "textRange": {
-                "startLine": 169,
-                "endLine": 169,
+                "startLine": 472,
+                "endLine": 472,
                 "startOffset": 12,
                 "endOffset": 16
               },
@@ -3245,168 +1806,32 @@
         {
           "locations": [
             {
-              "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
+              "component": "olegkizima01_System2:tui/keybindings.py",
               "textRange": {
-                "startLine": 171,
-                "endLine": 171,
-                "startOffset": 16,
-                "endOffset": 19
+                "startLine": 491,
+                "endLine": 491,
+                "startOffset": 8,
+                "endOffset": 10
               },
               "msg": "+2 (incl 1 for nesting)"
             }
           ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-              "textRange": {
-                "startLine": 173,
-                "endLine": 173,
-                "startOffset": 20,
-                "endOffset": 22
-              },
-              "msg": "+3 (incl 2 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-              "textRange": {
-                "startLine": 177,
-                "endLine": 177,
-                "startOffset": 32,
-                "endOffset": 34
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-              "textRange": {
-                "startLine": 180,
-                "endLine": 180,
-                "startOffset": 28,
-                "endOffset": 34
-              },
-              "msg": "+4 (incl 3 for nesting)"
-            }
-          ]
-        },
-        {
-          "locations": [
-            {
-              "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-              "textRange": {
-                "startLine": 186,
-                "endLine": 186,
-                "startOffset": 8,
-                "endOffset": 14
-              },
-              "msg": "+1"
-            }
-          ]
         }
       ],
       "status": "OPEN",
-      "message": "Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.",
-      "effort": "7min",
-      "debt": "7min",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 249 to the 15 allowed.",
+      "effort": "3h59min",
+      "debt": "3h59min",
       "author": "olegkizyma008@gmail.com",
       "tags": [
         "brain-overload"
       ],
-      "creationDate": "2025-12-21T09:02:57+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
+      "creationDate": "2025-12-21T23:33:23+0000",
+      "updateDate": "2025-12-21T23:55:14+0000",
       "type": "CODE_SMELL",
       "organization": "olegkizima01",
       "cleanCodeAttribute": "FOCUSED",
       "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa-FIamWuOZABWXe",
-      "rule": "python:S5754",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-      "project": "olegkizima01_System2",
-      "line": 77,
-      "hash": "3e264f5fbab10735799511f21ca70842",
-      "textRange": {
-        "startLine": 77,
-        "endLine": 77,
-        "startOffset": 12,
-        "endOffset": 18
-      },
-      "flows": [],
-      "status": "OPEN",
-      "message": "Specify an exception class to catch or reraise the exception",
-      "effort": "5min",
-      "debt": "5min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "bad-practice",
-        "error-handling",
-        "suspicious"
-      ],
-      "creationDate": "2025-12-21T08:30:01+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "COMPLETE",
-      "cleanCodeAttributeCategory": "INTENTIONAL",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa-FIamWuOZABWXh",
-      "rule": "python:S5754",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-      "project": "olegkizima01_System2",
-      "line": 402,
-      "hash": "3e264f5fbab10735799511f21ca70842",
-      "textRange": {
-        "startLine": 402,
-        "endLine": 402,
-        "startOffset": 8,
-        "endOffset": 14
-      },
-      "flows": [],
-      "status": "OPEN",
-      "message": "Specify an exception class to catch or reraise the exception",
-      "effort": "5min",
-      "debt": "5min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "bad-practice",
-        "error-handling",
-        "suspicious"
-      ],
-      "creationDate": "2025-12-21T08:30:01+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "COMPLETE",
-      "cleanCodeAttributeCategory": "INTENTIONAL",
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
@@ -10419,11 +8844,11 @@
       "severity": "CRITICAL",
       "component": "olegkizima01_System2:tui/layout.py",
       "project": "olegkizima01_System2",
-      "line": 165,
+      "line": 174,
       "hash": "75fbafa27c81191223b452656e129c31",
       "textRange": {
-        "startLine": 165,
-        "endLine": 165,
+        "startLine": 174,
+        "endLine": 174,
         "startOffset": 4,
         "endOffset": 13
       },
@@ -10433,8 +8858,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 186,
-                "endLine": 186,
+                "startLine": 195,
+                "endLine": 195,
                 "startOffset": 42,
                 "endOffset": 44
               },
@@ -10447,8 +8872,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 192,
-                "endLine": 192,
+                "startLine": 201,
+                "endLine": 201,
                 "startOffset": 8,
                 "endOffset": 10
               },
@@ -10461,8 +8886,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 195,
-                "endLine": 195,
+                "startLine": 204,
+                "endLine": 204,
                 "startOffset": 67,
                 "endOffset": 69
               },
@@ -10475,8 +8900,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 202,
-                "endLine": 202,
+                "startLine": 211,
+                "endLine": 211,
                 "startOffset": 47,
                 "endOffset": 49
               },
@@ -10489,8 +8914,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 204,
-                "endLine": 204,
+                "startLine": 213,
+                "endLine": 213,
                 "startOffset": 57,
                 "endOffset": 59
               },
@@ -10503,8 +8928,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 206,
-                "endLine": 206,
+                "startLine": 215,
+                "endLine": 215,
                 "startOffset": 59,
                 "endOffset": 61
               },
@@ -10517,8 +8942,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 245,
-                "endLine": 245,
+                "startLine": 254,
+                "endLine": 254,
                 "startOffset": 48,
                 "endOffset": 50
               },
@@ -10531,8 +8956,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 247,
-                "endLine": 247,
+                "startLine": 256,
+                "endLine": 256,
                 "startOffset": 4,
                 "endOffset": 6
               },
@@ -10545,8 +8970,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 250,
-                "endLine": 250,
+                "startLine": 259,
+                "endLine": 259,
                 "startOffset": 106,
                 "endOffset": 108
               },
@@ -10559,8 +8984,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 262,
-                "endLine": 262,
+                "startLine": 271,
+                "endLine": 271,
                 "startOffset": 4,
                 "endOffset": 8
               },
@@ -10573,8 +8998,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 311,
-                "endLine": 311,
+                "startLine": 320,
+                "endLine": 320,
                 "startOffset": 9,
                 "endOffset": 11
               },
@@ -10587,8 +9012,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 315,
-                "endLine": 315,
+                "startLine": 324,
+                "endLine": 324,
                 "startOffset": 82,
                 "endOffset": 84
               },
@@ -10601,8 +9026,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 322,
-                "endLine": 322,
+                "startLine": 331,
+                "endLine": 331,
                 "startOffset": 32,
                 "endOffset": 34
               },
@@ -10615,8 +9040,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 342,
-                "endLine": 342,
+                "startLine": 351,
+                "endLine": 351,
                 "startOffset": 68,
                 "endOffset": 70
               },
@@ -10629,8 +9054,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 342,
-                "endLine": 342,
+                "startLine": 351,
+                "endLine": 351,
                 "startOffset": 125,
                 "endOffset": 128
               },
@@ -10643,8 +9068,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 351,
-                "endLine": 351,
+                "startLine": 360,
+                "endLine": 360,
                 "startOffset": 110,
                 "endOffset": 113
               },
@@ -10657,8 +9082,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 352,
-                "endLine": 352,
+                "startLine": 361,
+                "endLine": 361,
                 "startOffset": 101,
                 "endOffset": 104
               },
@@ -10696,11 +9121,11 @@
       "severity": "CRITICAL",
       "component": "olegkizima01_System2:tui/layout.py",
       "project": "olegkizima01_System2",
-      "line": 191,
+      "line": 200,
       "hash": "453ba02410dd215427665e457848107e",
       "textRange": {
-        "startLine": 191,
-        "endLine": 191,
+        "startLine": 200,
+        "endLine": 200,
         "startOffset": 63,
         "endOffset": 77
       },
@@ -10710,8 +9135,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 201,
-                "endLine": 201,
+                "startLine": 210,
+                "endLine": 210,
                 "startOffset": 14,
                 "endOffset": 28
               },
@@ -10724,8 +9149,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 203,
-                "endLine": 203,
+                "startLine": 212,
+                "endLine": 212,
                 "startOffset": 14,
                 "endOffset": 28
               },
@@ -10738,8 +9163,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 205,
-                "endLine": 205,
+                "startLine": 214,
+                "endLine": 214,
                 "startOffset": 14,
                 "endOffset": 28
               },
@@ -10752,8 +9177,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 207,
-                "endLine": 207,
+                "startLine": 216,
+                "endLine": 216,
                 "startOffset": 14,
                 "endOffset": 28
               },
@@ -10766,8 +9191,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 209,
-                "endLine": 209,
+                "startLine": 218,
+                "endLine": 218,
                 "startOffset": 14,
                 "endOffset": 28
               },
@@ -10780,8 +9205,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 217,
-                "endLine": 217,
+                "startLine": 226,
+                "endLine": 226,
                 "startOffset": 14,
                 "endOffset": 28
               },
@@ -10819,11 +9244,11 @@
       "severity": "CRITICAL",
       "component": "olegkizima01_System2:tui/layout.py",
       "project": "olegkizima01_System2",
-      "line": 202,
+      "line": 211,
       "hash": "c139cc9e42d21e2182fce78f90251019",
       "textRange": {
-        "startLine": 202,
-        "endLine": 202,
+        "startLine": 211,
+        "endLine": 211,
         "startOffset": 14,
         "endOffset": 28
       },
@@ -10833,8 +9258,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 204,
-                "endLine": 204,
+                "startLine": 213,
+                "endLine": 213,
                 "startOffset": 14,
                 "endOffset": 28
               },
@@ -10847,8 +9272,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 206,
-                "endLine": 206,
+                "startLine": 215,
+                "endLine": 215,
                 "startOffset": 14,
                 "endOffset": 28
               },
@@ -10861,8 +9286,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 208,
-                "endLine": 208,
+                "startLine": 217,
+                "endLine": 217,
                 "startOffset": 14,
                 "endOffset": 28
               },
@@ -10875,8 +9300,8 @@
             {
               "component": "olegkizima01_System2:tui/layout.py",
               "textRange": {
-                "startLine": 315,
-                "endLine": 315,
+                "startLine": 324,
+                "endLine": 324,
                 "startOffset": 49,
                 "endOffset": 63
               },
@@ -11777,86 +10202,6 @@
       "organization": "olegkizima01",
       "cleanCodeAttribute": "DISTINCT",
       "cleanCodeAttributeCategory": "ADAPTABLE",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa3IIamWuOZABWPT",
-      "rule": "python:S5754",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:system_ai/tools/browser.py",
-      "project": "olegkizima01_System2",
-      "line": 95,
-      "hash": "3e264f5fbab10735799511f21ca70842",
-      "textRange": {
-        "startLine": 95,
-        "endLine": 95,
-        "startOffset": 12,
-        "endOffset": 18
-      },
-      "flows": [],
-      "status": "OPEN",
-      "message": "Specify an exception class to catch or reraise the exception",
-      "effort": "5min",
-      "debt": "5min",
-      "author": "trinity@local",
-      "tags": [
-        "bad-practice",
-        "error-handling",
-        "suspicious"
-      ],
-      "creationDate": "2025-12-20T17:03:07+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "COMPLETE",
-      "cleanCodeAttributeCategory": "INTENTIONAL",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa3IIamWuOZABWPU",
-      "rule": "python:S5754",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:system_ai/tools/browser.py",
-      "project": "olegkizima01_System2",
-      "line": 100,
-      "hash": "3e264f5fbab10735799511f21ca70842",
-      "textRange": {
-        "startLine": 100,
-        "endLine": 100,
-        "startOffset": 12,
-        "endOffset": 18
-      },
-      "flows": [],
-      "status": "OPEN",
-      "message": "Specify an exception class to catch or reraise the exception",
-      "effort": "5min",
-      "debt": "5min",
-      "author": "trinity@local",
-      "tags": [
-        "bad-practice",
-        "error-handling",
-        "suspicious"
-      ],
-      "creationDate": "2025-12-20T17:03:07+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "COMPLETE",
-      "cleanCodeAttributeCategory": "INTENTIONAL",
       "impacts": [
         {
           "softwareQuality": "MAINTAINABILITY",
@@ -21482,86 +19827,6 @@
       "projectName": "System"
     },
     {
-      "key": "AZtDBa3IIamWuOZABWPV",
-      "rule": "python:S5754",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:system_ai/tools/browser.py",
-      "project": "olegkizima01_System2",
-      "line": 141,
-      "hash": "3e264f5fbab10735799511f21ca70842",
-      "textRange": {
-        "startLine": 141,
-        "endLine": 141,
-        "startOffset": 8,
-        "endOffset": 14
-      },
-      "flows": [],
-      "status": "OPEN",
-      "message": "Specify an exception class to catch or reraise the exception",
-      "effort": "5min",
-      "debt": "5min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "bad-practice",
-        "error-handling",
-        "suspicious"
-      ],
-      "creationDate": "2025-12-19T23:04:55+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "COMPLETE",
-      "cleanCodeAttributeCategory": "INTENTIONAL",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
-      "key": "AZtDBa3IIamWuOZABWPW",
-      "rule": "python:S5754",
-      "severity": "CRITICAL",
-      "component": "olegkizima01_System2:system_ai/tools/browser.py",
-      "project": "olegkizima01_System2",
-      "line": 160,
-      "hash": "3e264f5fbab10735799511f21ca70842",
-      "textRange": {
-        "startLine": 160,
-        "endLine": 160,
-        "startOffset": 12,
-        "endOffset": 18
-      },
-      "flows": [],
-      "status": "OPEN",
-      "message": "Specify an exception class to catch or reraise the exception",
-      "effort": "5min",
-      "debt": "5min",
-      "author": "olegkizyma008@gmail.com",
-      "tags": [
-        "bad-practice",
-        "error-handling",
-        "suspicious"
-      ],
-      "creationDate": "2025-12-19T23:04:55+0000",
-      "updateDate": "2025-12-21T22:25:41+0000",
-      "type": "CODE_SMELL",
-      "organization": "olegkizima01",
-      "cleanCodeAttribute": "COMPLETE",
-      "cleanCodeAttributeCategory": "INTENTIONAL",
-      "impacts": [
-        {
-          "softwareQuality": "MAINTAINABILITY",
-          "severity": "HIGH"
-        }
-      ],
-      "issueStatus": "OPEN",
-      "projectName": "System"
-    },
-    {
       "key": "AZtDBa0kIamWuOZABWOP",
       "rule": "python:S3776",
       "severity": "CRITICAL",
@@ -23150,6 +21415,1986 @@
       ],
       "issueStatus": "OPEN",
       "projectName": "System"
+    },
+    {
+      "key": "AZtDBa1XIamWuOZABWOa",
+      "rule": "python:S1192",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/commands.py",
+      "project": "olegkizima01_System2",
+      "line": 224,
+      "hash": "49ab29d3ada6cc9f3c6ab90f6f41ade9",
+      "textRange": {
+        "startLine": 224,
+        "endLine": 224,
+        "startOffset": 55,
+        "endOffset": 62
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/commands.py",
+              "textRange": {
+                "startLine": 313,
+                "endLine": 313,
+                "startOffset": 89,
+                "endOffset": 96
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/commands.py",
+              "textRange": {
+                "startLine": 347,
+                "endLine": 347,
+                "startOffset": 18,
+                "endOffset": 25
+              },
+              "msg": "Duplication"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Define a constant instead of duplicating this literal \"/help\" 3 times.",
+      "effort": "6min",
+      "debt": "6min",
+      "author": "trinity@local",
+      "tags": [
+        "design"
+      ],
+      "creationDate": "2025-12-19T12:10:26+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "DISTINCT",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBa0vIamWuOZABWOU",
+      "rule": "python:S1192",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/messages.py",
+      "project": "olegkizima01_System2",
+      "line": 61,
+      "hash": "6cb87eb7bf67dfd209c64f280c7fb3e0",
+      "textRange": {
+        "startLine": 61,
+        "endLine": 61,
+        "startOffset": 11,
+        "endOffset": 20
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 203,
+                "endLine": 203,
+                "startOffset": 11,
+                "endOffset": 20
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 213,
+                "endLine": 213,
+                "startOffset": 42,
+                "endOffset": 51
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 253,
+                "endLine": 253,
+                "startOffset": 11,
+                "endOffset": 20
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 264,
+                "endLine": 264,
+                "startOffset": 42,
+                "endOffset": 51
+              },
+              "msg": "Duplication"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Define a constant instead of duplicating this literal \"[VOICE]\" 5 times.",
+      "effort": "10min",
+      "debt": "10min",
+      "author": "trinity@local",
+      "tags": [
+        "design"
+      ],
+      "creationDate": "2025-12-19T12:10:26+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "DISTINCT",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBa0vIamWuOZABWOT",
+      "rule": "python:S1192",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/messages.py",
+      "project": "olegkizima01_System2",
+      "line": 122,
+      "hash": "fa69d0d5baa5940e42e4ff7d064bfdc8",
+      "textRange": {
+        "startLine": 122,
+        "endLine": 122,
+        "startOffset": 26,
+        "endOffset": 46
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 220,
+                "endLine": 220,
+                "startOffset": 61,
+                "endOffset": 81
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 276,
+                "endLine": 276,
+                "startOffset": 61,
+                "endOffset": 81
+              },
+              "msg": "Duplication"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Define a constant instead of duplicating this literal \"class:agent.system\" 3 times.",
+      "effort": "6min",
+      "debt": "6min",
+      "author": "trinity@local",
+      "tags": [
+        "design"
+      ],
+      "creationDate": "2025-12-19T12:10:26+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "DISTINCT",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBa0vIamWuOZABWOS",
+      "rule": "python:S1192",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/messages.py",
+      "project": "olegkizima01_System2",
+      "line": 170,
+      "hash": "26c5a9fd1f11a8fc12a52f3c23ab7575",
+      "textRange": {
+        "startLine": 170,
+        "endLine": 170,
+        "startOffset": 31,
+        "endOffset": 49
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 176,
+                "endLine": 176,
+                "startOffset": 70,
+                "endOffset": 88
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 179,
+                "endLine": 179,
+                "startOffset": 31,
+                "endOffset": 49
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 185,
+                "endLine": 185,
+                "startOffset": 27,
+                "endOffset": 45
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 187,
+                "endLine": 187,
+                "startOffset": 39,
+                "endOffset": 57
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 238,
+                "endLine": 238,
+                "startOffset": 23,
+                "endOffset": 41
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/messages.py",
+              "textRange": {
+                "startLine": 291,
+                "endLine": 291,
+                "startOffset": 23,
+                "endOffset": 41
+              },
+              "msg": "Duplication"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Define a constant instead of duplicating this literal \"class:agent.text\" 7 times.",
+      "effort": "14min",
+      "debt": "14min",
+      "author": "trinity@local",
+      "tags": [
+        "design"
+      ],
+      "creationDate": "2025-12-19T12:10:26+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "DISTINCT",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBbDQIamWuOZABWZw",
+      "rule": "python:S3776",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:core/self_healing.py",
+      "project": "olegkizima01_System2",
+      "line": 231,
+      "hash": "7dc1de7d0ede780873b184154ab2f923",
+      "textRange": {
+        "startLine": 231,
+        "endLine": 231,
+        "startOffset": 8,
+        "endOffset": 25
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 247,
+                "endLine": 247,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 257,
+                "endLine": 257,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 258,
+                "endLine": 258,
+                "startOffset": 16,
+                "endOffset": 19
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 259,
+                "endLine": 259,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 264,
+                "endLine": 264,
+                "startOffset": 12,
+                "endOffset": 15
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 266,
+                "endLine": 266,
+                "startOffset": 16,
+                "endOffset": 18
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 266,
+                "endLine": 266,
+                "startOffset": 28,
+                "endOffset": 30
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 271,
+                "endLine": 271,
+                "startOffset": 16,
+                "endOffset": 18
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 273,
+                "endLine": 273,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 276,
+                "endLine": 276,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 276,
+                "endLine": 276,
+                "startOffset": 35,
+                "endOffset": 37
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 278,
+                "endLine": 278,
+                "startOffset": 20,
+                "endOffset": 24
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 280,
+                "endLine": 280,
+                "startOffset": 24,
+                "endOffset": 26
+              },
+              "msg": "+4 (incl 3 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 282,
+                "endLine": 282,
+                "startOffset": 24,
+                "endOffset": 26
+              },
+              "msg": "+4 (incl 3 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 284,
+                "endLine": 284,
+                "startOffset": 24,
+                "endOffset": 26
+              },
+              "msg": "+4 (incl 3 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 284,
+                "endLine": 284,
+                "startOffset": 52,
+                "endOffset": 54
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 289,
+                "endLine": 289,
+                "startOffset": 8,
+                "endOffset": 14
+              },
+              "msg": "+1"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 35 to the 15 allowed.",
+      "effort": "25min",
+      "debt": "25min",
+      "author": "olegkizyma008@gmail.com",
+      "tags": [
+        "brain-overload"
+      ],
+      "creationDate": "2025-12-19T10:50:34+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "FOCUSED",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBbDQIamWuOZABWZ2",
+      "rule": "python:S3776",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:core/self_healing.py",
+      "project": "olegkizima01_System2",
+      "line": 587,
+      "hash": "2955f9a1e9b767deddce7db321dc4751",
+      "textRange": {
+        "startLine": 587,
+        "endLine": 587,
+        "startOffset": 8,
+        "endOffset": 22
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 597,
+                "endLine": 597,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 601,
+                "endLine": 601,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 608,
+                "endLine": 608,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 612,
+                "endLine": 612,
+                "startOffset": 8,
+                "endOffset": 11
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 615,
+                "endLine": 615,
+                "startOffset": 16,
+                "endOffset": 18
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 617,
+                "endLine": 617,
+                "startOffset": 16,
+                "endOffset": 20
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 619,
+                "endLine": 619,
+                "startOffset": 16,
+                "endOffset": 20
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 621,
+                "endLine": 621,
+                "startOffset": 16,
+                "endOffset": 20
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 623,
+                "endLine": 623,
+                "startOffset": 16,
+                "endOffset": 20
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 627,
+                "endLine": 627,
+                "startOffset": 16,
+                "endOffset": 18
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 631,
+                "endLine": 631,
+                "startOffset": 12,
+                "endOffset": 18
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 639,
+                "endLine": 639,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 641,
+                "endLine": 641,
+                "startOffset": 8,
+                "endOffset": 12
+              },
+              "msg": "+1"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.",
+      "effort": "6min",
+      "debt": "6min",
+      "author": "olegkizyma008@gmail.com",
+      "tags": [
+        "brain-overload"
+      ],
+      "creationDate": "2025-12-19T10:50:34+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "FOCUSED",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBbDQIamWuOZABWZ3",
+      "rule": "python:S3776",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:core/self_healing.py",
+      "project": "olegkizima01_System2",
+      "line": 750,
+      "hash": "3e88c986e704c93604f2955cdb827d9f",
+      "textRange": {
+        "startLine": 750,
+        "endLine": 750,
+        "startOffset": 8,
+        "endOffset": 20
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 766,
+                "endLine": 766,
+                "startOffset": 8,
+                "endOffset": 13
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 771,
+                "endLine": 771,
+                "startOffset": 16,
+                "endOffset": 18
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 771,
+                "endLine": 771,
+                "startOffset": 26,
+                "endOffset": 29
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 782,
+                "endLine": 782,
+                "startOffset": 20,
+                "endOffset": 23
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 784,
+                "endLine": 784,
+                "startOffset": 24,
+                "endOffset": 26
+              },
+              "msg": "+4 (incl 3 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 787,
+                "endLine": 787,
+                "startOffset": 28,
+                "endOffset": 30
+              },
+              "msg": "+5 (incl 4 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 790,
+                "endLine": 790,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 795,
+                "endLine": 795,
+                "startOffset": 12,
+                "endOffset": 18
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:core/self_healing.py",
+              "textRange": {
+                "startLine": 798,
+                "endLine": 798,
+                "startOffset": 12,
+                "endOffset": 18
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 23 to the 15 allowed.",
+      "effort": "13min",
+      "debt": "13min",
+      "author": "olegkizyma008@gmail.com",
+      "tags": [
+        "brain-overload"
+      ],
+      "creationDate": "2025-12-19T10:50:34+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "FOCUSED",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBa1jIamWuOZABWOk",
+      "rule": "python:S1192",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/menu.py",
+      "project": "olegkizima01_System2",
+      "line": 77,
+      "hash": "03abdf3a494e8dac0f523f7c31d4f30a",
+      "textRange": {
+        "startLine": 77,
+        "endLine": 77,
+        "startOffset": 46,
+        "endOffset": 64
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/menu.py",
+              "textRange": {
+                "startLine": 336,
+                "endLine": 336,
+                "startOffset": 69,
+                "endOffset": 87
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/menu.py",
+              "textRange": {
+                "startLine": 433,
+                "endLine": 433,
+                "startOffset": 60,
+                "endOffset": 78
+              },
+              "msg": "Duplication"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Define a constant instead of duplicating this literal \"class:toggle.off\" 3 times.",
+      "effort": "6min",
+      "debt": "6min",
+      "author": "olegkizyma008@gmail.com",
+      "tags": [
+        "design"
+      ],
+      "creationDate": "2025-12-19T10:50:34+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "DISTINCT",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBa1jIamWuOZABWOl",
+      "rule": "python:S1192",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:tui/menu.py",
+      "project": "olegkizima01_System2",
+      "line": 77,
+      "hash": "03abdf3a494e8dac0f523f7c31d4f30a",
+      "textRange": {
+        "startLine": 77,
+        "endLine": 77,
+        "startOffset": 16,
+        "endOffset": 33
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/menu.py",
+              "textRange": {
+                "startLine": 336,
+                "endLine": 336,
+                "startOffset": 20,
+                "endOffset": 37
+              },
+              "msg": "Duplication"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:tui/menu.py",
+              "textRange": {
+                "startLine": 433,
+                "endLine": 433,
+                "startOffset": 31,
+                "endOffset": 48
+              },
+              "msg": "Duplication"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Define a constant instead of duplicating this literal \"class:toggle.on\" 3 times.",
+      "effort": "6min",
+      "debt": "6min",
+      "author": "olegkizyma008@gmail.com",
+      "tags": [
+        "design"
+      ],
+      "creationDate": "2025-12-19T10:50:34+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "DISTINCT",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBbFpIamWuOZABWbR",
+      "rule": "python:S3776",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:run_trinity_task.py",
+      "project": "olegkizima01_System2",
+      "line": 24,
+      "hash": "36999f0b7d2b4dd75cc52066ae8a601f",
+      "textRange": {
+        "startLine": 24,
+        "endLine": 24,
+        "startOffset": 4,
+        "endOffset": 8
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 25,
+                "endLine": 25,
+                "startOffset": 34,
+                "endOffset": 36
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 26,
+                "endLine": 26,
+                "startOffset": 4,
+                "endOffset": 6
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 50,
+                "endLine": 50,
+                "startOffset": 8,
+                "endOffset": 11
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 52,
+                "endLine": 52,
+                "startOffset": 12,
+                "endOffset": 15
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 55,
+                "endLine": 55,
+                "startOffset": 16,
+                "endOffset": 18
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 58,
+                "endLine": 58,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+4 (incl 3 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 59,
+                "endLine": 59,
+                "startOffset": 55,
+                "endOffset": 57
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 60,
+                "endLine": 60,
+                "startOffset": 20,
+                "endOffset": 24
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 62,
+                "endLine": 62,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+4 (incl 3 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 64,
+                "endLine": 64,
+                "startOffset": 4,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:run_trinity_task.py",
+              "textRange": {
+                "startLine": 66,
+                "endLine": 66,
+                "startOffset": 4,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 20 to the 15 allowed.",
+      "effort": "10min",
+      "debt": "10min",
+      "author": "trinity@local",
+      "tags": [
+        "brain-overload"
+      ],
+      "creationDate": "2025-12-19T07:37:30+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "FOCUSED",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBbAHIamWuOZABWYv",
+      "rule": "python:S3776",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:providers/copilot.py",
+      "project": "olegkizima01_System2",
+      "line": 243,
+      "hash": "b72bc42188ffb555f0f6dff5efc1c67a",
+      "textRange": {
+        "startLine": 243,
+        "endLine": 243,
+        "startOffset": 8,
+        "endOffset": 17
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 265,
+                "endLine": 265,
+                "startOffset": 33,
+                "endOffset": 35
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 273,
+                "endLine": 273,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 275,
+                "endLine": 275,
+                "startOffset": 12,
+                "endOffset": 16
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 279,
+                "endLine": 279,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 285,
+                "endLine": 285,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 295,
+                "endLine": 295,
+                "startOffset": 16,
+                "endOffset": 18
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 295,
+                "endLine": 295,
+                "startOffset": 35,
+                "endOffset": 38
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 298,
+                "endLine": 298,
+                "startOffset": 16,
+                "endOffset": 20
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 301,
+                "endLine": 301,
+                "startOffset": 16,
+                "endOffset": 18
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 302,
+                "endLine": 302,
+                "startOffset": 53,
+                "endOffset": 55
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 303,
+                "endLine": 303,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 304,
+                "endLine": 304,
+                "startOffset": 24,
+                "endOffset": 27
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 306,
+                "endLine": 306,
+                "startOffset": 28,
+                "endOffset": 30
+              },
+              "msg": "+4 (incl 3 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 309,
+                "endLine": 309,
+                "startOffset": 52,
+                "endOffset": 54
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 319,
+                "endLine": 319,
+                "startOffset": 12,
+                "endOffset": 18
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 323,
+                "endLine": 323,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 324,
+                "endLine": 324,
+                "startOffset": 43,
+                "endOffset": 45
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 327,
+                "endLine": 327,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 332,
+                "endLine": 332,
+                "startOffset": 8,
+                "endOffset": 14
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 334,
+                "endLine": 334,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 340,
+                "endLine": 340,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 350,
+                "endLine": 350,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 352,
+                "endLine": 352,
+                "startOffset": 20,
+                "endOffset": 24
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 356,
+                "endLine": 356,
+                "startOffset": 24,
+                "endOffset": 26
+              },
+              "msg": "+4 (incl 3 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 361,
+                "endLine": 361,
+                "startOffset": 16,
+                "endOffset": 22
+              },
+              "msg": "+3 (incl 2 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:providers/copilot.py",
+              "textRange": {
+                "startLine": 366,
+                "endLine": 366,
+                "startOffset": 8,
+                "endOffset": 14
+              },
+              "msg": "+1"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 43 to the 15 allowed.",
+      "effort": "33min",
+      "debt": "33min",
+      "author": "olegkizyma008@gmail.com",
+      "tags": [
+        "brain-overload"
+      ],
+      "creationDate": "2025-12-19T06:13:30+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "FOCUSED",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
+    },
+    {
+      "key": "AZtDBa2-IamWuOZABWPO",
+      "rule": "python:S3776",
+      "severity": "CRITICAL",
+      "component": "olegkizima01_System2:system_ai/tools/automation.py",
+      "project": "olegkizima01_System2",
+      "line": 35,
+      "hash": "539bf8d5bfb209bc7f487205423ad75b",
+      "textRange": {
+        "startLine": 35,
+        "endLine": 35,
+        "startOffset": 4,
+        "endOffset": 13
+      },
+      "flows": [
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 36,
+                "endLine": 36,
+                "startOffset": 4,
+                "endOffset": 6
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 40,
+                "endLine": 40,
+                "startOffset": 4,
+                "endOffset": 7
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 41,
+                "endLine": 41,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 48,
+                "endLine": 48,
+                "startOffset": 20,
+                "endOffset": 22
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 53,
+                "endLine": 53,
+                "startOffset": 8,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 57,
+                "endLine": 57,
+                "startOffset": 37,
+                "endOffset": 39
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 58,
+                "endLine": 58,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 60,
+                "endLine": 60,
+                "startOffset": 12,
+                "endOffset": 16
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 68,
+                "endLine": 68,
+                "startOffset": 39,
+                "endOffset": 41
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 69,
+                "endLine": 69,
+                "startOffset": 39,
+                "endOffset": 41
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 71,
+                "endLine": 71,
+                "startOffset": 12,
+                "endOffset": 14
+              },
+              "msg": "+2 (incl 1 for nesting)"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 80,
+                "endLine": 80,
+                "startOffset": 35,
+                "endOffset": 37
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 81,
+                "endLine": 81,
+                "startOffset": 35,
+                "endOffset": 37
+              },
+              "msg": "+1"
+            }
+          ]
+        },
+        {
+          "locations": [
+            {
+              "component": "olegkizima01_System2:system_ai/tools/automation.py",
+              "textRange": {
+                "startLine": 83,
+                "endLine": 83,
+                "startOffset": 4,
+                "endOffset": 10
+              },
+              "msg": "+1"
+            }
+          ]
+        }
+      ],
+      "status": "OPEN",
+      "message": "Refactor this function to reduce its Cognitive Complexity from 17 to the 15 allowed.",
+      "effort": "7min",
+      "debt": "7min",
+      "author": "olegkizyma008@gmail.com",
+      "tags": [
+        "brain-overload"
+      ],
+      "creationDate": "2025-12-19T03:57:22+0000",
+      "updateDate": "2025-12-21T22:25:41+0000",
+      "type": "CODE_SMELL",
+      "organization": "olegkizima01",
+      "cleanCodeAttribute": "FOCUSED",
+      "cleanCodeAttributeCategory": "ADAPTABLE",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "issueStatus": "OPEN",
+      "projectName": "System"
     }
   ],
   "components": [
@@ -23271,6 +23516,26 @@
       "name": "parallel_executor.py",
       "longName": "core/parallel_executor.py",
       "path": "core/parallel_executor.py"
+    },
+    {
+      "organization": "olegkizima01",
+      "key": "olegkizima01_System2:run_trinity_task.py",
+      "uuid": "AZtDBaYmIamWuOZABWMU",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "run_trinity_task.py",
+      "longName": "run_trinity_task.py",
+      "path": "run_trinity_task.py"
+    },
+    {
+      "organization": "olegkizima01",
+      "key": "olegkizima01_System2:tui/messages.py",
+      "uuid": "AZtDBaYhIamWuOZABWJC",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "messages.py",
+      "longName": "tui/messages.py",
+      "path": "tui/messages.py"
     },
     {
       "organization": "olegkizima01",
@@ -23424,33 +23689,23 @@
     },
     {
       "organization": "olegkizima01",
-      "key": "olegkizima01_System2:mcp_integration/generate_tool_examples.py",
-      "uuid": "AZtDBaYkIamWuOZABWKi",
+      "key": "olegkizima01_System2:system_ai/tools/automation.py",
+      "uuid": "AZtDBaYiIamWuOZABWJX",
       "enabled": true,
       "qualifier": "FIL",
-      "name": "generate_tool_examples.py",
-      "longName": "mcp_integration/generate_tool_examples.py",
-      "path": "mcp_integration/generate_tool_examples.py"
+      "name": "automation.py",
+      "longName": "system_ai/tools/automation.py",
+      "path": "system_ai/tools/automation.py"
     },
     {
       "organization": "olegkizima01",
-      "key": "olegkizima01_System2:mcp_integration/register_all_servers.py",
-      "uuid": "AZtDBaYkIamWuOZABWKk",
+      "key": "olegkizima01_System2:providers/copilot.py",
+      "uuid": "AZtDBaYkIamWuOZABWK-",
       "enabled": true,
       "qualifier": "FIL",
-      "name": "register_all_servers.py",
-      "longName": "mcp_integration/register_all_servers.py",
-      "path": "mcp_integration/register_all_servers.py"
-    },
-    {
-      "organization": "olegkizima01",
-      "key": "olegkizima01_System2:mcp_integration/rag_integration.py",
-      "uuid": "AZtDBaYkIamWuOZABWKm",
-      "enabled": true,
-      "qualifier": "FIL",
-      "name": "rag_integration.py",
-      "longName": "mcp_integration/rag_integration.py",
-      "path": "mcp_integration/rag_integration.py"
+      "name": "copilot.py",
+      "longName": "providers/copilot.py",
+      "path": "providers/copilot.py"
     },
     {
       "organization": "olegkizima01",

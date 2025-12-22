@@ -203,123 +203,117 @@ class VisionDiffManager:
         }
 
 def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] = None, activate: bool = False, use_frontmost: bool = False) -> Dict[str, Any]:
-    """Takes a smart screenshot of an app or the full screen.
-    
-    Args:
-        app_name: Name of the application (e.g. "Safari")
-        window_title: Optional substring to filter specific windows (e.g. "Google")
-        activate: If True, brings the application/window to the front before capturing.
-        use_frontmost: If True and no app_name provided, capture the frontmost app window.
-    """
+    """Takes a smart screenshot of an app or the full screen."""
     try:
-        # Auto-detect frontmost app if requested
         if use_frontmost and not app_name:
-            frontmost = get_frontmost_app()
-            if frontmost.get("status") == "success":
-                app_name = frontmost.get("app_name")
-                if not window_title:
-                    window_title = frontmost.get("window_title")
+            app_name, window_title = _auto_detect_frontmost(window_title)
         
         if activate and app_name:
-            # Dynamic Focus: Bring app to front
-            # If window_title is specific, we could try to raise just that window, but raising the App is safer/standard.
-            # We use ignoring application responses to avoid blocking if the app is hung, though basic activate is usually fine.
-            script = f'tell application "{app_name}" to activate'
-            subprocess.run(["osascript", "-e", script], capture_output=True, timeout=2)
-            time.sleep(0.5) # Wait for animation
+            _activate_app_safely(app_name)
             
         manager = VisionDiffManager.get_instance()
-        focus_id = "FULL"
-        if app_name:
-            focus_id = f"APP_{app_name}"
-            if window_title:
-                focus_id += f"_{window_title}"
+        focus_id = _build_focus_id(app_name, window_title)
         
-        img = None
-        mss_error = None
-        # Try mss capture with up to 2 attempts
-        try:
-            with mss.mss() as sct:
-                # Multi-monitor support: monitor 0 is the union of all monitors
-                monitor = sct.monitors[0]
-
-                # If app_name, try to get its window geometry
-                region = None
-                if app_name:
-                    region = _get_app_geometry(app_name, window_title)
-
-                # Retry loop
-                attempts = 2
-                for i in range(attempts):
-                    try:
-                        sct_img = sct.grab(region or monitor)
-                        img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
-                        break
-                    except Exception as e:
-                        mss_error = str(e)
-                        time.sleep(0.2)
-        except Exception as e:
-            mss_error = str(e)
-
-        # Fallback to macOS screencapture if mss failed
+        region = _get_app_geometry(app_name, window_title) if app_name else None
+        
+        img, mss_error = _capture_with_mss(region)
+        
         if img is None:
-            try:
-                fd, tmp_path = tempfile.mkstemp(suffix=".png")
-                os.close(fd)
-                cmd = ["screencapture", "-x"]
-                # If we have region geometry, use -R x,y,w,h
-                region = None
-                if app_name:
-                    region = _get_app_geometry(app_name, window_title)
-                if region:
-                    cmd += ["-R", f"{region['left']},{region['top']},{region['width']},{region['height']}"]
-                cmd.append(tmp_path)
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-                if result.returncode == 0 and os.path.exists(tmp_path):
-                    try:
-                        img = Image.open(tmp_path)
-                    except Exception as e:
-                        # If reading fails, surface error below
-                        mss_error = f"Fallback image read failed: {e}"
-                        img = None
-                    finally:
-                        # Clean up temp file since manager will re-save
-                        try:
-                            os.unlink(tmp_path)
-                        except Exception:
-                            pass
-                else:
-                    err = (result.stderr or "").strip()
-                    low = err.lower()
-                    if "screen recording" in low or "not permitted" in low:
-                        return {
-                            "tool": "take_screenshot",
-                            "status": "error",
-                            "error": err or "Screen recording permission required",
-                            "error_type": "permission_required",
-                            "permission": "screen_recording",
-                            "settings_url": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
-                            "hint": "Grant Screen Recording permission to Terminal/VS Code"
-                        }
-                    # Generic fallback error
-                    return {"tool": "take_screenshot", "status": "error", "error": err or (mss_error or "Unknown capture error")}
-            except Exception as e:
-                return {"tool": "take_screenshot", "status": "error", "error": str(e)}
-
-        if img is None:
-            # Neither mss nor screencapture succeeded
-            return {"tool": "take_screenshot", "status": "error", "error": mss_error or "Unable to capture screen"}
+            return _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id)
 
         res = manager.process_screenshot(img, focus_id)
+        return _build_success_response("take_screenshot", res, focus_id)
         
+    except Exception as e:
+        return {"tool": "take_screenshot", "status": "error", "error": str(e)}
+
+def _auto_detect_frontmost(window_title: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    frontmost = get_frontmost_app()
+    if frontmost.get("status") == "success":
+        app_name = frontmost.get("app_name")
+        if not window_title:
+            window_title = frontmost.get("window_title")
+        return app_name, window_title
+    return None, window_title
+
+def _activate_app_safely(app_name: str):
+    script = f'tell application "{app_name}" to activate'
+    subprocess.run(["osascript", "-e", script], capture_output=True, timeout=2)
+    time.sleep(0.5)
+
+def _build_focus_id(app_name: Optional[str], window_title: Optional[str]) -> str:
+    if not app_name:
+        return "FULL"
+    fid = f"APP_{app_name}"
+    return fid + f"_{window_title}" if window_title else fid
+
+def _capture_with_mss(region: Optional[Dict[str, int]]) -> Tuple[Optional[Image.Image], Optional[str]]:
+    try:
+        with mss.mss() as sct:
+            monitor = sct.monitors[0]
+            for _ in range(2):
+                try:
+                    sct_img = sct.grab(region or monitor)
+                    img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
+                    return img, None
+                except Exception as e:
+                    last_err = str(e)
+                    time.sleep(0.2)
+            return None, last_err
+    except Exception as e:
+        return None, str(e)
+
+def _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id):
+    try:
+        fd, tmp_path = tempfile.mkstemp(suffix=".png")
+        os.close(fd)
+        cmd = ["screencapture", "-x"]
+        region = _get_app_geometry(app_name, window_title) if app_name else None
+        if region:
+            cmd += ["-R", f"{region['left']},{region['top']},{region['width']},{region['height']}"]
+        cmd.append(tmp_path)
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        if result.returncode != 0:
+            return _handle_screencapture_error(result.stderr, mss_error)
+            
+        if not os.path.exists(tmp_path):
+            return {"tool": "take_screenshot", "status": "error", "error": "screencapture failed to create file"}
+
+        try:
+            img = Image.open(tmp_path)
+            res = manager.process_screenshot(img, focus_id)
+            return _build_success_response("take_screenshot", res, focus_id)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+    except Exception as e:
+        return {"tool": "take_screenshot", "status": "error", "error": str(e)}
+
+def _handle_screencapture_error(stderr: str, mss_error: Optional[str]) -> Dict[str, Any]:
+    err = (stderr or "").strip()
+    low = err.lower()
+    if "screen recording" in low or "not permitted" in low:
         return {
             "tool": "take_screenshot",
-            "status": "success",
-            "path": res["path"],
-            "mode": res["mode"],
-            "focus": focus_id,
-            "diff_bbox": res["bbox"]
+            "status": "error",
+            "error": err or "Screen recording permission required",
+            "error_type": "permission_required",
+            "permission": "screen_recording",
+            "settings_url": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+            "hint": "Grant Screen Recording permission to Terminal/VS Code"
         }
+    return {"tool": "take_screenshot", "status": "error", "error": err or (mss_error or "Unknown capture error")}
+
+def _build_success_response(tool: str, res: Dict[str, Any], focus_id: str) -> Dict[str, Any]:
+    return {
+        "tool": tool,
+        "status": "success",
+        "path": res["path"],
+        "mode": res["mode"],
+        "focus": focus_id,
+        "diff_bbox": res["bbox"]
+    }
     except Exception as e:
         return {"tool": "take_screenshot", "status": "error", "error": str(e)}
 

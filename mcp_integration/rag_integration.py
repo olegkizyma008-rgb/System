@@ -69,9 +69,7 @@ class MCPToolSelector:
             logger.warning("⚠️ ChromaDB persistence unavailable; using in-memory client")
             try:
                 self.chroma_client = chromadb.Client()
-            except BaseException as disc_err:
-                if isinstance(disc_err, (KeyboardInterrupt, SystemExit)):
-                    raise
+            except Exception as disc_err:
                 self.chroma_client = None
                 logger.error(f"❌ ChromaDB completely unavailable, RAG disabled: {disc_err}")
         

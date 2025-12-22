@@ -54,443 +54,415 @@ def build_keybindings(
 ) -> Tuple[KeyBindings, Callable]:
     kb = KeyBindings()
 
+    # Context object for helpers
+    ctx = {
+        "state": state, "MenuLevel": MenuLevel, "show_menu": show_menu, 
+        "log": log, "force_ui_update": force_ui_update, "save_ui_settings": save_ui_settings,
+        "reset_agent_llm": reset_agent_llm, "save_monitor_settings": save_monitor_settings,
+        "save_monitor_targets": save_monitor_targets, "get_editors_list": get_editors_list,
+        "get_cleanup_cfg": get_cleanup_cfg, "set_cleanup_cfg": set_cleanup_cfg,
+        "load_cleanup_config": load_cleanup_config, "run_cleanup": run_cleanup,
+        "localization": localization, "AVAILABLE_LOCALES": AVAILABLE_LOCALES,
+        "monitor_service": monitor_service, "fs_usage_service": fs_usage_service,
+        "opensnoop_service": opensnoop_service, "monitor_stop_selected": monitor_stop_selected,
+        "monitor_start_selected": monitor_start_selected, "normalize_menu_index": normalize_menu_index,
+        "get_monitor_menu_items": get_monitor_menu_items, "get_settings_menu_items": get_settings_menu_items,
+        "get_monitoring_menu_items": get_monitoring_menu_items, "get_custom_tasks_menu_items": get_custom_tasks_menu_items,
+        "MAIN_MENU_ITEMS": MAIN_MENU_ITEMS, "TOP_LANGS": TOP_LANGS, "get_llm_menu_items": get_llm_menu_items,
+        "get_llm_sub_menu_items": get_llm_sub_menu_items, "get_agent_menu_items": get_agent_menu_items,
+        "get_automation_permissions_menu_items": get_automation_permissions_menu_items,
+        "perform_install": perform_install, "find_module": find_module, "set_module_enabled": set_module_enabled,
+    }
+
+    _register_global_keys(kb)
+    _register_navigation_keys(kb, state, show_menu)
+    _register_layout_keys(kb, state, save_ui_settings)
+    _register_clipboard_keys(kb, state, log)
+    _register_menu_movement_keys(kb, ctx)
+    _register_action_keys(kb, ctx)
+
+    @kb.add("enter", filter=show_menu)
+    def handle_menu_enter(event=None):
+        _handle_menu_enter_dispatch(ctx)
+
+    return kb, handle_menu_enter
+
+def _register_global_keys(kb: KeyBindings):
     @kb.add("c-c")
     def _(event):
         event.app.exit()
 
+def _register_navigation_keys(kb: KeyBindings, state: Any, show_menu: Callable):
     @kb.add("f6")
     def _(event):
-        if show_menu():
-            return
-        cur = str(getattr(state, "ui_scroll_target", "log") or "log")
-        state.ui_scroll_target = "agents" if cur == "log" else "log"
+        if not show_menu():
+            cur = str(getattr(state, "ui_scroll_target", "log") or "log")
+            state.ui_scroll_target = "agents" if cur == "log" else "log"
 
+    def scroll(event, delta):
+        if show_menu(): return
+        target = str(getattr(state, "ui_scroll_target", "log") or "log")
+        name = "agents" if target == "agents" else "log"
+        if name == "log":
+            state.ui_log_follow = delta > 0
+            state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) + delta)
+        else:
+            state.ui_agents_follow = delta > 0
+            state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) + delta)
+        _scroll_named_window(event, name, delta)
+
+    @kb.add("pageup")
+    def _(event): scroll(event, -10)
+    @kb.add("pagedown")
+    def _(event): scroll(event, 10)
+    @kb.add("c-up")
+    def _(event): scroll(event, -1)
+    @kb.add("c-down")
+    def _(event): scroll(event, 1)
+
+def _register_layout_keys(kb: KeyBindings, state: Any, save_ui_settings: Callable):
     @kb.add("f3")
     def _(event):
-        """Decrease left panel ratio."""
         state.ui_left_panel_ratio = max(0.2, float(getattr(state, "ui_left_panel_ratio", 0.6)) - 0.05)
         save_ui_settings()
 
     @kb.add("f4")
     def _(event):
-        """Increase left panel ratio."""
         state.ui_left_panel_ratio = min(0.8, float(getattr(state, "ui_left_panel_ratio", 0.6)) + 0.05)
         save_ui_settings()
 
-    @kb.add("pageup")
-    def _(event):
-        if show_menu():
-            return
-        target = str(getattr(state, "ui_scroll_target", "log") or "log")
-        name = "agents" if target == "agents" else "log"
-        if name == "log":
-            state.ui_log_follow = False
-            state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) - 10)
-        elif name == "agents":
-            state.ui_agents_follow = False
-            state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) - 10)
-        _scroll_named_window(event, name, -10)
-
-    @kb.add("pagedown")
-    def _(event):
-        if show_menu():
-            return
-        target = str(getattr(state, "ui_scroll_target", "log") or "log")
-        name = "agents" if target == "agents" else "log"
-        if name == "log":
-            state.ui_log_cursor_y = int(getattr(state, "ui_log_cursor_y", 0)) + 10
-            if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
-                state.ui_log_follow = True
-        elif name == "agents":
-            state.ui_agents_cursor_y = int(getattr(state, "ui_agents_cursor_y", 0)) + 10
-            if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
-                state.ui_agents_follow = True
-        _scroll_named_window(event, name, 10)
-
-    @kb.add("c-up")
-    def _(event):
-        if show_menu():
-            return
-        target = str(getattr(state, "ui_scroll_target", "log") or "log")
-        name = "agents" if target == "agents" else "log"
-        if name == "log":
-            state.ui_log_follow = False
-            state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) - 1)
-        elif name == "agents":
-            state.ui_agents_follow = False
-            state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) - 1)
-        _scroll_named_window(event, name, -1)
-
-    @kb.add("c-down")
-    def _(event):
-        if show_menu():
-            return
-        target = str(getattr(state, "ui_scroll_target", "log") or "log")
-        name = "agents" if target == "agents" else "log"
-        if name == "log":
-            state.ui_log_cursor_y = int(getattr(state, "ui_log_cursor_y", 0)) + 1
-            if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
-                state.ui_log_follow = True
-        elif name == "agents":
-            state.ui_agents_cursor_y = int(getattr(state, "ui_agents_cursor_y", 0)) + 1
-            if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
-                state.ui_agents_follow = True
-        _scroll_named_window(event, name, 1)
-
-    @kb.add("f2")
-    def _(event):
-        if state.menu_level == MenuLevel.NONE:
-            state.menu_level = MenuLevel.MAIN
-            state.menu_index = 0
-            # Focus the menu window
-            w = _find_window_by_name(event, "menu")
-            if w:
-                event.app.layout.focus(w)
-        else:
-            state.menu_level = MenuLevel.NONE
-            state.menu_index = 0
-            state.ui_scroll_target = "agents"
-            # Focus back to input field
-            w = _find_window_by_name(event, "input")
-            if w:
-                event.app.layout.focus(w)
-
-    @kb.add("escape")
-    @kb.add("q")
-    def _(event):
-        if state.menu_level == MenuLevel.MAIN:
-            state.menu_level = MenuLevel.NONE
-            state.menu_index = 0
-            state.ui_scroll_target = "agents"
-        elif state.menu_level in {
-            MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS
-        }:
-            state.menu_level = MenuLevel.LLM_SETTINGS
-            state.menu_index = 0
-        elif state.menu_level in {
-            MenuLevel.LLM_SETTINGS, MenuLevel.AGENT_SETTINGS, MenuLevel.APPEARANCE, MenuLevel.LANGUAGE, MenuLevel.LAYOUT, MenuLevel.UNSAFE_MODE,
-            MenuLevel.AUTOMATION_PERMISSIONS, MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING, MenuLevel.LEARNING_MODE
-        }:
-            state.menu_level = MenuLevel.SETTINGS
-            state.menu_index = 0
-        elif state.menu_level in {
-            MenuLevel.SETTINGS, MenuLevel.CUSTOM_TASKS, MenuLevel.MONITORING, MenuLevel.CLEANUP_EDITORS,
-            MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS
-        }:
-            state.menu_level = MenuLevel.MAIN
-            state.menu_index = 0
-        elif state.menu_level == MenuLevel.MODULE_LIST:
-            state.menu_level = MenuLevel.MODULE_EDITORS
-            state.menu_index = 0
-        elif state.menu_level == MenuLevel.MONITOR_CONTROL or state.menu_level == MenuLevel.MONITOR_TARGETS:
-            state.menu_level = MenuLevel.MONITORING
-            state.menu_index = 0
-        else:
-            # Not in menu, focus the input field
-            w = _find_window_by_name(event, "input")
-            if w:
-                event.app.layout.focus(w)
-
+def _register_clipboard_keys(kb: KeyBindings, state: Any, log: Callable):
     @kb.add("c-k")
     def _(event):
-        """Copy active panel content to clipboard (Ctrl+K)."""
         try:
             from tui.clipboard_utils import copy_to_clipboard
             from tui.render import get_logs, get_agent_messages
             target = str(getattr(state, "ui_scroll_target", "log") or "log")
-            content = ""
-            panel_name = target.upper()
             if target == "log":
-                logs = get_logs()
-                content = "".join(str(t or "") for _, t in logs)
-                panel_name = "LOG"
+                content = "".join(str(t or "") for _, t in get_logs())
+                pname = "LOG"
             else:
-                msgs = get_agent_messages()
-                content = "".join(str(t or "") for _, t in msgs)
-                panel_name = "АГЕНТИ"
+                content = "".join(str(t or "") for _, t in get_agent_messages())
+                pname = "АГЕНТИ"
             if content:
-                success = copy_to_clipboard(content, log)
-                if not success: log(f"Помилка: не вдалося скопіювати з панелі {panel_name}", "error")
-            else: log(f"Панель {panel_name} порожня", "info")
+                if not copy_to_clipboard(content, log): log(f"Помилка: не вдалося скопіювати з панелі {pname}", "error")
+            else: log(f"Панель {pname} порожня", "info")
         except Exception as e: log(f"Помилка копіювання: {str(e)}", "error")
 
     @kb.add("c-o")
     def _(event):
-        """Toggle auto-copy on text selection (Ctrl+O)."""
         try:
             from tui.selection_tracker import set_auto_copy_enabled, get_selection_stats
-            stats = get_selection_stats()
-            new_state = not stats.get("auto_copy_enabled", True)
-            set_auto_copy_enabled(new_state)
-            log(f"Автокопіювання: {'Увімкнено' if new_state else 'Вимкнено'}", "action")
+            en = not get_selection_stats().get("auto_copy_enabled", True)
+            set_auto_copy_enabled(en)
+            log(f"Автокопіювання: {'Увімкнено' if en else 'Вимкнено'}", "action")
         except Exception as e: log(f"Помилка: {str(e)}", "error")
+
+def _register_menu_movement_keys(kb: KeyBindings, ctx: Dict[str, Any]):
+    state, show_menu = ctx["state"], ctx["show_menu"]
+    MenuLevel, force_ui_update = ctx["MenuLevel"], ctx["force_ui_update"]
+
+    @kb.add("f2")
+    def _(event):
+        if state.menu_level == MenuLevel.NONE:
+            state.menu_level, state.menu_index = MenuLevel.MAIN, 0
+            w = _find_window_by_name(event, "menu")
+            if w: event.app.layout.focus(w)
+        else:
+            state.menu_level, state.menu_index, state.ui_scroll_target = MenuLevel.NONE, 0, "agents"
+            w = _find_window_by_name(event, "input")
+            if w: event.app.layout.focus(w)
+
+    @kb.add("escape")
+    @kb.add("q")
+    def _(event):
+        _handle_menu_escape(ctx, event)
 
     @kb.add("up", filter=show_menu)
     def _(event):
         state.menu_index = max(0, state.menu_index - 1)
         if state.menu_level == MenuLevel.SETTINGS:
-            state.menu_index = _settings_next_selectable_index(get_settings_menu_items(), state.menu_index, -1)
+            state.menu_index = _settings_next_selectable_index(ctx["get_settings_menu_items"](), state.menu_index, -1)
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
-            normalize_menu_index(get_monitor_menu_items())
+            ctx["normalize_menu_index"](ctx["get_monitor_menu_items"]())
         force_ui_update()
 
     @kb.add("down", filter=show_menu)
     def _(event):
-        max_idx = _get_menu_max_index(
-            state, MenuLevel, MAIN_MENU_ITEMS, get_custom_tasks_menu_items,
-            get_monitoring_menu_items, get_editors_list, get_cleanup_cfg,
-            AVAILABLE_LOCALES, get_settings_menu_items, get_automation_permissions_menu_items,
-            get_monitor_menu_items, get_llm_menu_items, get_llm_sub_menu_items,
-            get_agent_menu_items
-        )
-        state.menu_index = min(max_idx, state.menu_index + 1)
+        state.menu_index = min(_get_menu_max_index_from_ctx(ctx), state.menu_index + 1)
         if state.menu_level == MenuLevel.SETTINGS:
-            state.menu_index = _settings_next_selectable_index(get_settings_menu_items(), state.menu_index, 1)
+            state.menu_index = _settings_next_selectable_index(ctx["get_settings_menu_items"](), state.menu_index, 1)
         if state.menu_level == MenuLevel.MONITOR_TARGETS:
-            normalize_menu_index(get_monitor_menu_items())
+            ctx["normalize_menu_index"](ctx["get_monitor_menu_items"]())
         force_ui_update()
 
     @kb.add("left", filter=show_menu)
     def _(event):
         if state.menu_level == MenuLevel.LAYOUT and state.menu_index == 0:
             state.ui_left_panel_ratio = max(0.2, float(getattr(state, "ui_left_panel_ratio", 0.6)) - 0.05)
-            save_ui_settings()
+            ctx["save_ui_settings"]()
 
     @kb.add("right", filter=show_menu)
     def _(event):
         if state.menu_level == MenuLevel.LAYOUT and state.menu_index == 0:
             state.ui_left_panel_ratio = min(0.8, float(getattr(state, "ui_left_panel_ratio", 0.6)) + 0.05)
-            save_ui_settings()
+            ctx["save_ui_settings"]()
 
-    @kb.add("d", filter=show_menu)
-    def _(event):
-        if state.menu_level != MenuLevel.CLEANUP_EDITORS: return
-        editors = get_editors_list()
-        if not editors: return
-        key = editors[state.menu_index][0]
-        state.selected_editor = key
-        ok, msg = run_cleanup(load_cleanup_config(), key, dry_run=True)
-        log(msg, "action" if ok else "error")
-
-    def handle_module_list_space():
-        editor = state.selected_editor
-        if not editor: return
-        cfg = get_cleanup_cfg() or {}
-        mods = cfg.get("editors", {}).get(editor, {}).get("modules", [])
-        if not mods: return
-        m = mods[state.menu_index]
-        mid = m.get("id")
-        ref = find_module(cfg, editor, str(mid))
-        if not ref: return
-        new_state = not bool(m.get("enabled"))
-        if set_module_enabled(cfg, ref, new_state):
-            set_cleanup_cfg(load_cleanup_config())
-            log(f"{editor}/{mid}: {'ON' if new_state else 'OFF'}", "action")
-        else: log("Не вдалося змінити модуль.", "error")
-
-    def handle_llm_settings_space():
-        items = get_llm_sub_menu_items(state.menu_level)
-        if not items: return
-        itm = items[max(0, min(state.menu_index, len(items) - 1))]
-        key = itm[1] if len(itm) > 1 else ""
-        section = {MenuLevel.LLM_ATLAS: "atlas", MenuLevel.LLM_TETYANA: "tetyana", 
-                   MenuLevel.LLM_GRISHA: "grisha", MenuLevel.LLM_VISION: "vision", 
-                   MenuLevel.LLM_DEFAULTS: "defaults"}.get(state.menu_level, "")
-        from tui.tools import tool_llm_set, tool_llm_status
-        if key == "provider":
-            cur_prov = tool_llm_status({"section": section}).get("provider", "copilot")
-            provs = ["copilot", "openai", "anthropic", "gemini"]
-            next_prov = provs[(provs.index(cur_prov) + 1) % len(provs)] if cur_prov in provs else "copilot"
-            tool_llm_set({"section": section, "provider": next_prov})
-            log(f"Provider set to: {next_prov}", "action")
-        elif key in {"model", "main_model"}:
-            start_status = tool_llm_status({"section": section})
-            cur_mod = start_status.get("model") or start_status.get("main_model") or ""
-            models = ["gpt-4.1", "gpt-4o", "gpt-4", "claude-3-5-sonnet-latest", "gemini-1.5-pro-002", "mistral-large-latest"]
-            next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
-            tool_llm_set({"main_model": next_mod} if section == "defaults" else {"section": section, "model": next_mod})
-            log(f"Model set to: {next_mod}", "action")
-        elif key == "vision_model":
-            cur_mod = tool_llm_status({"section": section}).get("vision_model", "")
-            models = ["gpt-4.1-vision", "gpt-4o", "claude-3-opus", "gemini-1.5-flash"]
-            next_mod = models[(models.index(cur_mod) + 1) % len(models)] if cur_mod in models else "gpt-4o"
-            tool_llm_set({"vision_model": next_mod})
-            log(f"Vision model set to: {next_mod}", "action")
-        force_ui_update()
-
-    def _handle_locales_toggle():
-        loc = AVAILABLE_LOCALES[state.menu_index]
-        if loc.code == localization.primary:
-            log("Не можна вимкнути primary локаль.", "error")
-            return
-        if loc.code in localization.selected:
-            localization.selected = [c for c in localization.selected if c != loc.code]
-            log(f"Вимкнено: {loc.code}", "action")
-        else:
-            localization.selected.append(loc.code)
-            log(f"Увімкнено: {loc.code}", "action")
-        localization.save()
-
-    def _handle_monitor_targets_toggle():
-        items = get_monitor_menu_items()
-        if not items: return
-        it = items[state.menu_index]
-        if not getattr(it, "selectable", False): return
-        if it.key in state.monitor_targets:
-            state.monitor_targets.remove(it.key)
-            log(f"Monitor: OFF {it.label}", "action")
-        else:
-            state.monitor_targets.add(it.key)
-            log(f"Monitor: ON {it.label}", "action")
-        force_ui_update()
+def _register_action_keys(kb: KeyBindings, ctx: Dict[str, Any]):
+    state, show_menu, log = ctx["state"], ctx["show_menu"], ctx["log"]
+    MenuLevel = ctx["MenuLevel"]
 
     @kb.add("space", filter=show_menu)
     def _(event):
         lvl = state.menu_level
-        if lvl == MenuLevel.MODULE_LIST: handle_module_list_space()
-        elif lvl == MenuLevel.LOCALES: _handle_locales_toggle()
-        elif lvl == MenuLevel.MONITOR_TARGETS: _handle_monitor_targets_toggle()
+        if lvl == MenuLevel.MODULE_LIST: _handle_module_list_space(ctx)
+        elif lvl == MenuLevel.LOCALES: _handle_locales_toggle(ctx)
+        elif lvl == MenuLevel.MONITOR_TARGETS: _handle_monitor_targets_toggle(ctx)
         elif lvl in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
-            handle_llm_settings_space()
+            _handle_llm_settings_space(ctx)
+
+    @kb.add("d", filter=show_menu)
+    def _(event):
+        if state.menu_level == MenuLevel.CLEANUP_EDITORS:
+            editors = ctx["get_editors_list"]()
+            if editors:
+                state.selected_editor = editors[state.menu_index][0]
+                ok, msg = ctx["run_cleanup"](ctx["load_cleanup_config"](), state.selected_editor, dry_run=True)
+                log(msg, "action" if ok else "error")
 
     @kb.add("s", filter=show_menu)
     def _(event):
-        if state.menu_level != MenuLevel.MONITOR_CONTROL or state.monitor_active: return
-        order = ["watchdog", "fs_usage", "opensnoop"]
-        cur = state.monitor_source if state.monitor_source in order else "watchdog"
-        state.monitor_source = order[(order.index(cur) + 1) % len(order)]
-        save_monitor_settings(); log(f"Monitoring source: {state.monitor_source}", "action")
+        if state.menu_level == MenuLevel.MONITOR_CONTROL and not state.monitor_active:
+            order = ["watchdog", "fs_usage", "opensnoop"]
+            cur = state.monitor_source if state.monitor_source in order else "watchdog"
+            state.monitor_source = order[(order.index(cur) + 1) % len(order)]
+            ctx["save_monitor_settings"](); log(f"Monitoring source: {state.monitor_source}", "action")
 
     @kb.add("u", filter=show_menu)
     def _(event):
-        if state.menu_level != MenuLevel.MONITOR_CONTROL or state.monitor_active: return
-        state.monitor_use_sudo = not state.monitor_use_sudo
-        save_monitor_settings(); log(f"Monitoring sudo: {'ON' if state.monitor_use_sudo else 'OFF'}", "action")
+        if state.menu_level == MenuLevel.MONITOR_CONTROL and not state.monitor_active:
+            state.monitor_use_sudo = not state.monitor_use_sudo
+            ctx["save_monitor_settings"](); log(f"Monitoring sudo: {'ON' if state.monitor_use_sudo else 'OFF'}", "action")
 
-    def _handle_general_toggle(attr_name, label):
-        new_val = not bool(getattr(state, attr_name, False))
-        setattr(state, attr_name, new_val)
-        save_ui_settings()
-        log(f"{label}: {'ON' if new_val else 'OFF'}", "action")
+def _handle_menu_escape(ctx, event):
+    state, MenuLevel = ctx["state"], ctx["MenuLevel"]
+    if state.menu_level == MenuLevel.MAIN:
+        state.menu_level, state.menu_index, state.ui_scroll_target = MenuLevel.NONE, 0, "agents"
+    elif state.menu_level in {MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS}:
+        state.menu_level, state.menu_index = MenuLevel.LLM_SETTINGS, 0
+    elif state.menu_level in {MenuLevel.LLM_SETTINGS, MenuLevel.AGENT_SETTINGS, MenuLevel.APPEARANCE, MenuLevel.LANGUAGE, MenuLevel.LAYOUT, MenuLevel.UNSAFE_MODE, MenuLevel.AUTOMATION_PERMISSIONS, MenuLevel.DEV_SETTINGS, MenuLevel.LOCALES, MenuLevel.SELF_HEALING, MenuLevel.LEARNING_MODE}:
+        state.menu_level, state.menu_index = MenuLevel.SETTINGS, 0
+    elif state.menu_level in {MenuLevel.SETTINGS, MenuLevel.CUSTOM_TASKS, MenuLevel.MONITORING, MenuLevel.CLEANUP_EDITORS, MenuLevel.MODULE_EDITORS, MenuLevel.INSTALL_EDITORS}:
+        state.menu_level, state.menu_index = MenuLevel.MAIN, 0
+    elif state.menu_level == MenuLevel.MODULE_LIST:
+        state.menu_level, state.menu_index = MenuLevel.MODULE_EDITORS, 0
+    elif state.menu_level in {MenuLevel.MONITOR_CONTROL, MenuLevel.MONITOR_TARGETS}:
+        state.menu_level, state.menu_index = MenuLevel.MONITORING, 0
+    else:
+        w = _find_window_by_name(event, "input")
+        if w: event.app.layout.focus(w)
 
-    def _handle_language_menu_enter():
-        langs = list(TOP_LANGS)
-        if not langs: return
-        idx = max(0, min(state.menu_index, 1))
-        if idx == 0:
-            cur = state.ui_lang if state.ui_lang in langs else langs[0]
-            state.ui_lang = langs[(langs.index(cur) + 1) % len(langs)]
-            save_ui_settings(); log(f"UI lang: {state.ui_lang}", "action")
-        else:
-            cur = state.chat_lang if state.chat_lang in langs else langs[0]
-            state.chat_lang = langs[(langs.index(cur) + 1) % len(langs)]
-            save_ui_settings(); reset_agent_llm(); log(f"Chat lang: {state.chat_lang}", "action")
+def _handle_module_list_space(ctx):
+    state, log = ctx["state"], ctx["log"]
+    editor = state.selected_editor
+    if not editor: return
+    cfg = ctx["get_cleanup_cfg"]() or {}
+    mods = cfg.get("editors", {}).get(editor, {}).get("modules", [])
+    if not mods: return
+    m = mods[state.menu_index]
+    mid = m.get("id")
+    ref = ctx["find_module"](cfg, editor, str(mid))
+    if ref:
+        en = not bool(m.get("enabled"))
+        if ctx["set_module_enabled"](cfg, ref, en):
+            ctx["set_cleanup_cfg"](ctx["load_cleanup_config"]())
+            log(f"{editor}/{mid}: {'ON' if en else 'OFF'}", "action")
+    else: log("Не вдалося змінити модуль.", "error")
 
-    def _handle_cleanup_editors_enter():
-        editors = get_editors_list()
-        if not editors: return
-        key = editors[state.menu_index][0]
-        state.selected_editor = key; log(f"Clearing {key}...", "info")
-        import threading
-        def run_cleanup_thread():
-            import re
-            def cleanup_log(line: str):
-                clean_line = re.sub(r'\x1b\[[0-9;]*m', '', line)
-                if clean_line.strip(): log(clean_line, "action"); force_ui_update()
-            ok, msg = run_cleanup(load_cleanup_config(), key, dry_run=False, log_callback=cleanup_log)
-            log(msg, "action" if ok else "error"); force_ui_update()
-        threading.Thread(target=run_cleanup_thread, daemon=True).start()
+def _handle_llm_settings_space(ctx):
+    state, log = ctx["state"], ctx["log"]
+    items = ctx["get_llm_sub_menu_items"](state.menu_level)
+    if not items: return
+    itm = items[max(0, min(state.menu_index, len(items) - 1))]
+    key = itm[1] if len(itm) > 1 else ""
+    sec = {ctx["MenuLevel"].LLM_ATLAS: "atlas", ctx["MenuLevel"].LLM_TETYANA: "tetyana", 
+           ctx["MenuLevel"].LLM_GRISHA: "grisha", ctx["MenuLevel"].LLM_VISION: "vision", 
+           ctx["MenuLevel"].LLM_DEFAULTS: "defaults"}.get(state.menu_level, "")
+    from tui.tools import tool_llm_set, tool_llm_status
+    if key == "provider":
+        cur = tool_llm_status({"section": sec}).get("provider", "copilot")
+        p = ["copilot", "openai", "anthropic", "gemini"]
+        nxt = p[(p.index(cur)+1)%len(p)] if cur in p else "copilot"
+        tool_llm_set({"section": sec, "provider": nxt}); log(f"Provider set to: {nxt}", "action")
+    elif key in {"model", "main_model"}:
+        start_status = tool_llm_status({"section": sec})
+        cur = start_status.get("model") or start_status.get("main_model") or ""
+        m = ["gpt-4.1", "gpt-4o", "gpt-4", "claude-3-5-sonnet-latest", "gemini-1.5-pro-002", "mistral-large-latest"]
+        nxt = m[(m.index(cur)+1)%len(m)] if cur in m else "gpt-4o"
+        tool_llm_set({"main_model": nxt} if sec=="defaults" else {"section": sec, "model": nxt})
+        log(f"Model set to: {nxt}", "action")
+    elif key == "vision_model":
+        cur = tool_llm_status({"section": sec}).get("vision_model", "")
+        m = ["gpt-4.1-vision", "gpt-4o", "claude-3-opus", "gemini-1.5-flash"]
+        nxt = m[(m.index(cur) + 1) % len(m)] if cur in m else "gpt-4o"
+        tool_llm_set({"vision_model": nxt})
+        log(f"Vision model set to: {nxt}", "action")
+    ctx["force_ui_update"]()
 
-    def _handle_monitor_control_enter():
-        if state.monitor_active:
-            ok, msg = monitor_stop_selected()
-            state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
-            log(msg, "action" if ok else "error")
-        elif state.monitor_targets:
-            ok, msg = monitor_start_selected()
-            state.monitor_active = bool(monitor_service.running or fs_usage_service.running or opensnoop_service.running)
-            log(msg, "action" if ok else "error")
-        else: log("Select targets first", "error")
+def _handle_locales_toggle(ctx):
+    loc = ctx["AVAILABLE_LOCALES"][ctx["state"].menu_index]
+    lz = ctx["localization"]
+    if loc.code == lz.primary: return ctx["log"]("Не можна вимкнути primary локаль.", "error")
+    if loc.code in lz.selected: lz.selected = [c for c in lz.selected if c != loc.code]
+    else: lz.selected.append(loc.code)
+    lz.save(); ctx["log"](f"Вимкнено: {loc.code}" if loc.code not in lz.selected else f"Увімкнено: {loc.code}", "action")
 
-    @kb.add("enter", filter=show_menu)
-    def handle_menu_enter(event=None):
-        lvl = state.menu_level
+def _handle_monitor_targets_toggle(ctx):
+    items = ctx["get_monitor_menu_items"]()
+    if not items: return
+    it = items[ctx["state"].menu_index]
+    if not getattr(it, "selectable", False): return
+    if it.key in ctx["state"].monitor_targets:
+        ctx["state"].monitor_targets.remove(it.key)
+        ctx["log"](f"Monitor: OFF {it.label}", "action")
+    else:
+        ctx["state"].monitor_targets.add(it.key)
+        ctx["log"](f"Monitor: ON {it.label}", "action")
+    ctx["force_ui_update"]()
 
-        def _main():
-            itm = MAIN_MENU_ITEMS[state.menu_index]
-            state.menu_level, state.menu_index = itm[1], 0
+def _handle_menu_enter_dispatch(ctx):
+    state, MenuLevel = ctx["state"], ctx["MenuLevel"]
+    lvl = state.menu_level
 
-        def _custom_tasks():
-            items = get_custom_tasks_menu_items()
-            if not items: return
-            action = items[max(0, min(state.menu_index, len(items) - 1))][1]
-            if callable(action):
-                try: ok, msg = action(); log(msg, "action" if ok else "error")
-                except Exception as e: log(f"Task failed: {e}", "error")
+    _llm_sub_hint = lambda: ctx["log"]("To edit model, use CLI: /llm set section=<name> model=<model>", "info")
+    
+    dispatch = {
+        MenuLevel.MAIN: lambda: _set_menu(state, ctx["MAIN_MENU_ITEMS"][state.menu_index][1]),
+        MenuLevel.CUSTOM_TASKS: lambda: _run_custom_task(ctx),
+        MenuLevel.MONITORING: lambda: _set_menu_from_items(state, ctx["get_monitoring_menu_items"]()),
+        MenuLevel.SETTINGS: lambda: _handle_settings_enter(ctx),
+        MenuLevel.LLM_SETTINGS: lambda: _set_menu_from_items(state, ctx["get_llm_menu_items"]()),
+        MenuLevel.UNSAFE_MODE: lambda: _handle_general_toggle_ctx(ctx, "ui_unsafe_mode", "Unsafe"),
+        MenuLevel.SELF_HEALING: lambda: _handle_general_toggle_ctx(ctx, "ui_self_healing", "Self-healing"),
+        MenuLevel.LEARNING_MODE: lambda: _handle_general_toggle_ctx(ctx, "learning_mode", "Learning"),
+        MenuLevel.AUTOMATION_PERMISSIONS: lambda: None, # Placeholder, original had handle_automation_enter
+        MenuLevel.DEV_SETTINGS: lambda: _toggle_dev_provider(ctx),
+        MenuLevel.APPEARANCE: lambda: _set_theme(ctx),
+        MenuLevel.LANGUAGE: lambda: _handle_language_menu_enter_ctx(ctx),
+        MenuLevel.CLEANUP_EDITORS: lambda: _handle_cleanup_editors_enter_ctx(ctx),
+        MenuLevel.MODULE_EDITORS: lambda: _handle_module_editors_enter(ctx),
+        MenuLevel.INSTALL_EDITORS: lambda: _handle_install_editors_enter(ctx),
+        MenuLevel.LOCALES: lambda: _handle_locales_enter(ctx),
+        MenuLevel.MONITOR_TARGETS: lambda: _handle_monitor_targets_enter(ctx),
+        MenuLevel.MONITOR_CONTROL: lambda: _handle_monitor_control_enter_ctx(ctx),
+        **{ml: _llm_sub_hint for ml in [MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS]}
+    }
+    if lvl in dispatch: dispatch[lvl]()
 
-        def _monitoring():
-            items = get_monitoring_menu_items()
-            if items: state.menu_level, state.menu_index = items[max(0, min(state.menu_index, len(items) - 1))][1], 0
+def _set_menu(state, new_lvl):
+    state.menu_level, state.menu_index = new_lvl, 0
 
-        def _settings():
-            items = get_settings_menu_items()
-            if not items: return
-            idx = _settings_next_selectable_index(items, max(0, min(state.menu_index, len(items) - 1)), 1)
-            item = items[idx]
-            if not _is_section_item(item): state.menu_level, state.menu_index = item[1], 0
+def _set_menu_from_items(state, items):
+    if items: _set_menu(state, items[max(0, min(state.menu_index, len(items) - 1))][1])
 
-        def _llm_settings():
-            items = get_llm_menu_items()
-            if items: state.menu_level, state.menu_index = items[max(0, min(state.menu_index, len(items) - 1))][1], 0
+def _run_custom_task(ctx):
+    items = ctx["get_custom_tasks_menu_items"]()
+    if not items: return
+    action = items[max(0, min(ctx["state"].menu_index, len(items) - 1))][1]
+    if callable(action):
+        try: ok, msg = action(); ctx["log"](msg, "action" if ok else "error")
+        except Exception as e: ctx["log"](f"Task failed: {e}", "error")
 
-        def _dev_settings():
-            cur = str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower()
-            state.ui_dev_code_provider = "continue" if cur == "vibe-cli" else "vibe-cli"
-            save_ui_settings(); log(f"Dev provider: {state.ui_dev_code_provider.upper()}", "action")
+def _handle_settings_enter(ctx):
+    items = ctx["get_settings_menu_items"]()
+    if not items: return
+    idx = _settings_next_selectable_index(items, ctx["state"].menu_index, 1)
+    item = items[idx]
+    if not _is_section_item(item): _set_menu(ctx["state"], item[1])
 
-        def _appearance():
-            themes = list(THEME_NAMES)
-            state.ui_theme = themes[max(0, min(state.menu_index, len(themes) - 1))]
-            save_ui_settings(); log(f"Theme set: {state.ui_theme}", "action")
+def _handle_general_toggle_ctx(ctx, attr, label):
+    new_val = not bool(getattr(ctx["state"], attr, False))
+    setattr(ctx["state"], attr, new_val)
+    ctx["save_ui_settings"]()
+    ctx["log"](f"{label}: {'ON' if new_val else 'OFF'}", "action")
 
-        def _module_editors():
-            items = get_editors_list()
-            if items: state.selected_editor, state.menu_level, state.menu_index = items[state.menu_index][0], MenuLevel.MODULE_LIST, 0
+def _toggle_dev_provider(ctx):
+    cur = str(getattr(ctx["state"], "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower()
+    ctx["state"].ui_dev_code_provider = "continue" if cur == "vibe-cli" else "vibe-cli"
+    ctx["save_ui_settings"](); ctx["log"](f"Dev provider: {ctx['state'].ui_dev_code_provider.upper()}", "action")
 
-        def _install_editors():
-            items = get_editors_list()
-            if items: ok, msg = perform_install(load_cleanup_config(), items[state.menu_index][0]); log(msg, "action" if ok else "error")
+def _set_theme(ctx):
+    themes = list(THEME_NAMES)
+    ctx["state"].ui_theme = themes[max(0, min(ctx["state"].menu_index, len(themes) - 1))]
+    ctx["save_ui_settings"](); ctx["log"](f"Theme set: {ctx['state'].ui_theme}", "action")
 
-        def _locales():
-            loc = AVAILABLE_LOCALES[state.menu_index]
-            localization.primary = loc.code
-            localization.selected = [loc.code] + [c for c in localization.selected if c != loc.code]
-            localization.save(); log(f"Primary set: {loc.code}", "action")
+def _handle_language_menu_enter_ctx(ctx):
+    langs = list(ctx["TOP_LANGS"])
+    if not langs: return
+    if ctx["state"].menu_index == 0:
+        cur = ctx["state"].ui_lang if ctx["state"].ui_lang in langs else langs[0]
+        ctx["state"].ui_lang = langs[(langs.index(cur) + 1) % len(langs)]
+        ctx["log"](f"UI lang: {ctx['state'].ui_lang}", "action")
+    else:
+        cur = ctx["state"].chat_lang if ctx["state"].chat_lang in langs else langs[0]
+        ctx["state"].chat_lang = langs[(langs.index(cur) + 1) % len(langs)]
+        ctx["reset_agent_llm"](); ctx["log"](f"Chat lang: {ctx['state'].chat_lang}", "action")
+    ctx["save_ui_settings"]()
 
-        def _monitor_targets():
-            if save_monitor_targets(): log(f"Monitor targets saved", "action")
-            else: log("Failed to save", "error")
-            state.menu_level, state.menu_index = MenuLevel.MAIN, 0
+def _handle_cleanup_editors_enter_ctx(ctx):
+    editors = ctx["get_editors_list"]()
+    if not editors: return
+    key = editors[ctx["state"].menu_index][0]
+    ctx["state"].selected_editor = key; ctx["log"](f"Clearing {key}...", "info")
+    import threading
+    def run_cleanup_thread():
+        import re
+        def cleanup_log(line: str):
+            clean_line = re.sub(r'\x1b\[[0-9;]*m', '', line)
+            if clean_line.strip(): ctx["log"](clean_line, "action"); ctx["force_ui_update"]()
+        ok, msg = ctx["run_cleanup"](ctx["load_cleanup_config"](), key, dry_run=False, log_callback=cleanup_log)
+        ctx["log"](msg, "action" if ok else "error"); ctx["force_ui_update"]()
+    threading.Thread(target=run_cleanup_thread, daemon=True).start()
 
-        def _llm_sub_hint(): log("To edit model, use CLI: /llm set section=<name> model=<model>", "info")
+def _handle_module_editors_enter(ctx):
+    items = ctx["get_editors_list"]()
+    if items: ctx["state"].selected_editor, ctx["state"].menu_level, ctx["state"].menu_index = items[ctx["state"].menu_index][0], ctx["MenuLevel"].MODULE_LIST, 0
 
-        dispatch = {
-            MenuLevel.MAIN: _main, MenuLevel.CUSTOM_TASKS: _custom_tasks, MenuLevel.MONITORING: _monitoring,
-            MenuLevel.SETTINGS: _settings, MenuLevel.LLM_SETTINGS: _llm_settings,
-            MenuLevel.UNSAFE_MODE: lambda: _handle_general_toggle("ui_unsafe_mode", "Unsafe"),
-            MenuLevel.SELF_HEALING: lambda: _handle_general_toggle("ui_self_healing", "Self-healing"),
-            MenuLevel.LEARNING_MODE: lambda: _handle_general_toggle("learning_mode", "Learning"),
-            MenuLevel.AUTOMATION_PERMISSIONS: handle_automation_enter, MenuLevel.DEV_SETTINGS: _dev_settings,
-            MenuLevel.APPEARANCE: _appearance, MenuLevel.LANGUAGE: _handle_language_menu_enter,
-            MenuLevel.CLEANUP_EDITORS: _handle_cleanup_editors_enter, MenuLevel.MODULE_EDITORS: _module_editors,
-            MenuLevel.INSTALL_EDITORS: _install_editors, MenuLevel.LOCALES: _locales,
-            MenuLevel.MONITOR_TARGETS: _monitor_targets, MenuLevel.MONITOR_CONTROL: _handle_monitor_control_enter,
-            **{ml: _llm_sub_hint for ml in [MenuLevel.LLM_ATLAS, MenuLevel.LLM_TETYANA, MenuLevel.LLM_GRISHA, MenuLevel.LLM_VISION, MenuLevel.LLM_DEFAULTS]}
-        }
+def _handle_install_editors_enter(ctx):
+    items = ctx["get_editors_list"]()
+    if items: ok, msg = ctx["perform_install"](ctx["load_cleanup_config"](), items[ctx["state"].menu_index][0]); ctx["log"](msg, "action" if ok else "error")
 
-        if lvl in dispatch: dispatch[lvl]()
+def _handle_locales_enter(ctx):
+    loc = ctx["AVAILABLE_LOCALES"][ctx["state"].menu_index]
+    ctx["localization"].primary = loc.code
+    ctx["localization"].selected = [loc.code] + [c for c in ctx["localization"].selected if c != loc.code]
+    ctx["localization"].save(); ctx["log"](f"Primary set: {loc.code}", "action")
 
-    return kb, handle_menu_enter
+def _handle_monitor_targets_enter(ctx):
+    if ctx["save_monitor_targets"](): ctx["log"](f"Monitor targets saved", "action")
+    else: ctx["log"]("Failed to save", "error")
+    _set_menu(ctx["state"], ctx["MenuLevel"].MAIN)
+
+def _handle_monitor_control_enter_ctx(ctx):
+    st = ctx["state"]
+    if st.monitor_active:
+        ok, msg = ctx["monitor_stop_selected"]()
+        st.monitor_active = bool(ctx["monitor_service"].running or ctx["fs_usage_service"].running or ctx["opensnoop_service"].running)
+        ctx["log"](msg, "action" if ok else "error")
+    elif st.monitor_targets:
+        ok, msg = ctx["monitor_start_selected"]()
+        st.monitor_active = bool(ctx["monitor_service"].running or ctx["fs_usage_service"].running or ctx["opensnoop_service"].running)
+        ctx["log"](msg, "action" if ok else "error")
+    else: ctx["log"]("Select targets first", "error")
+
+def _get_menu_max_index_from_ctx(ctx):
+    return _get_menu_max_index(
+        ctx["state"], ctx["MenuLevel"], ctx["MAIN_MENU_ITEMS"], ctx["get_custom_tasks_menu_items"],
+        ctx["get_monitoring_menu_items"], ctx["get_editors_list"], ctx["get_cleanup_cfg"],
+        ctx["AVAILABLE_LOCALES"], ctx["get_settings_menu_items"], ctx["get_automation_permissions_menu_items"],
+        ctx["get_monitor_menu_items"], ctx["get_llm_menu_items"], ctx["get_llm_sub_menu_items"],
+        ctx["get_agent_menu_items"]
+    )
 
 def _find_window_by_name(event: Any, name: str) -> Any:
     try:

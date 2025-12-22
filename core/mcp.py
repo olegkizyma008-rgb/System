@@ -165,6 +165,7 @@ class MCPToolRegistry:
     
     VISION_DISABLED_ERROR = "Vision tools disabled (TRINITY_DISABLE_VISION=1)"
     LAST_RESPONSE_FILE = ".last_response.txt"
+    YT_SEARCH_SELECTOR = '[name="search_query"]'
 
     def __init__(self):
         self._tools: Dict[str, Callable] = {}
@@ -467,92 +468,66 @@ class MCPToolRegistry:
                 print(f"[MCP] Failed to initialize external provider {name}: {e}")
 
     def _adapt_args_for_mcp(self, local_name: str, mcp_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Adapt local tool arguments to MCP server format.
+        """Adapt local tool arguments to MCP server format."""
         
-        @executeautomation/playwright-mcp-server API:
-        - Playwright_navigate: url, browserType, width, height, timeout, waitUntil, headless
-        - Playwright_click: selector
-        - Playwright_fill: selector, value
-        - Playwright_screenshot: name, selector, width, height, storeBase64, fullPage, savePng
-        - playwright_press_key: key, selector
-        - Playwright_hover: selector
-        - Playwright_select: selector, value
-        """
-        mcp_args = {}
+        # Adaptation handlers for specific tool categories
+        handlers = {
+            "browser_open_url": self._adapt_browser_nav,
+            "browser_navigate": self._adapt_browser_nav,
+            "browser_click_element": self._adapt_browser_click,
+            "browser_type_text": self._adapt_browser_type,
+            "browser_screenshot": self._adapt_browser_screenshot,
+            "browser_press_key": self._adapt_browser_key,
+            "browser_hover": lambda a: {"selector": a.get("selector", "")},
+            "browser_select": lambda a: {"selector": a.get("selector", ""), "value": a.get("value", "")},
+            "browser_get_content": lambda a: {"selector": a.get("selector", ""), "cleanHtml": True},
+            "run_applescript": lambda a: {"script": a.get("script", "")}
+        }
         
-        if local_name in ("browser_open_url", "browser_navigate"):
-            # Local: url, headless -> MCP: url, headless, browserType
-            mcp_args["url"] = args.get("url", "")
-            if "headless" in args:
-                mcp_args["headless"] = args["headless"]
-            mcp_args["browserType"] = "chromium"  # default to chromium
+        handler = handlers.get(local_name)
+        if handler:
+            return handler(args)
             
-        elif local_name == "browser_click_element":
-            # Local: selector -> MCP: selector
-            mcp_args["selector"] = self._smart_selector(args.get("selector", ""))
-            
-        elif local_name == "browser_type_text":
-            # Local: selector, text, press_enter -> MCP: selector, value
-            mcp_args["selector"] = self._smart_selector(args.get("selector", ""))
-            mcp_args["value"] = args.get("text", "")
-            # Note: press_enter needs to be handled separately via playwright_press_key
-            
-        elif local_name == "browser_screenshot":
-            # Local: path -> MCP: name, savePng, downloadsDir
-            path = args.get("path", "screenshot")
-            import os
-            mcp_args["name"] = os.path.basename(path).replace(".png", "")
-            mcp_args["savePng"] = True
-            mcp_args["downloadsDir"] = os.path.dirname(path) or "."
-            mcp_args["fullPage"] = args.get("full_page", False)
-                
-        elif local_name == "browser_press_key":
-            # Local: key, selector -> MCP: key, selector
-            mcp_args["key"] = args.get("key", "")
-            if args.get("selector"):
-                mcp_args["selector"] = args["selector"]
-                
-        elif local_name == "browser_hover":
-            # Local: selector -> MCP: selector
-            mcp_args["selector"] = args.get("selector", "")
-            
-        elif local_name == "browser_select":
-            # Local: selector, value -> MCP: selector, value
-            mcp_args["selector"] = args.get("selector", "")
-            mcp_args["value"] = args.get("value", "")
-            
-        elif local_name == "browser_snapshot":
-            # No args needed for playwright_get_visible_text
-            pass
-            
-        elif local_name == "browser_get_content":
-            # Local: selector -> MCP: selector, cleanHtml
-            if args.get("selector"):
-                mcp_args["selector"] = args["selector"]
-            mcp_args["cleanHtml"] = True
-            
-        elif local_name == "run_applescript":
-            # Local: script -> MCP: script
-            mcp_args["script"] = args.get("script", "")
-            
-        else:
-            # Pass through unchanged
-            mcp_args = args
-            
+        return args
+
+    def _adapt_browser_nav(self, args):
+        mcp_args = {"url": args.get("url", ""), "browserType": "chromium"}
+        if "headless" in args:
+            mcp_args["headless"] = args["headless"]
+        return mcp_args
+
+    def _adapt_browser_click(self, args):
+        return {"selector": self._smart_selector(args.get("selector", ""))}
+
+    def _adapt_browser_type(self, args):
+        return {
+            "selector": self._smart_selector(args.get("selector", "")),
+            "value": args.get("text", "")
+        }
+
+    def _adapt_browser_screenshot(self, args):
+        path = args.get("path", "screenshot")
+        import os
+        return {
+            "name": os.path.basename(path).replace(".png", ""),
+            "savePng": True,
+            "downloadsDir": os.path.dirname(path) or ".",
+            "fullPage": args.get("full_page", False)
+        }
+
+    def _adapt_browser_key(self, args):
+        mcp_args = {"key": args.get("key", "")}
+        if args.get("selector"):
+            mcp_args["selector"] = args["selector"]
         return mcp_args
 
     def _smart_selector(self, selector: str) -> str:
-        """Auto-correct common selector mistakes for popular sites.
-        
-        This helps when LLM uses generic selectors that don't work on specific sites.
-        The correction is based on the current page URL (if available from MCP).
-        """
-        # Common selector mappings for sites where generic selectors fail
+        """Auto-correct common selector mistakes for popular sites."""
         selector_fixes = {
             # YouTube
-            "input#search": '[name="search_query"]',
-            "#search": '[name="search_query"]',
-            "input[name='q']": '[name="search_query"]',  # Google-style won't work on YT
+            "input#search": self.YT_SEARCH_SELECTOR,
+            "#search": self.YT_SEARCH_SELECTOR,
+            "input[name='q']": self.YT_SEARCH_SELECTOR,  # Google-style won't work on YT
             
             # Google (fix textarea vs input)
             'input[name="q"]': 'textarea[name="q"], input[name="q"]',
@@ -619,12 +594,21 @@ class MCPToolRegistry:
     def execute(self, tool_name: str, args: Dict[str, Any]) -> str:
         """Executes a tool safely and returns a string result."""
         
-        # MCP PRIORITY: Try to route browser_* and applescript calls to MCP servers first
-        # Tool names from @executeautomation/playwright-mcp-server API:
-        # - playwright_navigate, playwright_click, playwright_fill, playwright_screenshot
-        # - playwright_close, playwright_get_visible_text, playwright_press_key, etc.
+        # 1. Routing to MCP Priotity
+        mcp_res = self._try_mcp_routing(tool_name, args)
+        if mcp_res is not None:
+            return mcp_res
+
+        # 2. Direct External Tool Call
+        ext_res = self._try_external_direct_call(tool_name, args)
+        if ext_res is not None:
+            return ext_res
+
+        # 3. Local Tool Call
+        return self._execute_local_tool(tool_name, args)
+
+    def _try_mcp_routing(self, tool_name: str, args: Dict[str, Any]) -> Optional[str]:
         mcp_routing = {
-            # Local tool name -> (MCP provider, MCP tool name)
             "browser_open_url": ("playwright", "playwright_navigate"),
             "browser_navigate": ("playwright", "playwright_navigate"),
             "browser_click_element": ("playwright", "playwright_click"),
@@ -641,95 +625,85 @@ class MCPToolRegistry:
             "run_applescript": ("applescript", "run_applescript"),
         }
         
-        # Check if we should route to MCP
-        if tool_name in mcp_routing:
-            provider_name, mcp_tool = mcp_routing[tool_name]
-            if provider_name in self._external_providers:
-                provider = self._external_providers[provider_name]
-                try:
-                    # Ensure connected
-                    if not provider._connected:
-                        provider.connect()
-                    
-                    # Adapt arguments for MCP format
-                    mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
-                    
-                    res = provider.execute(mcp_tool, mcp_args)
-                    print(f"[MCP] Executed {mcp_tool} via {provider_name}")
-                    
-                    # Handle press_enter for browser_type_text
-                    if tool_name == "browser_type_text" and args.get("press_enter"):
-                        try:
-                            import time
-                            time.sleep(0.5)  # Small delay before pressing Enter
-                            key_args = {"key": "Enter"}
-                            # Use the ADAPTED selector, not original
-                            if mcp_args.get("selector"):
-                                key_args["selector"] = mcp_args["selector"]
-                            provider.execute("playwright_press_key", key_args)
-                            print("[MCP] Also pressed Enter key")
-                        except Exception as key_e:
-                            print(f"[MCP] Warning: Failed to press Enter: {key_e}")
-                    
-                    return json.dumps(res, indent=2, ensure_ascii=False)
-                except Exception as e:
-                    print(f"[MCP] Failed {provider_name}.{mcp_tool}, falling back to local: {e}")
-                    # Fall through to local implementation
-        
-        # Check external tools first (prefixed tools like playwright.browser_snapshot)
-        provider_name = self._external_tools_map.get(tool_name)
-        if provider_name and provider_name in self._external_providers:
-            provider = self._external_providers[provider_name]
-            try:
-                # Strip prefix if present (e.g. "playwright.browser_navigate" -> "browser_navigate")
-                actual_name = tool_name.split(".", 1)[-1] if "." in tool_name else tool_name
-                res = provider.execute(actual_name, args)
-                return json.dumps(res, indent=2, ensure_ascii=False)
-            except Exception as e:
-                return f"Error executing external tool '{tool_name}': {str(e)}"
+        if tool_name not in mcp_routing:
+            return None
+            
+        provider_name, mcp_tool = mcp_routing[tool_name]
+        if provider_name not in self._external_providers:
+            return None
+            
+        provider = self._external_providers[provider_name]
+        try:
+            if not provider._connected:
+                provider.connect()
+            
+            mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
+            res = provider.execute(mcp_tool, mcp_args)
+            
+            if tool_name == "browser_type_text" and args.get("press_enter"):
+                self._mcp_press_enter_fallback(provider, mcp_args)
+            
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[MCP] Failed {provider_name}.{mcp_tool}, falling back to local: {e}")
+            return None
 
+    def _mcp_press_enter_fallback(self, provider, mcp_args):
+        try:
+            time.sleep(0.5)
+            key_args = {"key": "Enter"}
+            if mcp_args.get("selector"):
+                key_args["selector"] = mcp_args["selector"]
+            provider.execute("playwright_press_key", key_args)
+        except Exception:
+            pass
+
+    def _try_external_direct_call(self, tool_name: str, args: Dict[str, Any]) -> Optional[str]:
+        provider_name = self._external_tools_map.get(tool_name)
+        if not (provider_name and provider_name in self._external_providers):
+            return None
+            
+        provider = self._external_providers[provider_name]
+        try:
+            actual_name = tool_name.split(".", 1)[-1] if "." in tool_name else tool_name
+            res = provider.execute(actual_name, args)
+            return json.dumps(res, indent=2, ensure_ascii=False)
+        except Exception as e:
+            return f"Error executing external tool '{tool_name}': {str(e)}"
+
+    def _execute_local_tool(self, tool_name: str, args: Dict[str, Any]) -> str:
         func = self._tools.get(tool_name)
         if not func:
             return f"Error: Tool '{tool_name}' not found."
-        
+            
         try:
-            # Inspection of function signature to avoid TypeError: unexpected keyword argument
             import inspect
             sig = inspect.signature(func)
-            
-            # Special handling for 'allow' kwarg in executor tools if not present but needed
-            if "allow" in sig.parameters and "allow" not in args:
-                args["allow"] = True
-            
-            call_kwargs = {}
-            
-            # TUI Tool Convention: If the function explicitly requests 'args', pass the full dictionary
-            if "args" in sig.parameters:
-                call_kwargs["args"] = args
-            elif "_args" in sig.parameters:
-                call_kwargs["_args"] = args
-            
-            # Filter args to only those supported by the function, unless it has **kwargs
-            has_varkw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
-            
-            if has_varkw:
-                # If function has **kwargs, pass everything
-                for k, v in args.items():
-                    # Avoid overwriting the injected 'args' parameter if it exists
-                    if k == "args" and "args" in sig.parameters:
-                        continue
-                    call_kwargs[k] = v
-            else:
-                # Filter to supported params
-                for k, v in args.items():
-                    if k in sig.parameters:
-                        call_kwargs[k] = v
-            
+            call_kwargs = self._prepare_call_kwargs(sig, args)
             result = func(**call_kwargs)
-            
             return json.dumps(result, indent=2, ensure_ascii=False)
         except Exception as e:
             return f"Error executing '{tool_name}': {str(e)}"
+
+    def _prepare_call_kwargs(self, sig: Any, args: Dict[str, Any]) -> Dict[str, Any]:
+        if "allow" in sig.parameters and "allow" not in args:
+            args["allow"] = True
+            
+        call_kwargs = {}
+        if "args" in sig.parameters:
+            call_kwargs["args"] = args
+        elif "_args" in sig.parameters:
+            call_kwargs["_args"] = args
+            
+        has_varkw = any(p.kind == 3 for p in sig.parameters.values()) # 3 = VAR_KEYWORD
+        
+        for k, v in args.items():
+            if has_varkw:
+                if not (k == "args" and "args" in sig.parameters):
+                    call_kwargs[k] = v
+            elif k in sig.parameters:
+                call_kwargs[k] = v
+        return call_kwargs
 
     # ===== RAG-based Intelligent Tool Selection =====
     
