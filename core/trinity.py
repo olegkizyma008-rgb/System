@@ -75,6 +75,7 @@ class TrinityState(TypedDict):
 
 class TrinityRuntime:
     MAX_STEPS = 50
+    MAX_REPLANS = 10
     PROJECT_STRUCTURE_FILE = "project_structure_final.txt"
     LAST_RESPONSE_FILE = ".last_response.txt"
     TRINITY_REPORT_HEADER = "## Trinity Report"
@@ -774,7 +775,7 @@ class TrinityRuntime:
         
         try:
             resp = self.llm.invoke(prompt.format_messages())
-            data = self._extract_json_object(getattr(resp, "content", ""))
+            data = extract_json_object(getattr(resp, "content", ""))
             if data and "meta_config" in data:
                 meta_config.update(data["meta_config"])
                 if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan", "repair"]:
@@ -924,7 +925,7 @@ Return JSON with ONLY the replacement step.'''))
 
         plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
         plan_resp_content = getattr(plan_resp, "content", "") if plan_resp is not None else ""
-        return self._extract_json_object(plan_resp_content)
+        return extract_json_object(plan_resp_content)
 
     def _extract_raw_plan(self, data, meta_config):
         """Extract raw plan from JSON data."""
