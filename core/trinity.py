@@ -458,6 +458,17 @@ class TrinityRuntime:
             critical_issues = [issue for issue in issues if issue.severity in {IssueSeverity.CRITICAL, IssueSeverity.HIGH}]
             if critical_issues:
                 pause_info["issues"] = [issue.to_dict() for issue in critical_issues[:5]]  # Top 5 most critical
+
+        # Attach diagnostics (diffs, stack traces, files) to the pause to help
+        # Doctor Vibe diagnose the problem quickly. This is a best-effort, and
+        # will be limited and sanitized.
+        try:
+            diags = self._collect_pause_diagnostics(state)
+            if diags:
+                pause_info["diagnostics"] = diags
+        except Exception:
+            # Never fail the pause creation if diagnostics collection fails
+            pass
         
         # Notify Vibe CLI Assistant about the pause
         self.vibe_assistant.handle_pause_request(pause_info)
@@ -489,6 +500,101 @@ class TrinityRuntime:
             "vibe_assistant_pause": None,
             "vibe_assistant_context": f"RESUMED: {pause_context}"
         }
+
+    def _collect_pause_diagnostics(self, state: TrinityState, tools: Optional[list] = None, exception: Optional[Exception] = None) -> Dict[str, Any]:
+        """Collect limited diagnostics for a Vibe pause: diffs, files, and stack trace.
+
+        Returns a dict with keys: files, diffs (per-file truncated), file_line (first hunk), tools, stack_trace
+        """
+        diagnostics: Dict[str, Any] = {"files": [], "diffs": [], "tools": [], "stack_trace": None}
+
+        # Configurable limits
+        MAX_DIFF_FILES = 5
+        MAX_DIFF_LINES = 500
+        MAX_DIFF_BYTES = 20 * 1024  # 20 KB per file
+        MAX_STACK_LINES = 200
+        SENSITIVE_PATTERNS = [".env", "id_rsa", "secret", "credentials"]
+
+        git_root = self._get_git_root()
+        try:
+            # include tools if provided
+            if tools:
+                diagnostics["tools"] = [ {"name": t.get("name"), "args": t.get("args")} for t in tools ]
+
+            # Gather changed files from repo state
+            repo_changes = self._get_repo_changes()
+            changed = repo_changes.get("changed_files") if isinstance(repo_changes, dict) else None
+            files = list(changed or [])[:MAX_DIFF_FILES]
+            safe_files = []
+            for f in files:
+                # skip obvious sensitive files
+                if any(p in f for p in SENSITIVE_PATTERNS):
+                    continue
+                # ensure file is inside git root
+                try:
+                    ap = os.path.abspath(os.path.join(git_root or os.getcwd(), f))
+                except Exception:
+                    continue
+                if git_root and not ap.startswith(os.path.abspath(git_root) + os.sep):
+                    continue
+                safe_files.append(f)
+
+            diagnostics["files"] = safe_files
+
+            # For each file, collect a diff snippet limited by lines/bytes
+            for f in safe_files:
+                try:
+                    diff_proc = subprocess.run(["git", "diff", "-U3", "--", f], cwd=git_root or os.getcwd(), capture_output=True, text=True)
+                    raw = diff_proc.stdout or ""
+                    if not raw:
+                        continue
+                    # Truncate by lines first
+                    lines = raw.splitlines()
+                    if len(lines) > MAX_DIFF_LINES:
+                        lines = lines[:MAX_DIFF_LINES]
+                        lines.append("\n...diff truncated...")
+                    truncated = "\n".join(lines)
+                    # Truncate by bytes if needed
+                    if len(truncated.encode("utf-8")) > MAX_DIFF_BYTES:
+                        truncated = truncated.encode("utf-8")[:MAX_DIFF_BYTES].decode("utf-8", errors="ignore") + "\n...diff truncated (bytes)..."
+
+                    # Attempt to parse first hunk for new-file line number
+                    first_hunk_line = None
+                    for ln in lines:
+                        if ln.startswith("@@"):
+                            # pattern: @@ -a,b +c,d @@
+                            try:
+                                plus_part = ln.split("+")[1]
+                                start = plus_part.split(",")[0]
+                                first_hunk_line = int(start)
+                            except Exception:
+                                first_hunk_line = None
+                            break
+
+                    diagnostics["diffs"].append({"file": f, "diff": truncated, "first_hunk_line": first_hunk_line})
+                except Exception:
+                    continue
+
+            # Include exception stack trace if present
+            if exception is not None:
+                try:
+                    import traceback
+                    st = traceback.format_exception(type(exception), exception, exception.__traceback__)
+                    st_lines = []
+                    for s in st:
+                        st_lines.extend(str(s).splitlines())
+                    if len(st_lines) > MAX_STACK_LINES:
+                        st_lines = st_lines[-MAX_STACK_LINES:]
+                        st_lines.insert(0, "...stack trace truncated...")
+                    diagnostics["stack_trace"] = "\n".join(st_lines)
+                except Exception:
+                    diagnostics["stack_trace"] = None
+
+        except Exception:
+            # best-effort only
+            pass
+
+        return diagnostics
     
     def handle_vibe_assistant_command(self, command: str) -> Dict[str, Any]:
         """
@@ -560,6 +666,8 @@ class TrinityRuntime:
             "task_type": task_type,
             "is_dev": is_dev,
             "requires_windsurf": is_dev,
+            # Default editor mode is CLI. Allow operator to force Doctor Vibe
+            # to handle all DEV tasks via TRINITY_DEV_BY_VIBE env var.
             "dev_edit_mode": "cli",
             "intent_reason": "eternal_engine_mode",
             "last_step_status": "success",
@@ -579,6 +687,18 @@ class TrinityRuntime:
             "vibe_assistant_context": "eternal_engine_mode: Doctor Vibe monitoring activated",
             "learning_mode": self.learning_mode
         }
+
+        # If operator prefers Doctor Vibe to handle DEV tasks, enable vibe mode
+        try:
+            if is_dev and str(os.getenv("TRINITY_DEV_BY_VIBE", "")).strip().lower() in {"1", "true", "yes", "on"}:
+                initial_state["dev_edit_mode"] = "vibe"
+                # When Vibe handles dev, we don't require Windsurf
+                initial_state["requires_windsurf"] = False
+                initial_state["meta_config"]["doctor_vibe_mode"] = "active"
+                if self.verbose:
+                    self.logger.info("⚕️ Doctor Vibe enabled for DEV tasks (TRINITY_DEV_BY_VIBE)")
+        except Exception:
+            pass
         
         if self.verbose:
             mode_desc = "background error correction" if is_dev else "critical error intervention"
@@ -1189,6 +1309,23 @@ Return JSON with ONLY the replacement step.'''))
                     return ack_retry
 
             # 4. Execute tools
+            # If the runtime is configured to let Doctor Vibe handle DEV edits,
+            # pause and notify the Vibe CLI Assistant instead of executing dev
+            # tool calls (e.g., file writes, send_to_windsurf, open_project_in_windsurf).
+            dev_tools = {"send_to_windsurf", "open_file_in_windsurf", "open_project_in_windsurf", "write_file", "copy_file"}
+            if str(state.get("dev_edit_mode") or "").strip().lower() == "vibe" and any((t.get("name") in dev_tools) for t in (tool_calls or [])):
+                # Create a pause state for Doctor Vibe to intervene and return
+                # a paused state so execution stops until human continues.
+                pause = self._create_vibe_assistant_pause_state(state, "doctor_vibe_dev", "Doctor Vibe: Manual dev intervention required for this step")
+                # Enhance pause with diagnostics about the tools that triggered it
+                try:
+                    diags = self._collect_pause_diagnostics(state, tools=tool_calls)
+                    if diags:
+                        pause["diagnostics"] = diags
+                except Exception:
+                    pass
+                return {}, pause, True
+
             results, pause_info, had_failure = self._execute_tetyana_tools(state, tool_calls)
             
             # 5. Process tool responses
