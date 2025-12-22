@@ -1,5 +1,5 @@
 ## Metadata
-Generated: Mon Dec 22 16:21:16  2025
+Generated: Mon Dec 22 16:44:32  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
@@ -56,14 +56,15 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 
 
 ### Project Statistics
-  - Python files: 20384
-  - Test files: 27
+  - Python files: 20386
+  - Test files: 29
   - Documentation files: 14
   - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  35f9beff feat: Enhance Doctor Vibe integration for DEV edits, including auto-apply functionality and diagnostics support
+  b14b2abb feat: Integrate Doctor Vibe for authoritative dev edits, including mode toggling and content sanitization
+  3737e1bf feat: Enhance Doctor Vibe integration for DEV edits, including auto-apply functionality and diagnostics support
   df41d689 feat: Implement diagnostics collection for Vibe pauses and add tests for DEV task handling
   5c302099 fix: Improve git root detection for repository changes in TrinityRuntime
   11d15421 feat: Enable universal editor cleanup and improve error handling in various modules
@@ -72,7 +73,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
   1e42fbc8 feat: Enhance Atlas planning with critical anti-premature-completion rules and improve global goal validation in Trinity
   26b7465f fix: CAPTCHA detection and Grisha override bug for film search
   3524b2d5 feat: Add MAX_REPLANS constant, refactor JSON extraction utility, and update critical issues report totals.
-  f9beb344 Refactor copy_to_clipboard to reduce cognitive complexity
 ```
 
 ## Project Structure
@@ -594,10 +594,12 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
 │   ├── test_mcp_browser.py
 │   ├── test_mcp_registry.py
 │   ├── test_monitor_auto_select.py
+│   ├── test_monitor_ui_toggle.py
 │   ├── test_monitoring_trace.py
 │   ├── test_parallel_executor.py
 │   ├── test_router_vibe_pause.py
 │   ├── test_self_healing_quick_repair.py
+│   ├── test_tetyana_vibe_content_pause.py
 │   ├── test_trinity_autocommit.py
 │   ├── test_trinity_env_helper.py
 │   ├── test_trinity_models.py
@@ -662,6 +664,6 @@ mcp_integration/README.md | 633 +++++++++++++++++++++++-----------------------
     ├── test_modern_enhancements.py
     └── verify_website.py
 
-182 directories, 402 files
+182 directories, 404 files
 
 ```

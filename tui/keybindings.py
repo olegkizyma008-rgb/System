@@ -543,6 +543,24 @@ def _handle_monitor_targets_enter(ctx):
 
 def _handle_monitor_control_enter_ctx(ctx):
     st = ctx["state"]
+    # If the selected menu index is 0, toggle monitor mode (auto/manual)
+    try:
+        if int(getattr(st, "menu_index", 0)) == 0:
+            cur = str(getattr(st, "monitor_mode", "auto") or "auto").strip().lower()
+            new = "manual" if cur == "auto" else "auto"
+            st.monitor_mode = new
+            try:
+                # persist settings if provided
+                if "save_monitor_settings" in ctx and callable(ctx["save_monitor_settings"]):
+                    ctx["save_monitor_settings"]()
+            except Exception:
+                pass
+            ctx["log"](f"Monitor mode: {st.monitor_mode.upper()}", "action")
+            return
+    except Exception:
+        pass
+
+    # Otherwise, treat it as Start/Stop action (index 1)
     if st.monitor_active:
         ok, msg = ctx["monitor_stop_selected"]()
         st.monitor_active = bool(ctx["monitor_service"].running or ctx["fs_usage_service"].running or ctx["opensnoop_service"].running)
@@ -551,7 +569,8 @@ def _handle_monitor_control_enter_ctx(ctx):
         ok, msg = ctx["monitor_start_selected"]()
         st.monitor_active = bool(ctx["monitor_service"].running or ctx["fs_usage_service"].running or ctx["opensnoop_service"].running)
         ctx["log"](msg, "action" if ok else "error")
-    else: ctx["log"]("Select targets first", "error")
+    else:
+        ctx["log"]("Select targets first", "error")
 
 def _get_menu_max_index_from_ctx(ctx):
     return _get_menu_max_index(

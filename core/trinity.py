@@ -1257,7 +1257,24 @@ Return JSON with ONLY the replacement step.'''))
         task_type = str(state.get("task_type") or "").strip().upper()
         requires_windsurf = bool(state.get("requires_windsurf") or False)
         dev_edit_mode = str(state.get("dev_edit_mode") or ("windsurf" if requires_windsurf else "cli")).strip().lower()
+
+        # Respect global Doctor Vibe preference: if TRINITY_DEV_BY_VIBE is set,
+        # force dev edit handling to 'vibe' so Doctor Vibe becomes authoritative
+        try:
+            if self._is_env_true("TRINITY_DEV_BY_VIBE"):
+                dev_edit_mode = "vibe"
+                # Persist into state so downstream code and other checks see the mode
+                try:
+                    state["dev_edit_mode"] = "vibe"
+                    state["requires_windsurf"] = False
+                except Exception:
+                    pass
+                # Also ensure we don't require Windsurf when Vibe handles dev edits
+                requires_windsurf = False
+        except Exception:
+            pass
         had_failure = False # Initialize for scope safety
+        # (no-op) start debug removed
         
         try:
             plan_preview = state.get("plan")
@@ -1301,6 +1318,32 @@ Return JSON with ONLY the replacement step.'''))
             
             content = getattr(response, "content", "") if response else ""
             tool_calls = getattr(response, "tool_calls", []) if response and hasattr(response, 'tool_calls') else []
+
+            # If Doctor Vibe is enabled and the LLM content explicitly mentions
+            # 'Windsurf', pre-emptively pause so a human (Doctor Vibe) can intervene
+            try:
+                lower_content = (content or "").lower()
+                # Debug trace for content-based pause detection
+                try:
+                    self.logger.debug(f"Tetyana content check: dev_edit_mode={dev_edit_mode}, windsurf_in_content={'windsurf' in lower_content}")
+                except Exception:
+                    pass
+                # end debug
+                if dev_edit_mode == "vibe" and "windsurf" in lower_content:
+                    # Create pause and return a sanitized message to avoid displaying 'Windsurf'
+                    pause = self._create_vibe_assistant_pause_state(state, "doctor_vibe_dev", "Doctor Vibe: Manual dev intervention required for this step")
+                    try:
+                        diags = self._collect_pause_diagnostics(state)
+                        if diags:
+                            pause["diagnostics"] = diags
+                    except Exception:
+                        pass
+                    # Sanitize content for UI (replace Windsurf with Doctor Vibe note)
+                    import re
+                    sanitized = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", str(content or ""))
+                    return ({**state, "messages": list(context) + [AIMessage(content=sanitized)]}, pause, True)
+            except Exception:
+                pass
 
             # 3. Handle acknowledgment loops
             if not tool_calls and content:
@@ -1559,8 +1602,31 @@ Return JSON with ONLY the replacement step.'''))
             return False
 
     def _finalize_tetyana_state(self, state, context, content, tool_calls, had_failure, pause_info):
+        # Sanitize LLM messages that reference Windsurf when Doctor Vibe handles dev edits
+        try:
+            dev_mode = str(state.get("dev_edit_mode") or "").strip().lower()
+            if dev_mode == "vibe" and content and "windsurf" in str(content).lower():
+                import re
+                content = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", str(content))
+        except Exception:
+            pass
+
         updated_messages = list(context) + [AIMessage(content=content)]
         used_tools = [t.get("name") for t in tool_calls] if tool_calls else []
+        # If Doctor Vibe is enabled and the model's content mentions Windsurf,
+        # create a pause so human can intervene instead of proceeding.
+        try:
+            # Consider environment override in addition to state value
+            if self._is_env_true("TRINITY_DEV_BY_VIBE"):
+                dev_mode = "vibe"
+            else:
+                dev_mode = str(state.get("dev_edit_mode") or "").strip().lower()
+
+            if dev_mode == "vibe" and content and "windsurf" in str(content).lower():
+                pause = self._create_vibe_assistant_pause_state(state, "doctor_vibe_dev", "Doctor Vibe: Manual dev intervention required for this step")
+                return {**state, "messages": updated_messages, "pause_info": pause, "last_step_status": "uncertain", "current_agent": "meta_planner"}
+        except Exception:
+            pass
         
         if pause_info:
             return {**state, "messages": updated_messages, "pause_info": pause_info, "last_step_status": "uncertain", "current_agent": "meta_planner"}

@@ -83,15 +83,31 @@ git commit -m "Initial commit: Bootstrap Trinity continual development project" 
 echo "✓ Created initial commit"
 
 OPENED_IN_WINDSURF=0
-if command -v windsurf >/dev/null 2>&1; then
-    windsurf --new-window "$PROJECT_DIR" >/dev/null 2>&1 && OPENED_IN_WINDSURF=1 || true
-else
-    open -a Windsurf "$PROJECT_DIR" >/dev/null 2>&1 && OPENED_IN_WINDSURF=1 || true
+# Respect Doctor Vibe authority: if TRINITY_DEV_BY_VIBE is truthy, do not auto-open any editor
+VIBE_ENABLED=0
+if [ -n "${TRINITY_DEV_BY_VIBE:-}" ]; then
+    case "${TRINITY_DEV_BY_VIBE,,}" in
+        1|true|yes|on)
+            VIBE_ENABLED=1
+            ;;
+        *)
+            VIBE_ENABLED=0
+            ;;
+    esac
 fi
-if [ "$OPENED_IN_WINDSURF" -eq 1 ]; then
-    echo "🪟 Opened in Windsurf: $PROJECT_DIR"
+if [ "$VIBE_ENABLED" -eq 1 ]; then
+    echo "⚠️ Doctor Vibe is enabled (TRINITY_DEV_BY_VIBE). Skipping auto-open of editor; Doctor Vibe controls edit actions."
 else
-    echo "⚠️ Could not auto-open Windsurf. You can run: windsurf \"$PROJECT_DIR\""
+    if command -v windsurf >/dev/null 2>&1; then
+        windsurf --new-window "$PROJECT_DIR" >/dev/null 2>&1 && OPENED_IN_WINDSURF=1 || true
+    else
+        open -a Windsurf "$PROJECT_DIR" >/dev/null 2>&1 && OPENED_IN_WINDSURF=1 || true
+    fi
+    if [ "$OPENED_IN_WINDSURF" -eq 1 ]; then
+        echo "🪟 Opened in Windsurf: $PROJECT_DIR"
+    else
+        echo "⚠️ Could not auto-open an editor. You can run: windsurf \"$PROJECT_DIR\" or open it in your editor of choice."
+    fi
 fi
 
 # Summary
@@ -100,7 +116,11 @@ echo "✅ Bootstrap complete!"
 echo ""
 echo "📖 Next steps:"
 echo "1. cd $PROJECT_DIR"
-echo "2. Open in Windsurf: windsurf ."
+if [ "$VIBE_ENABLED" -eq 1 ]; then
+    echo "2. Doctor Vibe is enabled; use Doctor Vibe to review or apply edits (TRINITY_DEV_BY_VIBE=1)."
+else
+    echo "2. Open in your editor (e.g., Windsurf): windsurf ."
+fi
 echo "3. Start developing - project_structure_final.txt will update automatically"
 echo ""
 echo "📚 For more info, see README.md in the project directory"

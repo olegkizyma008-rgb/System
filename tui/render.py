@@ -255,6 +255,13 @@ def log_replace_at(index: int, text: str, category: str = "info") -> None:
 def log(text: str, category: str = "info") -> None:
     """Main log function - appends to log buffer."""
     global _logs_need_trim
+    # Sanitize references to Windsurf when Doctor Vibe is handling dev edits
+    try:
+        import os, re
+        if str(os.getenv("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
+            text = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", text)
+    except Exception:
+        pass
     
     # Log to root file (Left Screen)
     try:
@@ -287,7 +294,10 @@ _agent_last_logged_lock = threading.Lock()
 def log_agent_final(agent: AgentType, text: str) -> None:
     """Log final agent message to analysis log (JSONL). Call ONLY when streaming is complete."""
     try:
-        import logging
+        # Sanitize agent final messages for Doctor Vibe policy
+        import logging, os, re
+        if str(os.getenv("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
+            text = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", text)
         logging.getLogger("system_cli.right").info(
             f"[{agent.value}] {text}", 
             extra={"agent_type": agent.value, "is_final": True}
@@ -303,6 +313,14 @@ def log_agent_message(agent: AgentType, text: str) -> None:
     to log_agent_final() to avoid duplicate entries in analysis logs.
     """
     # Skip file logging here - it's handled by log_agent_final() after stream completes
+
+    # Sanitize agent messages when Doctor Vibe is enabled
+    try:
+        import os, re
+        if str(os.getenv("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
+            text = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", text)
+    except Exception:
+        pass
 
     with _agent_messages_lock:
         try:

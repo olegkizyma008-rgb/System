@@ -485,7 +485,11 @@ def _render_monitor_control_menu(ctx: dict) -> List[Tuple[str, str]]:
     state_line = "ACTIVE" if state.monitor_active else "INACTIVE"
     result.append((STYLE_MENU_ITEM, f" State: {state_line}\n"))
     result.append((STYLE_MENU_ITEM, f" Source: {state.monitor_source}\n"))
-    result.append((STYLE_MENU_ITEM, f" Mode: {state.monitor_mode}\n"))
+    # Mode toggle (auto/manual) - selectable via Enter
+    result.append((STYLE_MENU_SELECTED, f" > Mode: {state.monitor_mode}\n", make_click(0)))
+    style = "class:toggle.on" if state.monitor_mode == "auto" else "class:toggle.off"
+    result.append((style, f" {state.monitor_mode.upper()} "))
+    result.append(("", "\n"))
     
     if state.monitor_source in {"fs_usage", "opensnoop"}:
         sudo_line = "ON" if state.monitor_use_sudo else "OFF"
@@ -495,7 +499,8 @@ def _render_monitor_control_menu(ctx: dict) -> List[Tuple[str, str]]:
     result.append((STYLE_MENU_ITEM, f" DB: {MONITOR_EVENTS_DB_PATH}\n\n"))
     
     action = "STOP" if state.monitor_active else "START"
-    result.append((STYLE_MENU_SELECTED, f" > {action}\n", make_click(0)))
+    # Start/Stop is selectable as index 1
+    result.append((STYLE_MENU_SELECTED, f" > {action}\n", make_click(1)))
     
     notes = {
         "watchdog": "Note: watchdog monitors directories (no process attribution).",
@@ -504,6 +509,10 @@ def _render_monitor_control_menu(ctx: dict) -> List[Tuple[str, str]]:
     }
     note = notes.get(state.monitor_source, "Note: source not implemented yet.")
     result.append((STYLE_MENU_ITEM, f"\n {note}\n"))
+    # Small UI hint to make mode toggling discoverable (localized)
+    from tui.i18n import tr
+    hint = tr("menu.monitor.mode_hint", state.ui_lang)
+    result.append((STYLE_MENU_ITEM, f" {hint}\n"))
     return result
 
 
