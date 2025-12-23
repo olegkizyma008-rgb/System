@@ -1,11 +1,19 @@
 import base64
 import os
+
+# CRITICAL PERFORMANCE FIX: Disable PaddlePaddle/PaddleX network connectivity checks
+# These checks can cause 30+ second delays during initialization
+# The correct env var is PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK (checked in paddlex/utils/flags.py)
+os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
+os.environ.setdefault("PADDLEOCR_SHOW_LOG", "False")
+
 import tempfile
 import subprocess
 import hashlib
 from typing import Any, Dict, Optional, List
 from datetime import datetime
 import numpy as np
+
 
 
 def analyze_image_local(image_path: str, *, mode: str = "auto") -> Dict[str, Any]:
@@ -375,15 +383,31 @@ class DifferentialVisionAnalyzer:
         self._last_diff_image_path: Optional[str] = None
 
     def _get_ocr_engine(self):
-        """Lazy load OCR engine to avoid overhead if not used"""
+        """Lazy load OCR engine to avoid overhead if not used.
+        
+        Performance optimizations applied:
+        - DISABLE_MODEL_SOURCE_CHECK set to bypass network check (saves 30s+)
+        - use_textline_orientation for proper text orientation detection
+        """
         if self._ocr_engine is None:
             try:
+                # Ensure environment is set before import (in case module was not imported at top level)
+                os.environ.setdefault("PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK", "True")
+                
                 from paddleocr import PaddleOCR
-                # Initialize PaddleOCR with english support
-                # Note: use_textline_orientation replaces deprecated use_angle_cls
-                self._ocr_engine = PaddleOCR(use_textline_orientation=True, lang='en')
+                # Initialize PaddleOCR 3.x with compatible settings:
+                # - use_textline_orientation: enables text orientation detection
+                # - lang='en': English language model
+                # Note: PaddleOCR 3.x removed use_gpu/enable_mkldnn params
+                self._ocr_engine = PaddleOCR(
+                    use_textline_orientation=True, 
+                    lang='en',
+                )
             except ImportError:
                 # Fallback to a dummy or logger if not installed
+                self._ocr_engine = "unavailable"
+            except Exception as e:
+                # Any other error - mark as unavailable with reason
                 self._ocr_engine = "unavailable"
         return self._ocr_engine
 
