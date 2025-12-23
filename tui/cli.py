@@ -1630,6 +1630,7 @@ def _get_automation_permissions_menu_items() -> List[Tuple[str, Any, Optional[st
         (f"Allow AppleScript: {_env_on_off('TRINITY_ALLOW_APPLESCRIPT')}", "env_applescript", None),
         (f"Allow GUI: {_env_on_off('TRINITY_ALLOW_GUI')}", "env_gui", None),
         (f"Hyper Mode (Auto): {_env_on_off('TRINITY_HYPER_MODE')}", "env_hyper", None),
+        (f"Auto-resume permission pauses: {_env_on_off('TRINITY_VIBE_AUTO_RESUME_PERMISSIONS')}", "env_vibe_perm_resume", None),
     ]
 
 
@@ -1660,6 +1661,7 @@ def _handle_automation_permissions_enter(ctx: Dict[str, Any]):
             "env_applescript": "TRINITY_ALLOW_APPLESCRIPT",
             "env_gui": "TRINITY_ALLOW_GUI",
             "env_hyper": "TRINITY_HYPER_MODE",
+            "env_vibe_perm_resume": "TRINITY_VIBE_AUTO_RESUME_PERMISSIONS",
         }
         var = var_map.get(key)
         if var:

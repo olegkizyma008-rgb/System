@@ -1536,8 +1536,21 @@ Return JSON with ONLY the replacement step.'''))
             if dev_mode == "vibe" and name in {"open_file_in_windsurf", "send_to_windsurf", "open_project_in_windsurf"}:
                 # Skip opening Windsurf; either create a pause or auto-apply changes
                 if vibe_auto:
-                    results.append(f"[VIBE-AUTO] Skipped opening Windsurf for {args.get('path','')}")
-                    continue
+                    # Auto-apply the change immediately via registry execution
+                    try:
+                        exec_res = self.registry.execute(name, args, task_type=state.get("task_type"))
+                        results.append(f"[VIBE-AUTO] Executed {name}: {exec_res}")
+                        # Notify Vibe about applied change (best-effort)
+                        try:
+                            diags = {"files": [args.get('path') or args.get('dst')], "diffs": [{"file": args.get('path') or args.get('dst'), "diff": diff}]}
+                            self.vibe_assistant.handle_pause_request({"reason": "doctor_vibe_edit_done", "message": f"Doctor Vibe: Applied changes to {path}", "diagnostics": diags})
+                        except Exception:
+                            pass
+                        continue
+                    except Exception:
+                        results.append(f"[VIBE-AUTO] Failed to execute {name}")
+                        pause_info = {"permission": "doctor_vibe", "message": "Doctor Vibe: Manual dev intervention required"}
+                        continue
                 results.append(f"[BLOCKED] {name}: Doctor Vibe required")
                 pause_info = {"permission": "doctor_vibe", "message": "Doctor Vibe: Manual dev intervention required"}
                 continue
@@ -1568,9 +1581,12 @@ Return JSON with ONLY the replacement step.'''))
                     results.append(f"[PENDING VIBE] {path}")
                     continue
 
-                # auto-apply: execute write via registry
+                # auto-apply: execute write via registry (try kwargs, fallback to positional)
                 try:
-                    res_str = self.registry.execute(name, args, task_type=state.get("task_type"))
+                    try:
+                        res_str = self.registry.execute(name, args, task_type=state.get("task_type"))
+                    except TypeError:
+                        res_str = self.registry.execute(name, args)
                 except Exception as e:
                     res_str = f"Error: {e}"
 
@@ -1704,7 +1720,20 @@ Return JSON with ONLY the replacement step.'''))
             pass
         
         if pause_info:
-            return {**state, "messages": updated_messages, "pause_info": pause_info, "last_step_status": "uncertain", "current_agent": "meta_planner"}
+            # Convert low-level pause info (permission map) into a full Vibe pause
+            reason = pause_info.get("permission") or "permission_required"
+            message = pause_info.get("message") or "Permission required for action."
+            pause = self._create_vibe_assistant_pause_state(state, "permission_required", message)
+            # Attach permission metadata to the pause to allow UIs and auto-resume logic to inspect it
+            try:
+                pause["permission"] = pause_info.get("permission")
+                pause["blocked_tool"] = pause_info.get("blocked_tool")
+                pause["blocked_args"] = pause_info.get("blocked_args")
+                # Allow auto-resume for permission pauses if explicitly enabled
+                pause["auto_resume_available"] = bool(self._is_env_true("TRINITY_VIBE_AUTO_RESUME_PERMISSIONS", False))
+            except Exception:
+                pass
+            return {**state, "messages": updated_messages, "vibe_assistant_pause": pause, "last_step_status": "uncertain", "current_agent": "meta_planner"}
             
         if had_failure and state.get("execution_mode") != "gui" and state.get("gui_mode") in {"auto", "on"} and not state.get("gui_fallback_attempted"):
             return {**state, "messages": updated_messages, "execution_mode": "gui", "gui_fallback_attempted": True, "last_step_status": "failed", "current_agent": "tetyana"}
@@ -1948,7 +1977,9 @@ Return JSON with ONLY the replacement step.'''))
         try:
             if self._is_env_true("TRINITY_VIBE_AUTO_RESUME", False):
                 # Do not auto-resume if a permission is required or there
-                # are critical issues attached to the pause.
+                # are critical issues attached to the pause. Permission pauses
+                # are handled separately and can be auto-resumed only if the
+                # explicit per-permission env toggle is enabled.
                 if not pause_info.get("permission") and not pause_info.get("issues"):
                     # Invoke Vibe continue command to perform any cleanup
                     res = self.vibe_assistant.handle_user_command("/continue")
@@ -1959,6 +1990,19 @@ Return JSON with ONLY the replacement step.'''))
                         if self.verbose:
                             self.logger.info("🔁 Doctor Vibe: Auto-resumed pause (TRINITY_VIBE_AUTO_RESUME)")
                         return "meta_planner"
+                # Auto-resume permission-specific pauses if user enabled the
+                # per-permission auto-resume toggle.
+                if pause_info.get("permission") and self._is_env_true("TRINITY_VIBE_AUTO_RESUME_PERMISSIONS", False):
+                    try:
+                        res = self.vibe_assistant.handle_user_command("/continue")
+                        if res.get("action") == "resume":
+                            state["vibe_assistant_pause"] = None
+                            state["vibe_assistant_context"] = "AUTO-RESUMED: TRINITY_VIBE_AUTO_RESUME_PERMISSIONS"
+                            if self.verbose:
+                                self.logger.info("🔁 Doctor Vibe: Auto-resumed permission pause (TRINITY_VIBE_AUTO_RESUME_PERMISSIONS)")
+                            return "meta_planner"
+                    except Exception:
+                        pass
         except Exception:
             pass
 

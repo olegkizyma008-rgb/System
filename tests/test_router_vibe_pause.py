@@ -5,6 +5,8 @@ from core.trinity import TrinityRuntime
 
 def test_router_preemptive_vibe_pause(monkeypatch):
     monkeypatch.setenv("COPILOT_API_KEY", "dummy")
+    # Ensure auto-apply is disabled for this test so pause is created
+    monkeypatch.setenv("TRINITY_VIBE_AUTO_APPLY", "0")
 
     rt = TrinityRuntime(verbose=True)
 
