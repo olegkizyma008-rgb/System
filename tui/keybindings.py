@@ -427,7 +427,7 @@ def _get_menu_enter_dispatch(ctx, state, MenuLevel, _llm_sub_hint):
         MenuLevel.UNSAFE_MODE: lambda: _handle_general_toggle_ctx(ctx, "ui_unsafe_mode", "Unsafe"),
         MenuLevel.SELF_HEALING: lambda: _handle_general_toggle_ctx(ctx, "ui_self_healing", "Self-healing"),
         MenuLevel.MEMORY_MANAGER: lambda: _handle_memory_manager_enter(ctx),
-        MenuLevel.AUTOMATION_PERMISSIONS: lambda: ctx.get("handle_automation_permissions_enter", lambda: None)(),
+        MenuLevel.AUTOMATION_PERMISSIONS: lambda: ctx.get("handle_automation_permissions_enter", lambda c: None)(ctx),
         MenuLevel.DEV_SETTINGS: lambda: _handle_dev_settings_enter(ctx),
         MenuLevel.APPEARANCE: lambda: _set_theme(ctx),
         MenuLevel.LANGUAGE: lambda: _handle_language_menu_enter_ctx(ctx),
