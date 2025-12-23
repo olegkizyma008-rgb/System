@@ -197,11 +197,14 @@ class OpenMCPClient(BaseMCPClient):
             
             if result.returncode == 0:
                 if not result.stdout.strip():
+                    provider_info = f"command='{server_config['command']}'"
                     return {
                         "success": False,
                         "tool": name,
-                        "error": "MCP server returned empty stdout (common for stdio-based servers executed as one-off CLI)"
+                        "error": f"MCP server {server_name} returned empty stdout. This common for stdio-based servers executed as one-off CLI if they initialization fails or they are not installed correctly ({provider_info}).",
+                        "raw_stderr": result.stderr
                     }
+
                     
                 try:
                     response = json.loads(result.stdout)

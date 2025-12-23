@@ -1,9 +1,15 @@
 import json
 import time
+import logging
 import asyncio
 import threading
 import os
+import sys
 import contextlib
+
+logger = logging.getLogger(__name__)
+
+
 from typing import Dict, Any, Callable, List, Optional, Union, Tuple
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -84,20 +90,22 @@ class ExternalMCPProvider:
         if self._connected:
             return
         
-        def _setup():
+        async def _setup():
             self._init_future = self._loop.create_future()
             self._loop.create_task(self._async_connect())
-            return self._init_future
+            return await self._init_future
             
-        future = asyncio.run_coroutine_threadsafe(_setup(), self._loop).result()
         try:
-            future.result(timeout=30)
+            # Use run_coroutine_threadsafe to trigger _setup and wait for its completion
+            waiter = asyncio.run_coroutine_threadsafe(_setup(), self._loop)
+            waiter.result(timeout=30)
         except Exception as e:
             hint = ""
             if sys.platform == "darwin":
                 hint = " (Check macOS Automation/Accessibility permissions if this times out unexpectedly)"
             logger.error(f"Failed to connect MCP provider {self.name}: {e}{hint}")
             raise
+
 
     async def _async_connect(self):
         """Persistent task that manages the connection lifecycle."""
