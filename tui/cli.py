@@ -566,7 +566,11 @@ def _load_ui_settings() -> None:
         if "unsafe_mode" in data:
             state.ui_unsafe_mode = bool(data.get("unsafe_mode"))
         
-        state.automation_allow_shortcuts = bool(data.get("automation_allow_shortcuts", False))
+        # Respect saved UI setting if present; otherwise fall back to env var
+        if "automation_allow_shortcuts" in data:
+            state.automation_allow_shortcuts = bool(data.get("automation_allow_shortcuts", False))
+        else:
+            state.automation_allow_shortcuts = str(os.getenv("TRINITY_ALLOW_SHORTCUTS") or "0").strip().lower() in {"1", "true", "yes", "on"}
         state.ui_left_panel_ratio = float(data.get("left_panel_ratio", 0.6))
         state.ui_scroll_target = str(data.get("scroll_target", "log"))
         state.ui_log_follow = bool(data.get("log_follow", True))
