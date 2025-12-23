@@ -117,7 +117,13 @@ class OpenMCPClient(BaseMCPClient):
                     self._mcp_servers = config.get("mcpServers", {})
                     
             # Add tool descriptions to internal registry
+            # Skip persistent servers that are handled by ExternalMCPProvider in MCPToolRegistry
+            persistent_servers = ["playwright", "pyautogui", "applescript"]
+            
             for server_name, server_config in self._mcp_servers.items():
+                if server_name in persistent_servers:
+                    continue
+                    
                 self._tools[server_name] = {
                     "name": server_name,
                     "description": server_config.get("description", f"MCP Server: {server_name}"),

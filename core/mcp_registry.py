@@ -503,12 +503,6 @@ class MCPToolRegistry:
             print(f"⚠️ [MCP] Plugin auto-discovery failed: {e}")
 
     def _register_external_mcp(self):
-        """Register external MCP servers (Playwright, AppleScript, PyAutoGUI) - PRIORITY over local implementations."""
-        import os
-        import platform
-        
-        # Use the installed executeautomation playwright-mcp-server
-    def _register_external_mcp(self):
         """Register external MCP servers (Playwright, AppleScript, etc.) from config."""
         import os
         import json
@@ -751,12 +745,20 @@ class MCPToolRegistry:
             "run_applescript": ("applescript", "run_applescript"),
         }
         
-        if tool_name not in mcp_routing:
+        # 0. Identify provider and tool name
+        provider_name = None
+        mcp_tool = None
+        
+        if tool_name in mcp_routing:
+            provider_name, mcp_tool = mcp_routing[tool_name]
+        elif "." in tool_name:
+            # Handle prefixed calls from LLM (e.g. playwright.playwright_navigate)
+            parts = tool_name.split(".", 1)
+            provider_name = parts[0]
+            mcp_tool = parts[1]
+        else:
             return None
             
-        provider_name, mcp_tool = mcp_routing[tool_name]
-        
-        # NEW: Delegate to MCP Client Manager
         # We construct the tool name as "server.tool" (e.g., "playwright.playwright_navigate")
         full_tool_name = f"{provider_name}.{mcp_tool}"
         
