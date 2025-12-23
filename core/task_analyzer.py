@@ -24,10 +24,10 @@ class TaskAnalyzer:
         # Resolve default directories outside of repo to avoid dirty git status
         default_logs = os.environ.get("TRINITY_TASK_LOG_DIR")
         if not default_logs:
-            default_logs = str(Path.home() / ".trinity" / "task_logs")
+            default_logs = os.path.abspath("task_logs")
         default_shots = os.environ.get("TRINITY_TASK_SCREENSHOT_DIR")
         if not default_shots:
-            default_shots = str(Path.home() / ".trinity" / "task_screenshots")
+            default_shots = os.path.abspath("task_screenshots")
 
         self.log_dir = log_dir or default_logs
         self.screenshot_dir = screenshot_dir or default_shots

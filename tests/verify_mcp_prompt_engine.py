@@ -62,6 +62,46 @@ def test_prompt_engine():
     else:
         print("❌ No prompts found for desktop control query.")
 
+    # Test retrieval 5: AppleScript
+    query_as = "automate system settings on mac"
+    print(f"\nQuerying prompts for: '{query_as}'")
+    prompts_as = prompt_engine.get_relevant_prompts(query_as)
+    if prompts_as:
+        print(f"✅ Found {len(prompts_as)} relevant AppleScript prompts.")
+        for p in prompts_as: print(f"   - [{p['score']:.2f}] {p['source']}: {p['content'][:60]}...")
+    else:
+        print("❌ No prompts found for AppleScript query.")
+
+    # Test retrieval 6: Anthropic
+    query_ant = "ask llm to write a poem"
+    print(f"\nQuerying prompts for: '{query_ant}'")
+    prompts_ant = prompt_engine.get_relevant_prompts(query_ant)
+    if prompts_ant:
+        print(f"✅ Found {len(prompts_ant)} relevant Anthropic prompts.")
+        for p in prompts_ant: print(f"   - [{p['score']:.2f}] {p['source']}: {p['content'][:60]}...")
+    else:
+        print("❌ No prompts found for Anthropic query.")
+
+    # Test retrieval 7: SonarQube
+    query_sq = "check code quality issues"
+    print(f"\nQuerying prompts for: '{query_sq}'")
+    prompts_sq = prompt_engine.get_relevant_prompts(query_sq)
+    if prompts_sq:
+        print(f"✅ Found {len(prompts_sq)} relevant SonarQube prompts.")
+        for p in prompts_sq: print(f"   - [{p['score']:.2f}] {p['source']}: {p['content'][:60]}...")
+    else:
+        print("❌ No prompts found for SonarQube query.")
+
+    # Test retrieval 8: Context7
+    query_c7 = "find documentation for react"
+    print(f"\nQuerying prompts for: '{query_c7}'")
+    prompts_c7 = prompt_engine.get_relevant_prompts(query_c7)
+    if prompts_c7:
+        print(f"✅ Found {len(prompts_c7)} relevant Context7 prompts.")
+        for p in prompts_c7: print(f"   - [{p['score']:.2f}] {p['source']}: {p['content'][:60]}...")
+    else:
+        print("❌ No prompts found for Context7 query.")
+
     # Test Integration with Client Manager (Mock)
     print("\nTesting Context Injection...")
     context = prompt_engine.construct_context(query)
