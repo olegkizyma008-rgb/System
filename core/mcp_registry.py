@@ -760,11 +760,28 @@ class MCPToolRegistry:
         # We construct the tool name as "server.tool" (e.g., "playwright.playwright_navigate")
         full_tool_name = f"{provider_name}.{mcp_tool}"
         
-        # IMPORTANT: Adapt args BEFORE calling execute (was missing, causing NameError)
-        mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
-        
+        # 1. PRIORITY: Check legacy/standard ExternalMCPProvider first for mapped tools
+        # These tools (browser, applescript) require persistent stdio sessions.
+        if provider_name in self._external_providers:
+            provider = self._external_providers[provider_name]
+            try:
+                if not provider._connected:
+                    provider.connect()
+                
+                mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
+                res = provider.execute(mcp_tool, mcp_args)
+                
+                if tool_name == "browser_type_text" and args.get("press_enter"):
+                    self._mcp_press_enter_fallback(provider, mcp_args)
+                
+                return json.dumps(res, indent=2, ensure_ascii=False)
+            except Exception as e:
+                print(f"[MCP] Persistent provider {provider_name} call failed: {e}. Trying manager fallback...")
+
+        # 2. SUB-PRIORITY: Delegate to MCP Client Manager (e.g. for dynamic or new tools)
         try:
-            # Execute via manager
+            # IMPORTANT: Adapt args BEFORE calling execute
+            mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
             res_dict = self._mcp_client_manager.execute(full_tool_name, mcp_args, task_type=task_type)
             
             if not res_dict["success"]:
@@ -787,25 +804,7 @@ class MCPToolRegistry:
         except Exception as e:
             print(f"[MCP] Manager execution failed for {full_tool_name}: {e}")
             
-        # LEGACY FALLBACK (Keep existing direct execution for stability during transition)
-        if provider_name not in self._external_providers:
-            return None
-            
-        provider = self._external_providers[provider_name]
-        try:
-            if not provider._connected:
-                provider.connect()
-            
-            mcp_args = self._adapt_args_for_mcp(tool_name, mcp_tool, args)
-            res = provider.execute(mcp_tool, mcp_args)
-            
-            if tool_name == "browser_type_text" and args.get("press_enter"):
-                self._mcp_press_enter_fallback(provider, mcp_args)
-            
-            return json.dumps(res, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"[MCP] Failed {provider_name}.{mcp_tool}, falling back to local: {e}")
-            return None
+        return None
 
     def _mcp_press_enter_fallback_manager(self, provider_name, mcp_args):
         try:

@@ -190,26 +190,43 @@ class OpenMCPClient(BaseMCPClient):
             )
             
             if result.returncode == 0:
+                if not result.stdout.strip():
+                    return {
+                        "success": False,
+                        "tool": name,
+                        "error": "MCP server returned empty stdout (common for stdio-based servers executed as one-off CLI)"
+                    }
+                    
                 try:
                     response = json.loads(result.stdout)
+                    # Standard MCP tool response should have result or content
+                    if "result" not in response and "error" not in response:
+                        # Best effort for non-standard responses
+                        return {
+                            "success": True,
+                            "tool": name,
+                            "data": response,
+                            "raw_output": result.stdout
+                        }
+                        
                     return {
-                        "success": True,
+                        "success": True if "error" not in response else False,
                         "tool": name,
-                        "data": response.get("result", response),
+                        "data": response.get("result", response.get("error")),
                         "raw_output": result.stdout
                     }
                 except json.JSONDecodeError:
                     return {
-                        "success": True,
+                        "success": False,
                         "tool": name,
-                        "data": result.stdout,
+                        "error": f"Failed to parse JSON response: {result.stdout[:200]}...",
                         "raw_output": result.stdout
                     }
             else:
                 return {
                     "success": False,
                     "tool": name,
-                    "error": result.stderr or "Command failed",
+                    "error": result.stderr or f"MCP command failed with exit code {result.returncode}",
                     "returncode": result.returncode
                 }
                 
