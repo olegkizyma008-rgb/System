@@ -1,0 +1,30 @@
+{
+  "name": "System Dev (pyenv 3.11.13)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-vscode-remote.remote-containers",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "settings": {
+    "python.defaultInterpreterPath": "/home/vscode/.pyenv/versions/3.11.13/bin/python",
+    "terminal.integrated.profiles.linux": {
+      "bash (pyenv)": {
+        "path": "/bin/bash",
+        "args": ["-l"]
+      }
+    },
+    "terminal.integrated.defaultProfile.linux": "bash (pyenv)"
+  },
+  "postCreateCommand": "bash /workspace/scripts/devcontainer_setup.sh",
+  "remoteUser": "vscode",
+  "shutdownAction": "none"
+}
