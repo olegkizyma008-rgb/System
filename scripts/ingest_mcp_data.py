@@ -31,13 +31,56 @@ PROMPT_SOURCES = [
         "name": "fabric_patterns",
         "url": "https://api.github.com/repos/danielmiessler/fabric/contents/patterns",
         "type": "github_dir"
-    },
-    {
-        "name": "awesome_mcp_prompts",
-        "url": "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv", # Placeholder for actual valid CSV/JSON
-        "type": "csv"
     }
 ]
+
+# Manual Data for specific servers (simulating schema/prompt ingestion)
+SERVER_DATA = {
+    "filesystem": {
+        "prompts": [
+            "When using filesystem tools, ALWAYS verify the path exists using `list_directory` or `allowed_directories` check before reading.",
+            "If a file is large, read it in chunks or use `read_file` with line limits to avoid memory issues.",
+            "For write operations, always create a backup of critical configuration files before overwriting.",
+            "Prefer absolute paths over relative paths to avoid ambiguity in file operations."
+        ],
+        "schemas": [
+            {
+                "name": "read_file",
+                "description": "Read the contents of a file from the filesystem.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "The absolute path to the file to read"}
+                    },
+                    "required": ["path"]
+                }
+            },
+            {
+                "name": "write_file",
+                "description": "Write content to a file. Overwrites existing content.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "The absolute path to the file"},
+                        "content": {"type": "string", "description": "The content to write"}
+                    },
+                    "required": ["path", "content"]
+                }
+            },
+            {
+                "name": "list_directory",
+                "description": "List contents of a directory.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "The directory path"}
+                    },
+                    "required": ["path"]
+                }
+            }
+        ]
+    }
+}
 
 def get_device():
     """Check for MPS (Apple Silicon) or CUDA, else CPU."""
@@ -156,15 +199,55 @@ def ingest_samples(collection):
     collection.upsert(documents=documents, metadatas=metadatas, ids=ids)
     logger.info(f"✅ Upserted {len(documents)} sample prompts")
 
+def ingest_manual_server_data(prompts_col, schemas_col):
+    """Ingest manually defined server data (Prompts + Schemas)."""
+    logger.info("🛠 Ingesting manual server data...")
+    
+    for server, data in SERVER_DATA.items():
+        # Ingest Prompts
+        if "prompts" in data:
+            docs = data["prompts"]
+            metas = [{"source": f"mcp_server_{server}", "type": "expert_prompt", "server": server} for _ in docs]
+            ids = [f"{server}_prompt_{i}" for i in range(len(docs))]
+            prompts_col.upsert(documents=docs, metadatas=metas, ids=ids)
+            logger.info(f"   - Ingested {len(docs)} prompts for {server}")
+
+        # Ingest Schemas
+        if "schemas" in data:
+            schemas = data["schemas"]
+            # Store schema as JSON string in document, or description as document and full schema in metadata
+            # Strategy: Document = Description + Signature. Metadata = Full JSON.
+            docs = []
+            metas = []
+            ids = []
+            for i, tool in enumerate(schemas):
+                sig = f"{tool['name']}({', '.join(tool['inputSchema'].get('properties', {}).keys())})"
+                content = f"Tool: {tool['name']}\nDescription: {tool['description']}\nSignature: {sig}"
+                docs.append(content)
+                metas.append({
+                    "source": f"mcp_server_{server}", 
+                    "type": "tool_schema", 
+                    "server": server,
+                    "tool_name": tool['name'],
+                    "full_schema": json.dumps(tool)
+                })
+                ids.append(f"{server}_schema_{tool['name']}")
+            
+            schemas_col.upsert(documents=docs, metadatas=metas, ids=ids)
+            logger.info(f"   - Ingested {len(docs)} schemas for {server}")
+
 def main():
     parser = argparse.ArgumentParser(description="Ingest MCP Data")
     parser.add_argument("--prompts", action="store_true", help="Ingest prompts")
-    parser.add_argument("--schemas", action="store_true", help="Ingest schemas (placeholder)")
+    parser.add_argument("--schemas", action="store_true", help="Ingest schemas")
     args = parser.parse_args()
     
     prompts_col, schemas_col = setup_chroma()
     if not prompts_col:
         return
+
+    # ALWAYS ingest manual data for verification/demo purposes
+    ingest_manual_server_data(prompts_col, schemas_col)
 
     if args.prompts:
         # Try samples first to guarantee data
@@ -173,9 +256,6 @@ def main():
         for source in PROMPT_SOURCES:
             if source['type'] == 'github_dir':
                 ingest_github_dir_prompts(source, prompts_col)
-                
-    if args.schemas:
-        logger.info("Schema ingestion logic to be implemented based on specific registry format.")
 
 if __name__ == "__main__":
     main()
