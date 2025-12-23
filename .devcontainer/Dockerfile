@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
     libffi-dev liblzma-dev libncurses5-dev libncursesw5-dev libgdbm-dev \
     libnss3-dev libxml2-dev libxmlsec1-dev pkg-config xz-utils python3-venv \
-    make gcc g++ unzip pkg-config libdb-dev libexpat1-dev libmpdec-dev \
+    make gcc g++ unzip pkg-config libexpat1-dev \
     sox ffmpeg sudo && rm -rf /var/lib/apt/lists/*
 
 # Create vscode user (UID/GID consistent with common devcontainer images)
