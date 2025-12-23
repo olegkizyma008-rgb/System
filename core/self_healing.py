@@ -148,6 +148,17 @@ class CodeSelfHealer:
         "core/mcp.py",
     }
     
+    # Paths to ignore during error detection (temporary/test files)
+    IGNORE_PATHS = [
+        "/tmp/",
+        "/var/folders/",
+        "pytest-of-",
+        ".pytest_cache",
+        "__pycache__",
+        ".pyc",
+        "/private/var/folders/",
+    ]
+    
     def __init__(
         self,
         project_root: Optional[str] = None,
@@ -350,9 +361,32 @@ class CodeSelfHealer:
                 file_match = re.search(r'File "([^"]+)", line (\d+)', line)
                 if file_match:
                     path_str = file_match.group(1)
-                    # Ensure we only track files within the project
-                    if os.path.isabs(path_str) and not path_str.startswith(self.project_root):
-                        current_file = None 
+                    
+                    # Skip temporary/test files and files outside project
+                    should_skip = False
+                    
+                    # First check if file is within project root (absolute path check)
+                    if os.path.isabs(path_str):
+                        # Normalize paths for comparison
+                        normalized_path = os.path.normpath(path_str)
+                        normalized_root = os.path.normpath(self.project_root)
+                        
+                        # If file is outside project root, check ignore patterns
+                        if not normalized_path.startswith(normalized_root):
+                            # File is outside project - check if it's in ignored locations
+                            for ignore_pattern in self.IGNORE_PATHS:
+                                if ignore_pattern in path_str:
+                                    should_skip = True
+                                    break
+                    else:
+                        # Relative path - check ignore patterns
+                        for ignore_pattern in self.IGNORE_PATHS:
+                            if ignore_pattern in path_str:
+                                should_skip = True
+                                break
+                    
+                    if should_skip:
+                        current_file = None
                     else:
                         current_file = path_str
                     
@@ -366,15 +400,33 @@ class CodeSelfHealer:
                         continue
                     match = re.search(pattern, line, re.IGNORECASE)
                     if match:
-                        severity = self._classify_severity(
-                            issue_type, current_file, match.group(1) if match.lastindex else ""
-                        )
+                        # Skip if current file should be ignored (temp/test files filtered out)
+                        if current_file is None:
+                            # File was filtered - clear stack and skip this error entirely
+                            current_stack = []
+                            current_line = None
+                            break
+                        
+                        # Prefer the more descriptive capture group when available
+                        msg = None
+                        try:
+                            groups = match.groups()
+                            if len(groups) >= 2 and groups[1]:
+                                msg = groups[1]
+                            elif groups:
+                                msg = groups[-1]
+                        except Exception:
+                            msg = None
+
+                        msg = msg or line
+
+                        severity = self._classify_severity(issue_type, current_file, msg)
                         issue = CodeIssue(
                             issue_type=issue_type,
                             severity=severity,
-                            file_path=current_file or "unknown",
+                            file_path=current_file,
                             line_number=current_line,
-                            message=match.group(1) if match.lastindex else line,
+                            message=msg,
                             stack_trace="\n".join(current_stack[-10:]),
                         )
                         issues.append(issue)
@@ -1093,7 +1145,7 @@ Output your repair plan as JSON with this structure:
     def _quick_fix_undefined_name(self, file_path: str, line_number: Optional[int], message: str) -> bool:
         """Fix undefined name errors."""
         # Extract the undefined name
-        match = re.search(r"name '([^']+)' is not defined", message)
+        match = re.search(r"name ['\"]([^'\"]+)['\"] is not defined", message)
         if not match:
             return False
         
@@ -1151,8 +1203,9 @@ Output your repair plan as JSON with this structure:
                 return False
             
             line = lines[idx]
-            if old_name in line:
-                lines[idx] = line.replace(old_name, new_name)
+            pattern = r'\b' + re.escape(old_name) + r'\b'
+            if re.search(pattern, line):
+                lines[idx] = re.sub(pattern, new_name, line)
                 with open(full_path, "w", encoding="utf-8") as f:
                     f.writelines(lines)
                 self._stream(f"Replaced '{old_name}' with '{new_name}' at {file_path}:{line_number}")

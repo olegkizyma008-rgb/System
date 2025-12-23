@@ -8,6 +8,7 @@ and identify issues for code improvement.
 """
 
 import os
+import shutil
 import json
 import time
 import logging
@@ -130,34 +131,57 @@ class TaskAnalyzer:
             from system_ai.tools.screenshot import take_screenshot
             
             screenshot_id = f"screenshot_{len(self.current_task['screenshots']) + 1}"
-            screenshot_path = os.path.join(
-                self.screenshot_dir, 
-                f"{self.current_task['task_id']}_{screenshot_id}.png"
-            )
-            
-            # Take screenshot
-            screenshot_result = take_screenshot(screenshot_path)
-            
-            if screenshot_result.get("success"):
+
+            # Take screenshot using the system tool which returns a dict with status/path
+            screenshot_result = take_screenshot()
+
+            if screenshot_result.get("status") == "success" and screenshot_result.get("path"):
+                source_path = screenshot_result["path"]
+                # Mirror into task_screenshots with task-based filename, preserving extension
+                ext = os.path.splitext(source_path)[1] or ".png"
+                dest_path = os.path.join(
+                    self.screenshot_dir,
+                    f"{self.current_task['task_id']}_{screenshot_id}{ext}"
+                )
+                try:
+                    shutil.copyfile(source_path, dest_path)
+                    screenshot_path = dest_path
+                except Exception:
+                    # Fallback to original source path if copy fails
+                    screenshot_path = source_path
                 screenshot_info = {
                     "screenshot_id": screenshot_id,
                     "path": screenshot_path,
+                    "source_path": source_path,
                     "timestamp": datetime.now().isoformat(),
                     "description": description
                 }
-                
+
                 self.current_task["screenshots"].append(screenshot_info)
-                
+
                 logger.info(f"📸 Captured screenshot: {description}")
-                
+
                 return {
                     "success": True,
                     "screenshot_id": screenshot_id,
                     "path": screenshot_path
                 }
             else:
-                logger.error(f"Failed to capture screenshot: {screenshot_result.get('error')}")
-                return screenshot_result
+                err_msg = screenshot_result.get("error") or "Unknown screenshot error"
+                tb = screenshot_result.get("traceback")
+                # Log with exception context if available
+                if tb:
+                    logger.error(f"Failed to capture screenshot: {err_msg}\n{tb}")
+                else:
+                    logger.error(f"Failed to capture screenshot: {err_msg}")
+
+                # Record the error in the current task for later analysis
+                try:
+                    self.log_task_event("error", {"message": err_msg, "traceback": tb})
+                except Exception:
+                    logger.exception("Failed to record screenshot error in task")
+
+                return {"success": False, "error": err_msg, "traceback": tb}
                 
         except Exception as e:
             logger.error(f"Screenshot capture error: {e}")
@@ -168,9 +192,10 @@ class TaskAnalyzer:
         if not self.current_task:
             return {"success": False, "error": "No task to analyze"}
         
-        # Mark task as completed
+        # Mark task end and dynamic status
         self.current_task["end_time"] = datetime.now().isoformat()
-        self.current_task["status"] = "completed"
+        error_count = len(self.current_task.get("errors", []))
+        self.current_task["status"] = "failed" if error_count > 0 else "completed"
         
         # Calculate metrics
         start_time = datetime.fromisoformat(self.current_task["start_time"])
@@ -195,7 +220,20 @@ class TaskAnalyzer:
         
         # Save task_id before cleanup
         task_id = self.current_task["task_id"]
-        
+
+        # Clean up file handler for this task
+        try:
+            target_path = self.current_task.get("log_file")
+            for h in logger.handlers[:]:
+                try:
+                    if isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", None) == target_path:
+                        logger.removeHandler(h)
+                        h.close()
+                except Exception:
+                    logger.exception("Failed to clean up task log handler")
+        except Exception:
+            logger.exception("Unexpected error during handler cleanup")
+
         # Clean up
         self.current_task = None
         

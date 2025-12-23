@@ -65,6 +65,34 @@ class Context7:
         # Metrics storage
         self._last_metrics: Optional[ContextMetrics] = None
         self._metrics_history: List[ContextMetrics] = []
+        # Simple in-memory document store for optional local Context7 usage
+        self._documents: List[Dict[str, Any]] = []
+
+    def add_document(self, title: str, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Add a document to the local Context7 store and return its metadata."""
+        doc = {
+            "id": f"doc_{len(self._documents) + 1}",
+            "title": title,
+            "content": content,
+            "metadata": metadata or {},
+            "timestamp": datetime.now().isoformat(),
+        }
+        self._documents.append(doc)
+        if self.verbose:
+            print(f"[Context7] Document added: {title} (id={doc['id']})")
+        return doc
+
+    def search_documents(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Perform a simple substring search over stored documents and return matches."""
+        q = str(query or "").lower()
+        results: List[Dict[str, Any]] = []
+        for d in self._documents:
+            if q in d.get("title", "").lower() or q in d.get("content", "").lower():
+                snippet = d.get("content", "")[:500]
+                results.append({"id": d["id"], "title": d["title"], "snippet": snippet, "metadata": d["metadata"]})
+                if len(results) >= limit:
+                    break
+        return results
 
     def prepare(self, 
                 rag_context: str, 

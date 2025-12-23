@@ -1,11 +1,13 @@
 import base64
 import os
+import json
 import tempfile
 import subprocess
 import hashlib
 from typing import Any, Dict, Optional, List
 from datetime import datetime
 import numpy as np
+
 
 
 def analyze_image_local(image_path: str, *, mode: str = "auto") -> Dict[str, Any]:
@@ -43,11 +45,12 @@ def load_image_b64(image_path: str) -> Optional[str]:
         return None
 
 
-def load_image_png_b64(image_path: str, max_dimension: int = 1024) -> Optional[str]:
+def load_image_png_b64(image_path: str, max_dimension: int = 1024, max_side_limit: int = 3800) -> Optional[str]:
     """Return a PNG base64 payload, resized if needed to avoid payload limits.
 
     Copilot Vision is picky about accepted media types; we normalize to PNG.
     We also resize to max_dimension (default 1024px) to avoid HTTP 413 errors.
+    Additionally, we ensure no side exceeds max_side_limit (default 3800px) for Claude API compatibility.
     """
     if not image_path or not os.path.exists(image_path):
         return None
@@ -57,8 +60,15 @@ def load_image_png_b64(image_path: str, max_dimension: int = 1024) -> Optional[s
 
         img = Image.open(image_path)
         
-        # Resize if too large
+        # First, ensure no side exceeds Claude API limit (4000px, we use 3800 for safety margin)
         width, height = img.size
+        if width > max_side_limit or height > max_side_limit:
+            ratio = min(max_side_limit / width, max_side_limit / height)
+            new_size = (int(width * ratio), int(height * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+            width, height = img.size
+        
+        # Then resize to max_dimension if still too large
         if width > max_dimension or height > max_dimension:
             ratio = min(max_dimension / width, max_dimension / height)
             new_size = (int(width * ratio), int(height * ratio))
@@ -145,10 +155,10 @@ def analyze_with_copilot(image_path: str = None, prompt: str = "Describe the use
 
 
 def ocr_region(x: int, y: int, width: int, height: int) -> Dict[str, Any]:
-    """Best-effort OCR for a screen region.
+    """Best-effort OCR for a screen region using native macOS Vision.
 
-    Implementation: capture region -> send to Copilot Vision with an extraction prompt.
-    This avoids hardcoding and works across apps, but requires vision model + Screen Recording permission.
+    Implementation: capture region -> use local native OCR.
+    This is much faster than cloud-based vision models.
     """
     try:
         from system_ai.tools.screenshot import capture_screen_region
@@ -158,17 +168,17 @@ def ocr_region(x: int, y: int, width: int, height: int) -> Dict[str, Any]:
             return {"status": "error", **snap}
 
         image_path = str(snap.get("path") or "")
-        analysis = analyze_with_copilot(
-            image_path,
-            prompt=(
-                "Extract ALL visible text from this screenshot region. "
-                "Return ONLY the extracted text (no commentary), keep line breaks." 
-            ),
-        )
-        if analysis.get("status") != "success":
-            return {"status": "error", "error": analysis.get("error"), "image_path": image_path}
-        text = str(analysis.get("analysis") or "").strip()
-        return {"status": "success", "text": text, "image_path": image_path}
+        
+        # Use our enhanced vision tools which now uses native OCR
+        from system_ai.tools.vision import EnhancedVisionTools
+        analyzer = EnhancedVisionTools.get_analyzer()
+        ocr_res = analyzer._perform_ocr_analysis(image_path)
+        
+        if ocr_res.get("status") != "success":
+            return {"status": "error", "error": ocr_res.get("error"), "image_path": image_path}
+            
+        text = ocr_res.get("full_text", "").strip()
+        return {"status": "success", "text": text, "image_path": image_path, "regions": ocr_res.get("regions", [])}
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
@@ -348,6 +358,9 @@ def compare_images(path1: str, path2: str, prompt: str = None) -> Dict[str, Any]
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
+# Global OCR engine singleton - prevents reinitializing models on each call
+_GLOBAL_OCR_ENGINE = None
+
 class DifferentialVisionAnalyzer:
     """Core class for differential visual analysis with OCR and multi-monitor support.
     
@@ -366,18 +379,77 @@ class DifferentialVisionAnalyzer:
         self._monitor_count = 1
         self._last_diff_image_path: Optional[str] = None
 
-    def _get_ocr_engine(self):
-        """Lazy load OCR engine to avoid overhead if not used"""
-        if self._ocr_engine is None:
-            try:
-                from paddleocr import PaddleOCR
-                # Initialize PaddleOCR with ukrainian and english support
-                self._ocr_engine = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
-            except ImportError:
-                # Fallback to a dummy or logger if not installed
-                self._ocr_engine = "unavailable"
-        return self._ocr_engine
+    def _perform_ocr_analysis(self, image_path: str) -> dict:
+        """Perform OCR using native macOS Vision framework via binary.
+        
+        This replaces PaddleOCR for much faster, local, and native performance.
+        """
+        try:
+            # Path to native OCR binary
+            # We assume it's in the bin directory of the project
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            bin_path = os.path.join(project_root, "bin", "macos-vision-ocr")
+            
+            if not os.path.exists(bin_path):
+                # Fallback check if it's in path
+                if subprocess.run(["which", "macos-vision-ocr"], capture_output=True).returncode != 0:
+                    return {"status": "error", "error": f"Native OCR binary not found at {bin_path}"}
+                bin_path = "macos-vision-ocr"
 
+            # Prepare output directory
+            with tempfile.TemporaryDirectory() as tmp_out:
+                cmd = [bin_path, "--img", image_path, "--output", tmp_out]
+                subprocess.run(cmd, capture_output=True, check=True)
+                
+                # The tool saves file as [basename].json
+                json_name = os.path.splitext(os.path.basename(image_path))[0] + ".json"
+                json_path = os.path.join(tmp_out, json_name)
+                
+                if not os.path.exists(json_path):
+                    return {"status": "error", "error": "OCR binary succeeded but output file not found"}
+                
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                
+                text_regions = []
+                for obs in data.get("observations", []):
+                    # Convert quad to bounding box format [ [x,y], [x,y], [x,y], [x,y] ]
+                    # to maintain compatibility with PaddleOCR format if needed
+                    quad = obs.get("quad", {})
+                    tl = quad.get("topLeft", {})
+                    tr = quad.get("topRight", {})
+                    br = quad.get("bottomRight", {})
+                    bl = quad.get("bottomLeft", {})
+                    
+                    # Native tool provides relative coordinates (0.0 - 1.0)
+                    # We scale them to pixels using image dimensions
+                    from PIL import Image
+                    with Image.open(image_path) as img:
+                        w, h = img.size
+                    
+                    bbox = [
+                        [tl.get("x", 0) * w, tl.get("y", 0) * h],
+                        [tr.get("x", 0) * w, tr.get("y", 0) * h],
+                        [br.get("x", 0) * w, br.get("y", 0) * h],
+                        [bl.get("x", 0) * w, bl.get("y", 0) * h]
+                    ]
+                    
+                    text_regions.append({
+                        "text": obs.get("text", ""),
+                        "confidence": float(obs.get("confidence", 0)),
+                        "bbox": bbox
+                    })
+
+                return {
+                    "status": "success",
+                    "regions": text_regions,
+                    "full_text": data.get("texts", ""),
+                    "info": data.get("info", {})
+                }
+        except subprocess.CalledProcessError as e:
+            return {"status": "error", "error": f"OCR binary failed: {e.stderr.decode()}"}
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
     def capture_all_monitors(self) -> Dict[str, Any]:
         """Capture screenshot from all monitors using native macOS APIs.
         
@@ -398,7 +470,8 @@ class DifferentialVisionAnalyzer:
             
             # Get all displays
             max_displays = 16
-            active_displays, num_displays = CGGetActiveDisplayList(max_displays, None, None)
+            # CGGetActiveDisplayList returns (error, active_displays, num_displays)
+            _, active_displays, num_displays = CGGetActiveDisplayList(max_displays, None, None)
             self._monitor_count = num_displays
             
             if num_displays == 0:
@@ -626,36 +699,6 @@ class DifferentialVisionAnalyzer:
         
         return output_path
 
-    def _perform_ocr_analysis(self, image_path: str) -> dict:
-        """Perform OCR using PaddleOCR if available, else fallback to Copilot analysis"""
-        engine = self._get_ocr_engine()
-        
-        if engine == "unavailable":
-            # Fallback to analyze_with_copilot for critical OCR if possible
-            # or return empty result
-            return {"status": "unavailable", "note": "PaddleOCR not installed"}
-            
-        try:
-            result = engine.ocr(image_path, cls=True)
-            text_regions = []
-            
-            if result and result[0]:
-                for line in result[0]:
-                    bbox = line[0]
-                    text, conf = line[1]
-                    text_regions.append({
-                        "text": text,
-                        "confidence": float(conf),
-                        "bbox": bbox
-                    })
-
-            return {
-                "status": "success",
-                "regions": text_regions,
-                "full_text": " ".join([r["text"] for r in text_regions])
-            }
-        except Exception as e:
-            return {"status": "error", "error": str(e)}
 
     def _generate_context_summary(self, diff_data: dict, ocr_data: dict) -> str:
         """Generate human-readable context summary"""
@@ -693,7 +736,9 @@ class EnhancedVisionTools:
         image_path: str = None, 
         reference_path: str = None,
         generate_diff_image: bool = False,
-        multi_monitor: bool = True
+        multi_monitor: bool = True,
+        app_name: str = None,
+        window_title: str = None
     ) -> dict:
         """Tool implementation for differential vision analysis.
         
@@ -702,12 +747,19 @@ class EnhancedVisionTools:
             reference_path: Optional reference image for comparison
             generate_diff_image: Generate visualization of changes
             multi_monitor: Use multi-monitor capture (default True)
+            app_name: Optional app name to capture specific window (e.g., "Safari", "Chrome")
+            window_title: Optional window title substring to filter specific window
         """
         analyzer = EnhancedVisionTools.get_analyzer()
         
         # If no image path, take a screenshot
         if not image_path:
-            if multi_monitor:
+            # Smart capture based on context
+            if app_name:
+                # Capture specific app window
+                from system_ai.tools.screenshot import take_screenshot
+                snap = take_screenshot(app_name=app_name, window_title=window_title, activate=False)
+            elif multi_monitor:
                 snap = analyzer.capture_all_monitors()
             else:
                 from system_ai.tools.screenshot import take_screenshot
@@ -717,7 +769,16 @@ class EnhancedVisionTools:
                 return snap
             image_path = snap.get("path")
 
-        return analyzer.analyze_frame(image_path, reference_path, generate_diff_image)
+        result = analyzer.analyze_frame(image_path, reference_path, generate_diff_image)
+        
+        # Add capture context to result
+        result["capture_context"] = {
+            "method": "app_window" if app_name else ("multi_monitor" if multi_monitor else "primary"),
+            "app_name": app_name,
+            "window_title": window_title
+        }
+        
+        return result
 
     @staticmethod
     def analyze_with_context(image_path: str, context_manager: Any) -> dict:

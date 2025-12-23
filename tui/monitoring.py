@@ -18,13 +18,15 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from system_cli.state import state
+from tui.state import state
 from tui.cli_paths import (
     SYSTEM_CLI_DIR,
     MONITOR_SETTINGS_PATH,
     MONITOR_TARGETS_PATH,
     MONITOR_EVENTS_DB_PATH,
 )
+import shutil
+
 
 
 def load_monitor_settings() -> None:
@@ -43,9 +45,21 @@ def load_monitor_settings() -> None:
         src = str(data.get("source") or "").strip().lower()
         if src in {"watchdog", "fs_usage", "opensnoop"}:
             state.monitor_source = src
+        # mode can be 'auto' or 'manual' (default auto)
+        mode = str(data.get("mode") or "auto").strip().lower()
+        if mode in {"auto", "manual"}:
+            state.monitor_mode = mode
+        else:
+            state.monitor_mode = "auto"
         use_sudo = data.get("use_sudo")
         if isinstance(use_sudo, bool):
             state.monitor_use_sudo = use_sudo
+        # If mode is auto, let the system choose sensible targets
+        try:
+            if state.monitor_mode == "auto":
+                monitor_auto_select_targets()
+        except Exception:
+            pass
     except Exception:
         return
 
@@ -57,6 +71,8 @@ def save_monitor_settings() -> bool:
         payload = {
             "source": state.monitor_source,
             "use_sudo": bool(state.monitor_use_sudo),
+            # mode: 'auto' or 'manual'
+            "mode": str(state.monitor_mode or "auto").strip().lower(),
         }
         with open(MONITOR_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -77,6 +93,63 @@ def load_monitor_targets() -> None:
             state.monitor_targets = {str(x) for x in selected if x}
     except Exception:
         return
+
+
+def monitor_auto_select_targets() -> None:
+    """Auto-select monitor targets based on running processes and common editors/browsers.
+
+    Populates `state.monitor_targets` with entries like `editor:Code`, `browser:Google Chrome`, and `network:all`.
+    This is a best-effort heuristic and is safe to call repeatedly.
+    """
+    try:
+        import subprocess
+
+        proc = subprocess.run(["ps", "-ax", "-o", "comm="], capture_output=True, text=True)
+        out = (proc.stdout or "").strip().splitlines()
+        names = [os.path.basename(x).strip() for x in out if x]
+
+        editors = set()
+        browsers = set()
+
+        for n in names:
+            ln = n.lower()
+            if any(k in ln for k in ["code", "vscode", "sublime", "pycharm", "idea", "windsurf"]):
+                editors.add(n)
+            if any(k in ln for k in ["chrome", "safari", "firefox", "chromium"]):
+                browsers.add(n)
+
+        new_targets = set()
+        for e in sorted(editors)[:3]:
+            new_targets.add(f"editor:{e}")
+        for b in sorted(browsers)[:3]:
+            new_targets.add(f"browser:{b}")
+
+        # Add a generic network target to allow network-level monitoring where supported
+        new_targets.add("network:all")
+
+        # If nothing found, include the home dir as fallback
+        if not new_targets:
+            new_targets.add("home:~/")
+
+        state.monitor_targets = new_targets
+        save_monitor_targets()
+    except Exception:
+        return
+
+
+def tool_monitor_set_mode(args: dict) -> dict:
+    """Agent tool: set monitoring mode to 'auto' or 'manual'.
+
+    If set to 'auto', this will run the auto target selection immediately.
+    """
+    mode = str((args or {}).get("mode") or "auto").strip().lower()
+    if mode not in {"auto", "manual"}:
+        return {"status": "error", "error": "mode must be 'auto' or 'manual'"}
+    state.monitor_mode = mode
+    saved = save_monitor_settings()
+    if mode == "auto":
+        monitor_auto_select_targets()
+    return {"status": "success", "mode": mode, "saved": bool(saved)}
 
 
 def save_monitor_targets() -> bool:
@@ -436,6 +509,25 @@ class MonitorSummaryService:
 monitor_summary_service = MonitorSummaryService(db_path=MONITOR_EVENTS_DB_PATH)
 
 
+def _monitor_startup_log() -> None:
+    """Log monitor startup details (DB path, existence, size, settings)."""
+    try:
+        db = MONITOR_EVENTS_DB_PATH
+        exists = os.path.exists(db)
+        size = os.path.getsize(db) if exists else 0
+        from tui.cli import _maybe_log_monitor_ingest
+
+        _maybe_log_monitor_ingest(
+            f"Monitor startup: db={db} exists={exists} size={size} source={getattr(state,'monitor_source','')} use_sudo={getattr(state,'monitor_use_sudo',False)} targets={len(getattr(state,'monitor_targets',set()) or set())}"
+        )
+    except Exception:
+        return
+
+
+# Run startup log once
+_monitor_startup_log()
+
+
 
 def monitor_start_selected() -> Tuple[bool, str]:
     """Start the selected monitoring source."""
@@ -523,6 +615,94 @@ def tool_monitor_set_use_sudo(args: Dict[str, Any]) -> Dict[str, Any]:
     return {"ok": True, "use_sudo": state.monitor_use_sudo}
 
 
+def tool_monitor_summarize(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Create an on-demand summary of recent monitor events and return text.
+
+    Args (optional):
+      - limit: maximum number of recent events to include (default 5000)
+    """
+    try:
+        limit = int(args.get("limit") or 5000)
+    except Exception:
+        limit = 5000
+
+    try:
+        max_id = monitor_db_get_max_id(MONITOR_EVENTS_DB_PATH)
+        start_id = max(0, int(max_id) - int(limit))
+        batch = monitor_db_read_since_id(MONITOR_EVENTS_DB_PATH, start_id, limit=limit)
+        if not batch:
+            return {"ok": True, "summary": "No recent events"}
+
+        ts_values = [int(x.get("ts") or 0) for x in batch if int(x.get("ts") or 0) > 0]
+        ts_from = min(ts_values) if ts_values else int(time.time())
+        ts_to = max(ts_values) if ts_values else int(time.time())
+
+        by_target = Counter()
+        by_type = Counter()
+        by_process = Counter()
+        paths_by_target: Dict[str, Counter] = defaultdict(Counter)
+
+        for e in batch:
+            tk = str(e.get("target_key") or "")
+            et = str(e.get("event_type") or "")
+            by_target[tk] += 1
+            by_type[et] += 1
+            src = str(e.get("src_path") or "")
+            if src:
+                paths_by_target[tk][src] += 1
+            proc = str(e.get("process") or "").strip()
+            if proc:
+                by_process[proc] += 1
+
+        top_paths: Dict[str, List[Tuple[str, int]]] = {}
+        for tk, c in paths_by_target.items():
+            top_paths[tk] = c.most_common(10)
+
+        include_processes = bool(by_process)
+        summary_text = format_monitor_summary(
+            title="MONITOR SUMMARY (manual)",
+            source=str(getattr(state, "monitor_source", "") or ""),
+            targets=sorted(getattr(state, "monitor_targets", set()) or set()),
+            ts_from=int(ts_from),
+            ts_to=int(ts_to),
+            total_events=len(batch),
+            by_target=dict(by_target),
+            by_type=dict(by_type),
+            top_paths=top_paths,
+            include_processes=include_processes,
+            top_processes=by_process.most_common(10),
+        )
+
+        return {"ok": True, "summary": summary_text}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+def tool_monitor_import_log(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Import a fs_usage or opensnoop log file into monitor DB.
+
+    Args:
+      - path: path to the log file
+    """
+    path = str(args.get("path") or "").strip()
+    if not path:
+        return {"ok": False, "error": "Missing path"}
+    if not os.path.exists(path):
+        return {"ok": False, "error": "File not found"}
+    try:
+        from tui.cli import _ProcTraceService
+
+        svc = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
+        count = 0
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            for ln in f:
+                svc._parse_and_insert(ln)
+                count += 1
+        return {"ok": True, "imported": count}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 def tool_monitor_start() -> Dict[str, Any]:
     """Start monitoring."""
     if state.monitor_active:
@@ -595,3 +775,19 @@ _tool_monitor_set_use_sudo = tool_monitor_set_use_sudo
 _tool_monitor_start = tool_monitor_start
 _tool_monitor_stop = tool_monitor_stop
 _tool_monitor_targets = tool_monitor_targets
+_tool_monitor_summarize = tool_monitor_summarize
+_tool_monitor_import_log = tool_monitor_import_log
+
+
+def tool_monitor_flush(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Force a manual flush of monitor events into the RAG ingestion pipeline."""
+    try:
+        targets = sorted(getattr(state, "monitor_targets", set()) or set())
+        source = str(getattr(state, "monitor_source", "") or "")
+        monitor_summary_service._flush(kind="manual", targets=targets, source=source)
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
+_tool_monitor_flush = tool_monitor_flush

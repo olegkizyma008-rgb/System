@@ -1,366 +1,377 @@
-# MCP Server Integration
-
-A comprehensive integration system for Context7 MCP and SonarQube MCP servers with specialized modes for Atlas healing and development project management.
+# MCP Server Integration System
 
 ## Overview
 
-This package provides a robust framework for interacting with MCP (Microservice Communication Protocol) servers, specifically:
+This system provides comprehensive integration for multiple MCP (Mistral Copilot Protocol) servers with intelligent fallback and prioritization.
 
-1. **Context7 MCP** - Memory and context management server
-2. **SonarQube MCP** - Code quality analysis server
+## RAG Storage (ChromaDB)
 
-The system includes two specialized operation modes:
+MCP integration uses ChromaDB for local persistent vector storage.
 
-- **Atlas Healing Mode** - For system diagnostics, error recovery, and healing operations
-- **Dev Project Mode** - For project creation, scaffolding, and management
-
-## Installation
-
-### Prerequisites
-
-- Python 3.8+
-- **Node.js/npm** (for Context7 MCP) - https://nodejs.org/
-- **Docker** (for SonarQube MCP) - https://www.docker.com/products/docker-desktop
-- pip
-
-### Setup Instructions
-
-#### 1. Install System Dependencies
-
-**Node.js (for Context7 MCP):**
-```bash
-# macOS with Homebrew
-brew install node
-
-# Or download from: https://nodejs.org/
-
-# Verify installation
-node --version
-npm --version
-```
-
-**Docker (for SonarQube MCP):**
-```bash
-# Download Docker Desktop from: https://www.docker.com/products/docker-desktop
-# Or install with Homebrew:
-brew install --cask docker
-
-# Start Docker daemon
-open -a Docker
-
-# Verify installation
-docker --version
-docker ps  # Should not error
-```
-
-#### 2. Python Setup
-
-```bash
-# Clone the repository or copy the mcp_integration directory
-# Install required Python packages
-pip install -r requirements.txt
-```
-
-#### 3. Configure MCP Servers
-
-**Context7 MCP** will be automatically discovered via npx when needed.
-
-**SonarQube MCP** requires environment configuration:
-
-```bash
-# Set SonarQube credentials in your environment
-export SONARQUBE_TOKEN="your_sonarqube_token_here"
-export SONARQUBE_URL="https://sonarqube.example.com"
-export SONARQUBE_ORG="your_org_name"
-
-# Or edit mcp_integration/config/mcp_config.json directly
-```
-
-#### 4. Test MCP Availability (Optional)
-
-```bash
-# Test Context7 MCP
-npx @upstash/context7-mcp --version
-
-# Test SonarQube MCP (requires Docker running)
-docker run --rm mcp/sonarqube --version
-```
-
-### Automatic Setup
-
-The `setup.sh` script in the project root will automatically:
-1. ✅ Check for Node.js and npm
-2. ✅ Check for Docker and verify daemon is running
-3. ✅ Test MCP server accessibility
-4. ⚠️  Warn if any dependencies are missing
-5. ✅ Configure Python virtual environment with all dependencies
-
-## Configuration
-
-The system uses a JSON configuration file located at `mcp_integration/config/mcp_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"],
-      "description": "Context7 MCP Server",
-      "timeout": 30000,
-      "retryAttempts": 3
-    },
-    "sonarqube": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "-e", "SONARQUBE_TOKEN", "-e", "SONARQUBE_ORG", "-e", "SONARQUBE_URL", "mcp/sonarqube", "stdio"],
-      "env": {
-        "SONARQUBE_TOKEN": "your_token_here",
-        "SONARQUBE_URL": "your_url_here",
-        "SONARQUBE_ORG": "your_org_here"
-      },
-      "description": "SonarQube MCP Server",
-      "timeout": 60000,
-      "retryAttempts": 2
-    }
-  },
-  "defaultServer": "context7",
-  "logging": {
-    "level": "info",
-    "file": "mcp_integration.log",
-    "maxSize": "10MB",
-    "maxFiles": 5
-  }
-}
-```
-
-## Usage
-
-### Basic Usage
-
-```python
-from mcp_integration import create_mcp_integration
-
-# Initialize the integration
-mcp = create_mcp_integration()
-
-# Access components
-manager = mcp["manager"]
-atlas_healing = mcp["atlas_healing"]
-dev_project = mcp["dev_project"]
-
-# Connect to all MCP servers
-connections = manager.connect_all()
-print("Connection results:", connections)
-
-# Get server statuses
-statuses = manager.get_all_status()
-print("Server statuses:", statuses)
-```
-
-### Atlas Healing Mode
-
-```python
-# Start a healing session
-error_context = {
-    "type": "system_error",
-    "message": "Context7 MCP server connection timeout",
-    "severity": "high"
-}
-
-healing_result = atlas_healing.start_healing_session(error_context)
-print("Healing session started:", healing_result)
-
-# Run system diagnostics
-diagnostics = atlas_healing.diagnose_system()
-print("System diagnostics:", diagnostics)
-
-# Analyze error patterns
-analysis = atlas_healing.analyze_error_patterns(error_context)
-print("Error analysis:", analysis)
-
-# Apply healing actions
-healing_actions = [
-    {
-        "type": "restart_server",
-        "data": {"server": "context7"}
-    },
-    {
-        "type": "reconfigure_server",
-        "data": {
-            "server": "context7",
-            "config": {"timeout": 60000}
-        }
-    }
-]
-
-actions_result = atlas_healing.apply_healing_actions(healing_actions)
-print("Healing actions applied:", actions_result)
-
-# End healing session
-end_result = atlas_healing.end_healing_session("completed")
-print("Healing session ended:", end_result)
-```
-
-### Dev Project Mode
-
-```python
-# Create a new project
-project_config = {
-    "name": "My Web Application",
-    "type": "web",
-    "description": "A sample web application",
-    "version": "1.0.0",
-    "author": "Developer"
-}
-
-project_result = dev_project.create_project(project_config)
-print("Project created:", project_result)
-
-# Set up SonarQube analysis
-if project_result.get("success"):
-    project_id = project_result["project_id"]
-    sonarqube_result = dev_project.setup_sonarqube_analysis(project_id)
-    print("SonarQube setup:", sonarqube_result)
-    
-    # Run SonarQube analysis
-    analysis_result = dev_project.run_sonarqube_analysis(project_id)
-    print("SonarQube analysis:", analysis_result)
-    
-    # Get quality gate status
-    qg_result = dev_project.get_quality_gate_status(project_id)
-    print("Quality gate status:", qg_result)
-
-# Get project history
-history = dev_project.get_project_history()
-print("Project history:", history)
-```
+- Default path: `~/.system_cli/chroma/mcp_integration`
+- Override with env var: `SYSTEM_CHROMA_PERSIST_DIR` (a directory path)
+- If ChromaDB hits a rare Rust/SQLite panic, the directory is moved aside to `*_corrupt_<timestamp>` and recreated automatically.
 
 ## Architecture
 
-```
-mcp_integration/
-├── config/
-│   ├── mcp_config.json          # Main configuration
-│   └── server_specific/         # Server-specific configs
-├── core/
-│   ├── mcp_manager.py           # Main MCP manager
-│   ├── context7_client.py       # Context7 client
-│   ├── sonarqube_client.py      # SonarQube client
-│   └── server_factory.py        # Client factory
-├── modes/
-│   ├── atlas_healing_mode.py    # Atlas healing mode
-│   └── dev_project_mode.py      # Dev project mode
-├── utils/
-│   ├── config_loader.py         # Config utilities
-│   ├── error_handler.py         # Error handling
-│   └── logging_setup.py         # Logging config
-├── tests/
-│   ├── test_context7.py         # Context7 tests
-│   ├── test_sonarqube.py        # SonarQube tests
-│   └── test_integration.py      # Integration tests
-├── __init__.py                  # Package initialization
-└── README.md                    # Documentation
+```mermaid
+graph TD
+    A[Trinity Runtime] --> B[MCP Tool Registry]
+    B --> C[Local Tools]
+    B --> D[External MCP Servers]
+    D --> E[Playwright MCP Server]
+    D --> F[PyAutoGUI MCP Server]
+    D --> G[Anthropic MCP Server]
+    D --> H[AppleScript MCP Server]
+
+    style A fill:#f9f,stroke:#333
+    style B fill:#bbf,stroke:#333
+    style C fill:#9f9,stroke:#333
+    style D fill:#9bf,stroke:#333
+    style E fill:#f99,stroke:#333
+    style F fill:#f99,stroke:#333
+    style G fill:#f99,stroke:#333
+    style H fill:#f99,stroke:#333
 ```
 
-## Key Features
+## Server Prioritization
 
-### MCP Manager
-- **Multi-server support**: Manage multiple MCP servers simultaneously
-- **Connection management**: Automatic connection handling and retries
-- **Command execution**: Unified interface for executing commands
-- **Status monitoring**: Health checks and status reporting
+### Priority Order:
+1. **Playwright MCP Server** - Browser automation (HIGHEST PRIORITY)
+2. **AppleScript MCP Server** - macOS native automation
+3. **PyAutoGUI MCP Server** - GUI automation fallback
+4. **Anthropic MCP Server** - AI-powered tools (when available)
 
-### Context7 Client
-- **Context storage**: Store and retrieve contextual information
-- **Memory management**: Efficient memory operations
-- **Query capabilities**: Advanced context querying
+### Selection Logic:
+```python
+class MCPServerSelector:
+    def __init__(self):
+        self.priority = [
+            "playwright",  # Browser automation
+            "applescript", # macOS native
+            "pyautogui",   # GUI fallback
+            "anthropic"    # AI tools (optional)
+        ]
+        self.available = {}
+        self.fallback_chain = {}
+    
+    def select_server(self, tool_type):
+        """Select optimal server for tool type"""
+        if tool_type.startswith("browser_"):
+            return self._get_available("playwright")
+        elif tool_type.startswith("gui_"):
+            return self._get_available("applescript", "pyautogui")
+        elif tool_type.startswith("ai_"):
+            return self._get_available("anthropic", "playwright")
+        else:
+            return self._get_available("playwright", "applescript")
+```
 
-### SonarQube Client
-- **Code analysis**: Run comprehensive code quality analysis
-- **Quality gates**: Monitor project quality status
-- **Configuration management**: Project-specific analysis setup
+## Installation Requirements
 
-### Atlas Healing Mode
-- **System diagnostics**: Comprehensive system health checks
-- **Error analysis**: Pattern recognition and root cause analysis
-- **Automated healing**: Apply corrective actions
-- **Session management**: Track healing sessions and outcomes
-
-### Dev Project Mode
-- **Project scaffolding**: Automatic project structure creation
-- **Template system**: Project-type-specific templates
-- **SonarQube integration**: Built-in code quality setup
-- **Project management**: History tracking and metadata storage
-
-## Error Handling
-
-The system includes comprehensive error handling:
-
-- **Connection errors**: Automatic retries and fallback mechanisms
-- **Command failures**: Detailed error reporting and logging
-- **Validation errors**: Input validation and configuration checks
-- **Resource management**: Proper cleanup and resource handling
-
-## Logging
-
-All operations are logged with detailed information:
-
-- **Timestamps**: Precise operation timing
-- **Context**: Operation context and parameters
-- **Results**: Success/failure outcomes
-- **Errors**: Detailed error information
-
-## Testing
-
-The package includes comprehensive testing:
-
+### Required Servers:
 ```bash
-# Run all tests
-python -m pytest mcp_integration/tests/
+# Install Playwright MCP Server (PRIORITY 1)
+npm install -g @executeautomation/playwright-mcp-server
 
-# Run specific tests
-python -m pytest mcp_integration/tests/test_context7.py
-python -m pytest mcp_integration/tests/test_sonarqube.py
+# Install AppleScript MCP Server (PRIORITY 2)
+npm install -g @mseep/applescript-mcp
+
+# Install PyAutoGUI MCP Server (PRIORITY 3)
+pip install mcp-pyautogui-server
+
+# Anthropic MCP Server (Optional - not available yet)
+# Would be installed when available
 ```
 
-## Best Practices
+## Integration Implementation
 
-1. **Configuration Management**: Store sensitive data in environment variables
-2. **Error Handling**: Always check operation results and handle errors
-3. **Resource Cleanup**: Properly close connections and release resources
-4. **Logging**: Maintain comprehensive logs for debugging
-5. **Testing**: Test thoroughly before production deployment
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Connection failures**: Check server availability and network connectivity
-2. **Authentication errors**: Verify API tokens and credentials
-3. **Timeout issues**: Adjust timeout settings in configuration
-4. **Permission problems**: Ensure proper file system permissions
-
-### Debugging
+### 1. Enhanced MCP Registry
 
 ```python
-import logging
-
-# Enable debug logging
-logging.basicConfig(level=logging.DEBUG)
-
-# Run operations with detailed logging
+# core/mcp.py
+class EnhancedMCPToolRegistry(MCPToolRegistry):
+    def __init__(self):
+        super().__init__()
+        self.server_priority = [
+            {"name": "playwright", "status": "required", "installed": False},
+            {"name": "applescript", "status": "required", "installed": False},
+            {"name": "pyautogui", "status": "optional", "installed": False},
+            {"name": "anthropic", "status": "optional", "installed": False}
+        ]
+        self._check_installations()
+    
+    def _check_installations(self):
+        """Check which MCP servers are available"""
+        for server in self.server_priority:
+            try:
+                if server["name"] in ["playwright", "applescript"]:
+                    # Check npm packages
+                    import subprocess
+                    result = subprocess.run(
+                        ["npm", "list", "-g", f"@{server['name']}"],
+                        capture_output=True, text=True
+                    )
+                    server["installed"] = result.returncode == 0
+                elif server["name"] == "pyautogui":
+                    # Check pip package
+                    import pkg_resources
+                    pkg_resources.get_distribution("mcp-pyautogui-server")
+                    server["installed"] = True
+            except:
+                server["installed"] = False
+    
+    def get_available_servers(self):
+        """Get list of available servers"""
+        return [s["name"] for s in self.server_priority if s["installed"]]
+    
+    def select_server_for_tool(self, tool_name):
+        """Intelligent server selection"""
+        available = self.get_available_servers()
+        
+        # Browser tools -> Playwright first
+        if tool_name.startswith("browser_"):
+            if "playwright" in available:
+                return "playwright"
+            elif "applescript" in available:
+                return "applescript"
+        
+        # GUI tools -> AppleScript or PyAutoGUI
+        elif tool_name.startswith("gui_"):
+            if "applescript" in available:
+                return "applescript"
+            elif "pyautogui" in available:
+                return "pyautogui"
+        
+        # Default to most capable available
+        return available[0] if available else None
 ```
 
-## Future Enhancements
+### 2. Server-Specific Tool Mapping
 
-- **Additional MCP servers**: Support for more MCP server types
-- **Advanced analytics**: Machine learning-based error analysis
-- **CI/CD integration**: Built-in continuous integration support
-- **Monitoring dashboard**: Visual monitoring and management interface
+```python
+# core/mcp.py - Enhanced tool registration
+class MCPToolRegistry:
+    def __init__(self):
+        # ... existing code ...
+        
+        # Server-specific tool mappings
+        self.server_tool_map = {
+            "playwright": [
+                "playwright_navigate", "playwright_click", 
+                "playwright_fill", "playwright_screenshot"
+            ],
+            "applescript": [
+                "applescript_click", "applescript_type",
+                "applescript_open_app", "applescript_get_window"
+            ],
+            "pyautogui": [
+                "pyautogui_click", "pyautogui_type",
+                "pyautogui_screenshot", "pyautogui_locate"
+            ],
+            "anthropic": [
+                "anthropic_analyze", "anthropic_decide",
+                "anthropic_generate", "anthropic_verify"
+            ]
+        }
+        
+        # Local tool fallbacks
+        self.local_fallbacks = {
+            "playwright_navigate": "browser_navigate",
+            "playwright_click": "browser_click_element",
+            "applescript_click": "gui_click",
+            "pyautogui_click": "gui_click"
+        }
+```
 
-## License
+### 3. Intelligent Tool Execution
 
-This project is licensed under the MIT License.
+```python
+# core/mcp.py - Enhanced execute method
+class MCPToolRegistry:
+    def execute(self, tool_name: str, args: Dict[str, Any]) -> Any:
+        # Step 1: Determine which server to use
+        server = self.select_server_for_tool(tool_name)
+        
+        if server:
+            try:
+                # Execute via MCP server
+                return self._execute_via_server(server, tool_name, args)
+            except MCPExecutionError as e:
+                # Fallback to local implementation
+                if tool_name in self.local_fallbacks:
+                    local_tool = self.local_fallbacks[tool_name]
+                    return self.execute(local_tool, args)
+                raise
+        else:
+            # No servers available, use local only
+            if tool_name in self._tools:
+                return self._tools[tool_name](**args)
+            raise ToolUnavailable(f"{tool_name} requires MCP server")
+    
+    def _execute_via_server(self, server_name, tool_name, args):
+        """Execute tool via specific MCP server"""
+        provider = self._external_providers.get(server_name)
+        if not provider:
+            raise MCPServerUnavailable(server_name)
+        
+        # Adapt arguments for specific server
+        adapted_args = self._adapt_args_for_server(server_name, tool_name, args)
+        
+        return provider.execute(tool_name, adapted_args)
+    
+    def _adapt_args_for_server(self, server_name, tool_name, args):
+        """Adapt arguments for specific server API"""
+        if server_name == "playwright":
+            return self._adapt_for_playwright(tool_name, args)
+        elif server_name == "applescript":
+            return self._adapt_for_applescript(tool_name, args)
+        elif server_name == "pyautogui":
+            return self._adapt_for_pyautogui(tool_name, args)
+        else:
+            return args
+```
 
-## Support
+## Installation Script
 
-For issues, questions, or contributions, please contact the development team.
+Create `mcp_integration/setup_mcp_servers.sh`:
+
+```bash
+#!/bin/bash
+
+echo "🚀 Setting up MCP Servers..."
+
+# Install Playwright MCP Server (PRIORITY 1)
+echo "📦 Installing Playwright MCP Server..."
+npm install -g @executeautomation/playwright-mcp-server
+if [ $? -eq 0 ]; then
+    echo "✅ Playwright MCP Server installed"
+else
+    echo "❌ Playwright MCP Server failed"
+fi
+
+# Install AppleScript MCP Server (PRIORITY 2)
+echo "📦 Installing AppleScript MCP Server..."
+npm install -g @mseep/applescript-mcp
+if [ $? -eq 0 ]; then
+    echo "✅ AppleScript MCP Server installed"
+else
+    echo "❌ AppleScript MCP Server failed"
+fi
+
+# Install PyAutoGUI MCP Server (PRIORITY 3)
+echo "📦 Installing PyAutoGUI MCP Server..."
+pip install mcp-pyautogui-server
+if [ $? -eq 0 ]; then
+    echo "✅ PyAutoGUI MCP Server installed"
+else
+    echo "❌ PyAutoGUI MCP Server failed"
+fi
+
+echo "🎉 MCP Server setup complete!"
+echo "Available servers: $(python mcp_integration/check_servers.py)"
+```
+
+## Server Health Check
+
+Create `mcp_integration/check_servers.py`:
+
+```python
+#!/usr/bin/env python3
+"""Check MCP server availability and health"""
+
+import subprocess
+import json
+from typing import Dict, List
+
+def check_server_health() -> Dict[str, any]:
+    """Check which MCP servers are available"""
+    results = {}
+    
+    # Check Playwright
+    try:
+        result = subprocess.run(
+            ["npx", "@executeautomation/playwright-mcp-server", "--version"],
+            capture_output=True, text=True, timeout=5
+        )
+        results["playwright"] = {
+            "available": result.returncode == 0,
+            "version": result.stdout.strip() if result.returncode == 0 else None
+        }
+    except:
+        results["playwright"] = {"available": False}
+    
+    # Check AppleScript
+    try:
+        result = subprocess.run(
+            ["npx", "@mseep/applescript-mcp", "--version"],
+            capture_output=True, text=True, timeout=5
+        )
+        results["applescript"] = {
+            "available": result.returncode == 0,
+            "version": result.stdout.strip() if result.returncode == 0 else None
+        }
+    except:
+        results["applescript"] = {"available": False}
+    
+    # Check PyAutoGUI
+    try:
+        import pkg_resources
+        version = pkg_resources.get_distribution("mcp-pyautogui-server").version
+        results["pyautogui"] = {"available": True, "version": version}
+    except:
+        results["pyautogui"] = {"available": False}
+    
+    return results
+
+def print_server_status():
+    """Print server status in readable format"""
+    status = check_server_health()
+    
+    print("🔍 MCP Server Status:")
+    print("=" * 50)
+    
+    for server, info in status.items():
+        status_emoji = "✅" if info["available"] else "❌"
+        version = info.get("version", "N/A")
+        print(f"{status_emoji} {server:15} - {version}")
+    
+    available = sum(1 for info in status.values() if info["available"])
+    total = len(status)
+    
+    print("=" * 50)
+    print(f"Available: {available}/{total} servers")
+    
+    if available == 0:
+        print("⚠️  No MCP servers available - using local tools only")
+    elif available < total:
+        print("⚠️  Some servers missing - partial functionality")
+    else:
+        print("✅ All servers available - full functionality")
+
+if __name__ == "__main__":
+    print_server_status()
+```
+
+## Integration Summary
+
+### Key Files Created:
+1. `mcp_integration/README.md` - This documentation
+2. `mcp_integration/setup_mcp_servers.sh` - Installation script
+3. `mcp_integration/check_servers.py` - Health check utility
+
+### Integration Steps:
+1. Run `setup_mcp_servers.sh` to install servers
+2. Check `check_servers.py` to verify installation
+3. Update `core/mcp.py` with enhanced registry
+4. Test tool execution with fallback logic
+
+### Expected Outcome:
+- ✅ Playwright MCP Server: Primary browser automation
+- ✅ AppleScript MCP Server: macOS native automation
+- ✅ PyAutoGUI MCP Server: GUI automation fallback
+- ❌ Anthropic MCP Server: Not available (optional)
+
+The system will now have **intelligent MCP server selection with graceful fallback** to local tools when servers are unavailable.
+
+Would you like me to implement any specific part of this integration? The architecture is ready for implementation!

@@ -6,6 +6,10 @@
 # Last module in cleanup sequence - overrides previous network changes
 ###############################################################################
 
+# Забезпечуємо базовий PATH для системних утиліт
+PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
+export PATH
+
 set -e
 
 # Colors for output
@@ -72,15 +76,16 @@ check_mikrotik_connection() {
     
     local key_path="${SSH_KEY/#\~/$HOME}"
     
-    if timeout 5 ssh -i "$key_path" -o StrictHostKeyChecking=no \
-        -o ConnectTimeout=5 "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
+    if timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
+        "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
         "system identity print" > /dev/null 2>&1; then
         print_success "MikroTik is accessible"
         return 0
     else
-        print_error "Cannot connect to MikroTik at ${MIKROTIK_HOST}"
+        print_warning "Cannot connect to MikroTik at ${MIKROTIK_HOST}"
         print_info "Ensure SSH key is added to MikroTik: ssh ${MIKROTIK_USER}@${MIKROTIK_HOST}"
-        return 1
+        # Return 0 to allow script to continue with local cleanup steps
+        return 0
     fi
 }
 
@@ -116,7 +121,7 @@ update_mikrotik_ssid() {
     
     # Update all guest WiFi interfaces
     for iface in "${GUEST_WIFI_INTERFACES[@]}"; do
-        ssh -i "$key_path" -o StrictHostKeyChecking=no \
+        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
             "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
             "/interface wifi set [find name=\"${iface}\"] configuration.ssid=\"${new_ssid}\"" \
             2>&1 || return 1
@@ -135,13 +140,13 @@ update_mikrotik_ip_pool() {
     print_info "Updating MikroTik IP pool to: ${pool_range}"
     
     # Try to update existing pool
-    ssh -i "$key_path" -o StrictHostKeyChecking=no \
+    timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
         "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
         "/ip pool set [find name=\"guest_pool\"] ranges=\"${pool_range}\"" \
         2>&1 || {
         # Create new pool if it doesn't exist
         print_info "Creating new IP pool..."
-        ssh -i "$key_path" -o StrictHostKeyChecking=no \
+        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
             "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
             "/ip pool add name=\"guest_pool\" ranges=\"${pool_range}\"" \
             2>&1 || return 1
@@ -411,7 +416,7 @@ show_status() {
     if check_mikrotik_connection; then
         print_info "Retrieving MikroTik WiFi status..."
         local key_path="${SSH_KEY/#\~/$HOME}"
-        ssh -i "$key_path" -o StrictHostKeyChecking=no \
+        timeout 10 ssh -i "$key_path" -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 \
             "${MIKROTIK_USER}@${MIKROTIK_HOST}" \
             "/interface wifi print" || true
     fi
@@ -432,7 +437,7 @@ main() {
         return 1
     fi
     
-    case "${1:-spoof}" in
+    case "${1:-spoof-auto}" in
         spoof)
             spoof_all
             ;;
@@ -499,8 +504,8 @@ main() {
             echo "Usage: $0 [COMMAND]"
             echo
             echo "Commands:"
-            echo "  spoof           Execute WiFi and MAC spoofing (default)"
-            echo "  spoof-auto      Execute spoofing and auto-reconnect to new network"
+            echo "  spoof           Execute WiFi and MAC spoofing only"
+            echo "  spoof-auto      Execute spoofing and auto-reconnect to new network (default)"
             echo "  reconnect SSID  Reconnect to specific WiFi network (default: Guest, pwd: 00000000)"
             echo "  disconnect      Disconnect from current WiFi"
             echo "  status          Show current WiFi and MAC status"

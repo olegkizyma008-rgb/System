@@ -25,11 +25,13 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 CLI_LOG_FILE = LOGS_DIR / "cli.log"
 ERROR_LOG_FILE = LOGS_DIR / "errors.log"
 DEBUG_LOG_FILE = LOGS_DIR / "debug.log"
+ANALYSIS_LOG_FILE = LOGS_DIR / "atlas_analysis.jsonl"
 
 # Backup log files (keep last 5 versions)
 CLI_LOG_BACKUP = LOGS_DIR / "cli_{}.log"
 ERROR_LOG_BACKUP = LOGS_DIR / "errors_{}.log"
 DEBUG_LOG_BACKUP = LOGS_DIR / "debug_{}.log"
+ANALYSIS_LOG_BACKUP = LOGS_DIR / "atlas_analysis_{}.jsonl"
 
 # Rotate logs if they exceed 5MB
 MAX_LOG_SIZE = 5 * 1024 * 1024  # 5MB
@@ -91,11 +93,16 @@ class JSONFormatter(logging.Formatter):
             "line": record.lineno,
             "thread": record.threadName,
         }
+        if hasattr(record, "tui_category"):
+            log_obj["tui_category"] = record.tui_category
+        if hasattr(record, "agent_type"):
+            log_obj["agent_type"] = str(record.agent_type)
+            
         if record.exc_info:
             log_obj["exception"] = self.formatException(record.exc_info)
         return json.dumps(log_obj, ensure_ascii=False)
 
-def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Logger:
+def setup_logging(verbose: bool = False, name: str = "trinity") -> logging.Logger:
     """Setup comprehensive logging system.
     
     Args:
@@ -157,7 +164,19 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
         logger.addHandler(debug_handler)
     except Exception as e:
         print(f"Failed to setup debug log file: {e}", file=sys.stderr)
-
+    # 4. AI Analysis Log (JSONL) - Structured for AI analysis
+    try:
+        analysis_handler = logging.handlers.RotatingFileHandler(
+            ANALYSIS_LOG_FILE,
+            maxBytes=50 * 1024 * 1024,  # 50 MB
+            backupCount=5,
+            encoding="utf-8"
+        )
+        analysis_handler.setLevel(logging.DEBUG)
+        analysis_handler.setFormatter(JSONFormatter())
+        logger.addHandler(analysis_handler)
+    except Exception as e:
+        print(f"Failed to setup analysis log file: {e}", file=sys.stderr)
     # 4. AI JSON Log (Machine readable)
     try:
         json_log_file = LOGS_DIR / "ai.log.jsonl"
@@ -188,10 +207,18 @@ def setup_logging(verbose: bool = False, name: str = "system_cli") -> logging.Lo
     _memory_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
     logger.addHandler(_memory_handler)
     
+    # 7. Suppress noisy third-party loggers
+    logging.getLogger("urllib3").setLevel(logging.CRITICAL)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.CRITICAL)
+    logging.getLogger("chromadb").setLevel(logging.ERROR)
+    logging.getLogger("chromadb.telemetry").setLevel(logging.CRITICAL)
+    logging.getLogger("backoff").setLevel(logging.CRITICAL)
+    logging.getLogger("posthog").setLevel(logging.CRITICAL)
+    
     return logger
 
 
-def get_logger(name: str = "system_cli") -> logging.Logger:
+def get_logger(name: str = "trinity") -> logging.Logger:
     """Get or create logger."""
     return logging.getLogger(name)
 
@@ -227,7 +254,6 @@ def log_command_execution(logger: logging.Logger, cmd: str, cwd: Optional[str] =
     if stderr:
         logger.warning(f"STDERR:\n{stderr}")
 
-
 def trace(logger: logging.Logger, event: str, data: Optional[dict] = None) -> None:
     """Log structured trace event for AI analysis."""
     import json
@@ -236,7 +262,8 @@ def trace(logger: logging.Logger, event: str, data: Optional[dict] = None) -> No
         if data:
             payload.update(data)
         serialized = json.dumps(payload, ensure_ascii=False)
-        logger.debug(f"[TRACE] {serialized}")
+        # Use INFO level for traces to ensure they appear in standard logs
+        logger.info(f"[TRACE] {serialized}")
     except Exception:
         logger.debug(f"[TRACE] {event} (serialization failed)")
 
@@ -274,8 +301,23 @@ def setup_root_file_logging(root_dir: str) -> None:
     logs_dir = Path(root_dir) / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
     
+    # Analysis Handler (Shared)
+    analysis_handler = None
+    try:
+        analysis_log_path = logs_dir / "atlas_analysis.jsonl"
+        analysis_handler = logging.handlers.RotatingFileHandler(
+            analysis_log_path,
+            maxBytes=50 * 1024 * 1024,
+            backupCount=5,
+            encoding="utf-8"
+        )
+        analysis_handler.setLevel(logging.DEBUG)
+        analysis_handler.setFormatter(JSONFormatter())
+    except Exception as e:
+        print(f"Failed to setup analysis log handler: {e}", file=sys.stderr)
+
     # Left Screen Logger (Main Logs)
-    left_logger = logging.getLogger("system_cli.left")
+    left_logger = logging.getLogger("trinity.left")
     left_logger.setLevel(logging.DEBUG)
     left_logger.propagate = False
     
@@ -288,11 +330,13 @@ def setup_root_file_logging(root_dir: str) -> None:
         )
         left_handler.setFormatter(logging.Formatter(LOG_FORMAT_SIMPLE, datefmt=DATE_FORMAT))
         left_logger.addHandler(left_handler)
+        if analysis_handler:
+            left_logger.addHandler(analysis_handler)
     except Exception as e:
         print(f"Failed to setup left screen log: {e}", file=sys.stderr)
 
     # Right Screen Logger (Agent Messages)
-    right_logger = logging.getLogger("system_cli.right")
+    right_logger = logging.getLogger("trinity.right")
     right_logger.setLevel(logging.DEBUG)
     right_logger.propagate = False
 
@@ -305,5 +349,7 @@ def setup_root_file_logging(root_dir: str) -> None:
         )
         right_handler.setFormatter(logging.Formatter("%(asctime)s | %(message)s", datefmt=DATE_FORMAT))
         right_logger.addHandler(right_handler)
+        if analysis_handler:
+            right_logger.addHandler(analysis_handler)
     except Exception as e:
         print(f"Failed to setup right screen log: {e}", file=sys.stderr)

@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from prompt_toolkit.data_structures import Point
 
-from system_cli.state import state
+from tui.state import state
 from tui.messages import MessageBuffer, AgentType
 
 
@@ -34,6 +34,9 @@ _render_log_cache_ttl_s: float = 0.05
 _render_agents_cache: Dict[str, Any] = {"ts": 0.0, "messages": [], "cursor": Point(x=0, y=0)}
 _render_agents_cache_ttl_s: float = 0.05
 
+_render_context_cache: Dict[str, Any] = {"ts": 0.0, "content": []}
+_render_context_cache_ttl_s: float = 0.2
+
 # Style mapping
 STYLE_MAP = {
     "info": "class:log.info",
@@ -44,6 +47,44 @@ STYLE_MAP = {
     "tool_fail": "class:log.tool.fail",
     "tool_run": "class:log.tool.run",
 }
+
+
+def _apply_selection_to_formatted_text(formatted: List[Tuple[str, str]], panel_name: str) -> List[Tuple[str, str]]:
+    """Apply selection highlighting to formatted text tuples."""
+    if getattr(state, "selection_panel", None) != panel_name:
+        return formatted
+    if state.selection_start_y is None or state.selection_end_y is None:
+        return formatted
+        
+    start_y = min(state.selection_start_y, state.selection_end_y)
+    end_y = max(state.selection_start_y, state.selection_end_y)
+    
+    new_formatted = []
+    current_y = 0
+    for style, text in formatted:
+        if not text:
+            new_formatted.append((style, text))
+            continue
+            
+        lines = text.split("\n")
+        for i, line in enumerate(lines):
+            # Apply reverse style to selected lines
+            if start_y <= current_y <= end_y:
+                 current_style = style + " reverse" if style else "reverse"
+                 # Special handling for empty lines in selection to show visibility
+                 display_line = line if line else " "
+                 new_formatted.append((current_style, display_line))
+            else:
+                 new_formatted.append((style, line))
+            
+            # Re-add newline if it wasn't the last part of a split
+            if i < len(lines) - 1:
+                 # styled newline
+                 nl_style = style + " reverse" if (style and start_y <= current_y <= end_y) else (style or "")
+                 new_formatted.append((nl_style, "\n"))
+                 current_y += 1
+                 
+    return new_formatted
 
 
 def get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
@@ -124,7 +165,10 @@ def get_render_log_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
         _render_log_cache["ts"] = now
         _render_log_cache["logs"] = logs_snapshot
         _render_log_cache["cursor"] = cursor
-        return logs_snapshot, cursor
+        
+        # Apply selection highlighting AFTER caching the raw snapshot
+        highlighted = _apply_selection_to_formatted_text(logs_snapshot, "log")
+        return highlighted, cursor
 
 
 def get_render_agents_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
@@ -205,7 +249,10 @@ def get_render_agents_snapshot() -> Tuple[List[Tuple[str, str]], Point]:
         _render_agents_cache["ts"] = now
         _render_agents_cache["messages"] = formatted
         _render_agents_cache["cursor"] = cursor
-        return formatted, cursor
+        
+        # Apply selection highlighting AFTER caching the raw snapshot
+        highlighted = _apply_selection_to_formatted_text(formatted, "agents")
+        return highlighted, cursor
 
 
 def trim_logs_if_needed() -> None:
@@ -255,11 +302,19 @@ def log_replace_at(index: int, text: str, category: str = "info") -> None:
 def log(text: str, category: str = "info") -> None:
     """Main log function - appends to log buffer."""
     global _logs_need_trim
+    # Sanitize references to Windsurf when Doctor Vibe is handling dev edits
+    try:
+        import os, re
+        if str(os.getenv("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
+            text = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", text)
+    except Exception:
+        pass
     
     # Log to root file (Left Screen)
     try:
         import logging
-        logging.getLogger("system_cli.left").info(f"[{category.upper()}] {text}")
+        # Pass category as extra for JSON analysis log
+        logging.getLogger("system_cli.left").info(f"[{category.upper()}] {text}", extra={"tui_category": category})
     except Exception:
         pass
 
@@ -279,12 +334,38 @@ def log(text: str, category: str = "info") -> None:
                 state.logs = state.logs[-1500:]
 
 
-def log_agent_message(agent: AgentType, text: str) -> None:
-    """Log agent message to clean display panel."""
-    # Log to root file (Right Screen)
+# Track last logged content per agent to avoid duplicate streaming logs
+_agent_last_logged: Dict[str, str] = {}
+_agent_last_logged_lock = threading.Lock()
+
+def log_agent_final(agent: AgentType, text: str) -> None:
+    """Log final agent message to analysis log (JSONL). Call ONLY when streaming is complete."""
     try:
-        import logging
-        logging.getLogger("system_cli.right").info(f"[{agent.value}] {text}")
+        # Sanitize agent final messages for Doctor Vibe policy
+        import logging, os, re
+        if str(os.getenv("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
+            text = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", text)
+        logging.getLogger("system_cli.right").info(
+            f"[{agent.value}] {text}", 
+            extra={"agent_type": agent.value, "is_final": True}
+        )
+    except Exception:
+        pass
+
+
+def log_agent_message(agent: AgentType, text: str) -> None:
+    """Log agent message to clean display panel.
+    
+    NOTE: This is called for EVERY streaming chunk. File logging is deferred
+    to log_agent_final() to avoid duplicate entries in analysis logs.
+    """
+    # Skip file logging here - it's handled by log_agent_final() after stream completes
+
+    # Sanitize agent messages when Doctor Vibe is enabled
+    try:
+        import os, re
+        if str(os.getenv("TRINITY_DEV_BY_VIBE") or "").strip().lower() in {"1", "true", "yes", "on"}:
+            text = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", text)
     except Exception:
         pass
 
@@ -394,7 +475,13 @@ def get_header() -> List[Tuple[str, str]]:
 
 
 def get_context() -> List[Tuple[str, str]]:
-    """Generate context panel content for TUI."""
+    """Generate context panel content for TUI (with selection support)."""
+    now = time.monotonic()
+    ts = float(_render_context_cache.get("ts", 0.0))
+    if (now - ts) < _render_context_cache_ttl_s:
+        cached = _render_context_cache.get("content") or []
+        return _apply_selection_to_formatted_text(cached, "context")
+
     from tui.cli_paths import CLEANUP_CONFIG_PATH, LOCALIZATION_CONFIG_PATH
     result: List[Tuple[str, str]] = []
 
@@ -421,12 +508,15 @@ def get_context() -> List[Tuple[str, str]]:
     result.append(("class:context.label", " /gui_mode status|on|off|auto\n"))
     result.append(("class:context.label", " /trinity <task>\n"))
 
-    return result
+    _render_context_cache["ts"] = now
+    _render_context_cache["content"] = result
+    
+    return _apply_selection_to_formatted_text(result, "context")
 
 
 def get_status() -> List[Tuple[str, str]]:
     """Generate status bar content for TUI."""
-    from system_cli.state import MenuLevel
+    from tui.state import MenuLevel
     if state.menu_level != MenuLevel.NONE:
         mode_indicator = [("class:status.menu", " MENU "), ("class:status", " ")]
     else:
@@ -451,7 +541,21 @@ def get_status() -> List[Tuple[str, str]]:
     if getattr(state, "agent_paused", False):
         paused_hint = [("class:status", " | "), ("class:status.key", "Type: /resume")]
 
-    return mode_indicator + [
+    # Vibe live activity indicator (blinking)
+    try:
+        import time
+        last = float(getattr(state, "vibe_last_update", 0.0) or 0.0)
+        if time.time() - last < 3.0:
+            # Blink at ~2Hz
+            blink_on = (int(time.time() * 2) % 2) == 0
+            vibe_text = " VIBE " if blink_on else "     "
+            vibe_indicator = [("class:status.vibe", vibe_text), ("class:status", " | ")]
+        else:
+            vibe_indicator = []
+    except Exception:
+        vibe_indicator = []
+
+    base = mode_indicator + [
         ("class:status.ready", f" {state.status} "),
         ("class:status", " "),
         ("class:status.key", monitor_tag),
@@ -461,7 +565,12 @@ def get_status() -> List[Tuple[str, str]]:
         ("class:status.key", "F2: Menu"),
         ("class:status", " | "),
         ("class:status.key", "Ctrl+C: Quit"),
-    ] + paused_hint
+    ]
+
+    if vibe_indicator:
+        base = mode_indicator + vibe_indicator + base[len(mode_indicator) :]
+
+    return base + paused_hint
 
 
 # Backward compatibility aliases

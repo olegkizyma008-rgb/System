@@ -16,6 +16,9 @@ load_dotenv(os.path.join(_repo_root, ".env"))
 os.environ["TRINITY_ALLOW_GENERAL"] = "1"
 os.environ["TRINITY_ROUTING_MODE"] = "all"
 
+# Speed-up: avoid long model host connectivity checks (PaddleX/PaddleOCR)
+os.environ.setdefault("DISABLE_MODEL_SOURCE_CHECK", "True")
+
 from core.trinity import TrinityRuntime, TrinityPermissions
 
 def main():

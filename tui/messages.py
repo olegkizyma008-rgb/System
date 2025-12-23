@@ -14,6 +14,7 @@ class AgentType(Enum):
     ATLAS = "atlas"          # 🌐 Strategist (cyan/blue)
     TETYANA = "tetyana"      # 💻 Developer (green)
     GRISHA = "grisha"        # 👁️ Verifier (yellow/orange)
+    VIBE = "vibe"            # ⚕️ Doctor Vibe (magenta)
     USER = "user"            # 👤 User (white/default)
     SYSTEM = "system"        # ⚙️ System (gray)
 
@@ -55,60 +56,58 @@ class MessageFilter:
         return any(pattern.lower() in lower_text for pattern in MessageFilter.TECHNICAL_PATTERNS)
     
     @staticmethod
+    def clean_technical_markers(text: str) -> str:
+        """Remove technical markers like [STEP_COMPLETED], [VERIFIED], etc."""
+        import re
+        patterns = [
+            r'\[(?:STEP_COMPLETED|VERIFIED|FAILED|UNCERTAIN|NOT VERIFIED)\]',
+            r'\[VOICE\]',  # Also remove [VOICE] here if we want absolute cleanliness
+        ]
+        result = text
+        for p in patterns:
+            result = re.sub(p, '', result)
+        return result.strip()
+
+    @staticmethod
     def clean_message(text: str) -> str:
         """Remove technical details from message while prioritizing [VOICE] content."""
-        # Strict Voice Filtering
+        # 1. Prioritize [VOICE] content if present
         if "[VOICE]" in text:
             import re
             match = re.search(r"\[VOICE\]\s*(.*)", text, re.DOTALL)
             if match:
-                # Capture everything after [VOICE], stripping technical blocks if they appear later
-                voice_content = match.group(1).strip()
-                # If there are subsequent technical markers, cut them off
-                for pattern in MessageFilter.TECHNICAL_PATTERNS:
-                     if pattern in voice_content:
-                         # This is a naive cut, but safer for now. 
-                         # Ideally we trust the agent to put [VOICE] at the start or end.
-                         pass
-                return voice_content
+                content = match.group(1).strip()
+                return MessageFilter.clean_technical_markers(content)
         
-        # Fallback cleaning
+        # 2. Fallback cleaning (remove technical lines/JSON)
         lines = text.split("\n")
         clean_lines = []
         skip_until_empty = False
         
         for line in lines:
-            # Skip Tool Results sections
-            if "Tool Results:" in line or "Result for " in line:
+            if any(pattern.lower() in line.lower() for pattern in MessageFilter.TECHNICAL_PATTERNS):
                 skip_until_empty = True
                 continue
             
-            # Skip JSON/technical lines
             if skip_until_empty:
                 if line.strip() == "":
                     skip_until_empty = False
                 continue
             
-            # Skip pure JSON lines
-            if line.strip().startswith("{") or line.strip().startswith("["):
-                continue
-            if line.strip().startswith('"'):  # e.g. "tool_calls": [...]
-                continue
-            if line.strip() in ("}", "]", "},", "],"):
+            if line.strip().startswith(("{", "[", '"')) or line.strip() in ("}", "]", "},", "],"):
                 continue
             
             clean_lines.append(line)
         
-        # Join and clean up extra whitespace
         result = "\n".join(clean_lines).strip()
-        # Fallback: if result is still too technical (multiline JSON or code), truncate
+        
+        # If result looks like JSON, take the first non-JSON line
         if "{" in result and "}" in result:
-             # Heuristic: try to take just the first sentence if it looks normal
              first_line = result.split("\n")[0]
              if not first_line.startswith(("{", "[")):
-                 return first_line.strip()
-                 
-        return result
+                 result = first_line.strip()
+        
+        return MessageFilter.clean_technical_markers(result)
 
 
 class MessageFormatter:
@@ -118,6 +117,7 @@ class MessageFormatter:
         AgentType.ATLAS: "class:agent.atlas",
         AgentType.TETYANA: "class:agent.tetyana",
         AgentType.GRISHA: "class:agent.grisha",
+        AgentType.VIBE: "class:agent.vibe",
         AgentType.USER: "class:agent.user",
         AgentType.SYSTEM: "class:agent.system",
     }
@@ -126,6 +126,7 @@ class MessageFormatter:
         AgentType.ATLAS: "ATLAS",
         AgentType.TETYANA: "TETYANA",
         AgentType.GRISHA: "GRISHA",
+        AgentType.VIBE: "VIBE",
         AgentType.USER: "USER",
         AgentType.SYSTEM: "SYSTEM",
     }
@@ -134,6 +135,7 @@ class MessageFormatter:
         AgentType.ATLAS: "🌐",
         AgentType.TETYANA: "💻",
         AgentType.GRISHA: "👁️",
+        AgentType.VIBE: "⚕️",
         AgentType.USER: "👤",
         AgentType.SYSTEM: "⚙️",
     }
@@ -190,26 +192,25 @@ class MessageFormatter:
     def format_message(msg: AgentMessage) -> List[Tuple[str, str]]:
         """Format agent message with compact direct communication style for TTS.
         
-        Format: 
-        [EMOJI NAME] Message text...
+        STRICT: Only [VOICE] messages are displayed in agent panel.
+        This panel is for verbal communication between agents that will be
+        spoken via TTS - short, natural dialogue.
         
         Returns list of (style, text) tuples for prompt_toolkit.
         """
         result: List[Tuple[str, str]] = []
         
-        # Skip technical messages unless they contain [VOICE]
-        if "[VOICE]" not in msg.text:
-            if msg.is_technical or MessageFilter.is_technical(msg.text):
-                return result
+        # STRICT TTS FILTER: Only show [VOICE] messages
+        # Agent panel is for verbal communication only, not technical logs
+        # Allow Vibe messages to be shown even without explicit [VOICE]
+        if "[VOICE]" not in msg.text and msg.agent != AgentType.VIBE:
+            return result  # Skip ALL non-voice messages unless from Vibe
 
-        if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
+        if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA, AgentType.VIBE}:
             return result
         
-        # Clean the message for TTS - remove unnecessary tags and make it more natural
-        clean_text = MessageFilter.clean_message(msg.text)
-        
-        # Remove [VOICE] tag for display, keep it for TTS processing
-        display_text = clean_text.replace("[VOICE]", "").strip()
+        # Clean the message - remove unnecessary tags and make it more natural
+        display_text = MessageFilter.clean_message(msg.text)
         if not display_text:
             return result
         
@@ -256,19 +257,17 @@ class MessageFormatter:
         if msg.agent not in {AgentType.ATLAS, AgentType.TETYANA, AgentType.GRISHA}:
             return result
         
-        # Clean the message for TTS - remove unnecessary tags and make it more natural
-        clean_text = MessageFilter.clean_message(msg.text)
+        # Clean the message - remove unnecessary tags and make it more natural
+        display_text = MessageFilter.clean_message(msg.text)
         
-        # Remove [VOICE] tag for display, keep it for TTS processing
-        display_text = clean_text.replace("[VOICE]", "").strip()
         if not display_text:
             return result
         
-        # Ultra-compact format: EMOJI Message (no brackets, minimal spacing)
+        # TTS-optimized format: EMOJI Message (natural speech)
         emoji = MessageFormatter.AGENT_EMOJIS.get(msg.agent, "")
         color = MessageFormatter.AGENT_COLORS.get(msg.agent, "class:agent.system")
 
-        # Format: EMOJI Message text (single line, no extra spacing)
+        # Format: EMOJI Message text (single line, clean for TTS)
         result.append((color, f"{emoji} ")) # Just emoji as prefix
         
         # Message text with @mentions highlighted - optimized for TTS
@@ -294,7 +293,26 @@ class MessageFormatter:
             compact: If True, use ultra-compact format for TTS streaming
         """
         result: List[Tuple[str, str]] = []
+        last_verbal_agent = None
+        last_verbal_text = None
+        
+        # Deduplicate consecutive identical verbal messages from same agent
+        deduplicated = []
         for msg in messages:
+            is_verbal = "[VOICE]" in msg.text
+            if not is_verbal:
+                deduplicated.append(msg)
+                continue
+                
+            clean_text = MessageFilter.clean_message(msg.text)
+            if msg.agent == last_verbal_agent and clean_text == last_verbal_text:
+                continue # Skip visual duplicate
+            
+            deduplicated.append(msg)
+            last_verbal_agent = msg.agent
+            last_verbal_text = clean_text
+
+        for msg in deduplicated:
             if compact:
                 result.extend(MessageFormatter.format_message_compact(msg))
             else:
@@ -320,9 +338,32 @@ class MessageBuffer:
             self.messages = self.messages[-self.max_messages:]
 
     def upsert_stream(self, agent: AgentType, text: str, is_technical: bool = False) -> None:
+        """Add or update a streaming message.
+        
+        If the last verbal message in the buffer belongs to the same agent,
+        update it instead of appending, even if there are technical messages
+        in between. This prevents visual duplication in the AGENTS panel.
+        """
+        is_verbal = "[VOICE]" in text
         msg = AgentMessage(agent=agent, text=text, is_technical=is_technical)
-        if self.messages and self.messages[-1].agent == agent and not self.messages[-1].is_technical:
-            self.messages[-1] = msg
+        
+        if is_verbal:
+            # Look for the last verbal message
+            idx = len(self.messages) - 1
+            while idx >= 0:
+                m = self.messages[idx]
+                if "[VOICE]" in m.text:
+                    if m.agent == agent:
+                        self.messages[idx] = msg
+                        return
+                    else:
+                        # Found a verbal message from a DIFFERENT agent, so must append
+                        break
+                idx -= 1
+        
+        # Default: check literal last message (for technical/non-voice updates)
+        if self.messages and self.messages[-1].agent == agent and (self.messages[-1].is_technical == is_technical):
+             self.messages[-1] = msg
         else:
             self.messages.append(msg)
             if len(self.messages) > self.max_messages:

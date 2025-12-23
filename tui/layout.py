@@ -15,7 +15,7 @@ from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.styles import BaseStyle
 from prompt_toolkit.widgets import Frame
 from prompt_toolkit.layout.margins import ScrollbarMargin
-from system_cli.state import state, MenuLevel
+from tui.state import state, MenuLevel
 
 _app_state = {"instance": None}
 
@@ -96,6 +96,136 @@ def force_ui_update():
             pass
 
 
+def _handle_mouse_scroll_up(name: str, state: Any, scroll_delta: int):
+    if name == "log":
+        state.ui_log_follow = False
+        state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) - scroll_delta)
+    elif name == "agents":
+        state.ui_agents_follow = False
+        state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) - scroll_delta)
+    
+    from prompt_toolkit.application.current import get_app
+    app = get_app()
+    for w in app.layout.find_all_windows():
+        if getattr(w, "name", None) == name:
+            w.vertical_scroll = max(0, w.vertical_scroll - scroll_delta)
+
+def _handle_mouse_scroll_down(name: str, state: Any, scroll_delta: int):
+    if name == "log":
+        state.ui_log_cursor_y = int(getattr(state, "ui_log_cursor_y", 0)) + scroll_delta
+        if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
+            state.ui_log_follow = True
+    elif name == "agents":
+        state.ui_agents_cursor_y = int(getattr(state, "ui_agents_cursor_y", 0)) + scroll_delta
+        if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
+            state.ui_agents_follow = True
+    
+    from prompt_toolkit.application.current import get_app
+    app = get_app()
+    for w in app.layout.find_all_windows():
+        if getattr(w, "name", None) == name:
+            info = w.render_info
+            if info:
+                max_scroll = max(0, info.content_height - info.window_height)
+                w.vertical_scroll = min(max_scroll, w.vertical_scroll + scroll_delta)
+            else:
+                w.vertical_scroll += scroll_delta
+
+def _handle_mouse_up(name: str, get_logs: Callable, get_agent_messages: Callable, get_context: Callable = None):
+    try:
+        from tui.state import state
+        from tui.clipboard_utils import copy_to_clipboard
+        
+        if not state.selection_panel or state.selection_start_y is None or state.selection_end_y is None:
+            return
+
+        # Get vertical scroll offset
+        from prompt_toolkit.application.current import get_app
+        app = get_app()
+        v_scroll = 0
+        for wd in app.layout.find_all_windows():
+            if getattr(wd, "name", None) == name:
+                v_scroll = getattr(wd, "vertical_scroll", 0)
+                break
+
+        # Get full content
+        content_lines = []
+        if name == "log" and get_logs:
+            content = "".join(str(t or "") for _, t in get_logs())
+            content_lines = content.split("\n")
+        elif name == "agents" and get_agent_messages:
+            content = "".join(str(t or "") for _, t in get_agent_messages())
+            content_lines = content.split("\n")
+        elif name == "context" and get_context:
+            content = "".join(str(t or "") for _, t in get_context())
+            content_lines = content.split("\n")
+            
+        if not content_lines:
+            return
+
+        # Absolutize Y coordinates using scroll
+        start_abs = min(state.selection_start_y, state.selection_end_y) + v_scroll
+        end_abs = max(state.selection_start_y, state.selection_end_y) + v_scroll
+        
+        if start_abs == end_abs:
+            # Simple click - copy the line
+            if 0 <= start_abs < len(content_lines):
+                copy_to_clipboard(content_lines[start_abs])
+        else:
+            # Dragged selection
+            selected = "\n".join(content_lines[start_abs:end_abs+1])
+            if selected:
+                copy_to_clipboard(selected)
+                
+        # Clear selection state
+        state.selection_panel = None
+        state.selection_start_y = None
+        state.selection_end_y = None
+        
+    except Exception:
+        pass
+
+
+def _create_mouse_handler(name: str, force_ui_update: Callable, get_logs: Callable = None, get_agent_messages: Callable = None, get_context: Callable = None):
+    def _handler(mouse_event: Any):
+        from prompt_toolkit.mouse_events import MouseEventType
+        from tui.state import state
+        
+        scroll_delta = 10 
+        
+        if mouse_event.event_type == MouseEventType.SCROLL_UP:
+            _handle_mouse_scroll_up(name, state, scroll_delta)
+            force_ui_update()
+            return None
+            
+        if mouse_event.event_type == MouseEventType.SCROLL_DOWN:
+            _handle_mouse_scroll_down(name, state, scroll_delta)
+            force_ui_update()
+            return None
+            
+        if mouse_event.event_type == MouseEventType.MOUSE_DOWN:
+            state.selection_panel = name
+            state.selection_start_y = mouse_event.position.y
+            state.selection_end_y = mouse_event.position.y
+            force_ui_update()
+            return None
+
+        if mouse_event.event_type == MouseEventType.MOUSE_MOVE:
+            if state.selection_panel == name:
+                state.selection_end_y = mouse_event.position.y
+                force_ui_update()
+            return None
+        
+        if mouse_event.event_type == MouseEventType.MOUSE_UP:
+            if hasattr(mouse_event, 'button') and mouse_event.button is not None:
+                _handle_mouse_up(name, get_logs, get_agent_messages, get_context)
+                force_ui_update()
+            return NotImplemented
+        
+        return NotImplemented
+    return _handler
+
+
 def build_app(
     *,
     get_header: Callable[[], Any],
@@ -119,14 +249,6 @@ def build_app(
     def header_callback_menu(*args):
         state.menu_level = MenuLevel.MAIN if state.menu_level == MenuLevel.NONE else MenuLevel.NONE
         state.menu_index = 0
-        force_ui_update()
-
-    def header_callback_logs(*args):
-        state.ui_scroll_target = "log"
-        force_ui_update()
-
-    def header_callback_agents(*args):
-        state.ui_scroll_target = "agents"
         force_ui_update()
 
     def get_interactive_header() -> AnyFormattedText:
@@ -159,86 +281,16 @@ def build_app(
         style="class:header"
     )
 
+    context_control = FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context"))
+    context_control.mouse_handler = _create_mouse_handler("context", force_ui_update, get_logs, get_agent_messages, get_context)
+    
     context_window = Window(
-        FormattedTextControl(_safe_formatted_text(get_context, fallback_style="class:context")), 
+        context_control, 
         style="class:context", 
         wrap_lines=True,
         right_margins=[ScrollbarMargin(display_arrows=True)],
     )
-
-    def make_scroll_handler(name: str):
-        def _handler(mouse_event: Any):
-            from prompt_toolkit.mouse_events import MouseEventType
-            from system_cli.state import state
-            
-            # Scroll speed
-            scroll_delta = 10 
-            
-            if mouse_event.event_type == MouseEventType.SCROLL_UP:
-                # Disable follow when manually scrolling up
-                if name == "log":
-                    state.ui_log_follow = False
-                    state.ui_log_cursor_y = max(0, int(getattr(state, "ui_log_cursor_y", 0)) - scroll_delta)
-                elif name == "agents":
-                    state.ui_agents_follow = False
-                    state.ui_agents_cursor_y = max(0, int(getattr(state, "ui_agents_cursor_y", 0)) - scroll_delta)
-                
-                from prompt_toolkit.application.current import get_app
-                app = get_app()
-                for w in app.layout.find_all_windows():
-                    if getattr(w, "name", None) == name:
-                        w.vertical_scroll = max(0, w.vertical_scroll - scroll_delta)
-                force_ui_update()
-                return None
-                
-            elif mouse_event.event_type == MouseEventType.SCROLL_DOWN:
-                if name == "log":
-                    state.ui_log_cursor_y = int(getattr(state, "ui_log_cursor_y", 0)) + scroll_delta
-                    if state.ui_log_cursor_y >= max(0, int(getattr(state, "ui_log_line_count", 1)) - 1):
-                        state.ui_log_follow = True
-                elif name == "agents":
-                    state.ui_agents_cursor_y = int(getattr(state, "ui_agents_cursor_y", 0)) + scroll_delta
-                    if state.ui_agents_cursor_y >= max(0, int(getattr(state, "ui_agents_line_count", 1)) - 1):
-                        state.ui_agents_follow = True
-                
-                from prompt_toolkit.application.current import get_app
-                app = get_app()
-                for w in app.layout.find_all_windows():
-                    if getattr(w, "name", None) == name:
-                        info = w.render_info
-                        if info:
-                            max_scroll = max(0, info.content_height - info.window_height)
-                            w.vertical_scroll = min(max_scroll, w.vertical_scroll + scroll_delta)
-                        else:
-                            w.vertical_scroll += scroll_delta
-                force_ui_update()
-                return None
-            
-            # Handle text selection (MOUSE_UP after drag = selection complete)
-            elif mouse_event.event_type == MouseEventType.MOUSE_UP:
-                # Check if this was a selection/drag operation
-                if hasattr(mouse_event, 'button') and mouse_event.button is not None:
-                    # Text was selected - copy it automatically
-                    try:
-                        from tui.clipboard_utils import copy_to_clipboard
-                        from tui.render import get_logs, get_agent_messages
-                        
-                        content = ""
-                        if name == "log":
-                            logs = get_logs()
-                            content = "".join(str(t or "") for _, t in logs)
-                        elif name == "agents":
-                            msgs = get_agent_messages()
-                            content = "".join(str(t or "") for _, t in msgs)
-                        
-                        if content:
-                            copy_to_clipboard(content)
-                    except Exception:
-                        pass
-                return NotImplemented
-            
-            return NotImplemented
-        return _handler
+    setattr(context_window, "name", "context")
 
     safe_get_logs = _cached_getter(_safe_formatted_text(get_logs, fallback_style="class:log.info"))
     log_control = FormattedTextControl(
@@ -246,7 +298,7 @@ def build_app(
         get_cursor_position=_safe_cursor_position(safe_get_logs, get_log_cursor_position),
         focusable=True,
     )
-    log_control.mouse_handler = make_scroll_handler("log")
+    log_control.mouse_handler = _create_mouse_handler("log", force_ui_update, get_logs, get_agent_messages, get_context)
 
     log_window = Window(
         log_control,
@@ -266,7 +318,7 @@ def build_app(
             get_cursor_position=_safe_cursor_position(safe_get_agent_messages, get_agent_cursor_position) if get_agent_cursor_position else None,
             focusable=True,
         )
-        agent_control.mouse_handler = make_scroll_handler("agents")
+        agent_control.mouse_handler = _create_mouse_handler("agents", force_ui_update, get_logs, get_agent_messages, get_context)
 
         agent_messages_window = Window(
             agent_control,

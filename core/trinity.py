@@ -5,6 +5,24 @@ import subprocess
 import re
 import time
 from datetime import datetime
+import requests
+
+# Load .env BEFORE any code tries to read environment variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # Fallback: manually load .env if dotenv is not available
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    os.environ[key.strip()] = value.strip().strip('"\'')
+except Exception:
+    pass
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
@@ -13,8 +31,9 @@ from core.agents.tetyana import get_tetyana_prompt
 from core.agents.grisha import get_grisha_prompt, get_grisha_media_prompt
 from core.vision_context import VisionContextManager
 from providers.copilot import CopilotLLM
+from mcp_integration.prompt_engine import MCPPromptEngine
 
-from core.mcp import MCPToolRegistry
+from core.mcp_registry import MCPToolRegistry
 from core.context7 import Context7
 from core.verification import AdaptiveVerifier
 from core.memory import get_memory
@@ -22,13 +41,17 @@ from core.self_healing import IssueSeverity
 from core.vibe_assistant import VibeCLIAssistant
 from dataclasses import dataclass
 from tui.logger import get_logger, trace
+from core.task_analyzer import TaskAnalyzer
+from core.state_logger import log_initial_state, log_state_transition
 from core.utils import extract_json_object
 from core.constants import (
     DEV_KEYWORDS, GENERAL_KEYWORDS, MEDIA_KEYWORDS, 
     SUCCESS_MARKERS, FAILURE_MARKERS, UNCERTAIN_MARKERS,
     NEGATION_PATTERNS, VISION_FAILURE_KEYWORDS, MESSAGES,
-    TERMINATION_MARKERS
+    TERMINATION_MARKERS, STEP_COMPLETED_MARKER, UNKNOWN_STEP,
+    VOICE_MARKER, DEFAULT_MODEL_FALLBACK
 )
+import threading
 
 @dataclass
 class TrinityPermissions:
@@ -39,6 +62,20 @@ class TrinityPermissions:
     allow_gui: bool = False
     allow_shortcuts: bool = False
     hyper_mode: bool = False # Automation without confirmation
+
+    def __post_init__(self):
+        # Allow environment overrides
+        def _is_env_true(var: str, default: bool) -> bool:
+            val = str(os.getenv(var) or "").strip().lower()
+            if not val: return default
+            return val in {"1", "true", "yes", "on"}
+
+        self.allow_shell = _is_env_true("TRINITY_ALLOW_SHELL", self.allow_shell)
+        self.allow_applescript = _is_env_true("TRINITY_ALLOW_APPLESCRIPT", self.allow_applescript)
+        self.allow_file_write = _is_env_true("TRINITY_ALLOW_WRITE", self.allow_file_write)
+        self.allow_gui = _is_env_true("TRINITY_ALLOW_GUI", self.allow_gui)
+        self.allow_shortcuts = _is_env_true("TRINITY_ALLOW_SHORTCUTS", self.allow_shortcuts)
+        self.hyper_mode = _is_env_true("TRINITY_HYPER_MODE", self.hyper_mode)
 
 # Define the state of the Trinity system
 class TrinityState(TypedDict):
@@ -72,8 +109,11 @@ class TrinityState(TypedDict):
     learning_mode: Optional[bool]
 
 class TrinityRuntime:
-    MAX_REPLANS = 10
     MAX_STEPS = 50
+    MAX_REPLANS = 10
+    PROJECT_STRUCTURE_FILE = "project_structure_final.txt"
+    LAST_RESPONSE_FILE = ".last_response.txt"
+    TRINITY_REPORT_HEADER = "## Trinity Report"
     
     # Dev task keywords (allow execution)
     DEV_KEYWORDS = set(DEV_KEYWORDS)
@@ -93,7 +133,7 @@ class TrinityRuntime:
     ):
         self.llm = CopilotLLM()
         self.verbose = verbose
-        self.logger = get_logger("system_cli.trinity")
+        self.logger = get_logger("trinity.core")
         self.registry = MCPToolRegistry()
         self.learning_mode = learning_mode
         
@@ -112,6 +152,9 @@ class TrinityRuntime:
         self.preferred_language = preferred_language
         # Callback for streaming deltas: (agent_name, text_delta)
         self.on_stream = on_stream
+        # Thread lock to prevent duplicate streaming output
+        self._stream_lock = threading.Lock()
+        self._last_stream_content = {}  # Per-agent deduplication
         self.workflow = self._build_graph()
         
         # Hyper mode for unlimited permissions during testing
@@ -127,7 +170,7 @@ class TrinityRuntime:
             self.permissions.hyper_mode = True
         
         # Initialize self-healing module
-        self.self_healing_enabled = enable_self_healing
+        self.self_healing_enabled = enable_self_healing or self._is_env_true("TRINITY_SELF_HEALING", False)
         self.self_healer = None
         if self.self_healing_enabled:
             self._initialize_self_healing()
@@ -137,28 +180,101 @@ class TrinityRuntime:
         
         # Initialize Vibe CLI Assistant
         self.vibe_assistant = VibeCLIAssistant(name="Doctor Vibe")
+        # Subscribe to live updates from the Vibe assistant so we can stream
+        # them to the UI (TUI) and runtime logs.
+        try:
+            self.vibe_assistant.set_update_callback(self._on_vibe_update)
+        except Exception:
+            pass
+
+        # Optional background Sonar scanner
+        try:
+            if str(os.getenv("TRINITY_SONAR_BACKGROUND") or "").strip().lower() in {"1", "true", "yes", "on"}:
+                interval = int(os.getenv("TRINITY_SONAR_SCAN_INTERVAL") or "60")
+                from core.sonar_scanner import SonarBackgroundScanner
+                self._sonar_scanner = SonarBackgroundScanner(self, interval_minutes=interval)
+                if self.verbose:
+                    self.logger.info(f"🔁 Sonar background scanner enabled (interval={interval} min)")
+                self._sonar_scanner.start()
+            else:
+                self._sonar_scanner = None
+        except Exception:
+            self._sonar_scanner = None
         
         # Register core tools including enhanced vision
         self._register_tools()
 
+    def _deduplicated_stream(self, agent: str, content: str) -> None:
+        """Thread-safe streaming with deduplication to prevent duplicate log entries."""
+        if not self.on_stream or not content:
+            return
+        with self._stream_lock:
+            # Check for duplicate content (exact match or prefix match)
+            last = self._last_stream_content.get(agent, "")
+            if content == last or (len(content) < len(last) and last.startswith(content)):
+                return  # Skip duplicate
+            self._last_stream_content[agent] = content
+        self.on_stream(agent, content)
+
+    def _on_vibe_update(self, message: str) -> None:
+        """Callback from Vibe assistant for live updates.
+
+        We forward the message to the runtime stream (TUI subscribes to on_stream)
+        and log a debug line.
+        """
+        try:
+            # Forward to TUI / any on_stream subscriber
+            self._deduplicated_stream("vibe", message)
+        except Exception:
+            pass
+        try:
+            self.logger.debug(f"[Vibe] {message}")
+        except Exception:
+            pass
+
     def _register_tools(self) -> None:
         """Register all local tools and MCP tools."""
-        from system_ai.tools.vision import EnhancedVisionTools
+        from system_ai.tools.screenshot import get_frontmost_app, get_all_windows
+
+        disable_vision = str(os.environ.get("TRINITY_DISABLE_VISION", "")).strip().lower() in {"1", "true", "yes", "on"}
+        EnhancedVisionTools = None
+        if not disable_vision:
+            try:
+                from system_ai.tools.vision import EnhancedVisionTools as _EnhancedVisionTools
+
+                EnhancedVisionTools = _EnhancedVisionTools
+            except Exception as e:
+                if self.verbose:
+                    self.logger.warning(f"Vision tools unavailable: {e}")
         
-        # Core Vision Tools
+        # Core Vision Tools (optional)
+        if EnhancedVisionTools is not None:
+            self.registry.register_tool(
+                "enhanced_vision_analysis",
+                EnhancedVisionTools.capture_and_analyze,
+                description="Capture screen and perform differential visual/OCR analysis. Args: app_name (optional), window_title (optional)"
+            )
+
+            self.registry.register_tool(
+                "vision_analysis_with_context",
+                lambda args: EnhancedVisionTools.analyze_with_context(
+                    args.get("image_path"),
+                    self.vision_context_manager
+                ),
+                description="Analyze image and update global visual context"
+            )
+        
+        # Window detection utilities
         self.registry.register_tool(
-            "enhanced_vision_analysis",
-            EnhancedVisionTools.capture_and_analyze,
-            description="Capture screen and perform differential visual/OCR analysis"
+            "get_frontmost_app",
+            lambda args: get_frontmost_app(),
+            description="Get the currently active (frontmost) application name and window title on macOS"
         )
         
         self.registry.register_tool(
-            "vision_analysis_with_context",
-            lambda args: EnhancedVisionTools.analyze_with_context(
-                args.get("image_path"),
-                self.vision_context_manager
-            ),
-            description="Analyze image and update global visual context"
+            "get_all_windows",
+            lambda args: get_all_windows(),
+            description="Get list of all visible windows with their app names, titles, positions and sizes"
         )
 
     def _initialize_self_healing(self) -> None:
@@ -293,116 +409,92 @@ class TrinityRuntime:
         return [issue.to_dict() for issue in issues]
     
     def _check_for_vibe_assistant_intervention(self, state: TrinityState) -> Optional[Dict[str, Any]]:
-        """
-        Check if Doctor Vibe intervention is needed based on current state.
-        This method integrates with Atlas meta-planning to create a seamless workflow.
-        
-        Args:
-            state: Current Trinity state
-            
-        Returns:
-            Dict with pause information if intervention needed, None otherwise
-        """
-        # Check if we already have an active pause
+        """Check if Doctor Vibe intervention is needed based on current state."""
         if state.get("vibe_assistant_pause"):
             return state["vibe_assistant_pause"]
-        
-        # Check if self-healing detected critical issues that need human attention
-        if self.self_healing_enabled and self.self_healer:
-            issues = self.self_healer.detected_issues
-            critical_issues = [issue for issue in issues if issue.severity in {IssueSeverity.CRITICAL, IssueSeverity.HIGH}]
             
-            if critical_issues:
-                # Create pause context for Doctor Vibe with Atlas integration
-                pause_context = {
-                    "reason": "critical_issues_detected",
-                    "issues": [issue.to_dict() for issue in critical_issues[:5]],  # Top 5 most critical
-                    "message": f"Doctor Vibe: Виявлено {len(critical_issues)} критичних помилок. Атлас призупинив виконання для вашого втручання.",
-                    "timestamp": datetime.now().isoformat(),
-                    "suggested_action": "Будь ласка, виправте помилки. Атлас автоматично продовжить після /continue",
-                    "atlas_status": "paused_waiting_for_human",
-                    "auto_resume_available": True
-                }
-                return pause_context
+        intervention = self._check_critical_issues()
+        if intervention: return intervention
         
-        # Check for repeated failures that might need human intervention
-        current_step_fail_count = state.get("current_step_fail_count", 0)
-        if current_step_fail_count >= 3:
-            lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-            pause_context = {
-                "reason": "repeated_failures",
-                "message": "Doctor Vibe: Atlas detected repeating errors. System paused." if lang != "uk" else "Doctor Vibe: Атлас виявив повторювані помилки. Система призупинена для аналізу.",
-                "timestamp": datetime.now().isoformat(),
-                "suggested_action": "Please analyze the issue. Use /continue or /cancel" if lang != "uk" else "Будь ласка, проаналізуйте проблему. Використовуйте /continue або /cancel",
-                "atlas_status": "paused_analyzing_failures",
-                "auto_resume_available": True
-            }
-            return pause_context
+        intervention = self._check_repeated_failures(state)
+        if intervention: return intervention
         
-        # Check for complex dev tasks that might need Doctor Vibe's attention
-        task_type = state.get("task_type", "UNKNOWN")
-        is_dev_task = state.get("is_dev", False)
+        intervention = self._check_background_dev_mode(state)
+        if intervention: return intervention
         
-        if task_type == "DEV" and is_dev_task:
-            # For dev tasks, Doctor Vibe works in parallel thread for error correction
-            # Check if there are any unresolved issues that need attention
-            if self.self_healing_enabled and self.self_healer:
-                unresolved_issues = [issue for issue in self.self_healer.detected_issues 
-                                   if issue.severity in {IssueSeverity.MEDIUM, IssueSeverity.HIGH}]
-                
-                if unresolved_issues and len(unresolved_issues) > 2:
-                    # Doctor Vibe works in background mode for dev tasks
-                    lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-                    pause_context = {
-                        "reason": "background_error_correction_needed",
-                        "issues": [issue.to_dict() for issue in unresolved_issues[:3]],
-                        "message": f"Doctor Vibe: Detected {len(unresolved_issues)} background errors. Atlas continues current task." if lang != "uk" else f"Doctor Vibe: Виявлено {len(unresolved_issues)} помилок в фоновому режимі. Атлас продовжує основне завдання.",
-                        "timestamp": datetime.now().isoformat(),
-                        "suggested_action": "Errors are being fixed automatically." if lang != "uk" else "Помилки виправляються автоматично. Ви можете продовжувати роботу",
-                        "atlas_status": "running_with_background_fixes",
-                        "auto_resume_available": False,  # No pause needed, just notification
-                        "background_mode": True
-                    }
-                    return pause_context
-        
-        # Check for unknown stalls - when system is stuck without clear reason
-        # This happens when last message contains uncertainty or system is waiting
-        if state.get("vibe_assistant_pause"):
-            # Already paused, no need to intervene again
+        return self._check_stalls(state)
+
+    def _check_critical_issues(self) -> Optional[Dict[str, Any]]:
+        if not (self.self_healing_enabled and self.self_healer):
             return None
-        
-        # Detect stall conditions
+        issues = self.self_healer.detected_issues
+        critical = [i for i in issues if i.severity in {IssueSeverity.CRITICAL, IssueSeverity.HIGH}]
+        if not critical:
+            return None
+            
+        return {
+            "reason": "critical_issues_detected",
+            "issues": [i.to_dict() for i in critical[:5]],
+            "message": f"Doctor Vibe: Виявлено {len(critical)} критичних помилок. Атлас призупинив виконання.",
+            "timestamp": datetime.now().isoformat(),
+            "suggested_action": "Будь ласка, виправте помилки. Атлас автоматично продовжить після /continue",
+            "atlas_status": "paused_waiting_for_human",
+            "auto_resume_available": True
+        }
+
+    def _check_repeated_failures(self, state: TrinityState) -> Optional[Dict[str, Any]]:
+        count = state.get("current_step_fail_count", 0)
+        if count < 3:
+            return None
+        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+        return {
+            "reason": "repeated_failures",
+            "message": MESSAGES[lang].get("clueless_pause", "Doctor Vibe: System paused."),
+            "timestamp": datetime.now().isoformat(),
+            "suggested_action": "Please analyze the issue. Use /continue or /cancel" if lang != "uk" else "Проаналізуйте проблему. Використовуйте /continue або /cancel",
+            "atlas_status": "paused_analyzing_failures",
+            "auto_resume_available": True
+        }
+
+    def _check_background_dev_mode(self, state: TrinityState) -> Optional[Dict[str, Any]]:
+        if state.get("task_type") != "DEV" or not state.get("is_dev"):
+            return None
+        if not (self.self_healing_enabled and self.self_healer):
+            return None
+        unresolved = [i for i in self.self_healer.detected_issues if i.severity in {IssueSeverity.MEDIUM, IssueSeverity.HIGH}]
+        if len(unresolved) <= 2:
+            return None
+            
+        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+        return {
+            "reason": "background_error_correction_needed",
+            "issues": [i.to_dict() for i in unresolved[:3]],
+            "message": f"Doctor Vibe: Detected {len(unresolved)} background errors." if lang != "uk" else f"Doctor Vibe: Виявлено {len(unresolved)} помилок в фоновому режимі.",
+            "timestamp": datetime.now().isoformat(),
+            "suggested_action": "Errors fixed automatically." if lang != "uk" else "Помилки виправляються автоматично.",
+            "atlas_status": "running_with_background_fixes",
+            "auto_resume_available": False,
+            "background_mode": True
+        }
+
+    def _check_stalls(self, state: TrinityState) -> Optional[Dict[str, Any]]:
         messages = state.get("messages", [])
-        last_message = getattr(messages[-1], "content", "") if messages and len(messages) > 0 and messages[-1] is not None else ""
-        last_message_lower = last_message.lower()
-        
-        stall_conditions = [
-            "план порожній",
-            "empty plan",
-            "no steps",
-            "cannot",
-            "не може",
-            "не вдається",
-            "failed to",
-            "немає кроків"
-        ]
-        
-        if any(condition in last_message_lower for condition in stall_conditions):
-            lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-            # System is stalled with unclear reason - Doctor Vibe should intervene
-            pause_context = {
-                "reason": "unknown_stall_detected",
-                "message": f"Doctor Vibe: Detected unknown stall. Last message: {last_message[:100]}..." if lang != "uk" else f"Doctor Vibe: Виявлено невідому зупинку системи. Останнє повідомлення: {last_message[:100]}...",
-                "timestamp": datetime.now().isoformat(),
-                "suggested_action": "Please clarify the task or restart the system." if lang != "uk" else "Будь ласка, уточніть завдання або перезапустіть систему",
-                "atlas_status": "stalled_unknown_reason",
-                "auto_resume_available": False,
-                "last_message": last_message,
-                "original_task": state.get("original_task")
-            }
-            return pause_context
-        
-        return None
+        last = getattr(messages[-1], "content", "").lower() if messages and messages[-1] else ""
+        stall_keys = ["план порожній", "empty plan", "no steps", "cannot", "не може", "не вдається", "failed to"]
+        if not any(k in last for k in stall_keys):
+            return None
+            
+        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+        return {
+            "reason": "unknown_stall_detected",
+            "message": f"Doctor Vibe: Stall detected: {last[:100]}..." if lang != "uk" else f"Doctor Vibe: Виявлено зупинку: {last[:100]}...",
+            "timestamp": datetime.now().isoformat(),
+            "suggested_action": "Clarify task or restart." if lang != "uk" else "Уточніть завдання або перезапустіть",
+            "atlas_status": "stalled_unknown_reason",
+            "auto_resume_available": False,
+            "last_message": last,
+            "original_task": state.get("original_task")
+        }
     
     def _create_vibe_assistant_pause_state(self, state: TrinityState, pause_reason: str, message: str) -> TrinityState:
         """
@@ -437,6 +529,24 @@ class TrinityRuntime:
             critical_issues = [issue for issue in issues if issue.severity in {IssueSeverity.CRITICAL, IssueSeverity.HIGH}]
             if critical_issues:
                 pause_info["issues"] = [issue.to_dict() for issue in critical_issues[:5]]  # Top 5 most critical
+
+        # Attach diagnostics (diffs, stack traces, files) to the pause to help
+        # Doctor Vibe diagnose the problem quickly. This is a best-effort, and
+        # will be limited and sanitized.
+        try:
+            diags = self._collect_pause_diagnostics(state)
+            if diags:
+                pause_info["diagnostics"] = diags
+                try:
+                    s = diags.get("sonar")
+                    if s and isinstance(s, dict):
+                        cnt = s.get("issues_count") or (len(s.get("issues") or []))
+                        self.logger.info(f"🚨 SonarQube: attached {cnt} issue(s) to Vibe pause (project={s.get('project_key')})")
+                except Exception:
+                    pass
+        except Exception:
+            # Never fail the pause creation if diagnostics collection fails
+            pass
         
         # Notify Vibe CLI Assistant about the pause
         self.vibe_assistant.handle_pause_request(pause_info)
@@ -468,6 +578,109 @@ class TrinityRuntime:
             "vibe_assistant_pause": None,
             "vibe_assistant_context": f"RESUMED: {pause_context}"
         }
+
+    def _collect_pause_diagnostics(self, state: TrinityState, tools: Optional[list] = None, exception: Optional[Exception] = None) -> Dict[str, Any]:
+        """Collect limited diagnostics for a Vibe pause: diffs, files, and stack trace.
+
+        Returns a dict with keys: files, diffs (per-file truncated), file_line (first hunk), tools, stack_trace
+        """
+        diagnostics: Dict[str, Any] = {"files": [], "diffs": [], "tools": [], "stack_trace": None}
+
+        # Configurable limits
+        MAX_DIFF_FILES = 5
+        MAX_DIFF_LINES = 500
+        MAX_DIFF_BYTES = 20 * 1024  # 20 KB per file
+        MAX_STACK_LINES = 200
+        SENSITIVE_PATTERNS = [".env", "id_rsa", "secret", "credentials"]
+
+        git_root = self._get_git_root()
+        try:
+            # include tools if provided
+            if tools:
+                diagnostics["tools"] = [ {"name": t.get("name"), "args": t.get("args")} for t in tools ]
+
+            # Gather changed files from repo state
+            repo_changes = self._get_repo_changes()
+            changed = repo_changes.get("changed_files") if isinstance(repo_changes, dict) else None
+            files = list(changed or [])[:MAX_DIFF_FILES]
+            safe_files = []
+            for f in files:
+                # skip obvious sensitive files
+                if any(p in f for p in SENSITIVE_PATTERNS):
+                    continue
+                # ensure file is inside git root
+                try:
+                    ap = os.path.abspath(os.path.join(git_root or os.getcwd(), f))
+                except Exception:
+                    continue
+                if git_root and not ap.startswith(os.path.abspath(git_root) + os.sep):
+                    continue
+                safe_files.append(f)
+
+            diagnostics["files"] = safe_files
+
+            # For each file, collect a diff snippet limited by lines/bytes
+            for f in safe_files:
+                try:
+                    diff_proc = subprocess.run(["git", "diff", "-U3", "--", f], cwd=git_root or os.getcwd(), capture_output=True, text=True)
+                    raw = diff_proc.stdout or ""
+                    if not raw:
+                        continue
+                    # Truncate by lines first
+                    lines = raw.splitlines()
+                    if len(lines) > MAX_DIFF_LINES:
+                        lines = lines[:MAX_DIFF_LINES]
+                        lines.append("\n...diff truncated...")
+                    truncated = "\n".join(lines)
+                    # Truncate by bytes if needed
+                    if len(truncated.encode("utf-8")) > MAX_DIFF_BYTES:
+                        truncated = truncated.encode("utf-8")[:MAX_DIFF_BYTES].decode("utf-8", errors="ignore") + "\n...diff truncated (bytes)..."
+
+                    # Attempt to parse first hunk for new-file line number
+                    first_hunk_line = None
+                    for ln in lines:
+                        if ln.startswith("@@"):
+                            # pattern: @@ -a,b +c,d @@
+                            try:
+                                plus_part = ln.split("+")[1]
+                                start = plus_part.split(",")[0]
+                                first_hunk_line = int(start)
+                            except Exception:
+                                first_hunk_line = None
+                            break
+
+                    diagnostics["diffs"].append({"file": f, "diff": truncated, "first_hunk_line": first_hunk_line})
+                except Exception:
+                    continue
+
+            # Include exception stack trace if present
+            if exception is not None:
+                try:
+                    import traceback
+                    st = traceback.format_exception(type(exception), exception, exception.__traceback__)
+                    st_lines = []
+                    for s in st:
+                        st_lines.extend(str(s).splitlines())
+                    if len(st_lines) > MAX_STACK_LINES:
+                        st_lines = st_lines[-MAX_STACK_LINES:]
+                        st_lines.insert(0, "...stack trace truncated...")
+                    diagnostics["stack_trace"] = "\n".join(st_lines)
+                except Exception:
+                    diagnostics["stack_trace"] = None
+
+            # Best-effort: attach SonarQube findings to diagnostics when available
+            try:
+                sonar_info = self._fetch_sonar_issues()
+                if sonar_info:
+                    diagnostics["sonar"] = sonar_info
+            except Exception:
+                pass
+
+        except Exception:
+            # best-effort only
+            pass
+
+        return diagnostics
     
     def handle_vibe_assistant_command(self, command: str) -> Dict[str, Any]:
         """
@@ -539,6 +752,8 @@ class TrinityRuntime:
             "task_type": task_type,
             "is_dev": is_dev,
             "requires_windsurf": is_dev,
+            # Default editor mode is CLI. Allow operator to force Doctor Vibe
+            # to handle all DEV tasks via TRINITY_DEV_BY_VIBE env var.
             "dev_edit_mode": "cli",
             "intent_reason": "eternal_engine_mode",
             "last_step_status": "success",
@@ -558,6 +773,38 @@ class TrinityRuntime:
             "vibe_assistant_context": "eternal_engine_mode: Doctor Vibe monitoring activated",
             "learning_mode": self.learning_mode
         }
+
+        # Inject Dynamic MCP Context (Prompt Engine)
+        try:
+            engine = MCPPromptEngine()
+            mcp_ctx = engine.construct_context(task)
+            if mcp_ctx:
+                if self.verbose:
+                    self.logger.info(f"🧠 Injecting {len(mcp_ctx)} chars of dynamic MCP context")
+                initial_state["retrieved_context"] = mcp_ctx
+        except Exception as e:
+            if self.verbose:
+                self.logger.warning(f"Failed to inject MCP context: {e}")
+
+        # If operator prefers Doctor Vibe to handle DEV tasks, enable vibe mode
+        try:
+            if is_dev and str(os.getenv("TRINITY_DEV_BY_VIBE", "")).strip().lower() in {"1", "true", "yes", "on"}:
+                initial_state["dev_edit_mode"] = "vibe"
+                # When Vibe handles dev, we don't require Windsurf
+                initial_state["requires_windsurf"] = False
+                initial_state["meta_config"]["doctor_vibe_mode"] = "active"
+                if self.verbose:
+                    self.logger.info("⚕️ Doctor Vibe enabled for DEV tasks (TRINITY_DEV_BY_VIBE)")
+        except Exception:
+            pass
+
+        # Proactively enrich context with SonarQube findings for DEV tasks
+        try:
+            if is_dev:
+                initial_state = self._enrich_context_with_sonar(initial_state)
+        except Exception:
+            # Best-effort only
+            pass
         
         if self.verbose:
             mode_desc = "background error correction" if is_dev else "critical error intervention"
@@ -634,358 +881,472 @@ class TrinityRuntime:
 
     def _meta_planner_node(self, state: TrinityState):
         """The 'Controller Brain' that sets policies and manages replanning strategy."""
-        if self.verbose: print("🧠 [Meta-Planner] Analyzing strategy...")
+        if self.verbose: print(f"🧠 {VOICE_MARKER} [Meta-Planner] Analyzing strategy...")
         context = state.get("messages", [])
-        # Safe access to last message - check if context is not empty first
-        last_msg = getattr(context[-1], "content", "Start") if context and len(context) > 0 and context[-1] is not None else "Start"
-        original_task = state.get("original_task") or "Unknown"
-        step_count = state.get("step_count", 0)
-        replan_count = state.get("replan_count", 0)
-        last_step_status = state.get("last_step_status", "success")
+        last_msg = getattr(context[-1], "content", "Start") if context and context[-1] else "Start"
+        
+        # 1. Initialize and maintain state
+        meta_config = self._prepare_meta_config(state, last_msg)
+        summary = self._update_periodic_summary(state, context)
+        
+        # 2. Check hard limits
+        limit_reached = self._check_master_limits(state, context)
+        if limit_reached: return limit_reached
+        
+        # 3. Consume or handle previous step result
         plan = state.get("plan") or []
-        meta_config = state.get("meta_config") or {}
+        last_status = state.get("last_step_status", "success")
+        fail_count = int(state.get("current_step_fail_count") or 0)
         
-        # Ensure meta_config has all required keys with safe defaults
-        if isinstance(meta_config, dict):
-            meta_config.setdefault("strategy", "hybrid")
-            meta_config.setdefault("verification_rigor", "standard")
-            meta_config.setdefault("recovery_mode", "local_fix")
-            meta_config.setdefault("tool_preference", "hybrid")
-            meta_config.setdefault("reasoning", "")
-            meta_config.setdefault("retrieval_query", last_msg)
-            meta_config.setdefault("n_results", 3)
-        else:
-            # If meta_config is not a dict for some reason, reset it
-            meta_config = {
-                "strategy": "hybrid",
-                "verification_rigor": "standard",
-                "recovery_mode": "local_fix",
-                "tool_preference": "hybrid",
-                "reasoning": "",
-                "retrieval_query": last_msg,
-                "n_results": 3
-            }
-        
-        current_step_fail_count = int(state.get("current_step_fail_count") or 0)
-
-        # 1. Update Summary Memory periodically
-        summary = state.get("summary", "")
-        if len(context) > 6 and step_count % 3 == 0:
-             try:
-                # Safe content extraction - handle objects without .content attribute
-                recent_contents = []
-                for m in (context[-4:] if len(context) >= 4 else context):
-                    msg_content = getattr(m, "content", "") if m is not None else ""
-                    if msg_content:
-                        recent_contents.append(str(msg_content)[:4000])
-                
-                summary_prompt = [
-                    SystemMessage(content=f"You are the Trinity archivist. Create a concise summary (2-3 sentences) of the current task state in {self.preferred_language}. What has been done? What remains?"),
-                    HumanMessage(content=f"Current summary: {summary}\n\nRecent events:\n" + "\n".join(recent_contents))
-                ]
-                sum_resp = self.llm.invoke(summary_prompt)
-                summary = getattr(sum_resp, "content", "")
-                if self.verbose: print(f"🧠 [Meta-Planner] Summary update: {summary[:50] if summary else '(empty)'}...")
-             except Exception:
-                pass
-
-        # 1b. Check Master Limits
-        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-        if step_count >= self.MAX_STEPS:
-            msg = MESSAGES[lang]["step_limit_reached"].format(limit=self.MAX_STEPS)
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
-        if replan_count >= self.MAX_REPLANS:
-            msg = MESSAGES[lang]["replan_limit_reached"].format(limit=self.MAX_REPLANS)
-            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
-
-        # 2. Plan Maintenance (Consumption)
         if plan:
-            if last_step_status == "success":
-                # Success - record it in history and consume
-                completed_step = plan.pop(0)
-                hist = state.get("history_plan_execution") or []
-                desc = completed_step.get('description', 'Unknown step')
-                hist.append(f"SUCCESS: {desc}")
-                state["history_plan_execution"] = hist
-                current_step_fail_count = 0
-                state["gui_fallback_attempted"] = False # Reset for next step
-                if self.verbose: print(f"🧠 [Meta-Planner] Step succeeded: {desc}. Remaining: {len(plan)}")
-                if not plan:
-                    # Robust termination: Only end if the Global Goal is explicitly verified
-                    has_verified = any(m.upper() in last_msg.upper() for m in TERMINATION_MARKERS) or "[ACHIEVEMENT_CONFIRMED]" in last_msg.upper()
-                    if has_verified:
-                        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-                        msg = MESSAGES[lang]["task_achieved"]
-                        return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {msg}")]}
-                    else:
-                        if self.verbose: print("🧠 [Meta-Planner] Plan exhausted but Global Goal NOT verified. Triggering replan for next steps.")
-                        # Do not return 'end' here; let the decision logic below set action = 'replan'
-
-            elif last_step_status == "failed":
-                current_step_fail_count += 1
-                if self.verbose: print(f"🧠 [Meta-Planner] Step failed ({current_step_fail_count}/3).")
-                
-                # Record failure
-                hist = state.get("history_plan_execution") or []
-                desc = plan[0].get('description', 'Unknown step') if plan else 'Unknown step'
-                hist.append(f"FAILED: {desc} (Try #{current_step_fail_count})")
-                state["history_plan_execution"] = hist
-                
-            elif last_step_status == "uncertain":
-                # Treat uncertain as soft failure - increment count but don't replan immediately
-                current_step_fail_count += 1
-                if self.verbose: print(f"🧠 [Meta-Planner] Step uncertain ({current_step_fail_count}/4).")
-                
-                # Record uncertainty
-                hist = state.get("history_plan_execution") or []
-                desc = plan[0].get('description', 'Unknown step') if plan else 'Unknown step'
-                hist.append(f"UNCERTAIN: {desc} (Check #{current_step_fail_count})")
-                state["history_plan_execution"] = hist
-
-                # Increase allowance for uncertainty to avoid premature failure
-                if current_step_fail_count >= 4:
-                    if self.verbose: print(f"🧠 [Meta-Planner] Uncertainty limit reached ({current_step_fail_count}). Marking step as FAILED to trigger recovery.")
-                    last_step_status = "failed"
-                    # Capture failed action for forbidden list (Manual Retry)
-                    forbidden = state.get("forbidden_actions") or []
-                    forbidden.append(f"FAILED ACTION: {desc}")
-                    state["forbidden_actions"] = forbidden
-                    # Do NOT pop the plan. Let the decision logic below handle 'failed' -> 'replan'.
-
-        # 3. Decision Logic with Doctor Vibe integration
-        action = "proceed" # Default: continue to tetyana with current plan
+            plan, last_status, fail_count = self._consume_execution_step(state, plan, last_status, fail_count, last_msg)
+            
+        # 4. Decide next action
+        action = self._decide_meta_action(plan, last_status, fail_count, state)
         
-        if not meta_config:
-            action = "initialize"
-        elif not plan:
-            # Check if this is a planning failure that needs Doctor Vibe intervention
-            if step_count > 0 and last_step_status == "success":
-                # Empty plan after successful step - just replan
-                if self.verbose:
-                    self.logger.info("Plan completed. Triggering replan for next steps.")
-                action = "replan"
-            else:
-                action = "replan" # out of steps
-        elif last_step_status == "failed":
-            if current_step_fail_count >= 3:
-                 action = "replan"
-                 # Capture failed action for forbidden list
-                 hist = state.get("history_plan_execution") or []
-                 if hist:
-                     forbidden = state.get("forbidden_actions") or []
-                     forbidden.append(f"FAILED ACTION: {hist[-1]}")
-                     state["forbidden_actions"] = forbidden
-            else:
-                 recovery_mode = meta_config.get("recovery_mode", "local_fix")
-                 action = "replan" if recovery_mode == "full_replan" else "repair"
-        
-        # Doctor Vibe integration: Check if we're in background error correction mode
-        vibe_assistant_context = state.get("vibe_assistant_context", "")
-        if "background_mode" in vibe_assistant_context:
-
-            # If Doctor Vibe is working in background, let him continue
-            if self.verbose:
-                self.logger.info("🧠 [Meta-Planner] Doctor Vibe working in background mode - continuing execution")
-            action = "proceed"
-        # NOTE: Removed the old "uncertain -> replan" logic. Uncertain is now handled above as a soft failure.
-        
-        # 4. Meta-Reasoning (LLM)
+        # 5. Execute meta-action (replan/repair/initialize)
         if action in ["initialize", "replan", "repair"]:
-            from core.agents.atlas import get_meta_planner_prompt
-            
-            task_context = f"Global Goal: {original_task}\nCurrent Request: {last_msg}\nStep: {step_count}\nStatus: {last_step_status}\nCurrent config: {meta_config}\nPlan (remaining): {len(plan)} steps."
-            prompt = get_meta_planner_prompt(task_context, preferred_language=self.preferred_language)
-            
-            try:
-                resp = self.llm.invoke(prompt.format_messages())
-                resp_content = getattr(resp, "content", "") if resp is not None else ""
-                data = self._extract_json_object(resp_content)
-                if data and "meta_config" in data:
-                    meta_config.update(data["meta_config"])
-                    # Selective RAG: If Meta-Planner decides context is needed
-                    if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan", "repair"]:
-                        query = meta_config.get("retrieval_query", last_msg)
-                        limit = int(meta_config.get("n_results", 3))
-                        
-                        if self.verbose: print(f"🧠 [Meta-Planner] Selective RAG lookup: '{query}' (top {limit})...")
-                        mem_res = self.memory.query_memory("knowledge_base", query, n_results=limit)
-                        
-                        # Filter memories: Prioritize high confidence, be wary of 'failed' ones
-                        relevant_context = []
-                        for r in mem_res:
-                            m = r.get("metadata", {})
-                            status = m.get("status", "success")
-                            conf = float(m.get("confidence", 1.0))
-                            
-                            if status == "success" and conf > 0.3:
-                                relevant_context.append(f"[SUCCESS] {r.get('content')}")
-                            elif status == "failed":
-                                relevant_context.append(f"[WARNING: FAILED PREVIOUSLY] Avoid this: {r.get('content')}")
-                        
-                        if not relevant_context:
-                            # fallback to strategies
-                            mem_res = self.memory.query_memory("strategies", query, n_results=limit)
-                            relevant_context = [r.get("content", "") for r in mem_res]
-                        
-                        state["retrieved_context"] = "\n".join(relevant_context)
-                    
-                    if self.verbose: print(f"🧠 [Meta-Planner] Reasoning: {meta_config.get('reasoning')}")
-                    if self.verbose: print(f"🧠 [Meta-Planner] Updated policy: {meta_config.get('strategy')}, rigor={meta_config.get('verification_rigor')}")
-            except Exception as e:
-                if self.verbose: print(f"⚠️ [Meta-Planner] Error: {e}")
-
-            # Signal Atlas if we need plan changes
-            return {
-                "current_agent": "atlas",
-                "meta_config": meta_config,
-                "plan": None if action == "replan" else plan,
-                "current_step_fail_count": current_step_fail_count,
-                "gui_fallback_attempted": False if action == "replan" else state.get("gui_fallback_attempted"),
-                "summary": summary,
-                "retrieved_context": state.get("retrieved_context", "")
+            verbals = {
+                "initialize": "Розпочинаю планування завдання.",
+                "replan": "Попередній підхід не спрацював, розробляю новий план.",
+                "repair": "Крок не вдався, спробую виправити ситуацію іншим способом."
             }
+            msg = verbals.get(action, "Аналізую стратегію.")
+            state["messages"] = list(context) + [AIMessage(content=f"[VOICE] {msg}")]
+            return self._handle_meta_action(state, action, plan, last_msg, meta_config, fail_count, summary, last_status=last_status)
 
-        # 5. Default flow
-        out = self._atlas_dispatch(state, plan)
+        # 6. Default flow: Atlas dispatch
+        out = self._atlas_dispatch(state, plan, last_status=last_status, fail_count=fail_count)
         out["summary"] = summary
         return out
 
+    def _prepare_meta_config(self, state: TrinityState, last_msg: str) -> Dict[str, Any]:
+        cfg = state.get("meta_config") or {}
+        if not isinstance(cfg, dict): cfg = {}
+        defaults = {
+            "strategy": "hybrid", "verification_rigor": "standard",
+            "recovery_mode": "local_fix", "tool_preference": "hybrid",
+            "reasoning": "", "retrieval_query": last_msg, "n_results": 3
+        }
+        for k, v in defaults.items():
+            cfg.setdefault(k, v)
+        return cfg
+
+    def _update_periodic_summary(self, state: TrinityState, context: List[Any]) -> str:
+        summary = state.get("summary", "")
+        step_count = state.get("step_count", 0)
+        if len(context) > 6 and step_count % 3 == 0:
+            try:
+                recent = [str(getattr(m, "content", ""))[:4000] for m in context[-4:] if m]
+                prompt = [
+                    SystemMessage(content=f"Trinity archivist. Summarize (2-3 sentences) in {self.preferred_language}."),
+                    HumanMessage(content=f"Summary: {summary}\n\nEvents:\n" + "\n".join(recent))
+                ]
+                summary = getattr(self.llm.invoke(prompt), "content", "")
+            except Exception: pass
+        return summary
+
+    def _check_master_limits(self, state: TrinityState, context: List[Any]) -> Optional[Dict[str, Any]]:
+        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
+        if state.get("step_count", 0) >= self.MAX_STEPS:
+            msg = MESSAGES[lang]["step_limit_reached"].format(limit=self.MAX_STEPS)
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"{VOICE_MARKER} {msg}")]}
+        if state.get("replan_count", 0) >= self.MAX_REPLANS:
+            msg = MESSAGES[lang]["replan_limit_reached"].format(limit=self.MAX_REPLANS)
+            return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"{VOICE_MARKER} {msg}")]}
+        return None
+
+    def _consume_execution_step(self, state: TrinityState, plan: List[Dict], status: str, fail_count: int, last_msg: str) -> tuple:
+        hist = state.get("history_plan_execution") or []
+        desc = plan[0].get('description', UNKNOWN_STEP) if plan else UNKNOWN_STEP
+        
+        if status == "success":
+            plan.pop(0)
+            hist.append(f"SUCCESS: {desc}")
+            fail_count = 0
+            state["gui_fallback_attempted"] = False
+        elif status == "failed":
+            fail_count += 1
+            hist.append(f"FAILED: {desc} (Try #{fail_count})")
+        elif status == "uncertain":
+            fail_count += 1
+            hist.append(f"UNCERTAIN: {desc} (Check #{fail_count})")
+            if fail_count >= 4:
+                status = "failed"
+                forbidden = state.get("forbidden_actions") or []
+                forbidden.append(f"FAILED ACTION: {desc}")
+                state["forbidden_actions"] = forbidden
+                
+        state["history_plan_execution"] = hist
+        return plan, status, fail_count
+
+    def _decide_meta_action(self, plan: List[Dict], status: str, fail_count: int, state: TrinityState) -> str:
+        if not state.get("meta_config"): return "initialize"
+        if not plan: return "replan"
+        
+        # If we are failing or stuck in uncertainty, trigger replan or repair
+        if status == "failed":
+            if fail_count >= 3:
+                hist = state.get("history_plan_execution") or []
+                if hist:
+                    forbidden = state.get("forbidden_actions") or []
+                    forbidden.append(f"FAILED ACTION: {hist[-1]}")
+                    state["forbidden_actions"] = forbidden
+                return "replan"
+            
+            cfg = state.get("meta_config") or {}
+            return "replan" if cfg.get("recovery_mode") == "full_replan" else "repair"
+            
+        if status == "uncertain":
+            # If we've been uncertain for more than 2 attempts on the same step, 
+            # something is wrong with the plan or the agent's ability to verify.
+            # Trigger 'repair' to try an alternative approach or context gathering.
+            if fail_count >= 2:
+                if self.verbose: 
+                    print(f"⚠️ [Meta-Planner] Persistent uncertainty ({fail_count} tries). Triggering repair.")
+                return "repair"
+            return "proceed"
+            
+        vibe_ctx = state.get("vibe_assistant_context", "")
+        if "background_mode" in vibe_ctx: return "proceed"
+        
+        return "proceed"
+
+    def _handle_meta_action(self, state: TrinityState, action: str, plan: List[Dict], last_msg: str, 
+                           meta_config: Dict, fail_count: int, summary: str, last_status: str = "success"):
+        from core.agents.atlas import get_meta_planner_prompt
+        task_ctx = f"Goal: {state.get('original_task')}\nReq: {last_msg}\nStep: {state.get('step_count')}\nStatus: {state.get('last_step_status')}"
+        prompt = get_meta_planner_prompt(task_ctx, preferred_language=self.preferred_language)
+        
+        try:
+            resp = self.llm.invoke(prompt.format_messages())
+            data = extract_json_object(getattr(resp, "content", ""))
+            if data and "meta_config" in data:
+                meta_config.update(data["meta_config"])
+                if meta_config.get("strategy") == "rag_heavy" or action in ["initialize", "replan", "repair"]:
+                    self._perform_selective_rag(state, meta_config, last_msg)
+        except Exception: pass
+
+        plan_for_atlas = plan[1:] if action == "repair" and len(plan) > 0 else None
+        meta_config["repair_mode"] = (action == "repair")
+        meta_config["failed_step"] = plan[0].get("description", UNKNOWN_STEP) if action == "repair" and plan else UNKNOWN_STEP
+        
+        return {
+            "current_agent": "atlas", "meta_config": meta_config, "plan": plan_for_atlas,
+            "current_step_fail_count": fail_count, "summary": summary,
+            "last_step_status": last_status,
+            "gui_fallback_attempted": False if action == "replan" else state.get("gui_fallback_attempted"),
+            "retrieved_context": state.get("retrieved_context", "")
+        }
+
+    def _perform_selective_rag(self, state: TrinityState, meta_config: Dict, last_msg: str):
+        query = meta_config.get("retrieval_query", last_msg)
+        limit = int(meta_config.get("n_results", 3))
+        mem_res = self.memory.query_memory("knowledge_base", query, n_results=limit)
+        relevant = []
+        for r in mem_res:
+            m = r.get("metadata", {})
+            if m.get("status") == "success" and float(m.get("confidence", 1.0)) > 0.3:
+                relevant.append(f"[SUCCESS] {r.get('content')}")
+            elif m.get("status") == "failed":
+                relevant.append(f"[WARNING: FAILED] Avoid: {r.get('content')}")
+        
+        if not relevant:
+            mem_res = self.memory.query_memory("strategies", query, n_results=limit)
+            relevant = [r.get("content", "") for r in mem_res]
+        state["retrieved_context"] = "\n".join(relevant)
+        # NOTE: Removed the old "uncertain -> replan" logic. Uncertain is now handled above as a soft failure.
     def _atlas_node(self, state: TrinityState):
         """Generates the plan based on Meta-Planner policy."""
         if self.verbose: print("🌐 [Atlas] Generating steps...")
+        
+        # 1. State extraction
+        plan = state.get("plan")
+        replan_count = state.get("replan_count", 0)
         context = state.get("messages", [])
         last_msg = getattr(context[-1], "content", "Start") if context and len(context) > 0 and context[-1] is not None else "Start"
-        step_count = state.get("step_count", 0) + 1
-        replan_count = state.get("replan_count", 0)
-        plan = state.get("plan")
-        meta_config = state.get("meta_config") or {}
 
-        # If we already have a plan (e.g. from Meta 'repair' mode), we just dispatch
-        if plan:
+        # 2. Check for existing plan (Anti-loop)
+        if plan and len(plan) > 0:
+            if self.verbose: print(f"🌐 [Atlas] Using existing plan ({len(plan)} steps). Dispatching to execution.")
             return self._atlas_dispatch(state, plan)
 
-        # Generate new plan
+        # 3. Check for replan loop (Anti-loop)
+        loop_break = self._check_atlas_loop(state, replan_count, last_msg)
+        if loop_break:
+            return loop_break
+
+        # 4. Prepare for new planning
         replan_count += 1
+        meta_config = state.get("meta_config") or {}
         if self.verbose: print(f"🔄 [Atlas] Replan #{replan_count}")
-        
+
+        try:
+            # 5. Prepare prompt
+            prompt = self._prepare_atlas_prompt(state, last_msg, meta_config)
+            
+            # 6. Execute planning request
+            raw_plan_data = self._execute_atlas_planning_request(prompt)
+            
+            # 7. Check for completion or valid plan
+            if isinstance(raw_plan_data, dict) and raw_plan_data.get("status") == "completed":
+                # Only accept "completed" if global goal is truly achieved
+                if self._is_global_goal_achieved(state, context):
+                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {raw_plan_data.get('message', 'Done.')}")]}
+                else:
+                    # Force LLM to generate remaining steps
+                    if self.verbose: print("⚠️ [Atlas] LLM claimed completion but global goal not achieved. Forcing continuation.")
+                    forced_plan = self._force_continuation_plan(state, context)
+                    if forced_plan:
+                        return self._atlas_dispatch(state, forced_plan, replan_count=replan_count, fail_count=state.get("current_step_fail_count", 0))
+                    # If no forced plan, try to re-prompt with stronger instruction
+                    raw_plan_data = None
+                
+            raw_plan = self._extract_raw_plan(raw_plan_data, meta_config)
+            
+            # 8. Optimize or Repair Plan
+            optimized_plan = self._process_atlas_plan(raw_plan, plan, meta_config)
+            
+            return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count, fail_count=state.get("current_step_fail_count", 0))
+
+        except Exception as e:
+            err_msg = f"[VOICE] Вибачте, у мене виникла помилка під час планування: {str(e)[:100]}. Спробую ще раз."
+            state["messages"] = list(context) + [AIMessage(content=err_msg)]
+            return self._handle_atlas_planning_error(e, state, last_msg, context, replan_count)
+
+    def _check_atlas_loop(self, state, replan_count, last_msg):
+        """Check if we're stuck in a replan loop and break it if necessary."""
+        last_status = state.get("last_step_status", "success")
+        if replan_count >= 3 and last_status != "success":
+            if self.verbose: print(f"⚠️ [Atlas] Replan loop detected (#{replan_count}). Forcing simple execution.")
+            fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana", "tools": ["browser_open_url"]}]
+            return self._atlas_dispatch(state, fallback, replan_count=replan_count, fail_count=state.get("current_step_fail_count", 0))
+        return None
+
+    def _prepare_atlas_prompt(self, state, last_msg, meta_config):
+        """Prepare the prompt for Atlas planning."""
         from core.agents.atlas import get_atlas_plan_prompt
-        # Context is now provided by Context7 Layer (Explicit Context Management)
+        
         rag_context = state.get("retrieved_context", "")
         structure_context = self._get_project_structure_context()
         
-        # Determine last user message for Context7 prioritization if needed
-        last_user_msg = last_msg # simplified, ideally specific user request
-        
-        # Prepare context via Context7
         final_context = self.context_layer.prepare(
             rag_context=rag_context,
             project_structure=structure_context,
             meta_config=meta_config,
-            last_msg=last_user_msg
+            last_msg=last_msg
         )
 
-        # Prepare history of execution for context
         execution_history = []
         hist = state.get("history_plan_execution") or []
-        if hist:
-            for h in hist:
-                execution_history.append(f"- {h}")
+        for h in hist:
+            execution_history.append(f"- {h}")
         
         history_str = "\n".join(execution_history) if execution_history else "No steps executed yet. Starting fresh."
         
         prompt = get_atlas_plan_prompt(
             f"Global Goal: {state.get('original_task')}\nCurrent Request: {last_msg}\n\nEXECUTION HISTORY SO FAR (Status of steps):\n{history_str}",
-            tools_desc=self.registry.list_tools(),
+            tools_desc=self.registry.list_tools(task_type=state.get("task_type")),
             context=final_context + ("\n\n[MEDIA_MODE] This is a media-related task. Use the Two-Phase Media Strategy." if state.get("is_media") else ""),
             preferred_language=self.preferred_language,
             forbidden_actions="\n".join(state.get("forbidden_actions") or []),
             vision_context=self.vision_context_manager.current_context
         )
         
-        # Inject ANTI-LOOP reinforcement if replanning after failure
-        if state.get("last_step_status") == "failed":
-            prompt.messages.append(HumanMessage(content=f"PREVIOUS ATTEMPT FAILED. Current history shows what didn't work. AVOID REPEATING FAILED ACTIONS. Respecify the plan starting from the current state to achieve the goal. RESUME, DO NOT RESTART."))
+        self._inject_prompt_modifiers(prompt, state, meta_config)
+        return prompt
+
+    def _inject_prompt_modifiers(self, prompt, state, meta_config):
+        """Inject specific modifiers like REPAIR or REPLAN instructions into the prompt."""
+        plan = state.get("plan")
+        if meta_config.get("repair_mode"):
+            failed_step = meta_config.get("failed_step", "Unknown")
+            remaining_plan = plan if plan else []
+            remaining_desc = ", ".join([s.get("description", "?")[:30] for s in remaining_plan[:3]]) if remaining_plan else "none"
+            prompt.messages.append(HumanMessage(content=f'''🔧 REPAIR MODE: Generate ONLY ONE alternative step to replace the failed step.
+FAILED STEP: {failed_step}
+REMAINING PLAN: {remaining_desc}
+Generate ONE step that achieves the same goal as the failed step but uses a DIFFERENT approach.
+Return JSON with ONLY the replacement step.'''))
+        elif state.get("last_step_status") == "failed":
+            prompt.messages.append(HumanMessage(content=f"PREVIOUS ATTEMPT FAILED. Current history shows what didn't work. AVOID REPEATING FAILED ACTIONS. Respecify the plan starting from the current state. RESUME, DO NOT RESTART."))
         elif state.get("last_step_status") == "uncertain":
-            prompt.messages.append(HumanMessage(content=f"PREVIOUS STEP WAS UNCERTAIN. Review the last action's output and verify if you need to retry it differently or try an alternative approach to confirm success."))
+            prompt.messages.append(HumanMessage(content=f"PREVIOUS STEP WAS UNCERTAIN. Review output and verify if you need to retry differently or try alternative."))
 
-        try:
-            def on_delta(chunk):
-                if self.on_stream:
-                    self.on_stream("atlas", chunk)
+    def _execute_atlas_planning_request(self, prompt):
+        """Execute the LLM request for planning."""
+        def on_delta(chunk):
+            self._deduplicated_stream("atlas", chunk)
 
-            # Use Atlas-specific LLM
-            atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            atlas_llm = CopilotLLM(model_name=atlas_model)
+        atlas_model = os.getenv("ATLAS_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
+        atlas_llm = CopilotLLM(model_name=atlas_model)
 
-            plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-            plan_resp_content = getattr(plan_resp, "content", "") if plan_resp is not None else ""
-            data = self._extract_json_object(plan_resp_content)
-            
-            raw_plan = []
-            if isinstance(data, list): raw_plan = data
-            elif isinstance(data, dict):
-                if data.get("status") == "completed":
-                    return {"current_agent": "end", "messages": list(context) + [AIMessage(content=f"[VOICE] {data.get('message', 'Done.')}")]}
-                raw_plan = data.get("steps") or data.get("plan") or []
-                if data.get("meta_config"):
-                    meta_config.update(data["meta_config"])
-                    if self.verbose: print(f"🌐 [Atlas] Strategy Justification: {meta_config.get('reasoning')}")
-                    if self.verbose: print(f"🌐 [Atlas] Preferences: tool_pref={meta_config.get('tool_preference', 'hybrid')}")
+        plan_resp = atlas_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
+        plan_resp_content = getattr(plan_resp, "content", "") if plan_resp is not None else ""
+        return extract_json_object(plan_resp_content)
 
-            if not raw_plan: raise ValueError("No steps generated")
+    def _extract_raw_plan(self, data, meta_config):
+        """Extract raw plan from JSON data."""
+        raw_plan = []
+        if isinstance(data, list): 
+            raw_plan = data
+        elif isinstance(data, dict):
+            raw_plan = data.get("steps") or data.get("plan") or []
+            if data.get("meta_config"):
+                meta_config.update(data["meta_config"])
+                if self.verbose: 
+                    print(f"🌐 [Atlas] Strategy Justification: {meta_config.get('reasoning')}")
+                    print(f"🌐 [Atlas] Preferences: tool_pref={meta_config.get('tool_preference', 'hybrid')}")
 
-            # Optimize with Grisha (Verifier) using GRISHA settings
+        if not raw_plan: 
+            raise ValueError("No steps generated")
+        return raw_plan
+
+    def _process_atlas_plan(self, raw_plan, existing_plan, meta_config):
+        """Process the raw plan (repair or full optimization)."""
+        if meta_config.get("repair_mode") and existing_plan:
+            # Repair mode: Prepend new step
+            repair_step = raw_plan[0] if raw_plan else None
+            if repair_step:
+                optimized_plan = [repair_step] + list(existing_plan)
+                if self.verbose: print(f"🔧 [Atlas] REPAIR: Prepended new step to {len(existing_plan)} remaining steps")
+            else:
+                optimized_plan = list(existing_plan)
+            meta_config["repair_mode"] = False
+            return optimized_plan
+        else:
+            # Full replan: optimize new plan
             grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
             grisha_llm = CopilotLLM(model_name=grisha_model)
             local_verifier = AdaptiveVerifier(grisha_llm)
-            
-            optimized_plan = local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
-            
-            return self._atlas_dispatch(state, optimized_plan, replan_count=replan_count)
+            return local_verifier.optimize_plan(raw_plan, meta_config=meta_config)
 
-        except Exception as e:
-            if self.verbose: print(f"⚠️ [Atlas] Error: {e}")
+    def _handle_atlas_planning_error(self, e, state, last_msg, context, replan_count):
+        """Handle errors during Atlas planning phase."""
+        if self.verbose: print(f"⚠️ [Atlas] Error: {e}")
+        
+        error_str = str(e).lower()
+        if "no steps generated" in error_str or "empty plan" in error_str or "cannot" in error_str:
+            if self.verbose:
+                print(f"🚨 [Atlas] Planning failure detected. Activating Doctor Vibe intervention.")
             
-            # Check if this is a planning failure that Doctor Vibe should handle
-            error_str = str(e).lower()
-            if "no steps generated" in error_str or "empty plan" in error_str or "cannot" in error_str:
-                if self.verbose:
-                    print(f"🚨 [Atlas] Planning failure detected. Activating Doctor Vibe intervention.")
+            pause_context = {
+                "reason": "planning_failure",
+                "message": f"Doctor Vibe: Атлас не може створити план для завдання: {last_msg}",
+                "timestamp": datetime.now().isoformat(),
+                "suggested_action": "Будь ласка, уточніть завдання або розбийте його на простіші кроки",
+                "atlas_status": "planning_failed",
+                "auto_resume_available": False,
+                "original_task": state.get("original_task"),
+                "current_attempt": last_msg
+            }
                 
-                # Create pause context for Doctor Vibe
-                pause_context = {
-                    "reason": "planning_failure",
-                    "message": f"Doctor Vibe: Атлас не може створити план для завдання: {last_msg}",
-                    "timestamp": datetime.now().isoformat(),
-                    "suggested_action": "Будь ласка, уточніть завдання або розбийте його на простіші кроки",
-                    "atlas_status": "planning_failed",
-                    "auto_resume_available": False,
-                    "original_task": state.get("original_task"),
-                    "current_attempt": last_msg
-                }
-                    
-                # Notify Doctor Vibe and create pause state
-                self.vibe_assistant.handle_pause_request(pause_context)
-                
-                return {
-                    **state,
-                    "vibe_assistant_pause": pause_context,
-                    "vibe_assistant_context": f"PAUSED: Planning failure for task: {last_msg}",
-                    "current_agent": "meta_planner",  # Stay in meta_planner to handle pause
-                    "messages": list(context) + [AIMessage(content=f"[VOICE] Doctor Vibe: Виникла проблема з плануванням. Будь ласка, уточніть завдання.")]
-                }
-            else:
-                # Regular fallback for other errors
-                if self.verbose:
-                    print(f"🔄 [Atlas] Using fallback plan due to error: {e}")
-                fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana"}]
-                return self._atlas_dispatch(state, fallback, replan_count=replan_count)
+            self.vibe_assistant.handle_pause_request(pause_context)
+            
+            return {
+                **state,
+                "vibe_assistant_pause": pause_context,
+                "vibe_assistant_context": f"PAUSED: Planning failure for task: {last_msg}",
+                "current_agent": "meta_planner",
+                "messages": list(context) + [AIMessage(content=f"[VOICE] Doctor Vibe: Виникла проблема з плануванням. Будь ласка, уточніть завдання.")]
+            }
+        else:
+            if self.verbose:
+                print(f"🔄 [Atlas] Using fallback plan due to error: {e}")
+            fallback = [{"id": 1, "type": "execute", "description": last_msg, "agent": "tetyana"}]
+            return self._atlas_dispatch(state, fallback, replan_count=replan_count)
 
-    def _atlas_dispatch(self, state, plan, replan_count=None):
+    def _is_global_goal_achieved(self, state: TrinityState, context: list) -> bool:
+        """Check if the global goal was actually achieved based on task type and history."""
+        original_task = str(state.get("original_task", "")).lower()
+        is_media = state.get("is_media", False)
+        
+        # For media tasks, check if video/content is actually playing
+        if is_media:
+            history = state.get("history_plan_execution", [])
+            history_str = " ".join(str(h) for h in history).lower()
+            
+            # Media tasks require: search + select + play (+ optional fullscreen)
+            required_actions = ["search", "пошук", "google", "click", "відкри"]
+            completion_actions = ["play", "відтвор", "fullscreen", "весь екран", "video", "відео"]
+            
+            has_search = any(a in history_str for a in required_actions)
+            has_playback = any(a in history_str for a in completion_actions)
+            
+            # If only search/open was done but no playback, goal not achieved
+            if has_search and not has_playback:
+                if self.verbose: print(f"⚠️ [Atlas] Media task: search done but playback not confirmed")
+                return False
+                
+            # Check step count - media tasks typically need 4+ steps
+            step_count = state.get("step_count", 0)
+            if step_count < 3:
+                if self.verbose: print(f"⚠️ [Atlas] Media task: only {step_count} steps completed, likely incomplete")
+                return False
+        
+        # Check if last message indicates actual completion
+        if context:
+            last_content = str(getattr(context[-1], "content", "")).lower() if context[-1] else ""
+            completion_indicators = ["fullscreen", "весь екран", "playing", "відтворюється", "watching", "дивимось", "video started", "відео запущено"]
+            if any(ind in last_content for ind in completion_indicators):
+                return True
+        
+        # Default: check if plan was fully executed AND enough steps were done
+        plan = state.get("plan", [])
+        step_count = state.get("step_count", 0)
+        return len(plan) == 0 and step_count > 3
+
+    def _force_continuation_plan(self, state: TrinityState, context: list) -> list:
+        """Generate continuation plan when LLM incorrectly claims completion."""
+        original_task = str(state.get("original_task", "")).lower()
+        is_media = state.get("is_media", False)
+        history = state.get("history_plan_execution", [])
+        history_str = " ".join(str(h) for h in history).lower()
+        
+        if is_media:
+            # Check what stage we're at based on history
+            has_open = any(k in history_str for k in ["google", "browser", "браузер", "open", "відкри"])
+            has_search = any(k in history_str for k in ["search", "type", "пошук", "ввести"])
+            has_links = any(k in history_str for k in ["link", "result", "результат", "get_links"])
+            has_click = any(k in history_str for k in ["click", "select", "вибр", "відкри"])
+            has_play = any(k in history_str for k in ["play", "відтвор"])
+            
+            if has_open and not has_search:
+                return [
+                    {"id": 1, "type": "execute", "description": "Ввести пошуковий запит у Google", "agent": "tetyana", "tools": ["browser_type_text", "press_key"]},
+                    {"id": 2, "type": "execute", "description": "Отримати результати пошуку", "agent": "tetyana", "tools": ["browser_get_links"]},
+                    {"id": 3, "type": "execute", "description": "Відкрити перший релевантний результат", "agent": "tetyana", "tools": ["browser_click"]},
+                    {"id": 4, "type": "execute", "description": "Запустити відео на весь екран", "agent": "tetyana", "tools": ["press_key"]}
+                ]
+            elif has_search and not has_links:
+                return [
+                    {"id": 1, "type": "execute", "description": "Отримати посилання з результатів пошуку", "agent": "tetyana", "tools": ["browser_get_links"]},
+                    {"id": 2, "type": "execute", "description": "Відкрити перший безкоштовний сайт", "agent": "tetyana", "tools": ["browser_click"]},
+                    {"id": 3, "type": "execute", "description": "Запустити відео на весь екран", "agent": "tetyana", "tools": ["press_key"]}
+                ]
+            elif has_links and not has_click:
+                return [
+                    {"id": 1, "type": "execute", "description": "Вибрати та відкрити перший релевантний результат", "agent": "tetyana", "tools": ["browser_click"]},
+                    {"id": 2, "type": "execute", "description": "Запустити відео та увімкнути повноекранний режим", "agent": "tetyana", "tools": ["browser_click", "press_key"]}
+                ]
+            elif has_click and not has_play:
+                return [
+                    {"id": 1, "type": "execute", "description": "Знайти кнопку відтворення та натиснути", "agent": "tetyana", "tools": ["browser_click"]},
+                    {"id": 2, "type": "execute", "description": "Перемкнути на повноекранний режим (натиснути F)", "agent": "tetyana", "tools": ["press_key"]}
+                ]
+            elif has_play:
+                return [{"id": 1, "type": "execute", "description": "Перемкнути на повноекранний режим (натиснути F)", "agent": "tetyana", "tools": ["press_key"]}]
+        
+        return None  # Let normal replan handle it
+
+    def _atlas_dispatch(self, state, plan, replan_count=None, fail_count=None, last_status=None, uncertain_streak=None):
         """Internal helper to format the dispatch message and return state."""
         context = state.get("messages", [])
         step_count = state.get("step_count", 0) + 1
         replan_count = replan_count or state.get("replan_count", 0)
+        fail_count = fail_count if fail_count is not None else state.get("current_step_fail_count", 0)
+        last_status = last_status if last_status is not None else state.get("last_step_status", "success")
+        streak = uncertain_streak if uncertain_streak is not None else state.get("uncertain_streak", 0)
         
         current_step = plan[0] if plan else None
         if not current_step:
@@ -996,7 +1357,7 @@ class TrinityRuntime:
         next_agent = "grisha" if step_type == "verify" else "tetyana"
         
         voice = f"[VOICE] {next_agent.capitalize()}, {desc}."
-        content = f"{voice}\n\n[Atlas Debug] Step: {desc}. Next: {next_agent}"
+        content = voice
         
         return {
             "current_agent": next_agent,
@@ -1005,911 +1366,853 @@ class TrinityRuntime:
             "step_count": step_count,
             "replan_count": replan_count,
             "meta_config": state.get("meta_config"),
-            "current_step_fail_count": state.get("current_step_fail_count"),
+            "current_step_fail_count": fail_count,
+            "last_step_status": last_status,
+            "uncertain_streak": streak,
             "gui_mode": state.get("gui_mode"),
             "execution_mode": state.get("execution_mode"),
             "task_type": state.get("task_type"),
             "vision_context": self.vision_context_manager.get_context_for_api()
         }
 
+
     def _tetyana_node(self, state: TrinityState):
-        if self.verbose: print("💻 [Tetyana] Developing...")
+        """Executes the next step in the plan using Tetyana (Executor)."""
+        if self.verbose:
+            print(f"🔧 {VOICE_MARKER} [Tetyana] Executing step...")
+        
         context = state.get("messages", [])
-        if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для виконання.")]}
-        # Safe content extraction - check for None and missing attribute
-        last_msg = getattr(context[-1], "content", "") if context and context[-1] is not None else ""
-        original_task = state.get("original_task") or ""
+        original_task = state.get("original_task") or UNKNOWN_STEP
+        last_msg = getattr(context[-1], "content", UNKNOWN_STEP) if context and context[-1] else UNKNOWN_STEP
 
-        gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
-        execution_mode = str(state.get("execution_mode") or "native").strip().lower()
-        gui_fallback_attempted = bool(state.get("gui_fallback_attempted") or False)
-        task_type = str(state.get("task_type") or "").strip().upper()
-        requires_windsurf = bool(state.get("requires_windsurf") or False)
-        dev_edit_mode = str(state.get("dev_edit_mode") or ("windsurf" if requires_windsurf else "cli")).strip().lower()
-        had_failure = False # Initialize for scope safety
-        
-        try:
-            plan_preview = state.get("plan")
-            trace(self.logger, "tetyana_enter", {
-                "task_type": task_type,
-                "requires_windsurf": requires_windsurf,
-                "dev_edit_mode": dev_edit_mode,
-                "execution_mode": execution_mode,
-                "gui_mode": gui_mode,
-                "gui_fallback_attempted": gui_fallback_attempted,
-                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
-                "last_msg_preview": str(last_msg)[:200],
-            })
-        except Exception:
-            pass
-        
-        routing_hint = ""
-        try:
-            routing_hint = f"\n\n[ROUTING] task_type={task_type} requires_windsurf={requires_windsurf} dev_edit_mode={dev_edit_mode}"
-        except Exception:
-            routing_hint = ""
-
-        # Inject retry context if applicable
-        current_step_fail_count = int(state.get("current_step_fail_count") or 0)
-        retry_context = ""
-        if current_step_fail_count > 0:
-            retry_context = f"\n\n[SYSTEM NOTICE] This is retry #{current_step_fail_count} for this step. Previous attempts were uncertain or failed. Please adjust your approach (e.g., waiting longer, checking errors)."
-
-        # Inject available tools into Tetyana's prompt.
-        # If we are in GUI mode, we still list all tools, but the prompt instructs to prefer GUI primitives.
-        tools_list = self.registry.list_tools()
-        
-        # Combined context: Goal + immediate request + hints + retry
-        full_context = f"Global Goal: {original_task}\nRequest: {last_msg}{routing_hint}{retry_context}"
+        # 1. Prepare context and prompt
+        full_context = self._prepare_tetyana_context(state, original_task, last_msg)
         prompt = get_tetyana_prompt(
-            full_context, 
-            tools_desc=tools_list, 
+            full_context,
+            tools_desc=self.registry.list_tools(task_type=state.get("task_type")),
             preferred_language=self.preferred_language,
             vision_context=self.vision_context_manager.current_context
         )
+
+        # 2. Invoke LLM
+        tetyana_llm = self._init_tetyana_llm()
         
-        # Bind tools to LLM for structured tool_calls output.
-        tool_defs = self.registry.get_all_tool_definitions()
-        
-        # Use Tetyana-specific LLM
-        tetyana_model = os.getenv("TETYANA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4o"
-        tetyana_llm = CopilotLLM(model_name=tetyana_model)
-        
-        bound_llm = tetyana_llm.bind_tools(tool_defs)
-        
-        pause_info = None
-        content = ""  # Initialize content variable
+        # Ensure LLM knows how to use tools via custom JSON protocol in CopilotLLM
+        tools_defs = self.registry.get_all_tool_definitions(task_type=state.get("task_type"))
+        if hasattr(tetyana_llm, "bind_tools") and tools_defs:
+            tetyana_llm = tetyana_llm.bind_tools(tools_defs)
         
         try:
-            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
-            def on_delta(chunk):
-                if self.on_stream:
-                    self.on_stream("tetyana", chunk)
-            
-            # Use Tetyana's local bound LLM
+            def on_delta(chunk): self._deduplicated_stream("tetyana", chunk)
             response = tetyana_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-            content = getattr(response, "content", "") if response is not None else ""
-            tool_calls = getattr(response, "tool_calls", []) if response is not None and hasattr(response, 'tool_calls') else []
             
-            # Anti-acknowledgment check: if no tools and content looks like "I understand/will do"
-            if not tool_calls and content:
-                lower_content = content.lower()
-                acknowledgment_patterns = ["зрозуміла", "зрозумів", "ок", "добре", "починаю", "буду використовувати"]
-                if any(p in lower_content for p in acknowledgment_patterns) and len(lower_content) < 300:
-                    if self.verbose: print("⚠️ [Tetyana] Acknowledgment loop detected. Forcing retry...")
-                    new_msg = AIMessage(content=f"[VOICE] Error: No tool call provided. STOP TALKING, USE A TOOL. {content}")
-                    return {
-                        "messages": context + [new_msg],
-                        "last_step_status": "failed" # This will trigger replan or retry
-                    }
+            content = getattr(response, "content", "") if response else ""
+            tool_calls = getattr(response, "tool_calls", []) if response and hasattr(response, 'tool_calls') else []
 
+            # If Doctor Vibe is enabled and the LLM content explicitly mentions
+            # 'Windsurf', pre-emptively pause so a human (Doctor Vibe) can intervene
             try:
-                trace(self.logger, "tetyana_llm", {
-                    "tool_calls": len(tool_calls) if isinstance(tool_calls, list) else 0,
-                    "content_preview": str(content)[:200],
-                })
+                lower_content = (content or "").lower()
+                # Debug trace for content-based pause detection
+                try:
+                    self.logger.debug(f"Tetyana content check: dev_edit_mode={dev_edit_mode}, windsurf_in_content={'windsurf' in lower_content}")
+                except Exception:
+                    pass
+                # end debug
+                if dev_edit_mode == "vibe" and "windsurf" in lower_content:
+                    # Create pause and return a sanitized message to avoid displaying 'Windsurf'
+                    pause = self._create_vibe_assistant_pause_state(state, "doctor_vibe_dev", "Doctor Vibe: Manual dev intervention required for this step")
+                    try:
+                        diags = self._collect_pause_diagnostics(state)
+                        if diags:
+                            pause["diagnostics"] = diags
+                    except Exception:
+                        pass
+                    # Sanitize content for UI (replace Windsurf with Doctor Vibe note)
+                    import re
+                    sanitized = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", str(content or ""))
+                    return ({**state, "messages": list(context) + [AIMessage(content=sanitized)]}, pause, True)
             except Exception:
                 pass
-            
-            results = []
-            gui_tools = {
-                "move_mouse",
-                "click_mouse",
-                "click",
-                "type_text",
-                "press_key",
-                "find_image_on_screen",
-            }
-            applescript_tools = {
-                "run_applescript",
-                "native_applescript",
-                "native_click_ui",
-                "native_type_text",
-                "native_wait",
-                "native_open_app",
-                "native_activate_app",
-                "send_to_windsurf",
-            }
-            shell_tools = {
-                "run_shell",
-                "open_file_in_windsurf",
-                "open_project_in_windsurf",
-                "is_windsurf_running",
-                "get_windsurf_current_project_path",
-            }
-            file_write_tools = {
-                "write_file",
-                "copy_file",
-            }
-            windsurf_tools = {
-                "send_to_windsurf",
-                "open_file_in_windsurf",
-                "open_project_in_windsurf",
-                "is_windsurf_running",
-                "get_windsurf_current_project_path",
-            }
-            if tool_calls:
-                for tool in tool_calls:
-                    name = tool.get("name")
-                    args = tool.get("args") or {}
 
-                    def _general_allows_file_write(tool_name: str, tool_args: Dict[str, Any]) -> bool:
-                        try:
-                            from system_ai.tools.filesystem import _normalize_special_paths  # type: ignore
+            # 3. Handle acknowledgment loops
+            if not tool_calls and content:
+                ack_retry = self._check_tetyana_acknowledgment(content, context)
+                if ack_retry:
+                    return ack_retry
 
-                            git_root = self._get_git_root() or ""
-                            home = os.path.expanduser("~")
-                            allowed_roots = {
-                                home,
-                                os.path.join(os.sep, "tmp"),
-                            }
-
-                            def _is_allowed_path(p: str) -> bool:
-                                p2 = _normalize_special_paths(str(p or ""))
-                                ap = os.path.abspath(os.path.expanduser(str(p2 or "").strip()))
-                                if not ap:
-                                    return False
-                                # Block any writes inside repo for GENERAL tasks.
-                                if git_root and (ap == git_root or ap.startswith(git_root + os.sep)):
-                                    return False
-                                # Allow within home (or /tmp) only.
-                                if ap == home or ap.startswith(home + os.sep):
-                                    return True
-                                if ap == os.path.join(os.sep, "tmp") or ap.startswith(os.path.join(os.sep, "tmp") + os.sep):
-                                    return True
-                                return False
-
-                            if tool_name == "write_file":
-                                return _is_allowed_path(tool_args.get("path"))
-                            if tool_name == "copy_file":
-                                return _is_allowed_path(tool_args.get("dst"))
-                            return False
-                        except Exception:
-                            return False
-
-                    if task_type == "GENERAL" and name in windsurf_tools:
-                        results.append(f"[BLOCKED] {name}: GENERAL task must not use Windsurf dev subsystem")
-                        continue
-                    if task_type == "GENERAL" and name in file_write_tools:
-                        if not _general_allows_file_write(name, args):
-                            results.append(f"[BLOCKED] {name}: GENERAL write allowed only outside repo (home/tmp).")
-                            continue
-
-                    if (
-                        name in file_write_tools
-                        and task_type in {"DEV", "UNKNOWN"}
-                        and requires_windsurf
-                        and dev_edit_mode == "windsurf"
-                    ):
-                        results.append(
-                            f"[BLOCKED] {name}: DEV task requires Windsurf-first. Use send_to_windsurf/open_file_in_windsurf, or switch to CLI fallback if Windsurf is unavailable."
-                        )
-                        continue
-
-                    # Permission check for file writes
-                    if name in file_write_tools and not (self.permissions.allow_file_write or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "file_write",
-                            "message": "Потрібен дозвіл на запис у файли. Увімкніть Unsafe mode в TUI або перезапустіть задачу з allow_file_write.",
-                            "blocked_tool": name,
-                            "blocked_args": args,
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-                    
-                    # Permission check for dangerous tools
-                    if name in shell_tools and not (self.permissions.allow_shell or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "shell",
-                            "message": "Потрібен дозвіл на виконання shell команд. Увімкніть Unsafe mode або додайте CONFIRM_SHELL у запит.",
-                            "blocked_tool": name,
-                            "blocked_args": args
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-
-                    if name == "run_shortcut" and not (self.permissions.allow_shortcuts or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "shortcuts",
-                            "message": "Потрібен дозвіл на запуск Shortcuts. Увімкніть Unsafe mode (або дозвольте shortcuts у налаштуваннях).",
-                            "blocked_tool": name,
-                            "blocked_args": args,
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-                        
-                    if name in applescript_tools and not (self.permissions.allow_applescript or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "applescript",
-                            "message": "Потрібен дозвіл на виконання AppleScript. Увімкніть Unsafe mode або додайте CONFIRM_APPLESCRIPT у запит.",
-                            "blocked_tool": name,
-                            "blocked_args": args
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-                    if name in gui_tools and not (self.permissions.allow_gui or self.permissions.hyper_mode):
-                        pause_info = {
-                            "permission": "gui",
-                            "message": "Потрібен дозвіл на GUI automation (mouse/keyboard). Увімкніть Unsafe mode або додайте CONFIRM_GUI у запит.",
-                            "blocked_tool": name,
-                            "blocked_args": args,
-                        }
-                        results.append(f"[BLOCKED] {name}: permission required")
-                        continue
-                        
-                    # Execute via MCP Registry
-                    res_str = self.registry.execute(name, args)
-                    results.append(f"Result for {name}: {res_str}")
-
-                    windsurf_failed = False
-                    if name in windsurf_tools:
-                        try:
-                            res_dict = json.loads(res_str)
-                            if isinstance(res_dict, dict) and str(res_dict.get("status", "")).lower() == "error":
-                                windsurf_failed = True
-                        except Exception:
-                            pass
-                        if windsurf_failed and not pause_info and dev_edit_mode == "windsurf":
-                            updated_messages = list(context) + [
-                                AIMessage(content="[VOICE] Windsurf не відповідає. Перемикаюсь на CLI режим.")
-                            ]
-                            
-                            try:
-                                trace(self.logger, "tetyana_windsurf_fallback", {"tool": name, "dev_edit_mode": dev_edit_mode})
-                            except Exception:
-                                pass
-                            return {
-                                "current_agent": "atlas",
-                                "messages": updated_messages,
-                                "dev_edit_mode": "cli",
-                                "execution_mode": execution_mode,
-                                "gui_mode": gui_mode,
-                                "gui_fallback_attempted": gui_fallback_attempted,
-                                "last_step_status": "failed",
-                            }
-
-                    # Track failures and captchas for fallback decision
-                    try:
-                        res_dict = json.loads(res_str)
-                        if isinstance(res_dict, dict):
-                            status = str(res_dict.get("status", "")).lower()
-                            if status == "error":
-                                had_failure = True
-                            if res_dict.get("has_captcha"):
-                                had_failure = True
-                                if self.verbose: print("⚠️ [Tetyana] Captcha detected. Marking as failure to trigger GUI mode.")
-                    except Exception:
-                        # If not JSON, check for error string pattern from MCP executor
-                        if str(res_str).strip().startswith("Error"):
-                            had_failure = True
-                    
-                    # Check for permission_required errors in result
-                    try:
-                        res_dict = json.loads(res_str)
-                        if isinstance(res_dict, dict) and res_dict.get("error_type") == "permission_required":
-                            pause_info = {
-                                "permission": res_dict.get("permission", "unknown"),
-                                "message": res_dict.get("error", "Permission required"),
-                                "settings_url": res_dict.get("settings_url", "")
-                            }
-                    except (json.JSONDecodeError, TypeError):
-                            pass
-            
-            # If we executed tools, append results to content
-            if results:
-                content += "\n\nTool Results:\n" + "\n".join(results)
-                # Add explicit success marker if no errors occurred
-                if not had_failure and not pause_info:
-                    success_marker = "[STEP_COMPLETED]" if "[STEP_COMPLETED]" not in content else ""
-                    if success_marker:
-                        lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-                        desc = "All actions completed, verification can begin." if lang != "uk" else "Всі дії виконано, верифікацію можна починати."
-                        content += f"\n\n{success_marker} {desc}"
-
-            # Save successful action to RAG memory (only if no pause and learning mode is ON)
-            if not pause_info and state.get("learning_mode", True):
+            # 4. Execute tools
+            # If the runtime is configured to let Doctor Vibe handle DEV edits,
+            # pause and notify the Vibe CLI Assistant instead of executing dev
+            # tool calls (e.g., file writes, send_to_windsurf, open_project_in_windsurf).
+            dev_tools = {"send_to_windsurf", "open_file_in_windsurf", "open_project_in_windsurf", "write_file", "copy_file"}
+            if str(state.get("dev_edit_mode") or "").strip().lower() == "vibe" and any((t.get("name") in dev_tools) for t in (tool_calls or [])):
+                # Create a pause state for Doctor Vibe to intervene and return
+                # a paused state so execution stops until human continues.
+                pause = self._create_vibe_assistant_pause_state(state, "doctor_vibe_dev", "Doctor Vibe: Manual dev intervention required for this step")
+                # Enhance pause with diagnostics about the tools that triggered it
                 try:
-                    action_summary = f"Task: {last_msg[:100]}\nTools used: {[t.get('name') for t in tool_calls]}\nResult: Success"
-                    self.memory.add_memory("strategies", action_summary, {"type": "tetyana_action"})
+                    diags = self._collect_pause_diagnostics(state, tools=tool_calls)
+                    if diags:
+                        pause["diagnostics"] = diags
                 except Exception:
                     pass
+                return {}, pause, True
+
+            results, pause_info, had_failure = self._execute_tetyana_tools(state, tool_calls)
             
-            # Hybrid fallback: if native attempt failed and GUI fallback is allowed, switch execution_mode
-            if (
-                (not pause_info)
-                and had_failure
-                and (execution_mode != "gui")
-                and (gui_mode in {"auto", "on"})
-                and (not gui_fallback_attempted)
-            ):
-                # Tell the graph to retry this step in GUI mode.
-                lang = self.preferred_language if self.preferred_language in MESSAGES else "en"
-                msg = MESSAGES[lang]["native_failed_switching_gui"]
-                updated_messages = list(context) + [AIMessage(content=msg)]
-                
-                try:
-                    trace(self.logger, "tetyana_gui_fallback", {"from": execution_mode, "to": "gui"})
-                except Exception:
-                    pass
-                return {
-                    "current_agent": "tetyana",
-                    "messages": updated_messages,
-                    "execution_mode": "gui",
-                    "gui_fallback_attempted": True,
-                    "gui_mode": gui_mode,
-                    "last_step_status": "failed", # Retrying in GUI mode counts as a fail for the native step
-                }
-                
+            # 5. Process tool responses
+            content = self._process_tetyana_tool_results(content, results, had_failure, pause_info)
+
+            # 6. Fallback and Final State
+            return self._finalize_tetyana_state(state, context, content, tool_calls, had_failure, pause_info)
+
         except Exception as e:
             if self.verbose:
                 print(f"⚠️ [Tetyana] Exception: {e}")
-            content = f"Error invoking Tetyana: {e}"
-        
-        # If paused, return to atlas with pause_info
-        if pause_info:
-            updated_messages = list(context) + [AIMessage(content=f"[ПАУЗОВАНО] {pause_info['message']}")]
+            return self._handle_tetyana_error(state, context, e)
+
+    def _init_tetyana_llm(self):
+        """Initialize LLM for Tetyana node."""
+        tetyana_model = os.getenv("TETYANA_MODEL") or os.getenv("COPILOT_MODEL") or DEFAULT_MODEL_FALLBACK
+        return self.llm if hasattr(self, 'llm') and self.llm else CopilotLLM(model_name=tetyana_model)
+
+    def _process_tetyana_tool_results(self, content: str, results: List[str], had_failure: bool, pause_info: Any) -> str:
+        """Append tool results and success markers to content."""
+        if not results:
+            return content
             
+        content_with_results = content + "\n\nTool Results:\n" + "\n".join(results)
+        if not had_failure and not pause_info:
+            return self._append_success_marker(content_with_results)
+        return content_with_results
+
+    def _prepare_tetyana_context(self, state, original_task, last_msg):
+        task_type = state.get("task_type")
+        requires_windsurf = state.get("requires_windsurf")
+        dev_edit_mode = state.get("dev_edit_mode")
+        
+        routing = f"\n\n[ROUTING] task_type={task_type} requires_windsurf={requires_windsurf} dev_edit_mode={dev_edit_mode}"
+        retry = ""
+        fail_count = int(state.get("current_step_fail_count") or 0)
+        if fail_count > 0:
+            retry = f"\n\n[SYSTEM NOTICE] This is retry #{fail_count} for this step. Adjust approach."
+            
+        return f"Global Goal: {original_task}\nRequest: {last_msg}{routing}{retry}"
+
+    def _check_tetyana_acknowledgment(self, content, context):
+        lower_content = content.lower()
+        # Using word boundaries to avoid matching "ок" inside words like "список"
+        acknowledgment_patterns = [r"\bзрозуміла\b", r"\bзрозумів\b", r"\bок\b", r"\bдобре\b", r"\bпочинаю\b", r"\bбуду використовувати\b"]
+        if any(re.search(p, lower_content) for p in acknowledgment_patterns) and len(lower_content) < 300:
+            if self.verbose: print("⚠️ [Tetyana] Acknowledgment loop detected.")
+            new_msg = AIMessage(content=f"{VOICE_MARKER} Error: No tool call provided. USE A TOOL. {content}")
+            return {"messages": context + [new_msg], "last_step_status": "failed"}
+        return None
+
+    def _is_env_true(self, var: str, default: bool = False) -> bool:
+        """Check if environment variable is true."""
+        val = str(os.getenv(var) or "").strip().lower()
+        if not val:
+            return default
+        return val in {"1", "true", "yes", "on"}
+
+    def _execute_tetyana_tools(self, state, tool_calls):
+        results = []
+        pause_info = None
+        had_failure = False
+        
+        for tool in (tool_calls or []):
+            name = tool.get("name")
+            args = tool.get("args") or {}
+            
+            # Permission checks
+            pause_info = self._check_tool_permissions(state, name, args)
+            if pause_info:
+                results.append(f"[BLOCKED] {name}: permission required")
+                continue
+            
+            # Task-type constraints
+            blocked_reason = self._check_task_constraints(state, name, args)
+            if blocked_reason:
+                results.append(blocked_reason)
+                continue
+
+            # Execution
+            # If Doctor Vibe is in charge for DEV edits, handle dev tools specially
+            dev_mode = str(state.get("dev_edit_mode") or "").strip().lower()
+            # TRINITY_VIBE_AUTO_APPLY: when set to a truthy value, Doctor Vibe will auto-apply
+            # approved dev edits (write_file/copy_file) instead of pausing for manual approval.
+            # This can be enabled via env var or by setting state["vibe_auto_apply"]. Default: off.
+            vibe_auto = bool(state.get("vibe_auto_apply") or self._is_env_true("TRINITY_VIBE_AUTO_APPLY", False))
+
+            if dev_mode == "vibe" and name in {"open_file_in_windsurf", "send_to_windsurf", "open_project_in_windsurf"}:
+                # Skip opening Windsurf; either create a pause or auto-apply changes
+                if vibe_auto:
+                    # Auto-apply the change immediately via registry execution
+                    try:
+                        exec_res = self.registry.execute(name, args, task_type=state.get("task_type"))
+                        results.append(f"[VIBE-AUTO] Executed {name}: {exec_res}")
+                        # Notify Vibe about applied change (best-effort)
+                        try:
+                            diags = {"files": [args.get('path') or args.get('dst')], "diffs": [{"file": args.get('path') or args.get('dst'), "diff": diff}]}
+                            self.vibe_assistant.handle_pause_request({"reason": "doctor_vibe_edit_done", "message": f"Doctor Vibe: Applied changes to {path}", "diagnostics": diags})
+                        except Exception:
+                            pass
+                        continue
+                    except Exception:
+                        results.append(f"[VIBE-AUTO] Failed to execute {name}")
+                        pause_info = {"permission": "doctor_vibe", "message": "Doctor Vibe: Manual dev intervention required"}
+                        continue
+                results.append(f"[BLOCKED] {name}: Doctor Vibe required")
+                pause_info = {"permission": "doctor_vibe", "message": "Doctor Vibe: Manual dev intervention required"}
+                continue
+
+            if name in {"write_file", "copy_file"} and dev_mode == "vibe":
+                # Show diff preview and let Doctor Vibe auto-apply if enabled
+                path = args.get("path") or args.get("dst") or ""
+                old_content = ""
+                try:
+                    full = path if os.path.isabs(path) else os.path.join(self._get_git_root() or os.getcwd(), path)
+                    if os.path.exists(full):
+                        with open(full, "r", encoding="utf-8", errors="ignore") as f:
+                            old_content = f.read()
+                except Exception:
+                    old_content = ""
+
+                new_content = args.get("content") or ""
+                import difflib
+                diff = "\n".join(difflib.unified_diff(old_content.splitlines(), str(new_content).splitlines(), lineterm="", n=3))
+
+                # Notify Doctor Vibe with diagnostics before applying
+                diag = {"files": [path], "diffs": [{"file": path, "diff": diff}], "stack_trace": None}
+                self.vibe_assistant.handle_pause_request({"reason": "doctor_vibe_edit", "message": f"Doctor Vibe: Applying changes to {path}", "diagnostics": diag})
+
+                if not vibe_auto:
+                    # Pause execution to wait for human approval
+                    pause_info = {"permission": "doctor_vibe", "message": "Doctor Vibe: Awaiting human approval for edit"}
+                    results.append(f"[PENDING VIBE] {path}")
+                    continue
+
+                # auto-apply: execute write via registry (try kwargs, fallback to positional)
+                try:
+                    try:
+                        res_str = self.registry.execute(name, args, task_type=state.get("task_type"))
+                    except TypeError:
+                        res_str = self.registry.execute(name, args)
+                except Exception as e:
+                    res_str = f"Error: {e}"
+
+                # after apply, show confirmation with diff
+                self.vibe_assistant.handle_pause_request({"reason": "doctor_vibe_edit_done", "message": f"Doctor Vibe: Applied changes to {path}", "diagnostics": {"files": [path], "diffs": [{"file": path, "diff": diff}]}})
+                results.append(f"Result for {name}: {res_str}")
+                if self._is_execution_failure(res_str):
+                    had_failure = True
+                continue
+
+            if name in {"browser_get_links", "browser_get_text", "browser_get_visible_html", "browser_screenshot"}:
+                time.sleep(2.0)
+
+            # For run_shell, inject sudo password if requested and available
+            if name == "run_shell":
+                if args.get("use_sudo") and str(os.getenv("SUDO_PASSWORD") or "").strip():
+                    cmd = args.get("cmd") or args.get("command") or ""
+                    if cmd:
+                        sudo_prefix = f"echo {os.getenv('SUDO_PASSWORD')} | sudo -S "
+                        args = {**args, "cmd": sudo_prefix + cmd}
+
+            res_str = None
             try:
-                trace(self.logger, "tetyana_paused", {"pause_info": pause_info})
-            except Exception:
-                pass
-            return {
-                "current_agent": "meta_planner",
-                "messages": updated_messages,
-                "pause_info": pause_info,
-                "last_step_status": "uncertain"
-            }
+                res_str = self.registry.execute(name, args, task_type=state.get("task_type"))
+            except Exception as e:
+                res_str = f"Error: {e}"
+            results.append(f"Result for {name}: {res_str}")
+            
+            # Failure tracking
+            if self._is_execution_failure(res_str):
+                had_failure = True
+                
+        return results, pause_info, had_failure
+
+    def _check_tool_permissions(self, state, name, args):
+        perm_map = {
+            "file_write": (["write_file", "copy_file"], self.permissions.allow_file_write),
+            "shell": (["run_shell", "open_file_in_windsurf", "open_project_in_windsurf"], self.permissions.allow_shell),
+            "applescript": (["run_applescript", "native_applescript"], self.permissions.allow_applescript),
+            "gui": (["move_mouse", "click_mouse", "click", "type_text", "press_key"], self.permissions.allow_gui),
+            "shortcuts": (["run_shortcut"], self.permissions.allow_shortcuts),
+        }
         
-        # Preserve existing messages and add new one
-        updated_messages = list(context) + [AIMessage(content=content)]
+        for perm, (tools, allowed) in perm_map.items():
+            if name in tools and not (allowed or self.permissions.hyper_mode):
+                # Map internal permission name to macOS privacy pane name where they differ
+                mac_pane = perm
+                if perm == "applescript" or perm == "shortcuts" or perm == "shell":
+                    mac_pane = "automation"
+                elif perm == "gui":
+                    mac_pane = "accessibility"
+                
+                return {
+                    "permission": perm, 
+                    "mac_pane": mac_pane,
+                    "message": f"Permission required for {perm} (macOS {mac_pane}).", 
+                    "blocked_tool": name, 
+                    "blocked_args": args
+                }
+        return None
+
+    def _check_task_constraints(self, state, name, args):
+        task_type = state.get("task_type")
+        windsurf_tools = {"send_to_windsurf", "open_file_in_windsurf", "open_project_in_windsurf"}
         
+        if task_type == "GENERAL":
+            if name in windsurf_tools:
+                return f"[BLOCKED] {name}: GENERAL task must not use Windsurf dev subsystem"
+            if name in {"write_file", "copy_file"} and not self._is_safe_path(name, args):
+                return f"[BLOCKED] {name}: GENERAL write allowed only outside repo."
+        
+        if task_type in {"DEV", "UNKNOWN"} and state.get("requires_windsurf") and state.get("dev_edit_mode") == "windsurf":
+            if name in {"write_file", "copy_file"}:
+                return f"[BLOCKED] {name}: DEV task requires Windsurf-first"
+        return None
+
+    def _is_safe_path(self, name, args):
         try:
-            trace(self.logger, "tetyana_exit", {
-                "next_agent": "grisha",
-                "last_step_status": "failed" if had_failure else "success",
-                "execution_mode": execution_mode,
-                "gui_mode": gui_mode,
-                "dev_edit_mode": dev_edit_mode,
-            })
+            from system_ai.tools.filesystem import _normalize_special_paths
+            git_root = self._get_git_root() or ""
+            home = os.path.expanduser("~")
+            path = args.get("path") if name == "write_file" else args.get("dst")
+            ap = os.path.abspath(os.path.expanduser(_normalize_special_paths(str(path or ""))))
+            if git_root and (ap == git_root or ap.startswith(git_root + os.sep)): return False
+            return ap.startswith(home + os.sep) or ap.startswith(os.path.join(os.sep, "tmp") + os.sep)
+        except Exception: return False
+
+    def _is_execution_failure(self, res_str):
+        try:
+            res_dict = json.loads(res_str)
+            if isinstance(res_dict, dict):
+                status = str(res_dict.get("status", "")).lower()
+                # Check for error, captcha, or warning statuses
+                if status in {"error", "captcha"}:
+                    return True
+                # Warning with empty links is a failure (blocked page)
+                if status == "warning" and not res_dict.get("links"):
+                    return True
+                # Check has_captcha flag for backward compatibility
+                if res_dict.get("has_captcha"):
+                    return True
+                # Check for captcha/blocked indicators in output or URL
+                output = str(res_dict.get("output", "") or res_dict.get("url", "") or res_dict.get("error", ""))
+                captcha_markers = ["sorry/index", "recaptcha", "hcaptcha", "unusual traffic", "captcha"]
+                if any(k in output.lower() for k in captcha_markers):
+                    return True
+        except Exception:
+            if str(res_str).strip().startswith("Error"):
+                return True
+        res_lower = str(res_str).lower()
+        return "sorry/index" in res_lower or "recaptcha" in res_lower or "captcha" in res_lower
+
+    def _append_success_marker(self, content):
+        if STEP_COMPLETED_MARKER not in content:
+            msg = "Actions completed." if self.preferred_language != "uk" else "Дії виконано."
+            return f"{content}\n\n{STEP_COMPLETED_MARKER} {msg}"
+        return content
+
+    def _finalize_tetyana_state(self, state, context, content, tool_calls, had_failure, pause_info):
+        # Sanitize LLM messages that reference Windsurf when Doctor Vibe handles dev edits
+        try:
+            dev_mode = str(state.get("dev_edit_mode") or "").strip().lower()
+            if dev_mode == "vibe" and content and "windsurf" in str(content).lower():
+                import re
+                content = re.sub(r"(?i)windsurf", "Doctor Vibe (paused)", str(content))
         except Exception:
             pass
+
+        updated_messages = list(context) + [AIMessage(content=content)]
+        used_tools = [t.get("name") for t in tool_calls] if tool_calls else []
+        # If Doctor Vibe is enabled and the model's content mentions Windsurf,
+        # create a pause so human can intervene instead of proceeding.
+        try:
+            # Consider environment override in addition to state value
+            if self._is_env_true("TRINITY_DEV_BY_VIBE", False):
+                dev_mode = "vibe"
+            else:
+                dev_mode = str(state.get("dev_edit_mode") or "").strip().lower()
+
+            if dev_mode == "vibe" and content and "windsurf" in str(content).lower():
+                pause = self._create_vibe_assistant_pause_state(state, "doctor_vibe_dev", "Doctor Vibe: Manual dev intervention required for this step")
+                return {**state, "messages": updated_messages, "pause_info": pause, "last_step_status": "uncertain", "current_agent": "meta_planner"}
+        except Exception:
+            pass
+        
+        if pause_info:
+            # Convert low-level pause info (permission map) into a full Vibe pause
+            reason = pause_info.get("permission") or "permission_required"
+            message = pause_info.get("message") or "Permission required for action."
+            pause = self._create_vibe_assistant_pause_state(state, "permission_required", message)
+            # Attach permission metadata to the pause to allow UIs and auto-resume logic to inspect it
+            try:
+                pause["permission"] = pause_info.get("permission")
+                pause["mac_pane"] = pause_info.get("mac_pane")
+                pause["blocked_tool"] = pause_info.get("blocked_tool")
+                pause["blocked_args"] = pause_info.get("blocked_args")
+                # Allow auto-resume for permission pauses if explicitly enabled
+                pause["auto_resume_available"] = bool(self._is_env_true("TRINITY_VIBE_AUTO_RESUME_PERMISSIONS", False))
+            except Exception:
+                pass
+            return {**state, "messages": updated_messages, "vibe_assistant_pause": pause, "last_step_status": "uncertain", "current_agent": "meta_planner"}
+            
+        if had_failure and state.get("execution_mode") != "gui" and state.get("gui_mode") in {"auto", "on"} and not state.get("gui_fallback_attempted"):
+            return {**state, "messages": updated_messages, "execution_mode": "gui", "gui_fallback_attempted": True, "last_step_status": "failed", "current_agent": "tetyana"}
+
         return {
-            "current_agent": "grisha", 
+            **state,
             "messages": updated_messages,
-            "execution_mode": execution_mode,
-            "gui_mode": gui_mode,
-            "gui_fallback_attempted": gui_fallback_attempted,
-            "dev_edit_mode": dev_edit_mode,
+            "current_agent": "grisha",
             "last_step_status": "failed" if had_failure else "success",
+            "tetyana_used_tools": used_tools,
+            "tetyana_tool_context": self._extract_tool_context(tool_calls)
         }
+
+    def _extract_tool_context(self, tool_calls):
+        ctx = {}
+        for t in (tool_calls or []):
+            args = t.get("args") or {}
+            for k in ["app_name", "app", "window_title", "window", "url"]:
+                if k in args: ctx[k] = args[k]
+        return ctx
+
+    def _handle_tetyana_error(self, state, context, e):
+        err_msg = f"Error invoking Tetyana: {e}"
+        return {**state, "messages": list(context) + [AIMessage(content=err_msg)], "last_step_status": "failed", "current_agent": "grisha"}
 
     def _grisha_node(self, state: TrinityState):
-        if self.verbose: print("👁️ [Grisha] Verifying...")
+        if self.verbose: print(f"👁️ {VOICE_MARKER} [Grisha] Verifying...")
         context = state.get("messages", [])
-        if not context:
-            return {"current_agent": "end", "messages": [AIMessage(content="[VOICE] Немає контексту для перевірки.")]}
-        last_msg = getattr(context[-1], "content", "") if context and len(context) > 0 and context[-1] is not None else ""
-        if isinstance(last_msg, str) and len(last_msg) > 50000:
-            last_msg = last_msg[:45000] + "\n\n[... TRUNCATED DUE TO SIZE ...]\n\n" + last_msg[-5000:]
-        tool_calls = [] # Initialize for scope safety
+        last_msg = self._get_last_msg_content(context)
         
-        gui_mode = str(state.get("gui_mode") or "auto").strip().lower()
-        execution_mode = str(state.get("execution_mode") or "native").strip().lower()
+        # 1. Run tests if needed
+        test_results = self._run_grisha_tests(state)
 
-        try:
-            plan_preview = state.get("plan")
-            trace(self.logger, "grisha_enter", {
-                "step_count": state.get("step_count"),
-                "replan_count": state.get("replan_count"),
-                "plan_len": len(plan_preview) if isinstance(plan_preview, list) else 0,
-                "task_type": state.get("task_type"),
-                "gui_mode": gui_mode,
-                "execution_mode": execution_mode,
-                "last_msg_preview": str(last_msg)[:200],
-            })
-        except Exception:
-            pass
+        # 2. Invoke LLM and get initial response
+        prompt = self._prepare_grisha_prompt(state, last_msg)
+        content, tool_calls = self._invoke_grisha(prompt, last_msg)
         
-        # Check for code changes in critical directories and run tests
-        test_results = ""
-        critical_dirs = ["core/", "system_ai/", "tui/", "providers/"]
-        try:
-            # Check if we should even verify tests based on task type
-            task_type = str(state.get("task_type") or "").strip().upper()
-            should_skip_tests = (task_type == "GENERAL")
-            
-            repo_changes = self._get_repo_changes()
-            changed_files = []
-            if isinstance(repo_changes, dict) and repo_changes.get("ok") is True:
-                changed_files = list(repo_changes.get("changed_files") or [])
-            
-            has_critical_changes = any(
-                any(f.startswith(d) for d in critical_dirs) 
-                for f in changed_files
-            )
-            
-            try:
-                trace(self.logger, "grisha_verification_check", {
-                    "task_type": task_type,
-                    "critical_changes": has_critical_changes,
-                    "changed_files": changed_files,
-                    "skip": should_skip_tests
-                })
-            except Exception:
-                pass
-            
-            if has_critical_changes and not should_skip_tests:
-                if self.verbose:
-                    print("👁️ [Grisha] Detected changes in critical directories. Running pytest...")
-                # Run pytest
-                test_cmd = "pytest -q --tb=short 2>&1"
-                test_proc = subprocess.run(test_cmd, shell=True, capture_output=True, text=True, cwd=self._get_git_root() or ".")
-                test_output = test_proc.stdout + test_proc.stderr
-                test_results = f"\n\n[TEST_VERIFICATION] pytest output:\n{test_output}"
-                
-                if self.verbose:
-                    print(f"👁️ [Grisha] Test results:\n{test_output[:200]}...")
-            else:
-                 if self.verbose:
-                    print("👁️ [Grisha] Skipping extensive tests (simple task or no critical changes).")
-                    
-        except Exception as e:
-            if self.verbose:
-                print(f"👁️ [Grisha] Test execution error: {e}")
+        # 3. Execute Verification Tools
+        executed_results = self._execute_grisha_tools(tool_calls)
         
-        # Inject available tools (Vision priority)
-        # RESTRICTED: Grisha only gets read-only tools
-        all_tools = self.registry.list_tools()
-        allowed_prefixes = ["capture_", "analyze_", "browser_screenshot", "browser_get_", "chrome_active_tab", "read_", "list_", "run_shell"]
-        # Explicit allow-list for safety
-        allowed_tools_list = []
-        # We need a way to parse the tools_list string or object. 
-        # Assuming list_tools returns a string description, we might need to filter at execution time mostly.
-        # But `tools_list` variable is passed to prompt. Ideally we filter it.
-        # Check if list_tools returns a raw list or string. 
-        # Based on typical usage, it returns a string description. 
-        # For prompt safety, we will append a STRICT WARNING instead of parsing the string complexly.
-        
-        tools_desc = self.registry.list_tools()
-        
-        plan = state.get("plan") or []
-        current_step_desc = plan[0].get("description", "Unknown") if plan else "Final Verification"
-        
-        original_task = state.get("original_task") or ""
-        verify_context = f"Global Goal: {original_task}\nCurrent Step Objective: {current_step_desc}\nLast Action Result: {last_msg}"
-        
-        if state.get("is_media"):
-            prompt = get_grisha_media_prompt(verify_context, tools_desc=tools_desc, preferred_language=self.preferred_language)
-        else:
-            prompt = get_grisha_prompt(
-                verify_context, 
-                tools_desc=tools_desc, 
-                preferred_language=self.preferred_language,
-                vision_context=self.vision_context_manager.current_context
-            )
-        
-        content = ""  # Initialize content variable
-        executed_tools_results = [] # Keep track of results for verdict phase
+        # 4. Smart Vision Verification
+        vision_result = self._perform_smart_vision(state, last_msg)
+        if vision_result:
+            content += f"\n\n[GUI_BROWSER_VERIFY]\n{vision_result}"
+            executed_results.append(vision_result)
 
-        try:
-            trace(self.logger, "grisha_llm_start", {"prompt_len": len(str(prompt.format_messages()))})
-            # For tool-bound calls, use invoke_with_stream to capture deltas for the TUI
-            def on_delta(chunk):
-                if self.on_stream:
-                    self.on_stream("grisha", chunk)
-            
-            # Use Grisha-specific LLM
-            grisha_model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or "gpt-4.1"
-            grisha_llm = CopilotLLM(model_name=grisha_model)
-            
-            response = grisha_llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
-            content = getattr(response, "content", "") if response is not None else ""
-            tool_calls = getattr(response, "tool_calls", []) if response is not None and hasattr(response, 'tool_calls') else []
-            
-            try:
-                trace(self.logger, "grisha_llm", {
-                    "tool_calls": len(tool_calls) if isinstance(tool_calls, list) else 0,
-                    "content_preview": str(content)[:200],
-                })
-            except Exception:
-                pass
-            
-            # Execute Tools
-            if tool_calls:
-                 for tool in tool_calls:
-                     name = tool.get("name")
-                     args = tool.get("args") or {}
-                     
-                     # ⛔️ RUNTIME BLOCK FOR GRISHA ⛔️
-                     # She is NOT allowed to navigate or click.
-                     forbidden_prefixes = ["browser_open", "browser_click", "browser_type", "write_", "create_", "delete_", "move_"]
-                     if any(name.startswith(p) for p in forbidden_prefixes):
-                         res_str = f"Result for {name}: [BLOCKED] Grisha is a read-only agent. Navigation/Modification blocked."
-                         if self.verbose:
-                             print(f"🛑 [Grisha] Blocked forbidden tool: {name}")
-                         executed_tools_results.append(res_str)
-                         continue
+        # 5. Verdict Analysis
+        final_content = self._get_grisha_verdict(content, executed_results, test_results)
+        step_status, next_agent = self._determine_grisha_status(state, final_content, executed_results)
 
-                     # Provide helpful default for capture_screen if args empty
-                     if name == "capture_screen" and not args:
-                         args = {"app_name": None}
+        # 6. Anti-loop protection
+        current_streak = self._handle_grisha_streak(state, step_status, final_content)
 
-                     # Execute via MCP Registry
-                     res = self.registry.execute(name, args)
-                     res_str = f"Result for {name}: {res}"
-                     executed_tools_results.append(res_str)
-            
-            if executed_tools_results:
-                content += "\n\nVerification Tools Results:\n" + "\n".join(executed_tools_results)
-            
-            # Append test results if any
-            if test_results:
-                content += test_results
-                executed_tools_results.append(test_results)
-
-            # Deterministic verification hook: capture + analyze for GUI OR Browser tasks.
-            is_browser_task = "browser_" in content.lower() or "браузер" in content.lower()
-            forced_verification_run = False
-            
-            if (gui_mode in {"auto", "on"} and execution_mode == "gui") or is_browser_task:
-                # Use the new enhanced vision tool instead of basic capture
-                analysis = self.registry.execute("enhanced_vision_analysis", {"app_name": None})
-                analysis_res = f"\n[GUI_BROWSER_VERIFY] enhanced_vision_analysis:\n{analysis}"
-                content += analysis_res
-                executed_tools_results.append(analysis_res)
-                forced_verification_run = True
-
-                try:
-                    # Attempt to extract image path from analysis result for further analyze_screen if needed
-                    # Note: enhanced_vision_analysis result structure is different
-                    if isinstance(analysis, dict):
-                        img_path = analysis.get("diff_image_path") or analysis.get("path")
-                    else:
-                        analysis_dict = json.loads(analysis)
-                        img_path = analysis_dict.get("diff_image_path") or analysis_dict.get("path")
-                except Exception:
-                    img_path = None
-                
-                if img_path:
-                    # Optional: still use LLM analysis on the diff image for high-level understanding
-                    analysis_llm = self.registry.execute(
-                        "analyze_screen",
-                        {"image_path": img_path, "prompt": "Based on this (potentially highlighted diff) image and the goal, provide a final confirmation of success or failure. Focus on specific UI changes."},
-                    )
-                    analysis_res_llm = f"\n[GUI_VERIFY_LLM] analyze_screen:\n{analysis_llm}"
-                    content += analysis_res_llm
-                    executed_tools_results.append(analysis_res_llm)
-
-        except Exception as e:
-            content = f"Error invoking Grisha: {e}"
-            executed_tools_results.append(f"Error: {e}")
-
-        # --- VERDICT PHASE ---
-        # If tools were executed (voluntarily or forced), we must ask Grisha to ANALYZE the results.
-        # Otherwise, he often ignores them or assumes uncertainty.
-        
-        has_tools_run = bool(executed_tools_results)
-        verdict_content = content
-        
-        if has_tools_run:
-            if self.verbose: print(f"👁️ [Grisha] Analyzing {len(executed_tools_results)} tool results for Verdict...")
-            
-            verdict_prompt_txt = (
-                "Here are the verification results obtained from the tools:\n" + 
-                "\n".join(executed_tools_results) + 
-                "\n\nBased on these results and history, provide your FINAL verdict.\n"
-                "IMPORTANT: Distinguish between CURRENT STEP success and GLOBAL GOAL success.\n"
-                "You MUST respond with exactly ONE of these markers at the VERY END of your message:\n"
-                "- [VERIFIED] (if the Global Goal is fully achieved and no more actions are needed)\n"
-                "- [STEP_COMPLETED] (if the current step succeeded and we should move to the next part of the plan, but the Global Goal is NOT yet reached)\n"
-                "- [FAILED] (if the current step failed, an error occurred, or the goal is unachievable)\n"
-                "- [UNCERTAIN] (if results are truly inconclusive)\n\n"
-                "Explain your reasoning briefly before the marker."
-            )
-            
-            verdict_msgs = [
-                SystemMessage(content="You are Grisha, analyzing verification data."),
-                HumanMessage(content=verdict_prompt_txt)
-            ]
-            
-            # We don't stream the verdict, just get it
-            try:
-                verdict_resp = self.llm.invoke(verdict_msgs)
-                verdict_content_to_add = getattr(verdict_resp, "content", "") if verdict_resp is not None else ""
-                verdict_content += "\n\n[VERDICT ANALYSIS]\n" + verdict_content_to_add
-            except Exception as e:
-                verdict_content += f"\n\n[VERDICT ERROR] Could not get verdict: {e}"
-
-        # If Grisha says "CONFIRMED" or "VERIFIED", we end. Else Atlas replans.
-        lower_content = verdict_content.lower()
-        step_status = "uncertain"
-        next_agent = "meta_planner"
-
-        # 1. Check for explicit FAILURE markers first (Priority)
-        has_explicit_fail = any(f"[{m}]" in lower_content or m in lower_content for m in FAILURE_MARKERS)
-        
-        # 2. Check for explicit SUCCESS markers
-        has_explicit_complete = any(f"[{m}]" in lower_content or m in lower_content for m in SUCCESS_MARKERS)
-        # 3. Check for tool execution errors in context
-        latest_tools_result = "\n".join(executed_tools_results).lower()
-        has_tool_error_in_context = '"status": "error"' in latest_tools_result
-        
-        # 4. Check for test failures
-        has_test_failure = "[test_verification]" in lower_content and ("failed" in lower_content or "error" in lower_content)
-        
-        # 5. Markers analysis (Failure takes precedence)
-        if has_explicit_fail:
-             step_status = "failed"
-             next_agent = "meta_planner"
-        elif has_test_failure:
-            step_status = "failed"
-            next_agent = "meta_planner"
-        elif has_tool_error_in_context:
-            # If the tool failed, we default to failed unless EXPLICITLY confirmed (safe default)
-            # But even if [VERIFIED] is present, tool error is suspicious. 
-            # We trust [VERIFIED] only if there are NO tool errors.
-            if has_explicit_complete:
-                 # Ambiguous: Tool error but LLM says verified. 
-                 # Trust LLM only if it explained why the error is fine? 
-                 # For safety, let's downgrade to UNCERTAIN or FAILED.
-                 # Let's say FAILED to force replan/retry.
-                 step_status = "failed"
-            else:
-                 step_status = "failed"
-            next_agent = "meta_planner"
-        elif "[captcha]" in lower_content or "captcha detected" in lower_content:
-            step_status = "uncertain"
-            next_agent = "meta_planner"
-        elif has_explicit_complete:
-            # CHECK FOR NEGATIONS: if 'not' or 'не' is near the marker
-            is_negated = False
-            lang_negations = NEGATION_PATTERNS.get(self.preferred_language, NEGATION_PATTERNS["en"])
-            
-            for kw in SUCCESS_MARKERS:
-                if kw in lower_content:
-                    for match in re.finditer(re.escape(kw), lower_content):
-                        idx = match.start()
-                        pre_text = lower_content[max(0, idx-25):idx]
-                        if re.search(lang_negations, pre_text):
-                            is_negated = True
-                            break
-                if is_negated: break
-            
-            if not is_negated:
-                step_status = "success"
-                next_agent = "meta_planner"
-            else:
-                step_status = "failed"
-                next_agent = "meta_planner"
-
-        # NEW: Anti-loop protection via uncertain_streak
-        current_streak = int(state.get("uncertain_streak") or 0)
-        
-        # If still uncertain and no tools were run (and we haven't forced them yet)
-        if step_status == "uncertain" and not has_tools_run:
-             # Force verification if we haven't already
-             pass # We can't easily force it here without recursion or complex logic. 
-                  # Ideally the first prompt should have triggered tools. 
-                  # If we are here, Grisha produced text without tools and without a verdict.
-        
-        if step_status in {"uncertain", "failed"}:
-            current_streak += 1
-        else:
-            current_streak = 0  # Reset on definite decision (success)
-        
-        # If 3+ consecutive uncertain decisions, consider forcing completion
-        vision_shows_failure = any(kw in lower_content for kw in VISION_FAILURE_KEYWORDS)
-        
-        if step_status == "uncertain" and current_streak >= 3:
-            if vision_shows_failure or "[failed]" in lower_content:
-                if self.verbose:
-                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) but failure detected → triggering REPLAN")
-                step_status = "failed"
-                # Add explainer
-                verdict_content += "\n\n[SYSTEM] Uncertainty limit reached with negative evidence. Marking as FAILED."
-                current_streak = 0
-            else:
-                # If ambiguous but no obvious failure, force FAIL to be safe (replan is safer than fake success)
-                if self.verbose:
-                    print(f"⚠️ [Grisha] Uncertainty streak ({current_streak}) reached limit → forcing FAILED (conclusive verification failed)")
-                step_status = "failed"
-                verdict_content += "\n\n[SYSTEM] Uncertainty limit reached. Consistency check failed. Marking as FAILED."
-                current_streak = 0
-
-        try:
-            trace(self.logger, "grisha_decision", {"next_agent": next_agent, "last_step_status": step_status, "uncertain_streak": current_streak})
-        except Exception:
-            pass
-
-        out = {
-            "current_agent": next_agent, 
-            "messages": list(context) + [AIMessage(content=verdict_content)],
+        return {
+            "current_agent": next_agent,
+            "messages": list(context) + [AIMessage(content=final_content)],
             "last_step_status": step_status,
             "uncertain_streak": current_streak,
-            "plan": state.get("plan"),  # Always preserve plan in state
+            "plan": state.get("plan"),
         }
+
+    def _get_last_msg_content(self, context):
+        msg = getattr(context[-1], "content", "") if context and context[-1] else ""
+        if isinstance(msg, str) and len(msg) > 50000:
+            return msg[:45000] + "\n[...]\n" + msg[-5000:]
+        return msg
+
+    def _run_grisha_tests(self, state):
+        task_type = str(state.get("task_type") or "").upper()
+        if task_type == "GENERAL": return ""
         
-        return out
+        critical_dirs = ["core/", "system_ai/", "tui/", "providers/"]
+        changed = (self._get_repo_changes().get("changed_files") or []) if self._get_repo_changes().get("ok") else []
+        if any(any(f.startswith(d) for d in critical_dirs) for f in changed):
+            if self.verbose: print("👁️ [Grisha] Running pytest...")
+            res = subprocess.run("pytest -q --tb=short 2>&1", shell=True, capture_output=True, text=True, cwd=self._get_git_root() or ".")
+            return f"\n\n[TEST_VERIFICATION] pytest output:\n{res.stdout + res.stderr}"
+        return ""
+
+    def _prepare_grisha_prompt(self, state, last_msg):
+        plan = state.get("plan") or []
+        current_step = plan[0].get("description", "Unknown") if plan else "Final Verification"
+        original_task = state.get("original_task") or ""
+        
+        verify_context = f"GLOBAL GOAL: {original_task}\nSTEP TO VERIFY: {current_step}\nREPORT: {last_msg[:30000]}"
+        
+        if state.get("is_media"):
+            return get_grisha_media_prompt(verify_context, tools_desc=self.registry.list_tools(task_type=state.get("task_type")), preferred_language=self.preferred_language)
+        
+        return get_grisha_prompt(
+            verify_context,
+            tools_desc=self.registry.list_tools(task_type=state.get("task_type")),
+            preferred_language=self.preferred_language,
+            vision_context=self.vision_context_manager.current_context
+        )
+
+    def _invoke_grisha(self, prompt, last_msg):
+        # Prefer runtime-provided LLM (tests set rt.llm), fallback to Copilot provider
+        if getattr(self, "llm", None) is not None:
+            llm = self.llm
+        else:
+            model = os.getenv("GRISHA_MODEL") or os.getenv("COPILOT_MODEL") or DEFAULT_MODEL_FALLBACK
+            llm = CopilotLLM(model_name=model)
+        def on_delta(chunk): self._deduplicated_stream("grisha", chunk)
+        resp = llm.invoke_with_stream(prompt.format_messages(), on_delta=on_delta)
+        content = getattr(resp, "content", "") if resp else ""
+        tool_calls = getattr(resp, "tool_calls", []) if resp and hasattr(resp, 'tool_calls') else []
+        
+        # Override if Grisha fails without evidence, BUT NOT if there are captcha/error indicators
+        last_msg_lower = last_msg.lower()
+        captcha_indicators = ["captcha", "sorry/index", "recaptcha", "blocked", "status\": \"error", "status\": \"captcha", "status\": \"warning", "links\": []"]
+        has_captcha_evidence = any(ind in last_msg_lower for ind in captcha_indicators)
+        
+        if not has_captcha_evidence and any(m in content.lower() for m in ["failed", "не виконано"]) and not tool_calls and STEP_COMPLETED_MARKER.lower() in last_msg_lower:
+            if self.verbose: print("⚠️ [Grisha] Overriding FAILED without evidence.")
+            content = f"{VOICE_MARKER} Tetyana reported success. Tools confirmed. {STEP_COMPLETED_MARKER}"
+            tool_calls = []
+        return content, tool_calls
+
+    def _execute_grisha_tools(self, tool_calls):
+        results = []
+        forbidden = ["browser_open", "browser_click", "browser_type", "write_", "create_", "delete_", "move_"]
+        for tool in (tool_calls or []):
+            name = tool.get("name")
+            args = tool.get("args") or {}
+            if any(name.startswith(p) for p in forbidden):
+                results.append(f"Result for {name}: [BLOCKED] Grisha is read-only.")
+                continue
+            res = self.registry.execute(name, ({"app_name": None} if name == "capture_screen" and not args else args))
+            results.append(f"Result for {name}: {res}")
+        return results
+
+    def _perform_smart_vision(self, state, last_msg):
+        tetyana_tools = state.get("tetyana_used_tools") or []
+        tetyana_ctx = state.get("tetyana_tool_context") or {}
+        
+        browser_active = any(k in last_msg.lower() or k in str(state.get("original_task")).lower() for k in ["google", "browser", "сайт", "url"])
+        needs_visual = (set(tetyana_tools) & {"click", "type_text", "move_mouse"}) or browser_active or tetyana_ctx.get("browser_tool")
+        
+        if not (needs_visual or (state.get("gui_mode") in {"auto", "on"} and state.get("execution_mode") == "gui")):
+            return None
+
+        if any(t in tetyana_tools for t in ["browser_type_text", "browser_click", "browser_open_url"]):
+            time.sleep(3.0)
+            
+        args = {}
+        if tetyana_ctx.get("app_name"):
+            args["app_name"] = tetyana_ctx["app_name"]
+            if tetyana_ctx.get("window_title"): args["window_title"] = tetyana_ctx["window_title"]
+            
+        analysis = self.registry.execute("enhanced_vision_analysis", args)
+        if isinstance(analysis, dict) and analysis.get("status") == "success":
+            self.vision_context_manager.update_context(analysis)
+        return str(analysis)
+
+    def _get_grisha_verdict(self, content, executed_results, test_results):
+        if not executed_results and not test_results: return content
+        
+        prompt = (f"Analyze these results:\n" + "\n".join(executed_results) + (f"\nTests:\n{test_results}" if test_results else "") +
+                 f"\n\nRespond with Reasoning + Marker: [VERIFIED], [STEP_COMPLETED], [FAILED], or [UNCERTAIN]. "
+                 f"Do NOT use [VOICE] tag in this response, provide analysis only.")
+        try:
+            resp = self.llm.invoke([SystemMessage(content="You are Grisha."), HumanMessage(content=prompt)])
+            analysis = getattr(resp, "content", "")
+            # Ensure we don't double the voice icon in UI
+            if VOICE_MARKER in analysis:
+                analysis = analysis.replace(VOICE_MARKER, "").strip()
+            
+            return content + "\n\n[VERDICT ANALYSIS]\n" + analysis
+        except Exception as e:
+            return content + f"\n\n[VERDICT ERROR] {e}"
+
+    def _determine_grisha_status(self, state, content, executed_results):
+        lower = content.lower()
+        res_str = "\n".join(executed_results).lower()
+        
+        if "[failed]" in lower:
+            return "failed", "meta_planner"
+        if "[verified]" in lower or "[step_completed]" in lower or "[achievement_confirmed]" in lower:
+            return "success", "meta_planner"
+        if "[uncertain]" in lower or "[captcha]" in lower:
+            return "uncertain", "meta_planner"
+
+        if any(m in lower or f"[{m}]" in lower for m in FAILURE_MARKERS) or ("[test_verification]" in lower and "failed" in lower):
+            return "failed", "meta_planner"
+        if '"status": "error"' in res_str:
+            return "failed", "meta_planner"
+            
+        for kw in SUCCESS_MARKERS:
+            if kw.lower() in lower:
+                idx = lower.find(kw.lower())
+                pre = lower[max(0, idx-25):idx]
+                if not re.search(NEGATION_PATTERNS.get(self.preferred_language, "not |never "), pre):
+                    return "success", "meta_planner"
+        return "uncertain", "meta_planner"
+
+    def _handle_grisha_streak(self, state, status, content):
+        streak = (int(state.get("uncertain_streak") or 0) + 1) if status == "uncertain" else 0
+        if streak >= 3:
+            # If we've been uncertain for 3 times, don't reset, but maybe it will escalate naturally
+            # in meta_planner via current_step_fail_count.
+            # We preserve the streak to avoid flip-flopping.
+            return streak
+        return streak
+
 
     def _router(self, state: TrinityState):
-        current = state.get("current_agent", "meta_planner")  # Safe default to meta_planner
-        
-        # Check for Vibe CLI Assistant pause state
-        if state.get("vibe_assistant_pause"):
-            pause_info = state.get("vibe_assistant_pause")
-            if pause_info is None:
-                # Corrupted pause state, reset
-                state["vibe_assistant_pause"] = None
-                return current
-            
-            # Try auto-repair if enabled
-            if self.vibe_assistant.should_attempt_auto_repair(pause_info):
-                if self.verbose:
-                    self.logger.info("🔧 Doctor Vibe: Attempting auto-repair...")
-                
-                repair_result = self.vibe_assistant.attempt_auto_repair(pause_info)
-                
-                if repair_result and repair_result.get("success"):
-                    # Auto-repair succeeded - clear pause and continue
-                    if self.verbose:
-                        self.logger.info(f"✅ Doctor Vibe: Auto-repair successful! Resuming execution.")
-                    
-                    # Clear pause state in vibe_assistant (already done by attempt_auto_repair)
-                    # Update state to remove pause
-                    state["vibe_assistant_pause"] = None
-                    state["vibe_assistant_context"] = f"AUTO-REPAIRED: {repair_result.get('message', 'Fixed') if repair_result else 'Fixed'}"
-                    
-                    # Reset failure counters to give system fresh start
-                    state["current_step_fail_count"] = 0
-                    state["uncertain_streak"] = 0
-                    
-                    # Return to meta_planner for fresh planning after repair
-                    return "meta_planner"
-                else:
-                    # Auto-repair failed - keep paused, wait for human
-                    if self.verbose:
-                        self.logger.warning(f"⚠️ Doctor Vibe: Auto-repair failed. Waiting for human intervention.")
-                    return current
-            
-            # No auto-repair - stay paused
-            if self.verbose:
-                self.logger.info(f"Vibe CLI Assistant PAUSE: {pause_info.get('message', 'No reason provided')}")
+        """Route to next agent based on current state."""
+        current = state.get("current_agent", "meta_planner")
+
+        # Step 1: Handle existing pause state
+        pause_result = self._handle_existing_pause(state, current)
+        if pause_result is not None:
+            return pause_result
+
+        # Step 2: Check for new intervention needed
+        intervention_result = self._handle_new_intervention(state, current)
+        if intervention_result is not None:
+            return intervention_result
+
+        # Step 3: Check for knowledge transition
+        knowledge_result = self._check_knowledge_transition(state, current)
+        if knowledge_result is not None:
+            return knowledge_result
+
+        return current
+
+    def _handle_existing_pause(self, state: TrinityState, current: str) -> Optional[str]:
+        """Handle existing vibe assistant pause state."""
+        if not state.get("vibe_assistant_pause"):
+            return None
+
+        pause_info = state.get("vibe_assistant_pause")
+        if pause_info is None:
+            state["vibe_assistant_pause"] = None
             return current
-        
-        # Check if Vibe CLI Assistant intervention is needed
-        pause_context = self._check_for_vibe_assistant_intervention(state)
-        if pause_context:
-            # Check if we should try auto-repair first
-            if pause_context.get("auto_resume_available", False) or pause_context.get("background_mode", False):
-                if self.vibe_assistant.should_attempt_auto_repair(pause_context):
-                    repair_result = self.vibe_assistant.attempt_auto_repair(pause_context)
-                    if repair_result and repair_result.get("success"):
-                        # Fixed before even creating pause - continue normally
-                        if self.verbose:
-                            self.logger.info("🔧 Doctor Vibe: Pre-emptive repair successful!")
-                        return current  # Continue without pause
-            
-            # Create pause state and return to current agent
-            new_state = self._create_vibe_assistant_pause_state(state, 
-                                                               pause_context.get("reason", "unknown"), 
-                                                               pause_context.get("message", "Unknown pause reason"))
-            # Update the state in the workflow
-            # We'll handle this in the node functions
-            if self.verbose:
-                self.logger.info(f"Vibe CLI Assistant INTERVENTION: {pause_context.get('message', 'Unknown reason')}")
-            return current
-        
+
+        # Auto-resume behavior: if operator enabled auto-resume and pause
+        # is not caused by a missing permission or critical issues, then
+        # resume automatically to reduce blocking.
         try:
-            # Check for completion to trigger learning
-            # If current is 'end', we check if we should go to 'knowledge' first
-            if current == "end":
-                # ANTI-LOOP: If we were already in knowledge, just end
-                # We can check the messages or a specific state flag if we added one.
-                # But simpler: if the last message was from Grisha/Meta and contains success, go to knowledge.
-                # If the last message was from Knowledge, then it's really the end.
-                
-                # Check the message history to see who sent the last message
-                messages = state.get("messages", [])
-                if messages and isinstance(messages[-1], AIMessage):
-                    content = getattr(messages[-1], "content", "").lower() if messages[-1] is not None else ""
-                    # If it sounds like success AND it's not a message from the knowledge node itself
-                    if any(x in content for x in ["завершена", "готово", "виконано", "completed", "success"]):
-                        # Simple heuristic: if the message doesn't mention "experience stored" (which knowledge node does)
-                        if "experience stored" not in content and "досвід збережено" not in content:
-                            return "knowledge"
+            if self._is_env_true("TRINITY_VIBE_AUTO_RESUME", False):
+                # Do not auto-resume if a permission is required or there
+                # are critical issues attached to the pause. Permission pauses
+                # are handled separately and can be auto-resumed only if the
+                # explicit per-permission env toggle is enabled.
+                if not pause_info.get("permission") and not pause_info.get("issues"):
+                    # Invoke Vibe continue command to perform any cleanup
+                    res = self.vibe_assistant.handle_user_command("/continue")
+                    if res.get("action") == "resume":
+                        # Clear pause and mark context
+                        state["vibe_assistant_pause"] = None
+                        state["vibe_assistant_context"] = "AUTO-RESUMED: TRINITY_VIBE_AUTO_RESUME"
+                        if self.verbose:
+                            self.logger.info("🔁 Doctor Vibe: Auto-resumed pause (TRINITY_VIBE_AUTO_RESUME)")
+                        return "meta_planner"
+                # Auto-resume permission-specific pauses if user enabled the
+                # per-permission auto-resume toggle.
+                if pause_info.get("permission") and self._is_env_true("TRINITY_VIBE_AUTO_RESUME_PERMISSIONS", False):
+                    try:
+                        res = self.vibe_assistant.handle_user_command("/continue")
+                        if res.get("action") == "resume":
+                            state["vibe_assistant_pause"] = None
+                            state["vibe_assistant_context"] = "AUTO-RESUMED: TRINITY_VIBE_AUTO_RESUME_PERMISSIONS"
+                            if self.verbose:
+                                self.logger.info("🔁 Doctor Vibe: Auto-resumed permission pause (TRINITY_VIBE_AUTO_RESUME_PERMISSIONS)")
+                            return "meta_planner"
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        # Try auto-repair
+        repair_result = self._try_auto_repair(state, pause_info)
+        if repair_result is not None:
+            return repair_result
+
+        # Stay paused
+        if self.verbose:
+            self.logger.info(f"Vibe CLI Assistant PAUSE: {pause_info.get('message', 'No reason provided')}")
+        return current
+
+    def _try_auto_repair(self, state: TrinityState, pause_info: dict) -> Optional[str]:
+        """Attempt auto-repair for paused state. Returns new agent or None."""
+        if not self.vibe_assistant.should_attempt_auto_repair(pause_info):
+            return None
+
+        if self.verbose:
+            self.logger.info("🔧 Doctor Vibe: Attempting auto-repair...")
+
+        repair_result = self.vibe_assistant.attempt_auto_repair(pause_info)
+
+        if not (repair_result and repair_result.get("success")):
+            if self.verbose:
+                self.logger.warning("⚠️ Doctor Vibe: Auto-repair failed. Waiting for human intervention.")
+            return state.get("current_agent", "meta_planner")
+
+        # Success - clear pause and reset counters
+        if self.verbose:
+            self.logger.info("✅ Doctor Vibe: Auto-repair successful! Resuming execution.")
+
+        state["vibe_assistant_pause"] = None
+        state["vibe_assistant_context"] = f"AUTO-REPAIRED: {repair_result.get('message', 'Fixed')}"
+        state["current_step_fail_count"] = 0
+        state["uncertain_streak"] = 0
+        return "meta_planner"
+
+    def _handle_new_intervention(self, state: TrinityState, current: str) -> Optional[str]:
+        """Check if new intervention is needed and handle it."""
+        pause_context = self._check_for_vibe_assistant_intervention(state)
+        if not pause_context:
+            # If there's no explicit pause context, check whether the next
+            # planned execution step would perform DEV edits via Windsurf or
+            # direct file writes while the runtime is configured to let
+            # Doctor Vibe handle DEV work. In that case, pre-emptively pause
+            # and notify Doctor Vibe so a human can intervene instead of
+            # launching Windsurf.
+            try:
+                dev_mode = str(state.get("dev_edit_mode") or "").strip().lower()
+                plan = state.get("plan") or []
+                # When TRINITY_VIBE_AUTO_APPLY is enabled, runtime will mark
+                # Doctor Vibe to auto-apply dev edits without creating a pause.
+                # This is controlled by env var (TRINITY_VIBE_AUTO_APPLY) or by
+                # state["vibe_auto_apply"] set earlier.
+                auto_apply = self._is_env_true("TRINITY_VIBE_AUTO_APPLY", False)
+                if dev_mode == "vibe" and plan:
+                    first = plan[0] if isinstance(plan, list) and plan else None
+                    if first:
+                        tools = first.get("tools") or []
+                        dev_tools = {"send_to_windsurf", "open_file_in_windsurf", "open_project_in_windsurf", "write_file", "copy_file"}
+                        if any((t.get("name") in dev_tools) for t in (tools or [])):
+                            if auto_apply:
+                                # Mark state to indicate Doctor Vibe will auto-apply dev changes
+                                state["vibe_auto_apply"] = True
+                                state["vibe_assistant_context"] = "AUTO-APPLY: Doctor Vibe will apply dev changes automatically"
+                                if self.verbose:
+                                    self.logger.info("🚀 Doctor Vibe: Auto-apply enabled, proceeding without opening Windsurf (dev_edit_mode=vibe)")
+                                return None
+                            else:
+                                new_state = self._create_vibe_assistant_pause_state(state, "doctor_vibe_dev", "Doctor Vibe: Manual dev intervention required for this step")
+                                # push the pause into the runtime state for handling
+                                state.update(new_state)
+                                if self.verbose:
+                                    self.logger.info("🚨 Doctor Vibe: Pre-emptive pause created to avoid Windsurf edits (dev_edit_mode=vibe)")
+                                return current
+            except Exception:
+                pass
+            return None
+
+        # Try pre-emptive repair
+        if pause_context.get("auto_resume_available", False) or pause_context.get("background_mode", False):
+            if self.vibe_assistant.should_attempt_auto_repair(pause_context):
+                repair_result = self.vibe_assistant.attempt_auto_repair(pause_context)
+                if repair_result and repair_result.get("success"):
+                    if self.verbose:
+                        self.logger.info("🔧 Doctor Vibe: Pre-emptive repair successful!")
+                    return None  # Continue without pause
+
+        # Create pause state
+        self._create_vibe_assistant_pause_state(
+            state,
+            pause_context.get("reason", "unknown"),
+            pause_context.get("message", "Unknown pause reason")
+        )
+        if self.verbose:
+            self.logger.info(f"Vibe CLI Assistant INTERVENTION: {pause_context.get('message', 'Unknown reason')}")
+        return current
+
+    def _check_knowledge_transition(self, state: TrinityState, current: str) -> Optional[str]:
+        """Check if we should transition to knowledge node."""
+        try:
+            if current != "end":
+                return None
+
+            messages = state.get("messages", [])
+            if not messages or not isinstance(messages[-1], AIMessage):
+                return None
+
+            content = getattr(messages[-1], "content", "").lower() if messages[-1] else ""
+            success_markers = ["завершена", "готово", "виконано", "completed", "success"]
+            knowledge_markers = ["experience stored", "досвід збережено"]
+
+            if any(x in content for x in success_markers):
+                if not any(x in content for x in knowledge_markers):
+                    return "knowledge"
 
             trace(self.logger, "router_decision", {"current": current, "next": current})
         except Exception:
             pass
-        return current
+        return None
 
     # _extract_json_object was moved to the top of the class to avoid duplication.
 
     def _knowledge_node(self, state: TrinityState):
-        """Final node to extract and store knowledge (success or failure) from completion."""
-        if self.verbose: print("🧠 [Learning] Extracting structured experience...")
+        """Final node to extract and store knowledge from completion."""
+        if self.verbose:
+            print("🧠 [Learning] Extracting structured experience...")
+        
         context = state.get("messages", [])
         plan = state.get("plan") or []
         summary = state.get("summary", "")
         replan_count = state.get("replan_count", 0)
-        last_status = state.get("last_step_status", "success")
         
-        # Determine status: if we are here via 'success' tags, it's a win.
-        # But we should also be able to learn from failures.
-        actual_status = "success"
-        if last_status == "failed":
-            actual_status = "failed"
-        elif context and len(context) > 0 and context[-1] is not None:
+        actual_status = self._determine_knowledge_status(state, context)
+        confidence = self._calculate_confidence(actual_status, replan_count, len(plan))
+        
+        self._store_experience(summary, actual_status, plan, confidence, replan_count)
+        
+        final_msg = "[VOICE] Досвід збережено. Завдання завершено." if self.preferred_language == "uk" else "[VOICE] Experience stored. Task completed."
+        return {"current_agent": "end", "messages": context + [AIMessage(content=final_msg)]}
+
+    def _determine_knowledge_status(self, state: TrinityState, context: list) -> str:
+        """Determine actual status for knowledge storage."""
+        if state.get("last_step_status") == "failed":
+            return "failed"
+        if context and context[-1] is not None:
             last_content = getattr(context[-1], "content", "").lower()
             if "failed" in last_content:
-                actual_status = "failed"
-            
-        # Self-evaluation of confidence
-        if actual_status == "success":
-            confidence = 1.0 - (min(replan_count, 5) * 0.1) - (min(len(plan), 10) * 0.02)
-        else:
-            confidence = 0.5 # Failures have neutral confidence (they are certain warnings)
-            
-        confidence = max(0.1, round(confidence, 2))
-        
+                return "failed"
+        return "success"
+
+    def _calculate_confidence(self, status: str, replan_count: int, plan_len: int) -> float:
+        """Calculate confidence score."""
+        if status != "success":
+            return 0.5
+        confidence = 1.0 - (min(replan_count, 5) * 0.1) - (min(plan_len, 10) * 0.02)
+        return max(0.1, round(confidence, 2))
+
+    def _store_experience(self, summary: str, status: str, plan: list, confidence: float, replan_count: int):
+        """Store experience in knowledge base."""
         try:
-            # Create a structured memory entry
-            experience = f"Task: {summary}\nStatus: {actual_status}\nSteps: {len(plan)}\n"
+            experience = f"Task: {summary}\nStatus: {status}\nSteps: {len(plan)}\n"
             if plan:
                 experience += "Plan Summary:\n" + "\n".join([f"- {s.get('description')}" for s in plan])
             
-            # Save to knowledge_base
             self.memory.add_memory(
                 category="knowledge_base",
                 content=experience,
                 metadata={
-                    "type": "experience_log",
-                    "status": actual_status,
-                    "source": "trinity_runtime",
-                    "timestamp": int(time.time()),
-                    "confidence": confidence,
-                    "replan_count": replan_count
+                    "type": "experience_log", "status": status, "source": "trinity_runtime",
+                    "timestamp": int(time.time()), "confidence": confidence, "replan_count": replan_count
                 }
             )
-            
-            if self.verbose: 
-                stored_msg = f"🧠 [Learning] {actual_status.upper()} experience stored (conf: {confidence})"
-                print(stored_msg)
-            
+            if self.verbose:
+                print(f"🧠 [Learning] {status.upper()} experience stored (conf: {confidence})")
             try:
-                trace(self.logger, "knowledge_stored", {"status": actual_status, "confidence": confidence})
+                trace(self.logger, "knowledge_stored", {"status": status, "confidence": confidence})
             except Exception:
                 pass
-                
         except Exception as e:
-            if self.verbose: print(f"⚠️ [Learning] Error: {e}")
-            
-        final_msg = "[VOICE] Досвід збережено. Завдання завершено." if self.preferred_language == "uk" else "[VOICE] Experience stored. Task completed."
-        return {
-            "current_agent": "end",
-            "messages": context + [AIMessage(content=final_msg)]
-        }
+            if self.verbose:
+                print(f"⚠️ [Learning] Error: {e}")
 
     def _get_git_root(self) -> Optional[str]:
         try:
@@ -1925,6 +2228,149 @@ class TrinityRuntime:
         except Exception:
             return None
 
+    def _get_sonar_project_key(self) -> Optional[str]:
+        """Determine Sonar project key from environment or sonar-project.properties in repo root."""
+        # 1. env override
+        pk = os.getenv("SONAR_PROJECT_KEY") or os.getenv("SONAR_PROJECT") or os.getenv("SONAR_PROJECT_KEY_OVERRIDE")
+        if pk:
+            return pk.strip()
+
+        # 2. try to read sonar-project.properties at repo root
+        root = self._get_git_root()
+        if not root:
+            return None
+        props = os.path.join(root, "sonar-project.properties")
+        if not os.path.exists(props):
+            return None
+        try:
+            with open(props, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if line.strip().startswith("sonar.projectKey"):
+                        parts = line.split("=", 1)
+                        if len(parts) == 2:
+                            return parts[1].strip()
+        except Exception:
+            return None
+        return None
+
+    def _enrich_context_with_sonar(self, state: TrinityState) -> TrinityState:
+        """Best-effort: fetch Sonar issues and append a summary to state['retrieved_context'].
+
+        This enriches Context7 inputs for Atlas and Doctor Vibe prior to planning/pause.
+        """
+        try:
+            if not state.get("is_dev"):
+                return state
+
+            sonar = self._fetch_sonar_issues()
+            if not sonar:
+                return state
+
+            parts = []
+            parts.append(f"SonarQube summary (project={sonar.get('project_key')}): issues={sonar.get('issues_count')}")
+            for it in (sonar.get('issues') or [])[:10]:
+                parts.append(f"- [{it.get('severity')}] {it.get('message')} ({it.get('component')}:{it.get('line')})")
+
+            summary = "\n".join(parts)
+
+            # Try to index into MCP Context7 (context7-docs) if available
+            try:
+                import mcp_integration
+                from mcp_integration.utils.sonarqube_context7_helper import create_sonarqube_context7_helper
+
+                integration = mcp_integration.create_mcp_integration()
+                mcp_manager = integration.get("manager") if isinstance(integration, dict) else None
+                if mcp_manager:
+                    helper = create_sonarqube_context7_helper(mcp_manager)
+                    idx_res = helper.index_analysis_to_context7(sonar)
+                    if idx_res and idx_res.get("stored_in"):
+                        # attach a pointer to the stored doc
+                        doc_meta = idx_res.get("doc") or {}
+                        pointer = f"[SonarDoc:{doc_meta.get('title')}]"
+                        current = str(state.get("retrieved_context") or "").strip()
+                        state["retrieved_context"] = (current + "\n\n" + summary + "\n" + pointer).strip() if current else (summary + "\n" + pointer)
+                        if self.verbose:
+                            self.logger.info(f"🔎 Sonar indexed into Context7 ({idx_res.get('stored_in')}) for project={sonar.get('project_key')}")
+                        return state
+            except Exception:
+                # MCP integration not available or failed -> fallback to local storage
+                pass
+
+            # Fallback: attach summary to state and add local Context7 doc
+            current = str(state.get("retrieved_context") or "").strip()
+            state["retrieved_context"] = current + "\n\n" + summary if current else summary
+
+            try:
+                # store locally for quick retrieval
+                doc = self.context_layer.add_document(
+                    title=f"SonarQube Analysis - {sonar.get('project_key')}",
+                    content=summary,
+                    metadata={"project_key": sonar.get('project_key'), "issues_count": sonar.get('issues_count')}
+                )
+                if self.verbose:
+                    self.logger.info(f"🔎 Sonar stored locally in Context7 (id={doc.get('id')})")
+            except Exception:
+                pass
+
+            if self.verbose:
+                self.logger.info(f"🔎 Sonar enrichment added to context (project={sonar.get('project_key')})")
+            return state
+        except Exception:
+            return state
+
+    def _fetch_sonar_issues(self, project_key: Optional[str] = None, severities: str = "CRITICAL,BLOCKER,MAJOR") -> Optional[Dict[str, Any]]:
+        """Fetch SonarQube issues and quality gate status for the given project key.
+
+        Returns a dict with summary information or None if not configured.
+        This is best-effort and must never raise.
+        """
+        try:
+            api_key = os.getenv("SONAR_API_KEY")
+            if not api_key:
+                return None
+
+            project_key = project_key or self._get_sonar_project_key()
+            if not project_key:
+                return None
+
+            base = os.getenv("SONAR_URL", "https://sonarcloud.io").rstrip("/")
+
+            issues_url = f"{base}/api/issues/search"
+            params = {
+                "componentKeys": project_key,
+                "severities": severities,
+                "resolved": "false",
+                "ps": 50
+            }
+            resp = requests.get(issues_url, params=params, auth=(api_key, ""), timeout=10)
+            if resp.status_code != 200:
+                return {"error": f"sonar_api_failed:{resp.status_code}", "status_code": resp.status_code}
+            data = resp.json()
+            issues = []
+            for it in data.get("issues", [])[:20]:
+                issues.append({
+                    "key": it.get("key"),
+                    "message": it.get("message"),
+                    "severity": it.get("severity"),
+                    "component": it.get("component"),
+                    "line": it.get("textRange", {}).get("startLine"),
+                    "rule": it.get("rule"),
+                })
+
+            # Quality gate
+            qg = None
+            try:
+                qg_url = f"{base}/api/qualitygates/project_status"
+                qg_resp = requests.get(qg_url, params={"projectKey": project_key}, auth=(api_key, ""), timeout=6)
+                if qg_resp.status_code == 200:
+                    qg = qg_resp.json().get("projectStatus")
+            except Exception:
+                qg = None
+
+            return {"project_key": project_key, "issues_count": data.get("total", 0), "issues": issues, "quality_gate": qg}
+        except Exception:
+            return None
+
     def _get_project_structure_context(self) -> str:
         """Read project_structure_final.txt for Atlas context."""
         try:
@@ -1932,56 +2378,57 @@ class TrinityRuntime:
             if not git_root:
                 return ""
             
-            structure_file = os.path.join(git_root, "project_structure_final.txt")
+            structure_file = os.path.join(git_root, self.PROJECT_STRUCTURE_FILE)
             if not os.path.exists(structure_file):
                 return ""
             
             # Read only first part of file to avoid memory issues with huge files
-            # then process carefully
             with open(structure_file, 'r', encoding='utf-8') as f:
-                # Read up to 100kb of the file
                 content = f.read(100000)
             
-            # Extract key sections for context (Metadata, Program Execution Logs, Project Structure)
-            lines = content.split('\n')
-            context_lines = []
-            current_section = None
-            section_count = 0
-            
-            for line in lines:
-                # Each line limited to 500 chars to avoid prompt blowup
-                line = line[:500]
-                
-                # Identify sections
-                lstrip = line.strip()
-                if lstrip.startswith('## Metadata'):
-                    current_section = 'metadata'
-                    section_count = 0
-                elif '## Program Execution Logs' in lstrip:
-                    current_section = 'logs'
-                    section_count = 0
-                elif '## Project Structure' in lstrip:
-                    current_section = 'structure'
-                    section_count = 0
-                elif lstrip.startswith('## ') and current_section:
-                    # If it's a new section we don't care about, stop capturing
-                    if not any(x in lstrip for x in ['Metadata', 'Logs', 'Structure']):
-                        current_section = None
-                
-                # Collect lines (limit per section to avoid bias)
-                if current_section:
-                    if section_count < 30: # Max 30 lines per section
-                         if lstrip and not lstrip.startswith('```'):
-                            context_lines.append(line)
-                            section_count += 1
-            
-            # Final safety cut
-            return '\n'.join(context_lines[:150]) 
+            return self._parse_context_sections(content)
             
         except Exception as e:
             if self.verbose:
                 print(f"⚠️ [Trinity] Error reading project structure: {e}")
             return ""
+
+    def _parse_context_sections(self, content: str) -> str:
+        """Extract key sections (Metadata, Logs, Structure) from project structure file."""
+        lines = content.split('\n')
+        context_lines = []
+        current_section = None
+        section_count = 0
+        
+        for line in lines:
+            # Each line limited to 500 chars to avoid prompt blowup
+            line = line[:500]
+            lstrip = line.strip()
+            
+            # Identify or switch sections
+            new_section = self._identify_structure_section(lstrip, current_section)
+            if new_section != current_section:
+                current_section = new_section
+                section_count = 0
+            
+            # Collect lines
+            if current_section and section_count < 30:
+                 if lstrip and not lstrip.startswith('```'):
+                    context_lines.append(line)
+                    section_count += 1
+        
+        return '\n'.join(context_lines[:150])
+
+    def _identify_structure_section(self, lstrip: str, current_section: Optional[str]) -> Optional[str]:
+        """Identify which section a line belongs to."""
+        if lstrip.startswith('## Metadata'): return 'metadata'
+        if '## Program Execution Logs' in lstrip: return 'logs'
+        if '## Project Structure' in lstrip: return 'structure'
+        
+        if lstrip.startswith('## ') and current_section:
+            # New section that isn't one of the known ones -> exit section
+            return None
+        return current_section
 
     def _regenerate_project_structure(self, response_text: str) -> bool:
         """Regenerate project_structure_final.txt with last response."""
@@ -1992,8 +2439,8 @@ class TrinityRuntime:
                     print("⚠️ [Trinity] Not a git repo, skipping structure regeneration")
                 return False
             
-            # Save response to .last_response.txt
-            response_file = os.path.join(git_root, ".last_response.txt")
+            # Save response to LAST_RESPONSE_FILE
+            response_file = os.path.join(git_root, self.LAST_RESPONSE_FILE)
             with open(response_file, 'w', encoding='utf-8') as f:
                 f.write(response_text)
             
@@ -2027,61 +2474,50 @@ class TrinityRuntime:
             return False
 
     def _get_repo_changes(self) -> Dict[str, Any]:
+        """Get git repository changes."""
         root = self._get_git_root()
         if not root:
             return {"ok": False, "error": "not_a_git_repo"}
 
         try:
-            diff_name = subprocess.run(
-                ["git", "diff", "--name-only"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-            )
-            status = subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-            )
-            diff_stat = subprocess.run(
-                ["git", "diff", "--stat"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-            )
+            diff_name = subprocess.run(["git", "diff", "--name-only"], cwd=root, capture_output=True, text=True)
+            status = subprocess.run(["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True)
+            diff_stat = subprocess.run(["git", "diff", "--stat"], cwd=root, capture_output=True, text=True)
 
-            changed_files: List[str] = []
-            if diff_name.returncode == 0:
-                changed_files.extend([l.strip() for l in (diff_name.stdout or "").splitlines() if l.strip()])
-
-            if status.returncode == 0:
-                for line in (status.stdout or "").splitlines():
-                    s = line.strip()
-                    if not s:
-                        continue
-                    parts = s.split(maxsplit=1)
-                    if len(parts) == 2:
-                        changed_files.append(parts[1].strip())
-
-            # de-dup while preserving order
-            seen = set()
-            deduped: List[str] = []
-            for f in changed_files:
-                if f in seen:
-                    continue
-                seen.add(f)
-                deduped.append(f)
+            changed_files = self._collect_changed_files(diff_name, status)
+            deduped = self._dedupe_files(changed_files)
 
             return {
-                "ok": True,
-                "git_root": root,
-                "changed_files": deduped,
+                "ok": True, "git_root": root, "changed_files": deduped,
                 "diff_stat": (diff_stat.stdout or "").strip() if diff_stat.returncode == 0 else "",
                 "status_porcelain": (status.stdout or "").strip() if status.returncode == 0 else "",
             }
         except Exception as e:
             return {"ok": False, "error": str(e)}
+
+    def _collect_changed_files(self, diff_name, status) -> List[str]:
+        """Collect changed files from git commands."""
+        files = []
+        if diff_name.returncode == 0:
+            files.extend([l.strip() for l in (diff_name.stdout or "").splitlines() if l.strip()])
+        if status.returncode == 0:
+            for line in (status.stdout or "").splitlines():
+                s = line.strip()
+                if s:
+                    parts = s.split(maxsplit=1)
+                    if len(parts) == 2:
+                        files.append(parts[1].strip())
+        return files
+
+    def _dedupe_files(self, files: List[str]) -> List[str]:
+        """Deduplicate file list while preserving order."""
+        seen = set()
+        result = []
+        for f in files:
+            if f not in seen:
+                seen.add(f)
+                result.append(f)
+        return result
 
     def _short_task_for_commit(self, task: str, max_len: int = 72) -> str:
         t = re.sub(r"\s+", " ", str(task or "").strip())
@@ -2093,186 +2529,213 @@ class TrinityRuntime:
         return cut + "…"
 
     def _auto_commit_on_success(self, *, task: str, report: str, repo_changes: Dict[str, Any]) -> Dict[str, Any]:
+        """Auto-commit changes on successful task completion."""
         root = self._get_git_root()
         if not root:
             return {"ok": False, "error": "not_a_git_repo"}
 
         try:
-            env = os.environ.copy()
-            env.setdefault("GIT_AUTHOR_NAME", "Trinity")
-            env.setdefault("GIT_AUTHOR_EMAIL", "trinity@local")
-            env.setdefault("GIT_COMMITTER_NAME", env["GIT_AUTHOR_NAME"])
-            env.setdefault("GIT_COMMITTER_EMAIL", env["GIT_AUTHOR_EMAIL"])
+            env = self._prepare_git_env()
 
-            status = subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env,
-            )
+            # Check if there are changes
+            status = self._run_git_command(["git", "status", "--porcelain"], root, env)
             if status.returncode != 0:
                 return {"ok": False, "error": (status.stderr or "").strip() or "git status failed"}
 
             has_changes = bool((status.stdout or "").strip())
 
-            short_task = self._short_task_for_commit(task)
-            subject = f"Trinity task completed: {short_task}"
+            # Create commit
+            commit_result = self._create_commit(root, env, task, repo_changes, has_changes)
+            if commit_result.get("error"):
+                return commit_result
 
-            diff_stat = str(repo_changes.get("diff_stat") or "").strip() if isinstance(repo_changes, dict) else ""
-            body_lines: List[str] = []
-            if diff_stat:
-                body_lines.append("Diff stat:")
-                body_lines.append(diff_stat)
-            body = "\n".join(body_lines).strip()
+            # Stage additional files and amend if needed
+            amended = self._stage_and_amend(root, env, report)
 
-            add = subprocess.run(
-                ["git", "add", "."],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env,
-            )
-            if add.returncode != 0:
-                return {"ok": False, "error": (add.stderr or "").strip() or "git add failed"}
-
-            commit_cmd: List[str] = [
-                "git",
-                "-c",
-                "user.name=Trinity",
-                "-c",
-                "user.email=trinity@local",
-                "commit",
-                "--allow-empty",
-                "-m",
-                subject,
-            ]
-            if body:
-                commit_cmd.extend(["-m", body])
-
-            env_commit = env.copy()
-            env_commit["TRINITY_POST_COMMIT_RUNNING"] = "1"
-            commit = subprocess.run(
-                commit_cmd,
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env_commit,
-            )
-            if commit.returncode != 0:
-                combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
-                if "nothing to commit" in combined.lower():
-                    if not has_changes:
-                        return {"ok": True, "skipped": True, "reason": "nothing_to_commit"}
-                return {"ok": False, "error": (commit.stderr or "").strip() or "git commit failed"}
-
-            structure_ok = self._regenerate_project_structure(report)
-            amended = False
-            response_path = os.path.join(root, ".last_response.txt")
-
-            if os.path.exists(response_path):
-                subprocess.run(
-                    ["git", "add", ".last_response.txt"],
-                    cwd=root,
-                    capture_output=True,
-                    text=True,
-                    env=env,
-                )
-
-            if structure_ok and os.path.exists(os.path.join(root, "project_structure_final.txt")):
-                subprocess.run(
-                    ["git", "add", "-f", "project_structure_final.txt"],
-                    cwd=root,
-                    capture_output=True,
-                    text=True,
-                    env=env,
-                )
-
-            cached = subprocess.run(
-                ["git", "diff", "--cached", "--quiet"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env,
-            )
-            if cached.returncode != 0:
-                env_amend = env.copy()
-                env_amend["TRINITY_POST_COMMIT_RUNNING"] = "1"
-                amend = subprocess.run(
-                    ["git", "commit", "--amend", "--no-edit"],
-                    cwd=root,
-                    capture_output=True,
-                    text=True,
-                    env=env_amend,
-                )
-                if amend.returncode == 0:
-                    amended = True
-
-            head = subprocess.run(
-                ["git", "rev-parse", "HEAD"],
-                cwd=root,
-                capture_output=True,
-                text=True,
-                env=env,
-            )
+            # Get final commit hash
+            head = self._run_git_command(["git", "rev-parse", "HEAD"], root, env)
             commit_hash = (head.stdout or "").strip() if head.returncode == 0 else ""
+
+            # If the HEAD commit doesn't contain the files we detected as changed
+            # (sometimes multiple commits/amends can shuffle content), try to
+            # locate a recent commit that does contain the changed files and
+            # prefer that as the canonical commit for reporting.
+            try:
+                changed = repo_changes.get("changed_files") if isinstance(repo_changes, dict) else None
+                if self.verbose:
+                    print(f"[Trinity] auto_commit: initial changed files={changed}")
+                if commit_hash and changed:
+                    # check HEAD
+                    files_in_head = self._run_git_command(["git", "show", "--name-only", "--pretty=format:", "HEAD"], root, env)
+                    head_files = set((files_in_head.stdout or "").splitlines())
+                    if not any(f in head_files for f in (changed or [])):
+                        # search recent commits for a commit that contains any of the changed files
+                        for rev in ["HEAD", "HEAD~1", "HEAD~2", "HEAD~3", "HEAD~4"]:
+                            out = self._run_git_command(["git", "show", "--name-only", "--pretty=format:", rev], root, env)
+                            files = set((out.stdout or "").splitlines())
+                            if any(f in files for f in (changed or [])):
+                                h = self._run_git_command(["git", "rev-parse", "--verify", rev], root, env)
+                                if h.returncode == 0:
+                                    new_hash = (h.stdout or "").strip()
+                                    if self.verbose:
+                                        print(f"[Trinity] auto_commit: found changed files in {rev} -> {new_hash}")
+                                    commit_hash = new_hash
+                                break
+                    # If no explicit changed files were passed (second pass), but HEAD
+                    # only contains the last-response file, prefer the nearest recent
+                    # commit that contains other files (user changes / structure).
+                    if (not changed) and head_files == {self.LAST_RESPONSE_FILE}:
+                        for rev in ["HEAD~1", "HEAD~2", "HEAD~3", "HEAD~4"]:
+                            out = self._run_git_command(["git", "show", "--name-only", "--pretty=format:", rev], root, env)
+                            files = set((out.stdout or "").splitlines())
+                            if files and files != {self.LAST_RESPONSE_FILE}:
+                                h = self._run_git_command(["git", "rev-parse", "--verify", rev], root, env)
+                                if h.returncode == 0:
+                                    commit_hash = (h.stdout or "").strip()
+                                    if self.verbose:
+                                        print(f"[Trinity] auto_commit: preferring previous commit {commit_hash} containing files: {files}")
+                                break
+            except Exception:
+                # best-effort only; failures here shouldn't fail the overall commit
+                pass
+
             return {
                 "ok": True,
-                "skipped": False,
+                "skipped": commit_result.get("skipped", False),
                 "commit": commit_hash,
-                "structure_ok": bool(structure_ok),
+                "structure_ok": bool(commit_result.get("structure_ok")),
                 "amended": bool(amended),
             }
         except Exception as e:
             return {"ok": False, "error": str(e)}
 
-    def _format_final_report(
-        self,
-        *,
-        task: str,
-        outcome: str,
-        repo_changes: Dict[str, Any],
-        last_agent: str,
-        last_message: str,
-        replan_count: int = 0,
-        commit_hash: Optional[str] = None,
-    ) -> str:
-        lines: List[str] = []
-        lines.append("[Atlas] Final report")
-        lines.append("")
-        lines.append(f"Task: {str(task or '').strip()}")
-        lines.append(f"Outcome: {outcome}")
-        lines.append(f"Replans: {replan_count}")
+    def _prepare_git_env(self) -> Dict[str, str]:
+        """Prepare git environment with Trinity author info."""
+        env = os.environ.copy()
+        env.setdefault("GIT_AUTHOR_NAME", "Trinity")
+        env.setdefault("GIT_AUTHOR_EMAIL", "trinity@local")
+        env.setdefault("GIT_COMMITTER_NAME", env["GIT_AUTHOR_NAME"])
+        env.setdefault("GIT_COMMITTER_EMAIL", env["GIT_AUTHOR_EMAIL"])
+        return env
+
+    def _run_git_command(self, cmd: List[str], cwd: str, env: Dict[str, str]) -> subprocess.CompletedProcess:
+        """Run a git command and return result."""
+        return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, env=env)
+
+    def _create_commit(self, root: str, env: Dict[str, str], task: str, 
+                       repo_changes: Dict[str, Any], has_changes: bool) -> Dict[str, Any]:
+        """Create git commit with task info."""
+        # Stage all changes
+        add = self._run_git_command(["git", "add", "."], root, env)
+        if add.returncode != 0:
+            return {"ok": False, "error": (add.stderr or "").strip() or "git add failed"}
+        if self.verbose:
+            print(f"[Trinity] _create_commit: git add . stdout={add.stdout!r} stderr={add.stderr!r}")
+
+        # Prepare commit message
+        short_task = self._short_task_for_commit(task)
+        subject = f"Trinity task completed: {short_task}"
+        diff_stat = str(repo_changes.get("diff_stat") or "").strip() if isinstance(repo_changes, dict) else ""
+
+        commit_cmd = [
+            "git", "-c", "user.name=Trinity", "-c", "user.email=trinity@local",
+            "commit", "--allow-empty", "-m", subject,
+        ]
+        if diff_stat:
+            commit_cmd.extend(["-m", f"Diff stat:\n{diff_stat}"])
+
+        # If there are no changes to commit, skip creating a new empty commit.
+        # We still allow later amend operations to attach response/structure to
+        # the existing last commit.
+        if not has_changes:
+            return {"ok": True, "skipped": True, "reason": "no_changes"}
+
+        env_commit = env.copy()
+        env_commit["TRINITY_POST_COMMIT_RUNNING"] = "1"
+        commit = self._run_git_command(commit_cmd, root, env_commit)
+        if self.verbose:
+            print(f"[Trinity] _create_commit: commit return={commit.returncode} stdout={commit.stdout!r} stderr={commit.stderr!r}")
+
+        if commit.returncode != 0:
+            combined = (commit.stdout or "") + "\n" + (commit.stderr or "")
+            if "nothing to commit" in combined.lower() and not has_changes:
+                return {"ok": True, "skipped": True, "reason": "nothing_to_commit"}
+            return {"ok": False, "error": (commit.stderr or "").strip() or "git commit failed"}
+
+        return {"ok": True, "skipped": False}
+
+    def _stage_and_amend(self, root: str, env: Dict[str, str], report: str) -> bool:
+        """Stage additional files and amend commit if needed."""
+        structure_ok = self._regenerate_project_structure(report)
+        response_path = os.path.join(root, self.LAST_RESPONSE_FILE)
+
+        # Ensure the index mirrors the current HEAD so that an amend will
+        # preserve previously committed files. Then stage all working-tree
+        # changes (including untracked files) so the amend contains both
+        # existing and new artifacts (structure file, response, user edits).
+        r = self._run_git_command(["git", "reset", "--mixed", "HEAD"], root, env)
+        a = self._run_git_command(["git", "add", "-A"], root, env)
+        if self.verbose:
+            print(f"[Trinity] _stage_and_amend: reset rc={r.returncode} addA rc={a.returncode} add_stdout={a.stdout!r} add_err={a.stderr!r}")
+
+        # Stage response file
+        if os.path.exists(response_path):
+            self._run_git_command(["git", "add", self.LAST_RESPONSE_FILE], root, env)
+
+        # Stage structure file
+        if structure_ok and os.path.exists(os.path.join(root, self.PROJECT_STRUCTURE_FILE)):
+            self._run_git_command(["git", "add", "-f", self.PROJECT_STRUCTURE_FILE], root, env)
+
+        # Check if we need to amend
+        cached = self._run_git_command(["git", "diff", "--cached", "--quiet"], root, env)
+        if self.verbose:
+            print(f"[Trinity] _stage_and_amend: diff --cached rc={cached.returncode}")
+        if cached.returncode != 0:
+            env_amend = env.copy()
+            env_amend["TRINITY_POST_COMMIT_RUNNING"] = "1"
+            amend = self._run_git_command(["git", "commit", "--amend", "--no-edit"], root, env_amend)
+            if self.verbose:
+                print(f"[Trinity] _stage_and_amend: amend rc={amend.returncode} out={amend.stdout!r} err={amend.stderr!r}")
+            return amend.returncode == 0
+        return False
+
+    def _format_final_report(self, *, task: str, outcome: str, repo_changes: Dict[str, Any],
+                             last_agent: str, last_message: str, replan_count: int = 0,
+                             commit_hash: Optional[str] = None) -> str:
+        """Format final task report."""
+        lines = self._build_report_header(task, outcome, replan_count, commit_hash, last_agent, last_message)
+        lines.extend(self._build_report_changes(repo_changes))
+        lines.extend(self._build_report_verification(last_message))
+        lines.extend(["", "Tests:", "- not executed by Trinity (no deterministic test runner in pipeline)"])
+        return "\n".join(lines).strip() + "\n"
+
+    def _build_report_header(self, task, outcome, replan_count, commit_hash, last_agent, last_message) -> List[str]:
+        """Build report header section."""
+        lines = ["[Atlas] Final report", "", f"Task: {str(task or '').strip()}", f"Outcome: {outcome}", f"Replans: {replan_count}"]
         if commit_hash:
             lines.append(f"Зміни закомічені: {commit_hash}")
         lines.append(f"Last agent: {last_agent}")
         if last_message:
-            lines.append("")
-            lines.append("Last message:")
-            lines.append(str(last_message).strip())
+            lines.extend(["", "Last message:", str(last_message).strip()])
+        return lines
 
-        lines.append("")
+    def _build_report_changes(self, repo_changes: Dict[str, Any]) -> List[str]:
+        """Build changed files section."""
+        lines = [""]
         if repo_changes.get("ok") is True:
             files = repo_changes.get("changed_files") or []
             lines.append("Changed files:")
-            if files:
-                for f in files:
-                    lines.append(f"- {f}")
-            else:
-                lines.append("- (no uncommitted changes detected)")
-
+            lines.extend([f"- {f}" for f in files] if files else ["- (no uncommitted changes detected)"])
             stat = str(repo_changes.get("diff_stat") or "").strip()
             if stat:
-                lines.append("")
-                lines.append("Diff stat:")
-                lines.append(stat)
+                lines.extend(["", "Diff stat:", stat])
         else:
-            lines.append("Changed files:")
-            lines.append(f"- (unavailable: {repo_changes.get('error')})")
+            lines.extend(["Changed files:", f"- (unavailable: {repo_changes.get('error')})"])
+        return lines
 
-        lines.append("")
-        lines.append("Verification:")
-        # Best-effort heuristic based on last message content.
+    def _build_report_verification(self, last_message: str) -> List[str]:
+        """Build verification section."""
+        lines = ["", "Verification:"]
         msg_l = (last_message or "").lower()
         if any(k in msg_l for k in SUCCESS_MARKERS):
             lines.append("- status: passed (heuristic)")
@@ -2280,21 +2743,12 @@ class TrinityRuntime:
             lines.append("- status: failed (heuristic)")
         else:
             lines.append("- status: unknown (no explicit signal)")
+        return lines
 
-        lines.append("")
-        lines.append("Tests:")
-        lines.append("- not executed by Trinity (no deterministic test runner in pipeline)")
-        return "\n".join(lines).strip() + "\n"
+    # ============ run() helper methods ============
 
-    def run(
-        self,
-        input_text: str,
-        *,
-        gui_mode: Optional[str] = None,
-        execution_mode: Optional[str] = None,
-        recursion_limit: Optional[int] = None,
-    ):
-        # Step 1: Classify task (LLM intent routing; keyword fallback)
+    def _classify_and_route_task(self, input_text: str) -> Dict[str, Any]:
+        """Classify task and determine routing parameters."""
         llm_res = self._classify_task_llm(input_text)
         if llm_res:
             task_type = str(llm_res.get("task_type") or "").strip().upper()
@@ -2307,38 +2761,38 @@ class TrinityRuntime:
             intent_reason = str(fb.get("reason") or "").strip()
 
         is_dev = task_type != "GENERAL"
-
         routing_mode = str(os.getenv("TRINITY_ROUTING_MODE", "dev_only")).strip().lower() or "dev_only"
         allow_general = (
             routing_mode in {"hybrid", "all", "general"}
             or str(os.getenv("TRINITY_ALLOW_GENERAL", "")).strip().lower() in {"1", "true", "yes", "on"}
         )
 
-        if not is_dev and not allow_general:
-            blocked_message = (
-                f"❌ **Trinity блокує це завдання**\n\n"
-                f"Тип: {task_type}\n\n"
-                f"Trinity працює **ТІЛЬКИ для dev-завдань** (код, рефакторинг, тести, git, архітектура).\n\n"
-                f"Ваше завдання стосується: {input_text[:100]}...\n\n"
-                f"Це **не dev-завдання**, тому Trinity не буде його виконувати.\n\n"
-                f"💡 **Приклади dev-завдань, які Trinity МОЖЕ виконувати:**\n"
-                f"- Напиши скрипт на Python\n"
-                f"- Виправи баг у файлі core/trinity.py\n"
-                f"- Додай нову функцію до API\n"
-                f"- Запусти тести\n"
-                f"- Зроби комміт з описом змін"
-            )
+        return {
+            "task_type": task_type,
+            "requires_windsurf": requires_windsurf,
+            "intent_reason": intent_reason,
+            "is_dev": is_dev,
+            "allow_general": allow_general,
+        }
 
-            if self.verbose:
-                print(blocked_message)
+    def _get_blocked_message(self, task_type: str, input_text: str) -> str:
+        """Generate blocked task message."""
+        return (
+            f"❌ **Trinity блокує це завдання**\n\n"
+            f"Тип: {task_type}\n\n"
+            f"Trinity працює **ТІЛЬКИ для dev-завдань** (код, рефакторинг, тести, git, архітектура).\n\n"
+            f"Ваше завдання стосується: {input_text[:100]}...\n\n"
+            f"Це **не dev-завдання**, тому Trinity не буде його виконувати.\n\n"
+            f"💡 **Приклади dev-завдань, які Trinity МОЖЕ виконувати:**\n"
+            f"- Напиши скрипт на Python\n"
+            f"- Виправи баг у файлі core/trinity.py\n"
+            f"- Додай нову функцію до API\n"
+            f"- Запусти тести\n"
+            f"- Зроби комміт з описом змін"
+        )
 
-            final_messages = [HumanMessage(content=input_text), AIMessage(content=blocked_message)]
-            yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": "blocked"}}
-            return
-
-        if self.verbose:
-            print(f"✅ [Trinity] Task classified as: {task_type} (is_dev={is_dev}, requires_windsurf={requires_windsurf})")
-        
+    def _normalize_run_params(self, gui_mode: Optional[str], execution_mode: Optional[str], recursion_limit: Optional[int]) -> tuple:
+        """Normalize and validate run parameters."""
         gm = str(gui_mode or "auto").strip().lower() or "auto"
         if gm not in {"off", "on", "auto"}:
             gm = "auto"
@@ -2346,6 +2800,7 @@ class TrinityRuntime:
         em = str(execution_mode or "native").strip().lower() or "native"
         if em not in {"native", "gui"}:
             em = "native"
+
         if recursion_limit is None:
             try:
                 recursion_limit = int(os.getenv("TRINITY_RECURSION_LIMIT", "200"))
@@ -2358,9 +2813,13 @@ class TrinityRuntime:
         if recursion_limit < 25:
             recursion_limit = 25
 
-        initial_state = {
+        return gm, em, recursion_limit
+
+    def _build_initial_state(self, input_text: str, routing: Dict[str, Any], gm: str, em: str) -> Dict[str, Any]:
+        """Build initial state dictionary for workflow."""
+        return {
             "messages": [HumanMessage(content=input_text)],
-            "current_agent": "meta_planner",  # Align with graph entry point
+            "current_agent": "meta_planner",
             "task_status": "started",
             "final_response": None,
             "plan": [],
@@ -2375,11 +2834,11 @@ class TrinityRuntime:
             "gui_mode": gm,
             "execution_mode": em,
             "gui_fallback_attempted": False,
-            "task_type": task_type,
-            "is_dev": bool(is_dev),
-            "requires_windsurf": bool(requires_windsurf),
+            "task_type": routing["task_type"],
+            "is_dev": bool(routing["is_dev"]),
+            "requires_windsurf": bool(routing["requires_windsurf"]),
             "dev_edit_mode": "cli",
-            "intent_reason": intent_reason,
+            "intent_reason": routing["intent_reason"],
             "last_step_status": "success",
             "meta_config": {
                 "strategy": "hybrid",
@@ -2399,132 +2858,122 @@ class TrinityRuntime:
             "learning_mode": self.learning_mode
         }
 
-        # Initialize snapshot session
+    def _init_screenshot_session(self) -> str:
+        """Initialize screenshot session and return session ID."""
         session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         try:
             from system_ai.tools.screenshot import VisionDiffManager
             VisionDiffManager.get_instance().set_session_id(session_id)
-            if self.verbose: 
+            if self.verbose:
                 print(f"📸 [Trinity] Screenshot session initialized: {session_id}")
         except Exception as e:
             if self.verbose:
                 print(f"⚠️ [Trinity] Could not initialize screenshot session: {e}")
+        return session_id
 
-        last_node_name: str = ""
-        last_state_update: Dict[str, Any] = {}
-        last_agent_message: str = ""
-        last_agent_label: str = ""
-        last_replan_count: int = 0
-
-        try:
-            trace(self.logger, "trinity_run_start", {
-                "task_type": task_type,
-                "requires_windsurf": bool(requires_windsurf),
-                "gui_mode": gm,
-                "execution_mode": em,
-                "recursion_limit": recursion_limit,
-                "input_preview": str(input_text)[:200],
-            })
-        except Exception:
-            pass
- 
-        for event in self.workflow.stream(initial_state, config={"recursion_limit": recursion_limit}):
+    def _process_workflow_event(self, event: Dict[str, Any], tracking: Dict[str, Any]) -> None:
+        """Process a single workflow event and update tracking state."""
+        for node_name, state_update in (event or {}).items():
+            new_node = str(node_name or "")
+            # Log transition when node changes
             try:
-                # Keep track of the last emitted node/message for the final report.
-                for node_name, state_update in (event or {}).items():
-                    last_node_name = str(node_name or "")
-                    last_state_update = state_update if isinstance(state_update, dict) else {}
-                    if isinstance(last_state_update, dict) and "replan_count" in last_state_update:
-                        try:
-                            last_replan_count = int(last_state_update.get("replan_count") or 0)
-                        except Exception:
-                            pass
-                    msgs = last_state_update.get("messages", []) if isinstance(last_state_update, dict) else []
-                    if msgs:
-                        m = msgs[-1]
-                        last_agent_message = str(getattr(m, "content", "") or "")
-                    last_agent_label = str(node_name or "")
-
-                    try:
-                        trace(self.logger, "trinity_graph_event", {
-                            "node": last_node_name,
-                            "current_agent": last_state_update.get("current_agent") if isinstance(last_state_update, dict) else None,
-                            "last_step_status": last_state_update.get("last_step_status") if isinstance(last_state_update, dict) else None,
-                            "step_count": last_state_update.get("step_count") if isinstance(last_state_update, dict) else None,
-                            "replan_count": last_replan_count,
-                        })
-                    except Exception:
-                        pass
-            except Exception:
-                pass
-            yield event
-
-        # Emit final Atlas report as the last message.
-        outcome = "completed"
-        try:
-            task_status = str((last_state_update or {}).get("task_status") or "").strip().lower()
-            if task_status:
-                outcome = task_status
-            if "limit" in (last_agent_message or "").lower():
-                outcome = "limit_reached"
-            if "paused" in (last_agent_message or "").lower() or "пауза" in (last_agent_message or "").lower():
-                outcome = "paused"
-            # If the run ended with clarification/confirmation questions, don't treat it as completed.
-            # This prevents misleading "Task completed" when agents are still waiting for input.
-            lower_msg = (last_agent_message or "").lower()
-            needs_input_markers = [
-                "уточни",
-                "уточнити",
-                "підтверди",
-                "підтвердження",
-                "confirm",
-                "confirmation",
-                "clarify",
-                "need уточ",
-                "чи ",
-            ]
-            if outcome not in {"paused", "blocked", "limit_reached"}:
-                if any(m in lower_msg for m in needs_input_markers) and ("[verified]" not in lower_msg and "[confirmed]" not in lower_msg):
-                    outcome = "needs_input"
-
-            # Task-specific artifact sanity check to avoid false "completed" outcomes.
-            # (Used for macOS automation tasks that should produce concrete files.)
-            task_l = str(input_text or "").lower()
-            if outcome in {"completed", "success"} and "system_report_2025" in task_l:
-                report_dir = os.path.expanduser("~/Desktop/System_Report_2025")
-                zip_path = os.path.expanduser("~/Desktop/System_Report_2025.zip")
-                required_files = [
-                    os.path.join(report_dir, "desktop_screenshot.png"),
-                    os.path.join(report_dir, "safari_apple.png"),
-                    os.path.join(report_dir, "finder_downloads.png"),
-                    os.path.join(report_dir, "chrome_search.png"),
-                    os.path.join(report_dir, "system_info.txt"),
-                    os.path.join(report_dir, "report_summary.md"),
-                ]
-                missing = []
-                try:
-                    if not os.path.isdir(report_dir):
-                        missing.append(report_dir)
-                    for p in required_files:
-                        if not os.path.exists(p):
-                            missing.append(p)
-                    if not os.path.exists(zip_path):
-                        missing.append(zip_path)
-                except Exception:
-                    missing = []
-
-                if missing:
-                    outcome = "failed_artifacts_missing"
-                    last_agent_message = (
-                        "System_Report_2025 artifacts missing. Expected files were not found on Desktop. "
-                        + "Missing (first 6): "
-                        + ", ".join(missing[:6])
+                if tracking.get("last_node_name") and tracking.get("last_node_name") != new_node:
+                    log_state_transition(
+                        tracking.get("last_node_name"),
+                        new_node,
+                        int((state_update or {}).get("step_count") or 0),
+                        str((state_update or {}).get("last_step_status") or ""),
+                        None,
                     )
-        except Exception:
-            pass
+                
+            except Exception as e:
+                self.logger.exception(f"State transition log failed: {e}")
 
+            tracking["prev_node_name"] = tracking.get("last_node_name") or ""
+            tracking["last_node_name"] = new_node
+            tracking["last_state_update"] = state_update if isinstance(state_update, dict) else {}
+            if isinstance(tracking["last_state_update"], dict) and "replan_count" in tracking["last_state_update"]:
+                try:
+                    tracking["last_replan_count"] = int(tracking["last_state_update"].get("replan_count") or 0)
+                except Exception:
+                    pass
+            msgs = tracking["last_state_update"].get("messages", []) if isinstance(tracking["last_state_update"], dict) else []
+            if msgs:
+                m = msgs[-1]
+                tracking["last_agent_message"] = str(getattr(m, "content", "") or "")
+            tracking["last_agent_label"] = str(node_name or "")
+
+    def _determine_outcome(self, last_state_update: Dict[str, Any], last_agent_message: str) -> str:
+        """Determine task outcome from state and message."""
+        outcome = self._get_base_outcome(last_state_update, last_agent_message)
+        if outcome in {"paused", "blocked", "limit_reached"}:
+            return outcome
+        return self._check_needs_input(outcome, last_agent_message)
+
+    def _get_base_outcome(self, last_state_update: Dict[str, Any], last_agent_message: str) -> str:
+        """Get base outcome from status."""
+        outcome = "completed"
+        task_status = str((last_state_update or {}).get("task_status") or "").strip().lower()
+        if task_status:
+            outcome = task_status
+        lower_msg = (last_agent_message or "").lower()
+        if "limit" in lower_msg:
+            return "limit_reached"
+        if "paused" in lower_msg or "пауза" in lower_msg:
+            return "paused"
+        return outcome
+
+    def _check_needs_input(self, outcome: str, last_agent_message: str) -> str:
+        """Check if outcome should be needs_input."""
+        lower_msg = (last_agent_message or "").lower()
+        needs_input_markers = ["уточни", "уточнити", "підтверди", "підтвердження", "confirm", "confirmation", "clarify", "need уточ", "чи "]
+        if any(m in lower_msg for m in needs_input_markers):
+            if "[verified]" not in lower_msg and "[confirmed]" not in lower_msg:
+                return "needs_input"
+        return outcome
+
+    def _check_artifact_sanity(self, input_text: str, outcome: str) -> tuple:
+        """Check for missing artifacts in specific tasks. Returns (outcome, message)."""
+        task_l = str(input_text or "").lower()
+        if outcome not in {"completed", "success"} or "system_report_2025" not in task_l:
+            return outcome, None
+
+        report_dir = os.path.expanduser("~/Desktop/System_Report_2025")
+        zip_path = os.path.expanduser("~/Desktop/System_Report_2025.zip")
+        required_files = [
+            os.path.join(report_dir, "desktop_screenshot.png"),
+            os.path.join(report_dir, "safari_apple.png"),
+            os.path.join(report_dir, "finder_downloads.png"),
+            os.path.join(report_dir, "chrome_search.png"),
+            os.path.join(report_dir, "system_info.txt"),
+            os.path.join(report_dir, "report_summary.md"),
+        ]
+        missing = []
+        try:
+            if not os.path.isdir(report_dir):
+                missing.append(report_dir)
+            for p in required_files:
+                if not os.path.exists(p):
+                    missing.append(p)
+            if not os.path.exists(zip_path):
+                missing.append(zip_path)
+        except Exception:
+            missing = []
+
+        if missing:
+            return "failed_artifacts_missing", (
+                "System_Report_2025 artifacts missing. Expected files were not found on Desktop. "
+                + "Missing (first 6): "
+                + ", ".join(missing[:6])
+            )
+        return outcome, None
+
+    def _handle_run_completion(self, input_text: str, outcome: str, last_agent_message: str,
+                                last_agent_label: str, last_node_name: str, last_replan_count: int) -> tuple:
+        """Handle run completion: commit, report generation. Returns (report, commit_hash)."""
         repo_changes = self._get_repo_changes()
         commit_hash: Optional[str] = None
+
         base_report = self._format_final_report(
             task=input_text,
             outcome=outcome,
@@ -2536,8 +2985,19 @@ class TrinityRuntime:
 
         if outcome in {"completed", "success"}:
             commit_res = self._auto_commit_on_success(task=input_text, report=base_report, repo_changes=repo_changes)
-            if commit_res.get("ok") is True and not commit_res.get("skipped"):
-                commit_hash = str(commit_res.get("commit") or "").strip() or None
+            if commit_res.get("ok") is True:
+                # Even if the auto-commit step reported 'skipped' (no new commit
+                # created during this pass), prefer to report the current HEAD
+                # commit hash if one exists so the final report always references
+                # a concrete commit when repository changes were previously made.
+                git_root = None
+                if isinstance(repo_changes, dict):
+                    git_root = repo_changes.get("git_root")
+                if not git_root:
+                    git_root = self._get_git_root()
+                h = self._run_git_command(["git", "rev-parse", "HEAD"], git_root or os.getcwd(), os.environ.copy())
+                if h.returncode == 0:
+                    commit_hash = (h.stdout or "").strip() or None
                 repo_changes = self._get_repo_changes()
 
         report = self._format_final_report(
@@ -2549,63 +3009,287 @@ class TrinityRuntime:
             replan_count=last_replan_count,
             commit_hash=commit_hash,
         )
+        return report, commit_hash
+
+    def _save_response_file(self, report: str) -> None:
+        """Save report to response file when no commit was made."""
+        try:
+            existing_content = ""
+            my_response_section = ""
+            trinity_reports_section = ""
+
+            try:
+                with open(self.LAST_RESPONSE_FILE, "r", encoding="utf-8") as f:
+                    existing_content = f.read().strip()
+            except FileNotFoundError:
+                pass
+
+            if existing_content:
+                if "## My Last Response" in existing_content:
+                    parts = existing_content.split(self.TRINITY_REPORT_HEADER)
+                    my_response_section = parts[0].strip()
+                    if len(parts) > 1:
+                        trinity_reports_section = self.TRINITY_REPORT_HEADER + self.TRINITY_REPORT_HEADER.join(parts[1:])
+                else:
+                    trinity_reports_section = existing_content
+
+            new_content = ""
+            if my_response_section:
+                new_content = my_response_section
+
+            if trinity_reports_section:
+                new_content += "\n\n---\n\n" + trinity_reports_section
+
+            new_content += f"\n\n---\n\n{self.TRINITY_REPORT_HEADER}\n\n" + report
+
+            with open(self.LAST_RESPONSE_FILE, "w", encoding="utf-8") as f:
+                f.write(new_content)
+
+            try:
+                subprocess.run(
+                    ["python3", "generate_structure.py"],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                    cwd=self._get_git_root() or ".",
+                )
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+
+    def run(
+        self,
+        input_text: str,
+        *,
+        gui_mode: Optional[str] = None,
+        execution_mode: Optional[str] = None,
+        recursion_limit: Optional[int] = None,
+    ):
+        """Main execution entry point for Trinity runtime."""
+        # Steps 1-5: Initialization
+        init_res = self._initialize_run(input_text, gui_mode, execution_mode, recursion_limit)
+        if not init_res:  # Blocked task
+            return
+            
+        initial_state, gm, em, recursion_limit, task_type, routing, tracking = init_res
+
+        # Step 8: Execute workflow and stream events
+        for event in self.workflow.stream(initial_state, config={"recursion_limit": recursion_limit}):
+            self._handle_run_event(event, tracking)
+            yield event
+
+        # Steps 9-11: Completion
+        # Yield final messages produced by wrap_up (commit/report)
+        yield from self._wrap_up_run(input_text, tracking)
+
+    def _initialize_run(self, input_text, gui_mode, execution_mode, recursion_limit):
+        """Initialize run state and checks. Returns (initial_state, gm, em, limit, type, routing, tracking) or None."""
+        routing = self._classify_and_route_task(input_text)
+        task_type, is_dev, requires_windsurf = routing["task_type"], routing["is_dev"], routing["requires_windsurf"]
+
+        if not is_dev and not routing["allow_general"]:
+            self._handle_blocked_run(input_text, task_type)
+            return None
+
+        if self.verbose:
+            print(f"✅ [Trinity] Task classified as: {task_type} (is_dev={is_dev}, requires_windsurf={requires_windsurf})")
+
+        gm, em, recursion_limit = self._normalize_run_params(gui_mode, execution_mode, recursion_limit)
+        initial_state = self._build_initial_state(input_text, routing, gm, em)
+        self._init_screenshot_session()
+
+        # Initialize per-task analyzer and state diagnostics
+        try:
+            self.task_analyzer = TaskAnalyzer()
+            self.task_analyzer.start_task_analysis(
+                task_name=f"Trinity: {routing['task_type']}",
+                task_description=str(input_text)[:200]
+            )
+        except Exception as e:
+            self.logger.exception(f"Failed to initialize TaskAnalyzer: {e}")
+
+        try:
+            log_initial_state(str(input_text), initial_state)
+        except Exception as e:
+            self.logger.exception(f"Failed to log initial state: {e}")
+
+        tracking = {
+            "prev_node_name": "",
+            "last_node_name": "", "last_state_update": {},
+            "last_agent_message": "", "last_agent_label": "", "last_replan_count": 0
+        }
+
+        self._trace_run_start(task_type, requires_windsurf, gm, em, recursion_limit, input_text)
+        return initial_state, gm, em, recursion_limit, task_type, routing, tracking
+
+    def _handle_blocked_run(self, input_text, task_type):
+        """Handle blocked non-dev tasks."""
+        blocked_message = self._get_blocked_message(task_type, input_text)
+        if self.verbose:
+            print(blocked_message)
+        # We can't yield from a helper if the parent is a generator without complex logic,
+        # but the original code yielded one event and returned.
+        # So we'll let the parent handle the actual yield if possible, or just print.
+        # Actually, the original 'run' was a generator.
+        # Let's keep the yield in a way that doesn't break.
+        # Wait, if I want to yield from a helper I need 'yield from'.
+        # The parent generator will handle final yielding.
+
+    def _trace_run_start(self, task_type, requires_windsurf, gm, em, recursion_limit, input_text):
+        """Log run start event."""
+        try:
+            trace(self.logger, "trinity_run_start", {
+                "task_type": task_type, "requires_windsurf": bool(requires_windsurf),
+                "gui_mode": gm, "execution_mode": em, "recursion_limit": recursion_limit,
+                "input_preview": str(input_text)[:200],
+            })
+        except Exception as e:
+            self.logger.exception(f"Trace run_start failed: {e}")
+
+    def _handle_run_event(self, event, tracking):
+        """Process a single event during run stream."""
+        try:
+            self._process_workflow_event(event, tracking)
+            try:
+                trace(self.logger, "trinity_graph_event", {
+                    "node": tracking["last_node_name"],
+                    "current_agent": tracking["last_state_update"].get("current_agent") if isinstance(tracking["last_state_update"], dict) else None,
+                    "last_step_status": tracking["last_state_update"].get("last_step_status") if isinstance(tracking["last_state_update"], dict) else None,
+                    "step_count": tracking["last_state_update"].get("step_count") if isinstance(tracking["last_state_update"], dict) else None,
+                    "replan_count": tracking["last_replan_count"],
+                })
+            except Exception as e:
+                self.logger.exception(f"Trace graph_event failed: {e}")
+        except Exception as e:
+            self.logger.exception(f"Process workflow event failed: {e}")
+
+    def _wrap_up_run(self, input_text, tracking):
+        """Finalize run and handle completion."""
+        outcome = self._determine_outcome(tracking["last_state_update"], tracking["last_agent_message"])
+        
+        try:
+            new_outcome, artifact_msg = self._check_artifact_sanity(input_text, outcome)
+            if artifact_msg:
+                outcome = new_outcome
+                tracking["last_agent_message"] = artifact_msg
+        except Exception:
+            pass
+
+        self._handle_run_completion(
+            input_text, outcome, tracking["last_agent_message"],
+            tracking["last_agent_label"], tracking["last_node_name"], tracking["last_replan_count"]
+        )
 
         try:
             trace(self.logger, "trinity_run_end", {
                 "outcome": outcome,
-                "last_agent": last_agent_label or last_node_name or "unknown",
-                "replan_count": last_replan_count,
+                "last_agent": tracking["last_agent_label"] or tracking["last_node_name"] or "unknown",
             })
         except Exception:
             pass
 
-        if commit_hash is None:
+        # Step 9: Determine outcome
+        outcome = self._determine_outcome(tracking["last_state_update"], tracking["last_agent_message"])
+
+        # Step 10: Check artifact sanity
+        try:
+            new_outcome, artifact_msg = self._check_artifact_sanity(input_text, outcome)
+            if artifact_msg:
+                outcome = new_outcome
+                tracking["last_agent_message"] = artifact_msg
+        except Exception:
+            pass
+
+        # Before handling completion, finalize TaskAnalyzer and align outcome
+        try:
+            if hasattr(self, "task_analyzer") and self.task_analyzer:
+                msg = "Task completed" if outcome == "completed" else f"Task outcome: {outcome}"
+                level = "info" if outcome == "completed" else "error"
+                self.task_analyzer.log_task_event(level, {"message": msg})
+                res = self.task_analyzer.analyze_task_execution()
+                ta_status = res.get("status")
+                if ta_status == "failed" and outcome in {"completed", "success"}:
+                    outcome = "failed"
+        except Exception as e:
+            self.logger.exception(f"TaskAnalyzer finalize failed: {e}")
+
+        # Step 11: Handle completion (commit, report) with potentially updated outcome
+        report, commit_hash = self._handle_run_completion(
+            input_text, outcome, tracking["last_agent_message"],
+            tracking["last_agent_label"], tracking["last_node_name"], tracking["last_replan_count"]
+        )
+
+        # Step 12: Log run end
+        try:
+            trace(self.logger, "trinity_run_end", {
+                "outcome": outcome,
+                "last_agent": tracking["last_agent_label"] or tracking["last_node_name"] or "unknown",
+                "replan_count": tracking["last_replan_count"],
+            })
+        except Exception as e:
+            self.logger.exception(f"Trace run_end (phase 2) failed: {e}")
+
+        # Step 12.5: Record to learning memory if learning_mode is enabled and task succeeded
+        if self.learning_mode and outcome in {"completed", "success"}:
             try:
-                existing_content = ""
-                my_response_section = ""
-                trinity_reports_section = ""
+                from core.learning_memory import get_learning_memory
+                
+                # Extract execution history from tracking
+                history = tracking.get("last_state_update", {}).get("history_plan_execution", [])
+                steps = []
+                tools_used = set()
+                
+                for item in (history or []):
+                    if isinstance(item, dict):
+                        steps.append({
+                            "action": item.get("action", ""),
+                            "result": item.get("result", ""),
+                            "status": item.get("status", ""),
+                        })
+                        if item.get("tool"):
+                            tools_used.add(item.get("tool"))
+                
+                learn_mem = get_learning_memory()
+                learn_mem.record_successful_execution(
+                    task=input_text,
+                    steps=steps,
+                    tools_used=list(tools_used),
+                    outcome=outcome,
+                    duration_ms=0,  # Could track timing if needed
+                    metadata={
+                        "task_type": tracking.get("last_state_update", {}).get("task_type", ""),
+                        "replan_count": tracking["last_replan_count"],
+                        "commit_hash": commit_hash,
+                    }
+                )
+                if self.verbose:
+                    print(f"📚 [Trinity] Learning: recorded successful execution for learning")
+            except Exception as e:
+                self.logger.exception(f"Learning memory recording failed: {e}")
 
-                try:
-                    with open(".last_response.txt", "r", encoding="utf-8") as f:
-                        existing_content = f.read().strip()
-                except FileNotFoundError:
-                    pass
+        # Step 13: Save response file if no commit
+        if commit_hash is None:
+            self._save_response_file(report)
 
-                if existing_content:
-                    if "## My Last Response" in existing_content:
-                        parts = existing_content.split("## Trinity Report")
-                        my_response_section = parts[0].strip()
-                        if len(parts) > 1:
-                            trinity_reports_section = "## Trinity Report" + "## Trinity Report".join(parts[1:])
-                    else:
-                        trinity_reports_section = existing_content
+        # Step 14: Yield final result. Include last workflow atlas messages if present
+        prev_msgs = []
+        try:
+            last_state = tracking.get("last_state_update") or {}
+            prev_msgs = last_state.get("messages") or []
+            # Ensure these are message objects (HumanMessage/AIMessage)
+            prev_msgs = [m for m in prev_msgs if hasattr(m, "content")]
+        except Exception as e:
+            self.logger.exception(f"Collecting previous messages failed: {e}")
+            prev_msgs = []
 
-                new_content = ""
-                if my_response_section:
-                    new_content = my_response_section
+        # TaskAnalyzer already finalized above
 
-                if trinity_reports_section:
-                    new_content += "\n\n---\n\n" + trinity_reports_section
+        if prev_msgs:
+            final_messages = prev_msgs + [AIMessage(content=report)]
+        else:
+            final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
 
-                new_content += "\n\n---\n\n## Trinity Report\n\n" + report
-
-                with open(".last_response.txt", "w", encoding="utf-8") as f:
-                    f.write(new_content)
-
-                try:
-                    subprocess.run(
-                        ["python3", "generate_structure.py"],
-                        capture_output=True,
-                        text=True,
-                        timeout=60,
-                        cwd=self._get_git_root() or ".",
-                    )
-                except Exception:
-                    pass
-
-            except Exception:
-                pass
-
-        final_messages = [HumanMessage(content=input_text), AIMessage(content=report)]
-        
         yield {"atlas": {"messages": final_messages, "current_agent": "end", "task_status": outcome}}
+

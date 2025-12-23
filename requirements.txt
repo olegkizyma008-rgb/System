@@ -7,6 +7,7 @@ requests>=2.31.0
 prompt_toolkit>=3.0.0
 chromadb>=0.4.0
 python-dotenv>=1.0.0
+tenacity>=8.2.0
 mss>=9.0.0
 pillow>=10.0.0
 opencv-python>=4.8.0
@@ -19,11 +20,11 @@ mcp>=0.1.0
 mcp-pyautogui-server>=0.1.2
 pyautogui>=0.9.50
 # Vision System Dependencies
-paddleocr>=2.7.0
-paddlepaddle>=2.6.0
 # CLI and UI
 rich>=13.0.0
 typer>=0.9.0
+sentence-transformers>=2.3.0
+torch>=2.1.0
 
 # ===== EXTERNAL MCP SERVERS (for DEV mode) =====
 # These require external tools to be installed separately:

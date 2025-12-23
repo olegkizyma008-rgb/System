@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), os.pa
 
 def test_menu_item_structures():
     # Mock necessary state/globals before importing
-    from system_cli.state import state, MenuLevel
+    from tui.state import state, MenuLevel
     from tui.constants import MAIN_MENU_ITEMS
     
     # Mocking tool reactions

@@ -228,6 +228,14 @@ else
     exit 1
 fi
 
+# Check tenacity
+if $PYTHON_CMD -c "import tenacity; print('✅ tenacity installed')" 2>/dev/null; then
+    echo "✅ tenacity installed"
+else
+    echo "❌ tenacity not installed"
+    exit 1
+fi
+
 # Check rich
 if $PYTHON_CMD -c "import rich; print('✅ Rich installed')" 2>/dev/null; then
     echo "✅ Rich installed"

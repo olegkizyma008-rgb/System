@@ -41,7 +41,7 @@ if _repo_root not in sys.path:
     sys.path.insert(0, _repo_root)
 
 from i18n import TOP_LANGS, lang_name, normalize_lang, tr
-from system_cli.state import AppState, MenuLevel, state
+from tui.state import AppState, MenuLevel, state
 from tui.logger import setup_logging, get_logger, log_exception, log_command_execution, setup_root_file_logging
 
 from prompt_toolkit.buffer import Buffer
@@ -451,8 +451,13 @@ def _run_script(script_path: str) -> int:
     return _run_script_new(script_path)
 
 
-def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False) -> Tuple[bool, str]:
-    return _run_cleanup_new(cfg, editor, dry_run)
+def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False, **kwargs) -> Tuple[bool, str]:
+    """Wrapper for cleanup runner. Accepts optional keyword args (e.g., log_callback) and forwards them."""
+    try:
+        return _run_cleanup_new(cfg, editor, dry_run, **kwargs)
+    except TypeError:
+        # Fallback for older signature: call without kwargs
+        return _run_cleanup_new(cfg, editor, dry_run)
 
 
 def _perform_install(cfg: Dict[str, Any], editor: str) -> Tuple[bool, str]:
@@ -519,10 +524,6 @@ def _format_monitor_summary(
     )
 
 
-def _load_monitor_settings() -> None:
-    _load_monitor_settings_new()
-
-
 def _save_monitor_settings() -> bool:
     return _save_monitor_settings_new()
 
@@ -533,18 +534,6 @@ def _load_monitor_targets() -> None:
 
 def _save_monitor_targets() -> bool:
     return _save_monitor_targets_new()
-
-
-def _monitor_db_read_since_id(db_path: str, last_id: int, limit: int = 5000) -> List[Dict[str, Any]]:
-    return _monitor_db_read_since_id_new(db_path, last_id, limit)
-
-
-def _monitor_db_get_max_id(db_path: str) -> int:
-    return _monitor_db_get_max_id_new(db_path)
-
-
-def _format_monitor_summary(*args: Any, **kwargs: Any) -> str:
-    return _format_monitor_summary_new(*args, **kwargs)
 
 
 def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
@@ -577,7 +566,11 @@ def _load_ui_settings() -> None:
         if "unsafe_mode" in data:
             state.ui_unsafe_mode = bool(data.get("unsafe_mode"))
         
-        state.automation_allow_shortcuts = bool(data.get("automation_allow_shortcuts", False))
+        # Respect saved UI setting if present; otherwise fall back to env var
+        if "automation_allow_shortcuts" in data:
+            state.automation_allow_shortcuts = bool(data.get("automation_allow_shortcuts", False))
+        else:
+            state.automation_allow_shortcuts = str(os.getenv("TRINITY_ALLOW_SHORTCUTS") or "0").strip().lower() in {"1", "true", "yes", "on"}
         state.ui_left_panel_ratio = float(data.get("left_panel_ratio", 0.6))
         state.ui_scroll_target = str(data.get("scroll_target", "log"))
         state.ui_log_follow = bool(data.get("log_follow", True))
@@ -585,6 +578,17 @@ def _load_ui_settings() -> None:
         state.ui_dev_code_provider = str(data.get("dev_code_provider", "vibe-cli")).strip().lower()
         state.ui_self_healing = bool(data.get("self_healing", False))
         state.learning_mode = bool(data.get("learning_mode", False))
+        rl = int(data.get("recursion_limit", 100))
+        state.ui_recursion_limit = max(1, rl)
+        
+        # Load MCP Client State
+        try:
+            from mcp_integration.core.mcp_client_manager import get_mcp_client_manager
+            mgr = get_mcp_client_manager()
+            state.mcp_client_type = mgr.active_client.value
+        except ImportError:
+            pass
+            
     except Exception:
         pass
 
@@ -608,6 +612,8 @@ def _save_ui_settings() -> bool:
             "dev_code_provider": str(getattr(state, "ui_dev_code_provider", "vibe-cli") or "vibe-cli").strip().lower() or "vibe-cli",
             "self_healing": bool(getattr(state, "ui_self_healing", False)),
             "learning_mode": bool(getattr(state, "learning_mode", False)),
+            "recursion_limit": int(getattr(state, "ui_recursion_limit", 100)),
+            "mcp_client_type": str(getattr(state, "mcp_client_type", "open_mcp")).strip().lower(),
         }
         with open(UI_SETTINGS_PATH, "w", encoding="utf-8") as f:
             json.dump(payload, f, ensure_ascii=False, indent=2)
@@ -639,28 +645,8 @@ def _get_llm_signature() -> str:
     )
 
 
-def _load_env() -> None:
-    return _load_env_new()
-
-
 def _reset_agent_llm() -> None:
     return _reset_agent_llm_new()
-
-
-def _load_monitor_targets() -> None:
-    return _load_monitor_targets_new()
-
-
-def _save_monitor_targets() -> bool:
-    return _save_monitor_targets_new()
-
-
-def _load_monitor_settings() -> None:
-    return _load_monitor_settings_new()
-
-
-def _save_monitor_settings() -> bool:
-    return _save_monitor_settings_new()
 
 
 def _monitor_start_selected() -> Tuple[bool, str]:
@@ -671,55 +657,24 @@ def _monitor_stop_selected() -> Tuple[bool, str]:
     return _monitor_stop_selected_new()
 
 
-def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
-    return _monitor_resolve_watch_items_new(targets)
-
-
-def _load_cleanup_config() -> Dict[str, Any]:
-    return _load_cleanup_config_new()
-
-
-def _save_cleanup_config(cfg: Dict[str, Any]) -> bool:
-    return _save_cleanup_config_new(cfg)
-
-
-def _find_module(cfg: Dict[str, Any], editor: str, mod_id: str) -> Optional[ModuleRef]:
-    return _find_module_new(cfg, editor, mod_id)
-
-
-def _set_module_enabled(cfg: Dict[str, Any], ref: ModuleRef, enabled: bool) -> bool:
-    return _set_module_enabled_new(cfg, ref, enabled)
-
-
-def _run_cleanup(cfg: Dict[str, Any], editor: str, dry_run: bool = False) -> Tuple[bool, str]:
-    return _run_cleanup_new(cfg, editor, dry_run=dry_run)
-
-
-def _perform_install(cfg: Dict[str, Any], editor: str) -> Tuple[bool, str]:
-    return _perform_install_new(cfg, editor)
-
-
 def _scan_traces(editor: str) -> Dict[str, List[str]]:
     return _scan_traces_new(editor)
 
 
-def _list_editors(cfg: Dict[str, Any]) -> List[Tuple[str, str]]:
-    return _get_editors_list_new(cfg)
-
-
 def _get_editors_list() -> List[Tuple[str, str]]:
-    return _get_editors_list_new()
+    # The underlying implementation expects a cleanup config dict argument.
+    # Load current cleanup config and forward it to the function so the
+    # TUI can render editors without error.
+    try:
+        cfg = _load_cleanup_config()
+    except Exception:
+        cfg = {}
+    return _get_editors_list_new(cfg)
 
 
 def _apply_default_monitor_targets() -> None:
     # Optional logic to add default targets
     pass
-
-
-def _reset_agent_llm() -> None:
-    agent_session.llm = None
-    agent_session.llm_signature = ""
-    agent_session.reset()
 
 
 def _monitor_db_insert(
@@ -845,65 +800,6 @@ def _safe_abspath(path: str) -> str:
             return p
 
     return candidates[0]
-
-
-def _scan_traces(editor: str) -> Dict[str, Any]:
-    editor_key = editor.strip().lower()
-
-    patterns_map: Dict[str, List[str]] = {
-        "windsurf": ["*Windsurf*", "*windsurf*"],
-        "vscode": ["*Code*", "*VSCodium*", "*vscode*", "*VSCode*"],
-        "antigravity": ["*Antigravity*", "*antigravity*", "*Google/Antigravity*"],
-        "cursor": ["*Cursor*", "*cursor*"],
-    }
-
-    base_dirs = [
-        "~/Library/Application Support",
-        "~/Library/Caches",
-        "~/Library/Preferences",
-        "~/Library/Logs",
-        "~/Library/Saved Application State",
-    ]
-
-    patterns = patterns_map.get(editor_key) or [f"*{editor_key}*"]
-    found: List[Dict[str, Any]] = []
-
-    for b in base_dirs:
-        base = os.path.expanduser(b)
-        for pat in patterns:
-            for p in sorted(glob.glob(os.path.join(base, pat))):
-                entry: Dict[str, Any] = {"path": p, "type": "file" if os.path.isfile(p) else "dir"}
-                if os.path.isdir(p):
-                    try:
-                        items = os.listdir(p)
-                        entry["items"] = len(items)
-                        entry["sample"] = items[:20]
-                    except Exception as e:
-                        entry["error"] = str(e)
-                found.append(entry)
-
-    # Applications bundles
-    for pat in patterns:
-        for p in sorted(glob.glob(os.path.join("/Applications", pat))):
-            found.append({"path": p, "type": "app" if p.endswith(".app") else "file"})
-
-    # Dot-directories
-    dot_candidates = [
-        os.path.expanduser("~/.vscode"),
-        os.path.expanduser("~/.vscode-oss"),
-        os.path.expanduser("~/.cursor"),
-        os.path.expanduser("~/.windsurf"),
-    ]
-    for p in dot_candidates:
-        if os.path.exists(p) and editor_key in os.path.basename(p).lower():
-            found.append({"path": p, "type": "dir" if os.path.isdir(p) else "file"})
-
-    return {
-        "editor": editor_key,
-        "count": len(found),
-        "found": found[:120],
-        "note": "Це швидкий скан типових директорій. Якщо потрібно глибше — скажи, які саме шляхи/патерни шукати.",
-    }
 
 
 def _tool_scan_traces(args: Dict[str, Any]) -> Dict[str, Any]:
@@ -1137,8 +1033,156 @@ class _DummyProcService:
 
 
 monitor_service = _DummyProcService()
-fs_usage_service = _DummyProcService()
-opensnoop_service = _DummyProcService()
+
+
+class _ProcTraceService:
+    """Simple process-trace service wrapper around fs_usage/opensnoop.
+
+    It spawns the tool, reads stdout lines and tries to parse pid/process/path
+    and writes events into the monitor DB using `_monitor_db_insert`.
+    This is intentionally minimal and fails gracefully when tool is absent or
+    blocked by SIP.
+    """
+
+    def __init__(self, cmd_name: str, cmd_base: list):
+        self.cmd_name = str(cmd_name)
+        self.cmd_base = list(cmd_base)
+        self.proc = None
+        self.thread: Optional[threading.Thread] = None
+        self.stop_event = threading.Event()
+        self.running = False
+
+    def _parse_and_insert(self, line: str) -> None:
+        try:
+            # naive parsing: look for pid and path
+            pid = 0
+            process = ""
+            path = ""
+            # PID: first integer token after timestamp (fallback)
+            m = re.search(r"\b(\d{2,7})\b", line)
+            if m:
+                try:
+                    pid = int(m.group(1))
+                except Exception:
+                    pid = 0
+            # path: first token starting with /
+            m2 = re.search(r"(/[^\s]+)", line)
+            if m2:
+                path = m2.group(1)
+            # process: try last token (often contains execname), prefer token with dot+digits
+            m_proc = re.search(r"([A-Za-z0-9_\-\.]+(?:\.[0-9]+)?)\s*$", line)
+            if m_proc:
+                process = m_proc.group(1)
+
+            # If pid wasn't found, try to resolve by process name using pgrep
+            if not pid and process:
+                try:
+                    out = subprocess.check_output(["pgrep", "-f", process], text=True).strip().splitlines()
+                    if out:
+                        pid = int(out[0])
+                except Exception:
+                    pass
+
+            # Insert into DB using existing utility
+            try:
+                _monitor_db_insert(
+                    MONITOR_EVENTS_DB_PATH,
+                    source=self.cmd_name,
+                    event_type="access",
+                    src_path=path or "",
+                    dest_path="",
+                    is_directory=False,
+                    target_key="",
+                    pid=int(pid or 0),
+                    process=str(process or ""),
+                    raw_line=str(line or ""),
+                )
+            except Exception:
+                return
+        except Exception:
+            return
+
+    def _reader(self, stream: Any) -> None:
+        try:
+            for ln in iter(stream.readline, ""):
+                if self.stop_event.is_set():
+                    break
+                if not ln:
+                    continue
+                line = str(ln or "").strip()
+                if not line:
+                    continue
+                self._parse_and_insert(line)
+        except Exception:
+            return
+
+    def start(self, pid: Optional[int] = None) -> Tuple[bool, str]:
+        if self.running:
+            return True, f"{self.cmd_name} already running"
+        # check availability
+        if shutil.which(self.cmd_base[0]) is None:
+            return False, f"{self.cmd_base[0]} not found on PATH"
+
+        cmd = list(self.cmd_base)
+        if pid:
+            # pass pid as positional argument for tools like fs_usage
+            cmd += [str(int(pid))]
+
+        # Optionally run under sudo if environment / state indicates it
+        use_sudo = False
+        try:
+            from tui.state import state as _st
+            use_sudo = bool(getattr(_st, "monitor_use_sudo", False))
+        except Exception:
+            use_sudo = False
+        if not use_sudo:
+            # also allow explicit env override
+            use_sudo = bool(str(os.environ.get("FORCE_MONITOR_SUDO") or "").strip())
+
+        if use_sudo:
+            sudo_pwd = str(os.environ.get("SUDO_PASSWORD") or "").strip()
+            cmd = ["sudo", "-S"] + cmd
+
+        try:
+            self.stop_event.clear()
+            self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE if use_sudo and sudo_pwd else None, text=True)
+            if use_sudo and sudo_pwd and self.proc.stdin:
+                try:
+                    # supply password
+                    self.proc.stdin.write(sudo_pwd + "\n")
+                    self.proc.stdin.flush()
+                except Exception:
+                    pass
+            if self.proc.stdout:
+                self.thread = threading.Thread(target=self._reader, args=(self.proc.stdout,), daemon=True)
+                self.thread.start()
+            self.running = True
+            return True, f"{self.cmd_name} started"
+        except Exception as e:
+            return False, f"Failed to start {self.cmd_name}: {e}"
+
+    def stop(self) -> Tuple[bool, str]:
+        try:
+            self.stop_event.set()
+            if self.proc:
+                try:
+                    self.proc.terminate()
+                except Exception:
+                    pass
+            if self.thread:
+                try:
+                    self.thread.join(timeout=2)
+                except Exception:
+                    pass
+        finally:
+            self.proc = None
+            self.thread = None
+            self.running = False
+        return True, f"{self.cmd_name} stopped"
+
+
+fs_usage_service = _ProcTraceService("fs_usage", ["fs_usage", "-w", "-f", "filesys"])
+opensnoop_service = _ProcTraceService("opensnoop", ["opensnoop"])
 
 
 recorder_service: Any = None
@@ -1195,42 +1239,6 @@ def _start_recording_analysis(*, rec_dir: str, name: str, user_context: str) -> 
     _start_recording_analysis_new(rec_dir=rec_dir, name=name, user_context=user_context)
 
 
-def _recordings_base_dir() -> str:
-    return _recordings_base_dir_new()
-
-
-def _recordings_last_path() -> str:
-    return _recordings_last_path_new()
-
-
-def _recordings_save_last(path: str) -> None:
-    _recordings_save_last_new(path)
-
-
-def _recordings_load_last() -> Optional[str]:
-    return _recordings_load_last_new()
-
-
-def _recordings_list_session_dirs(limit: int = 20) -> List[str]:
-    return _recordings_list_session_dirs_new(limit)
-
-
-def _recordings_read_meta(dir_path: str) -> Dict[str, Any]:
-    return _recordings_read_meta_new(dir_path)
-
-
-def _recordings_update_meta(dir_path: str, updates: Dict[str, Any]) -> bool:
-    return _recordings_update_meta_new(dir_path, updates)
-
-
-def _extract_automation_title(text: str) -> Optional[str]:
-    return _extract_automation_title_new(text)
-
-
-def _extract_automation_prompt(text: str) -> Optional[str]:
-    return _extract_automation_prompt_new(text)
-
-
 def _recordings_ensure_meta_name(dir_path: str) -> str:
     return _recordings_ensure_meta_name_new(dir_path)
 
@@ -1265,14 +1273,6 @@ def _open_in_finder(path: str) -> Tuple[bool, str]:
 def _get_recorder_service() -> Any:
     return _get_recorder_service_new()
 
-
-
-def _monitor_start_selected() -> Tuple[bool, str]:
-    return _monitor_start_selected_new()
-
-
-def _monitor_stop_selected() -> Tuple[bool, str]:
-    return _monitor_stop_selected_new()
 
 
 def _monitor_summary_start_if_needed() -> None:
@@ -1604,10 +1604,12 @@ def _get_agent_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
     mode = "ON" if agent_chat_mode and agent_session.enabled else "OFF"
     unsafe = "ON" if bool(getattr(state, "ui_unsafe_mode", False)) else "OFF"
     learning = "ON" if bool(getattr(state, "learning_mode", False)) else "OFF"
+    step_limit = int(getattr(state, "ui_recursion_limit", 100))
     return [
         (f"Agent: {mode}", None, None),
         (f"Unsafe mode: {unsafe}", None, None),
-        (f"Learning mode: {learning}", "learning_mode", None)
+        (f"Learning mode: {learning}", "learning_mode", None),
+        (f"Step limit: {step_limit}", "ui_recursion_limit", None),
     ]
 
 
@@ -1615,10 +1617,93 @@ def _get_automation_permissions_menu_items() -> List[Tuple[str, Any, Optional[st
     shortcuts = "ON" if bool(getattr(state, "automation_allow_shortcuts", False)) else "OFF"
     exec_mode = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower() or "native"
     exec_label = "NATIVE" if exec_mode == "native" else "GUI"
+    
+    def _env_on_off(var, default="0"):
+        val = str(os.getenv(var) or default).strip().lower()
+        return "ON" if val in {"1", "true", "yes", "on"} else "OFF"
+        
     return [
         (f"Execution mode: {exec_label}", "ui_execution_mode", None),
         (f"Shortcuts: {shortcuts}", "automation_allow_shortcuts", None),
+        (f"Allow Shell: {_env_on_off('TRINITY_ALLOW_SHELL')}", "env_shell", None),
+        (f"Allow Write: {_env_on_off('TRINITY_ALLOW_WRITE', '1')}", "env_write", None),
+        (f"Allow AppleScript: {_env_on_off('TRINITY_ALLOW_APPLESCRIPT')}", "env_applescript", None),
+        (f"Allow GUI: {_env_on_off('TRINITY_ALLOW_GUI')}", "env_gui", None),
+        (f"Hyper Mode (Auto): {_env_on_off('TRINITY_HYPER_MODE')}", "env_hyper", None),
+        (f"Auto-resume permission pauses: {_env_on_off('TRINITY_VIBE_AUTO_RESUME_PERMISSIONS')}", "env_vibe_perm_resume", None),
     ]
+
+
+def _handle_automation_permissions_enter(ctx: Dict[str, Any]):
+    """Handle enter key in automation permissions menu."""
+    state, log = ctx["state"], ctx["log"]
+    items = _get_automation_permissions_menu_items()
+    if not items:
+        return
+    idx = max(0, min(state.menu_index, len(items) - 1))
+    key = items[idx][1]
+    
+    if key == "ui_execution_mode":
+        cur = str(getattr(state, "ui_execution_mode", "native") or "native").strip().lower()
+        state.ui_execution_mode = "gui" if cur == "native" else "native"
+        _save_ui_settings()
+        log(f"Execution mode set to: {state.ui_execution_mode.upper()}", "action")
+    elif key == "automation_allow_shortcuts":
+        new_val = not bool(getattr(state, "automation_allow_shortcuts", False))
+        state.automation_allow_shortcuts = new_val
+        _save_ui_settings()
+        _update_env_var("TRINITY_ALLOW_SHORTCUTS", "1" if new_val else "0")
+        log(f"Shortcuts: {'ON' if new_val else 'OFF'}", "action")
+    elif key.startswith("env_"):
+        var_map = {
+            "env_shell": "TRINITY_ALLOW_SHELL",
+            "env_write": "TRINITY_ALLOW_WRITE",
+            "env_applescript": "TRINITY_ALLOW_APPLESCRIPT",
+            "env_gui": "TRINITY_ALLOW_GUI",
+            "env_hyper": "TRINITY_HYPER_MODE",
+            "env_vibe_perm_resume": "TRINITY_VIBE_AUTO_RESUME_PERMISSIONS",
+        }
+        var = var_map.get(key)
+        if var:
+            cur_val = str(os.getenv(var) or ("1" if var == "TRINITY_ALLOW_WRITE" else "0")).strip().lower()
+            new_val = "0" if cur_val in {"1", "true", "yes", "on"} else "1"
+            if _update_env_var(var, new_val):
+                os.environ[var] = new_val
+                log(f"{var} set to: {'ON' if new_val == '1' else 'OFF'}", "action")
+            else:
+                log(f"Failed to update {var} in .env", "error")
+    
+    ctx["force_ui_update"]()
+
+
+def _update_env_var(key: str, value: str) -> bool:
+    """Update or add a variable in the .env file."""
+    env_path = os.path.join(_repo_root, ".env")
+    try:
+        lines = []
+        found = False
+        if os.path.exists(env_path):
+            with open(env_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+        
+        new_lines = []
+        for line in lines:
+            if line.strip().startswith(f"{key}="):
+                new_lines.append(f"{key}={value}\n")
+                found = True
+            else:
+                new_lines.append(line)
+        
+        if not found:
+            if new_lines and not new_lines[-1].endswith("\n"):
+                new_lines[-1] += "\n"
+            new_lines.append(f"{key}={value}\n")
+            
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+        return True
+    except Exception as e:
+        return False
 
 
 def _get_dev_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
@@ -1640,9 +1725,13 @@ def _get_settings_menu_items() -> List[Tuple[str, Any, Optional[str]]]:
         ("menu.settings.section.agent", None, "section"),
         ("menu.settings.llm", MenuLevel.LLM_SETTINGS, None),
         ("menu.settings.agent", MenuLevel.AGENT_SETTINGS, None),
-        ("menu.settings.unsafe_mode", MenuLevel.UNSAFE_MODE, None),
         ("menu.settings.self_healing", MenuLevel.SELF_HEALING, None),
-        ("menu.settings.learning_mode", MenuLevel.LEARNING_MODE, None),
+        ("menu.settings.memory_manager", MenuLevel.MEMORY_MANAGER, None),
+        ("menu.settings.section.automation", None, "section"),
+        ("menu.settings.automation_permissions", MenuLevel.AUTOMATION_PERMISSIONS, None),
+        ("menu.settings.section.dev", None, "section"),
+        ("menu.settings.dev", MenuLevel.DEV_SETTINGS, None),
+        ("menu.settings.mcp_settings", MenuLevel.MCP_CLIENT_SETTINGS, None),
     ]
 
 
@@ -1682,11 +1771,12 @@ def run_tui() -> None:
         get_llm_sub_menu_items=get_llm_sub_menu_items_cb,
         get_agent_menu_items=get_agent_menu_items_cb,
         get_automation_permissions_menu_items=_get_automation_permissions_menu_items,
+        handle_automation_permissions_enter=_handle_automation_permissions_enter,
         get_editors_list=_get_editors_list,
         get_cleanup_cfg=_get_cleanup_cfg,
         set_cleanup_cfg=_set_cleanup_cfg,
         load_cleanup_config=_load_cleanup_config,
-        run_cleanup=lambda cfg, editor, dry: _run_cleanup(cfg, editor, dry_run=dry),
+        run_cleanup=_run_cleanup,
         perform_install=_perform_install,
         find_module=_find_module,
         set_module_enabled=_set_module_enabled,
@@ -1813,46 +1903,6 @@ def _tool_monitor_stop() -> Dict[str, Any]:
 
 def _tool_monitor_targets(args: Dict[str, Any]) -> Dict[str, Any]:
     return _tool_monitor_targets_new(args)
-
-
-def _monitor_resolve_watch_items(targets: Set[str]) -> List[Tuple[str, str]]:
-    return _monitor_resolve_watch_items_new(targets)
-
-
-    # unique by (path,target)
-    seen: Set[Tuple[str, str]] = set()
-    uniq: List[Tuple[str, str]] = []
-    for p, k in items:
-        key = (p, k)
-        if key in seen:
-            continue
-        seen.add(key)
-        uniq.append((p, k))
-    return uniq
-
-
-def _load_monitor_targets() -> None:
-    try:
-        if not os.path.exists(MONITOR_TARGETS_PATH):
-            return
-        with open(MONITOR_TARGETS_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        selected = data.get("selected") or []
-        if isinstance(selected, list):
-            state.monitor_targets = {str(x) for x in selected if x}
-    except Exception:
-        return
-
-
-def _save_monitor_targets() -> bool:
-    try:
-        os.makedirs(SYSTEM_CLI_DIR, exist_ok=True)
-        payload = {"selected": sorted(state.monitor_targets)}
-        with open(MONITOR_TARGETS_PATH, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception:
-        return False
 
 
 def _scan_installed_apps(app_dirs: List[str]) -> List[str]:
@@ -2016,17 +2066,6 @@ def _normalize_menu_index(items: List[MonitorMenuItem]) -> None:
     state.menu_index = 0
 
 
-def _apply_default_monitor_targets() -> None:
-    # Default test set: antigravity + Safari + Chrome (if available)
-    if state.monitor_targets:
-        return
-    state.monitor_targets.add("editor:antigravity")
-    browsers = _get_installed_browsers()
-    for preferred in ("Safari", "Google Chrome", "Chrome"):
-        if preferred in browsers:
-            state.monitor_targets.add(f"browser:{preferred}")
-
-
 localization = LocalizationConfig.load()
 cleanup_cfg = None
 
@@ -2074,350 +2113,6 @@ def _resume_paused_agent() -> None:
 def _handle_command(cmd: str) -> None:
     _handle_command_new(cmd)
 
-    # Removed duplicate implementation
-
-    if command == "/bootstrap":
-        project_name = (args[0] if args else "").strip()
-        parent_dir = (args[1] if len(args) > 1 else ".").strip()
-        
-        if not project_name:
-            log("Usage: /bootstrap <project_name> [parent_dir]", "error")
-            return
-        
-        log(f"/bootstrap {project_name} {parent_dir}", "user")
-        
-        def _run_bootstrap() -> None:
-            try:
-                # Find bootstrap script
-                import os
-                system_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                bootstrap_script = os.path.join(system_root, "templates", "bootstrap_new_project.sh")
-                
-                if not os.path.exists(bootstrap_script):
-                    log(f"❌ Bootstrap script not found: {bootstrap_script}", "error")
-                    return
-                
-                # Run bootstrap script
-                import subprocess
-                result = subprocess.run(
-                    ["bash", bootstrap_script, project_name, parent_dir],
-                    capture_output=True,
-                    text=True,
-                    timeout=120
-                )
-                
-                # Log output
-                if result.stdout:
-                    for line in result.stdout.strip().split('\n'):
-                        log(line, "action")
-                
-                if result.returncode != 0:
-                    if result.stderr:
-                        log(f"❌ Error: {result.stderr}", "error")
-                    return
-                
-                log(f"✅ Project '{project_name}' bootstrapped successfully!", "action")
-                
-            except Exception as e:
-                log(f"❌ Bootstrap error: {e}", "error")
-        
-        threading.Thread(target=_run_bootstrap, daemon=True).start()
-        return
-
-    if command == "/agent-reset":
-        agent_session.reset()
-        log("Agent session reset.", "action")
-        return
-
-    if command == "/agent-on":
-        agent_session.enabled = True
-        log("Agent chat enabled.", "action")
-        return
-
-    if command == "/agent-off":
-        agent_session.enabled = False
-        log("Agent chat disabled.", "action")
-        return
-
-    if command == "/agent-mode":
-        global agent_chat_mode
-        mode = (args[0].lower() if args else "").strip()
-        if mode in {"", "status"}:
-            log(f"Agent mode: {'ON' if agent_chat_mode else 'OFF'}", "info")
-            return
-        if mode == "toggle":
-            agent_chat_mode = not agent_chat_mode
-            log(f"Agent mode: {'ON' if agent_chat_mode else 'OFF'}", "action")
-            return
-        if mode in {"on", "enable", "enabled"}:
-            agent_chat_mode = True
-            log("Agent mode: ON", "action")
-            return
-        if mode in {"off", "disable", "disabled"}:
-            agent_chat_mode = False
-            log("Agent mode: OFF", "action")
-            return
-        log("Usage: /agent-mode [on|off|toggle]", "error")
-        return
-
-    cleanup_cfg = _load_cleanup_config()
-
-    if command == "/run":
-        if not args:
-            log("Usage: /run <editor> [--dry]", "error")
-            return
-        editor = args[0]
-        dry = "--dry" in args or "--dry-run" in args
-        ok, msg = _run_cleanup(cleanup_cfg, editor, dry_run=dry)
-        log(msg, "action" if ok else "error")
-        return
-
-    if command == "/modules":
-        if not args:
-            log("Usage: /modules <editor>", "error")
-            return
-        editor = args[0]
-        meta = cleanup_cfg.get("editors", {}).get(editor)
-        if not meta:
-            log(f"Невідомий редактор: {editor}", "error")
-            return
-        mods = meta.get("modules", [])
-        if not mods:
-            log(f"Модулів для {editor} немає.", "info")
-            return
-        for m in mods:
-            mark = "ON" if m.get("enabled") else "OFF"
-            log(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})", "info")
-        return
-
-    if command in {"/enable", "/disable"}:
-        if len(args) < 2:
-            log("Usage: /enable <editor> <id> | /disable <editor> <id>", "error")
-            return
-        editor = args[0]
-        mid = args[1]
-        ref = _find_module(cleanup_cfg, editor, mid)
-        if not ref:
-            log("Модуль не знайдено.", "error")
-            return
-        enabled = command == "/enable"
-        ok = _set_module_enabled(cleanup_cfg, ref, enabled)
-        if ok:
-            log(f"Модуль {'увімкнено' if enabled else 'вимкнено'}: {editor}/{mid}", "action")
-        else:
-            log("Не вдалося змінити статус модуля.", "error")
-        return
-
-    if command == "/install":
-        if not args:
-            log("Usage: /install <editor>", "error")
-            return
-        ok, msg = _perform_install(cleanup_cfg, args[0])
-        log(msg, "action" if ok else "error")
-        return
-
-    if command == "/locales":
-        if not args:
-            log("Usage: /locales <codes...>", "error")
-            return
-        codes: List[str] = []
-        for token in args:
-            code = token.strip().upper().strip(".,;")
-            if any(l.code == code for l in AVAILABLE_LOCALES):
-                if code not in codes:
-                    codes.append(code)
-            else:
-                log(f"Невідома локаль: {token}", "error")
-        if not codes:
-            return
-        localization.selected = codes
-        localization.primary = codes[0]
-        localization.save()
-        log(f"Оновлено локалі: primary={localization.primary}, selected={' '.join(localization.selected)}", "action")
-        return
-
-    if command == "/theme":
-        sub = (args[0].lower() if args else "status").strip()
-        if sub in {"status", ""}:
-            log(f"Theme: {state.ui_theme}", "info")
-            return
-        if sub == "set":
-            if len(args) < 2:
-                log("Usage: /theme set <monaco|dracula|nord|gruvbox>", "error")
-                return
-            out = _tool_ui_theme_set({"theme": args[1]})
-            log(str(out.get("theme") or out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        log("Usage: /theme status|set <...>", "error")
-        return
-
-    if command in {"/streaming", "/stream"}:
-        sub = (args[0].lower() if args else "status").strip()
-        if sub in {"status", ""}:
-            log(f"Streaming: {'ON' if bool(getattr(state, 'ui_streaming', True)) else 'OFF'}", "info")
-            return
-        if sub in {"on", "enable", "enabled", "true", "1"}:
-            state.ui_streaming = True
-            _save_ui_settings()
-            log("Streaming: ON", "action")
-            return
-        if sub in {"off", "disable", "disabled", "false", "0"}:
-            state.ui_streaming = False
-            _save_ui_settings()
-            log("Streaming: OFF", "action")
-            return
-        if sub == "set":
-            if len(args) < 2:
-                log("Usage: /streaming set <on|off>", "error")
-                return
-            raw = str(args[1]).strip().lower()
-            state.ui_streaming = raw in {"on", "true", "1", "yes"}
-            _save_ui_settings()
-            log(f"Streaming: {'ON' if state.ui_streaming else 'OFF'}", "action")
-            return
-        log("Usage: /streaming status|on|off", "error")
-        return
-
-    if command == "/lang":
-        sub = (args[0].lower() if args else "status").strip()
-        if sub in {"status", ""}:
-            log(f"ui={state.ui_lang} chat={state.chat_lang}", "info")
-            return
-        if sub == "set":
-            if len(args) < 3:
-                log("Usage: /lang set ui <code> | /lang set chat <code>", "error")
-                return
-            which = args[1].lower().strip()
-            code = normalize_lang(args[2])
-            if which == "ui":
-                state.ui_lang = code
-            elif which == "chat":
-                state.chat_lang = code
-            else:
-                log("Usage: /lang set ui <code> | /lang set chat <code>", "error")
-                return
-            _save_ui_settings()
-            log(f"ui={state.ui_lang} chat={state.chat_lang}", "action")
-            return
-        log("Usage: /lang status|set ...", "error")
-        return
-
-    if command == "/llm":
-        sub = (args[0].lower() if args else "status").strip()
-        rest = args[1:]
-        if sub in {"", "status"}:
-            out = _tool_llm_status()
-            if out.get("ok"):
-                log(f"provider={out.get('provider')} main={out.get('main_model')} vision={out.get('vision_model')}", "info")
-            else:
-                log(str(out.get("error") or ""), "error")
-            return
-        if sub == "set":
-            if len(rest) < 2:
-                log("Usage: /llm set provider <copilot> | /llm set main <model> | /llm set vision <model>", "error")
-                return
-            key = rest[0].lower().strip()
-            val = " ".join(rest[1:]).strip()
-            payload: Dict[str, Any] = {}
-            if key == "provider":
-                payload["provider"] = val
-            elif key == "main":
-                payload["main_model"] = val
-            elif key == "vision":
-                payload["vision_model"] = val
-            else:
-                log("Usage: /llm set provider|main|vision <value>", "error")
-                return
-            out = _tool_llm_set(payload)
-            log("OK" if out.get("ok") else str(out.get("error") or "Failed"), "action" if out.get("ok") else "error")
-            return
-        log("Usage: /llm status|set ...", "error")
-        return
-
-    if command == "/monitor":
-        sub = (args[0].lower() if args else "status").strip()
-        rest = args[1:]
-        if sub in {"", "status"}:
-            st = _tool_monitor_status()
-            log(
-                f"Monitoring: active={st.get('active')} source={st.get('source')} sudo={st.get('use_sudo')} targets={st.get('targets_count')}",
-                "info",
-            )
-            return
-        if sub == "start":
-            out = _tool_monitor_start()
-            log(str(out.get("message") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "stop":
-            out = _tool_monitor_stop()
-            log(str(out.get("message") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "source":
-            if not rest:
-                log("Usage: /monitor source <watchdog|fs_usage|opensnoop>", "error")
-                return
-            out = _tool_monitor_set_source({"source": rest[0]})
-            log(str(out.get("source") or out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "sudo":
-            if not rest:
-                log("Usage: /monitor sudo <on|off>", "error")
-                return
-            raw = rest[0].strip().lower()
-            use_sudo = raw in {"1", "true", "yes", "on", "enable", "enabled"}
-            out = _tool_monitor_set_use_sudo({"use_sudo": use_sudo})
-            if out.get("ok"):
-                log(f"sudo={'ON' if out.get('use_sudo') else 'OFF'}", "action")
-            else:
-                log(str(out.get("error") or ""), "error")
-            return
-        log("Usage: /monitor status|start|stop|source <...>|sudo <on|off>", "error")
-        return
-
-    if command in {"/monitor-targets", "/monitor_targets"}:
-        sub = (args[0].lower() if args else "list").strip()
-        rest = args[1:]
-        if sub in {"list", "ls", "status"}:
-            if not state.monitor_targets:
-                log("Monitor targets: (none)", "info")
-                return
-            for k in sorted(state.monitor_targets):
-                log(f"[x] {k}", "info")
-            return
-        if sub in {"add", "+"}:
-            if not rest:
-                log("Usage: /monitor-targets add <key>", "error")
-                return
-            out = _tool_monitor_targets({"action": "add", "key": rest[0]})
-            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub in {"remove", "rm", "-"}:
-            if not rest:
-                log("Usage: /monitor-targets remove <key>", "error")
-                return
-            out = _tool_monitor_targets({"action": "remove", "key": rest[0]})
-            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "clear":
-            out = _tool_monitor_targets({"action": "clear"})
-            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        if sub == "save":
-            out = _tool_monitor_targets({"action": "save"})
-            log("OK" if out.get("ok") else str(out.get("error") or ""), "action" if out.get("ok") else "error")
-            return
-        log("Usage: /monitor-targets list|add|remove|clear|save", "error")
-        return
-
-    log("Невідома команда. Використай /help.", "error")
-
-
-def _get_editors_list() -> List[Tuple[str, str]]:
-    global cleanup_cfg
-    _ensure_cleanup_cfg_loaded()
-    return _list_editors(cleanup_cfg)
-
-
 def _handle_input(buff: Buffer) -> None:
     _handle_input_new(buff)
 
@@ -2438,17 +2133,6 @@ def get_status():
 
 
 # ================== KEY BINDINGS ==================
-
-
-def _get_cleanup_cfg() -> Any:
-    global cleanup_cfg
-    _ensure_cleanup_cfg_loaded()
-    return cleanup_cfg
-
-
-def _set_cleanup_cfg(cfg: Any) -> None:
-    global cleanup_cfg
-    cleanup_cfg = cfg
 
 
 def _tool_llm_status() -> Dict[str, Any]:
@@ -2472,7 +2156,7 @@ def _tool_ui_theme_set(args: Dict[str, Any]) -> Dict[str, Any]:
 def cli_main(argv: List[str]) -> None:
     # Setup logging
     verbose = "--verbose" in argv or "-v" in argv
-    logger = setup_logging(verbose=verbose, name="system_cli.cli")
+    logger = setup_logging(verbose=verbose, name="trinity.cli")
     logger.info(f"CLI started with arguments: {argv}")
     
     parser = argparse.ArgumentParser(prog="cli.py", description="System CLI")
@@ -2522,6 +2206,11 @@ def cli_main(argv: List[str]) -> None:
     p_eternal_engine.add_argument("--task", required=True, help="Task to execute in eternal engine mode")
     p_eternal_engine.add_argument("--hyper", action="store_true", help="Enable hyper mode (unlimited permissions)")
 
+    # Screenshots management
+    p_screens = sub.add_parser("screenshots", help="List or open task screenshots")
+    p_screens.add_argument("action", choices=["list", "open"], help="Action: list or open")
+    p_screens.add_argument("--count", type=int, default=10, help="Number of items to list (default 10)")
+
     sub.add_parser("agent-reset", help="Reset in-memory agent session")
     sub.add_parser("agent-on", help="Enable agent chat")
     sub.add_parser("agent-off", help="Disable agent chat")
@@ -2530,232 +2219,287 @@ def cli_main(argv: List[str]) -> None:
     logger.debug(f"Parsed command: {args.command}")
 
     if not args.command or args.command == "tui":
-        logger.info("Starting TUI mode")
-        try:
-            run_tui()
-            logger.info("TUI mode exited successfully")
-        except Exception as e:
-            log_exception(logger, e, "TUI mode")
-            raise
-        return
+        return _handle_tui_command(logger)
 
     try:
         cfg = _load_cleanup_config()
-        logger.debug(f"Cleanup config loaded successfully")
+        logger.debug("Cleanup config loaded successfully")
 
-        resolved_editor: Optional[str] = None
-        editor_note: Optional[str] = None
-        if hasattr(args, "editor"):
-            resolved_editor, editor_note = _resolve_editor_arg(cfg, getattr(args, "editor", None))
-            if editor_note:
-                logger.warning(editor_note)
-                try:
-                    print(editor_note, file=sys.stderr)
-                except Exception:
-                    pass
-
-        if args.command == "list-editors":
-            logger.info("Listing editors")
-            for key, label in _list_editors(cfg):
-                print(f"{key}: {label}")
-            logger.info("Editors listed successfully")
+        resolved_editor, editor_note = _get_resolved_editor(args, cfg, logger)
+        
+        # Dispatch command
+        handlers = {
+            "list-editors": lambda: _handle_list_editors(cfg, logger),
+            "list-modules": lambda: _handle_list_modules(args, cfg, resolved_editor, logger),
+            "run": lambda: _handle_run_command(args, cfg, resolved_editor, logger),
+            "enable": lambda: _handle_module_toggle(args, cfg, resolved_editor, logger, True),
+            "disable": lambda: _handle_module_toggle(args, cfg, resolved_editor, logger, False),
+            "install": lambda: _handle_install_command(args, cfg, resolved_editor, logger),
+            "smart-plan": lambda: _handle_smart_plan(args, cfg, resolved_editor, logger),
+            "ask": lambda: _handle_ask_command(args, cfg, logger),
+        }
+        
+        if args.command in handlers:
+            handlers[args.command]()
             return
 
-        if args.command == "list-modules":
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"Listing modules for editor: {editor}")
-            meta = cfg.get("editors", {}).get(editor)
-            if not meta:
-                logger.error(f"Unknown editor: {editor}")
-                print(f"Unknown editor: {editor}")
-                raise SystemExit(1)
-            for m in meta.get("modules", []):
-                mark = "ON" if m.get("enabled") else "OFF"
-                print(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})")
-            logger.info(f"Modules listed for {editor}")
-            return
-
-        if args.command == "run":
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"Running cleanup for editor: {editor}, dry_run={args.dry_run}")
-            ok, msg = _run_cleanup(cfg, editor, dry_run=args.dry_run)
-            print(msg)
-            logger.info(f"Cleanup completed: {msg}")
-            raise SystemExit(0 if ok else 1)
-
-        if args.command in {"enable", "disable"}:
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"{args.command.capitalize()} module {args.id} for editor {editor}")
-            ref = _find_module(cfg, editor, args.id)
-            if not ref:
-                logger.error(f"Module not found: {args.id}")
-                print("Module not found")
-                raise SystemExit(1)
-            enabled = args.command == "enable"
-            if _set_module_enabled(cfg, ref, enabled):
-                logger.info(f"Module {args.id} {args.command}d successfully")
-                print("OK")
-                raise SystemExit(0)
-            logger.error(f"Failed to {args.command} module {args.id}")
-            print("Failed")
-            raise SystemExit(1)
-
-        if args.command == "install":
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"Starting installation for editor: {editor}")
-            ok, msg = _perform_install(cfg, editor)
-            print(msg)
-            logger.info(f"Installation completed: {msg}")
-            raise SystemExit(0 if ok else 1)
-
-        if args.command == "smart-plan":
-            editor = resolved_editor or getattr(args, "editor", None)
-            logger.info(f"Running smart-plan for editor {editor} with query: {args.query}")
-            ok, msg = _llm_smart_plan(cfg, editor, args.query)
-            print(msg)
-            logger.info(f"Smart-plan completed: {msg}")
-            raise SystemExit(0 if ok else 1)
-
-        if args.command == "ask":
-            logger.info(f"Running LLM ask with question: {args.question}")
-            ok, msg = _llm_ask(cfg, args.question)
-            print(msg)
-            logger.info(f"LLM ask completed: {msg}")
-            raise SystemExit(0 if ok else 1)
     except SystemExit:
         raise
     except Exception as e:
         log_exception(logger, e, f"Command execution: {args.command}")
         raise
 
-    if args.command == "agent-reset":
-        logger.info("Resetting agent session")
-        agent_session.reset()
-        logger.info("Agent session reset successfully")
-        print("OK")
+    # Secondary Dispatch
+    sec_dispatch = {
+        "agent-reset": lambda: _handle_agent_reset(logger),
+        "agent-on": lambda: _handle_agent_toggle(logger, True),
+        "agent-off": lambda: _handle_agent_toggle(logger, False),
+        "self-healing-status": lambda: _handle_self_healing_status(logger),
+        "self-healing-scan": lambda: _handle_self_healing_scan(logger),
+        "vibe-status": lambda: _handle_vibe_command(logger, "status"),
+        "vibe-continue": lambda: _handle_vibe_command(logger, "continue"),
+        "vibe-cancel": lambda: _handle_vibe_command(logger, "cancel"),
+        "vibe-help": lambda: _handle_vibe_command(logger, "help"),
+        "eternal-engine": lambda: _handle_eternal_engine(args, logger),
+    }
+
+    if args.command in sec_dispatch:
+        sec_dispatch[args.command]()
         return
 
-    if args.command == "agent-on":
-        logger.info("Enabling agent chat")
-        agent_session.enabled = True
-        logger.info("Agent chat enabled")
-        print("OK")
-        return
-
-    if args.command == "agent-off":
-        logger.info("Disabling agent chat")
-        agent_session.enabled = False
-        logger.info("Agent chat disabled")
-        print("OK")
-        return
-
-    if args.command == "self-healing-status":
-        logger.info("Checking self-healing status")
-        from tui.commands import check_self_healing_status
-        check_self_healing_status()
-        return
-    
-    if args.command == "self-healing-scan":
-        logger.info("Triggering self-healing scan")
-        from tui.commands import trigger_self_healing_scan
-        trigger_self_healing_scan()
-        return
-    
-    if args.command == "vibe-status":
-        logger.info("Checking Vibe CLI Assistant status")
-        from tui.commands import check_vibe_assistant_status
-        check_vibe_assistant_status()
-        return
-    
-    if args.command == "vibe-continue":
-        logger.info("Vibe CLI Assistant continue command")
-        from tui.commands import handle_vibe_continue_command
-        handle_vibe_continue_command()
-        return
-    
-    if args.command == "vibe-cancel":
-        logger.info("Vibe CLI Assistant cancel command")
-        from tui.commands import handle_vibe_cancel_command
-        handle_vibe_cancel_command()
-        return
-    
-    if args.command == "vibe-help":
-        logger.info("Vibe CLI Assistant help command")
-        from tui.commands import handle_vibe_help_command
-        handle_vibe_help_command()
-        return
-    
-    if args.command == "eternal-engine":
-        logger.info(f"Starting eternal engine mode with task: {args.task}")
-        from tui.commands import start_eternal_engine_mode
-        start_eternal_engine_mode(args.task, args.hyper)
-        return
-    
+    if args.command == "screenshots":
+        return _handle_screenshots_command(args)
+        
     if args.command == "agent-chat":
-        logger.info(f"Agent chat message: {args.message}")
-        msg = str(args.message or "").strip()
+        return _handle_agent_chat_command(args, logger)
 
-        try:
-            # Deterministic CLI behavior for in-app slash commands.
-            parts = msg.split()
-            cmd_idx = next((i for i, p in enumerate(parts) if p.startswith("/")), None)
-            if cmd_idx is not None:
-                cmd = " ".join(parts[cmd_idx:]).strip()
-                logger.debug(f"Processing slash command: {cmd}")
-                _load_ui_settings()
-                out = _tool_app_command({"command": cmd})
-                if not out.get("ok"):
-                    error_msg = str(out.get("error") or "Unknown error")
-                    logger.error(f"Slash command failed: {error_msg}")
-                    print(error_msg)
-                    raise SystemExit(1)
-                for category, line in (out.get("lines") or []):
-                    _ = category
-                    if line:
-                        print(line)
-                logger.info("Slash command executed successfully")
-                raise SystemExit(0)
 
-            # Keep a stable, friendly greeting.
-            if _is_greeting(msg):
-                logger.debug("Greeting detected")
-                print("Привіт! Чим можу допомогти?")
-                raise SystemExit(0)
+# --- CLI Command Handlers ---
 
-            # Check for complex task execution
-            if _is_complex_task(msg):
-                logger.info("Complex task detected, delegating to Trinity Graph Agent...")
-                # Enable full permissions for CLI "run" mode
-                from tui.agents import run_graph_agent_task
-                run_graph_agent_task(
-                    msg,
-                    allow_file_write=True,
-                    allow_shell=True,
-                    allow_applescript=True,
-                    allow_gui=True, # Assuming CLI user wants action
-                    allow_shortcuts=True,
-                    gui_mode="auto"
-                )
-                logger.info("Graph task completed")
-                raise SystemExit(0)
+def _handle_tui_command(logger: Any):
+    logger.info("Starting TUI mode")
+    try:
+        run_tui()
+        logger.info("TUI mode exited successfully")
+    except Exception as e:
+        log_exception(logger, e, "TUI mode")
+        raise
+    return
 
-            logger.info("Sending message to agent")
-            ok, answer = _agent_send_no_stream(msg)
-            print(answer)
-            logger.info(f"Agent response sent, status: {ok}")
-            raise SystemExit(0 if ok else 1)
-        except SystemExit:
-            raise
+def _get_resolved_editor(args: Any, cfg: Dict[str, Any], logger: Any) -> Tuple[Optional[str], Optional[str]]:
+    if not hasattr(args, "editor"): return None, None
+    res, note = _resolve_editor_arg(cfg, getattr(args, "editor", None))
+    if note:
+        logger.warning(note)
+        try: print(note, file=sys.stderr)
         except Exception as e:
-            log_exception(logger, e, "Agent chat")
-            raise
+            logger.debug(f"Failed to print editor note to stderr: {e}")
+    return res, note
 
+def _handle_list_editors(cfg: Dict[str, Any], logger: Any):
+    logger.info("Listing editors")
+    for key, label in _list_editors(cfg): print(f"{key}: {label}")
+    logger.info("Editors listed successfully")
+
+def _handle_list_modules(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"Listing modules for editor: {editor}")
+    meta = cfg.get("editors", {}).get(editor)
+    if not meta:
+        logger.error(f"Unknown editor: {editor}")
+        print(f"Unknown editor: {editor}")
+        raise SystemExit(1)
+    for m in meta.get("modules", []):
+        mark = "ON" if m.get("enabled") else "OFF"
+        print(f"[{mark}] {m.get('id')} - {m.get('name')} (script={m.get('script')})")
+    logger.info(f"Modules listed for {editor}")
+
+def _handle_run_command(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"Running cleanup for editor: {editor}, dry_run={args.dry_run}")
+    ok, msg = _run_cleanup(cfg, editor, dry_run=args.dry_run)
+    print(msg); logger.info(f"Cleanup completed: {msg}")
+    raise SystemExit(0 if ok else 1)
+
+def _handle_module_toggle(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any, enabled: bool):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"{'Enable' if enabled else 'Disable'} module {args.id} for editor {editor}")
+    ref = _find_module(cfg, editor, args.id)
+    if not ref:
+        logger.error(f"Module not found: {args.id}"); print("Module not found")
+        raise SystemExit(1)
+    if _set_module_enabled(cfg, ref, enabled):
+        logger.info(f"Module {args.id} {'enabled' if enabled else 'disabled'} successfully")
+        print("OK"); raise SystemExit(0)
+    logger.error(f"Failed to {'enable' if enabled else 'disable'} module {args.id}")
+    print("Failed"); raise SystemExit(1)
+
+def _handle_install_command(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"Starting installation for editor: {editor}")
+    ok, msg = _perform_install(cfg, editor)
+    print(msg); logger.info(f"Installation completed: {msg}")
+    raise SystemExit(0 if ok else 1)
+
+def _handle_smart_plan(args: Any, cfg: Dict[str, Any], resolved_editor: Optional[str], logger: Any):
+    editor = resolved_editor or getattr(args, "editor", None)
+    logger.info(f"Running smart-plan for editor {editor} with query: {args.query}")
+    ok, msg = _llm_smart_plan(cfg, editor, args.query)
+    print(msg); logger.info(f"Smart-plan completed: {msg}")
+    raise SystemExit(0 if ok else 1)
+
+def _handle_ask_command(args: Any, cfg: Dict[str, Any], logger: Any):
+    logger.info(f"Running LLM ask with question: {args.question}")
+    ok, msg = _llm_ask(cfg, args.question)
+    print(msg); logger.info(f"LLM ask completed: {msg}")
+    raise SystemExit(0 if ok else 1)
+
+def _handle_agent_reset(logger: Any):
+    logger.info("Resetting agent session"); agent_session.reset()
+    logger.info("Agent session reset successfully"); print("OK")
+
+def _handle_agent_toggle(logger: Any, enabled: bool):
+    logger.info(f"{'Enabling' if enabled else 'Disabling'} agent chat")
+    agent_session.enabled = enabled
+    logger.info(f"Agent chat {'enabled' if enabled else 'disabled'}"); print("OK")
+
+def _handle_self_healing_status(logger: Any):
+    logger.info("Checking self-healing status")
+    from tui.commands import check_self_healing_status
+    check_self_healing_status()
+
+def _handle_self_healing_scan(logger: Any):
+    logger.info("Triggering self-healing scan")
+    from tui.commands import trigger_self_healing_scan
+    trigger_self_healing_scan()
+
+def _handle_vibe_command(logger: Any, action: str):
+    logger.info(f"Vibe CLI Assistant {action} command")
+    from tui.commands import (
+        check_vibe_assistant_status, handle_vibe_continue_command,
+        handle_vibe_cancel_command, handle_vibe_help_command
+    )
+    if action == "status": check_vibe_assistant_status()
+    elif action == "continue": handle_vibe_continue_command()
+    elif action == "cancel": handle_vibe_cancel_command()
+    elif action == "help": handle_vibe_help_command()
+
+def _handle_eternal_engine(args: Any, logger: Any):
+    logger.info(f"Starting eternal engine mode with task: {args.task}")
+    from tui.commands import start_eternal_engine_mode
+    start_eternal_engine_mode(args.task, args.hyper)
+
+def _handle_screenshots_command(args: Any):
+    if args.action == "list":
+        from tui.tools import tool_list_screenshots
+        out = tool_list_screenshots({"count": getattr(args, "count", 10)})
+        if not out.get("ok"):
+            print(out.get("error") or "Error listing screenshots")
+            raise SystemExit(1)
+        items = out.get("items") or []
+        if not items:
+            print(f"No screenshots found in {out.get('root')}.")
+            raise SystemExit(0)
+        for i in items:
+            sz = i.get("size")
+            print(f"{i.get('name')}  {sz} bytes")
+        raise SystemExit(0)
+    elif args.action == "open":
+        from tui.tools import tool_open_screenshots
+        out = tool_open_screenshots({})
+        if not out.get("ok"):
+            print(out.get("error") or "Error opening screenshots directory")
+            raise SystemExit(1)
+        print(f"Opened {out.get('root')} in Finder")
+        raise SystemExit(0)
+
+def _handle_agent_chat_command(args: Any, logger: Any):
+    """Handle chat messages from CLI."""
+    logger.info(f"Agent chat message: {args.message}")
+    msg = str(args.message or "").strip()
+
+    try:
+        # 1. Slash commands
+        if _try_process_slash_command(msg, logger):
+            raise SystemExit(0)
+
+        # 2. Greetings
+        if _is_greeting(msg):
+            logger.debug("Greeting detected")
+            print("Привіт! Чим можу допомогти?")
+            raise SystemExit(0)
+
+        # 3. Complex tasks
+        if _is_complex_task(msg):
+            _handle_complex_task_cli(msg, logger)
+            raise SystemExit(0)
+
+        # 4. Standard message
+        _handle_standard_agent_message(msg, logger)
+        raise SystemExit(0)
+        
+    except SystemExit:
+        raise
+    except Exception as e:
+        log_exception(logger, e, "Agent chat")
+        raise
+
+
+def _try_process_slash_command(msg: str, logger: Any) -> bool:
+    """Detect and execute slash command. Returns True if handled."""
+    parts = msg.split()
+    cmd_idx = next((i for i, p in enumerate(parts) if p.startswith("/")), None)
+    if cmd_idx is None:
+        return False
+        
+    cmd = " ".join(parts[cmd_idx:]).strip()
+    logger.debug(f"Processing slash command: {cmd}")
+    _load_ui_settings()
+    out = _tool_app_command({"command": cmd})
+    
+    if not out.get("ok"):
+        error_msg = str(out.get("error") or "Unknown error")
+        logger.error(f"Slash command failed: {error_msg}")
+        print(error_msg)
+        raise SystemExit(1)
+        
+    for _, line in (out.get("lines") or []):
+        if line:
+            print(line)
+    logger.info("Slash command executed successfully")
+    return True
+
+
+def _handle_complex_task_cli(msg: str, logger: Any):
+    """Delegate complex task to Trinity Graph Agent."""
+    logger.info("Complex task detected, delegating to Trinity Graph Agent...")
+    from tui.agents import run_graph_agent_task
+    run_graph_agent_task(
+        msg,
+        allow_file_write=True,
+        allow_shell=True,
+        allow_applescript=True,
+        allow_gui=True,
+        allow_shortcuts=True,
+        gui_mode="auto"
+    )
+    logger.info("Graph task completed")
+
+
+def _handle_standard_agent_message(msg: str, logger: Any):
+    """Send standard message to agent."""
+    logger.info("Sending message to agent")
+    ok, answer = _agent_send_no_stream(msg)
+    print(answer)
+    logger.info(f"Agent response sent, status: {ok}")
+    if not ok:
+        raise SystemExit(1)
 
 def main() -> None:
     try:
         cli_main(sys.argv[1:])
     except Exception as e:
-        logger = get_logger("system_cli.cli")
+        logger = get_logger("trinity.cli")
         log_exception(logger, e, "main()")
         sys.exit(1)
 

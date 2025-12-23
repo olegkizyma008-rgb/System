@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Elite Armory - Loading Test</title>
+    <style>
+        /* Loading Screen Styles */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        
+        .terminal-container {
+            width: 800px;
+            height: 500px;
+            background-color: #111;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .terminal-header {
+            background-color: #222;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00ff00;
+        }
+        
+        .terminal-title {
+            color: #00ff00;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .terminal-buttons span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-left: 5px;
+            border-radius: 50%;
+        }
+        
+        .close { background-color: #ff5555; }
+        .minimize { background-color: #ffff55; }
+        .maximize { background-color: #55ff55; }
+        
+        .terminal-content {
+            padding: 20px;
+            height: calc(100% - 50px);
+            overflow-y: auto;
+            color: #00ff00;
+        }
+        
+        .terminal-text {
+            font-size: 16px;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+        
+        .ascii-art {
+            font-size: 14px;
+            line-height: 1.2;
+            margin: 20px 0;
+            white-space: pre;
+        }
+        
+        .pistol-drawing {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            margin-top: 20px;
+        }
+        
+        .pistol-line {
+            position: absolute;
+            background-color: #00ff00;
+            height: 2px;
+        }
+        
+        /* Blinking cursor effect */
+        .blinking-cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background-color: #00ff00;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        /* Scanline effect */
+        #loading-screen::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0.1) 50%,
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 2px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <span class="terminal-title">ELITE ARMORY OS v3.14</span>
+                <span class="terminal-buttons">
+                    <span class="close"></span>
+                    <span class="minimize"></span>
+                    <span class="maximize"></span>
+                </span>
+            </div>
+            <div class="terminal-content">
+                <div class="terminal-text" id="terminal-text"></div>
+                <div class="ascii-art" id="ascii-art"></div>
+                <div class="pistol-drawing" id="pistol-drawing"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Retro Computer Loading Animation
+        class LoadingAnimation {
+            constructor() {
+                this.terminalText = document.getElementById('terminal-text');
+                this.asciiArt = document.getElementById('ascii-art');
+                this.pistolDrawing = document.getElementById('pistol-drawing');
+                this.loadingScreen = document.getElementById('loading-screen');
+                
+                this.sequences = [
+                    { text: 'ELITE ARMORY OS v3.14', delay: 50 },
+                    { text: 'Initializing security protocols...', delay: 100 },
+                    { text: 'Loading weapon database...', delay: 150 },
+                    { text: 'Verifying access credentials...', delay: 200 },
+                    { text: 'Establishing secure connection...', delay: 100 },
+                    { text: 'Decrypting inventory...', delay: 150 },
+                    { text: 'Preparing tactical interface...', delay: 200 },
+                    { text: 'All systems operational.', delay: 50 }
+                ];
+                
+                this.currentSequence = 0;
+                this.asciiArtLines = [
+                    '   ______  __  __  ______  __    __  ______  __  __  ______  __  __  ',
+                    '  /      ||  |/  / /      ||  |  |  ||      ||  |/  / /      ||  |/  / ',
+                    ' |  _____||  \'  / |  _____||  |__|  ||  _____||  \'  / |  _____||  \'  /  ',
+                    ' | |_____ |    <  | |_____ |   __   || |_____ |    <  | |_____ |    <   ',
+                    ' |_____  ||  |\  \ |_____  ||  |  |  ||_____  ||  |\  \ |_____  ||  |\  \ ',
+                    '  _____| ||__| \__| _____| ||__|  |__| _____| ||__| \__| _____| ||__| \__|',
+                    ' |________|________||________||________||________||________||________|'
+                ];
+                
+                this.pistolLines = [
+                    { x1: 50, y1: 150, x2: 100, y2: 150 },
+                    { x1: 100, y1: 150, x2: 100, y2: 100 },
+                    { x1: 100, y1: 100, x2: 150, y2: 100 },
+                    { x1: 150, y1: 100, x2: 150, y2: 120 },
+                    { x1: 150, y1: 120, x2: 180, y2: 120 },
+                    { x1: 180, y1: 120, x2: 180, y2: 100 },
+                    { x1: 180, y1: 100, x2: 200, y2: 100 },
+                    { x1: 200, y1: 100, x2: 200, y2: 150 },
+                    { x1: 200, y1: 150, x2: 150, y2: 150 },
+                    { x1: 150, y1: 150, x2: 150, y2: 180 },
+                    { x1: 150, y1: 180, x2: 100, y2: 180 },
+                    { x1: 100, y1: 180, x2: 100, y2: 150 }
+                ];
+            }
+            
+            start() {
+                this.typeText(this.sequences[this.currentSequence]);
+            }
+            
+            typeText(sequence) {
+                let i = 0;
+                const text = sequence.text;
+                const delay = sequence.delay;
+                
+                const typingInterval = setInterval(() => {
+                    if (i < text.length) {
+                        this.terminalText.innerHTML += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typingInterval);
+                        this.terminalText.innerHTML += '<span class="blinking-cursor"></span>';
+                        
+                        setTimeout(() => {
+                            this.terminalText.innerHTML = this.terminalText.innerHTML.replace('<span class="blinking-cursor"></span>', '');
+                            this.terminalText.innerHTML += '<br><br>';
+                            
+                            this.currentSequence++;
+                            
+                            if (this.currentSequence < this.sequences.length) {
+                                this.typeText(this.sequences[this.currentSequence]);
+                            } else {
+                                this.showAsciiArt();
+                            }
+                        }, 500);
+                    }
+                }, delay);
+            }
+            
+            showAsciiArt() {
+                this.asciiArtLines.forEach((line, index) => {
+                    setTimeout(() => {
+                        this.asciiArt.innerHTML += line + '<br>';
+                    }, index * 100);
+                });
+                
+                setTimeout(() => {
+                    this.drawPistol();
+                }, this.asciiArtLines.length * 100 + 1000);
+            }
+            
+            drawPistol() {
+                this.pistolLines.forEach((line, index) => {
+                    setTimeout(() => {
+                        const lineElement = document.createElement('div');
+                        lineElement.className = 'pistol-line';
+                        
+                        // Calculate angle and length
+                        const length = Math.sqrt(Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2));
+                        const angle = Math.atan2(line.y2 - line.y1, line.x2 - line.x1) * 180 / Math.PI;
+                        
+                        lineElement.style.width = length + 'px';
+                        lineElement.style.left = line.x1 + 'px';
+                        lineElement.style.top = line.y1 + 'px';
+                        lineElement.style.transform = `rotate(${angle}deg)`;
+                        lineElement.style.transformOrigin = '0 0';
+                        
+                        this.pistolDrawing.appendChild(lineElement);
+                    }, index * 200);
+                });
+                
+                setTimeout(() => {
+                    this.finishLoading();
+                }, this.pistolLines.length * 200 + 1000);
+            }
+            
+            finishLoading() {
+                this.loadingScreen.style.opacity = '0';
+                this.loadingScreen.style.transition = 'opacity 1s';
+                
+                setTimeout(() => {
+                    this.loadingScreen.style.display = 'none';
+                    document.body.innerHTML += '<h1 style="color: white; text-align: center; margin-top: 50px;">Loading animation completed! The full website would load here.</h1>';
+                }, 1000);
+            }
+        }
+        
+        // Start the loading animation when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const loading = new LoadingAnimation();
+            loading.start();
+        });
+    </script>
+</body>
+</html>

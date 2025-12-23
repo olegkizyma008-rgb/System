@@ -1,10 +1,10 @@
-# Project Atlas: Cognitive 2.0 Identity
+# Project Atlas: Cognitive 2.1 Identity
 
 **Autonomous Multi-Agent macOS Operator built on Trinity Runtime.**
 
-Atlas — це не просто автоматизатор, а **автономний мультиагентний оператор macOS**, що сприймає екран (Vision-First), планує (Meta-Planning 2.0), і виконує дії через MCP інструменти.
+Atlas — це не просто автоматизатор, а **автономний мультиагентний оператор macOS**, що сприймає екран (Vision-First), планує (Meta-Planning 2.1), і виконує дії через MCP інструменти.
 
-**Актуальний стан: Грудень 2025 (Cognitive 2.1 + Trinity Improvements v1.0)**
+**Актуальний стан: Грудень 2025 (Cognitive 2.1 + Trinity Improvements v1.1)**
 
 ---
 
@@ -24,15 +24,19 @@ Atlas — це не просто автоматизатор, а **автоном
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег]
-    MP -->|Policy| C7[context7<br/>Контекст-Менеджер]
-    C7 -->|Context| A[atlas<br/>Архітектор Плану]
-    MP -->|план готовий| T[tetyana<br/>Виконавець]
-    MP -->|план готовий| G[grisha<br/>Верифікатор]
+    MP -->|план готовий| A[atlas<br/>Архітектор Плану]
     A --> MP
+    MP -->|затверджено| T[tetyana<br/>Виконавець]
+    MP -->|затверджено| G[grisha<br/>Верифікатор]
     T --> G
     G --> MP
     MP -->|завершено| K[knowledge<br/>Екстрактор Досвіду]
     K --> END((END))
+    
+    subgraph Context
+        C7[Context7 Layer]
+    end
+    MP -.-> C7
 ```
 
 ### Trinity Agents
@@ -68,7 +72,13 @@ graph TD
 
 - Token Budget з динамічним керуванням
 - Priority Weighting для недавніх кроків
+- Priority Weighting для недавніх кроків
 - ContextMetrics для відстеження використання
+
+### MCP Prompt Engine (Dynamic Context)
+- **Active Retrieval**: Динамічний пошук релевантних промптів та схем для поточного завдання.
+- **Large-Scale Knowledge**: Індексація тисяч промптів з GitHub (Fabric, LangGPT).
+- **Context Injection**: Автоматичне збагачення контексту перед виконанням дій.
 
 ---
 
@@ -76,14 +86,22 @@ graph TD
 
 ### Внутрішні
 - **Automation (Unified)**: Shell, AppleScript, Shortcuts, Mouse/Keyboard
-- **System Cleanup**: Очищення слідів, спуфінг (Stealth Mode)
+- **Stealth Cleanup**: Видалення логів та кешів (`cleanup_scripts/`)
+- **Identity Spoofing**: Безпечна підміна ідентифікаторів хоста/мережі
 - **Desktop/Vision**: `enhanced_vision_analysis`, `compare_images`
 
 ### Зовнішні MCP Сервери
 - **Playwright MCP**: Контроль браузера (headless/headful)
 - **PyAutoGUI MCP**: Альтернативна емуляція вводу
+- **AppleScript MCP**: UI автоматизація macOS
+- **Anthropic MCP**: Генерація тексту та коду (Client-Side)
 - **Context7 MCP**: Документація бібліотек
 - **SonarQube MCP**: Quality gate та аналіз коду
+
+### Dual MCP Client Support (`AUTO` mode)
+Динамічне перемикання між клієнтами:
+- **Open-MCP**: Для складних агентних сценаріїв
+- **Continue MCP**: Оптимізовано для локальної розробки
 
 ---
 
@@ -99,13 +117,17 @@ graph TD
 
 ---
 
-## 🆕 Trinity Improvements v1.0 (Грудень 2025)
+## 🆕 Trinity Improvements v1.1 (Грудень 2025)
+
+### Resilience & Escalation
+- **LLM Retries**: Автоматичне відновлення при таймаутах (Tenacity)
+- **Fail Escalation**: Перепланування після 4 невдалих спроб верифікації
 
 ### Pydantic State Validation
 ```python
 from core.trinity_models import TrinityStateModel, MetaConfig
-state = TrinityStateModel(current_agent="meta_planner", task_type="DEV")
-state.validate_state()  # ✅
+state = TrinityStateModel(current_agent="meta_planner", task_type="GENERAL")
+state.validate_state()  # ✅ Повна валідація схеми
 ```
 
 ### MyPy Type Checking
@@ -185,5 +207,5 @@ chmod +x setup.sh
 
 ---
 
-*Останнє оновлення: 20 грудня 2025 р.*
+*Останнє оновлення: 23 грудня 2025 р. (Trinity 2.1 + MCP Engine)*
 *Детальна документація: [docs/atlas.md](docs/atlas.md)*

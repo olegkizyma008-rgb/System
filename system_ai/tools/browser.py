@@ -92,12 +92,12 @@ class BrowserManager:
         if self.browser:
             try:
                 self.browser.close()
-            except:
+            except Exception:
                 pass
         if self.pw:
             try:
                 self.pw.stop()
-            except:
+            except Exception:
                 pass
         self.pw = None
         self.browser = None
@@ -121,11 +121,18 @@ def browser_open_url(url: str, headless: bool = False) -> str:
         if not has_captcha and ("sorry" in content and "unusual traffic" in content):
             has_captcha = True
         
+        if has_captcha:
+            return json.dumps({
+                "status": "captcha",
+                "error": "CAPTCHA detected - blocked by Google. Use DuckDuckGo instead.",
+                "url": page.url,
+                "has_captcha": True
+            }, ensure_ascii=False)
         return json.dumps({
             "status": "success",
             "url": page.url,
             "title": page.title(),
-            "has_captcha": has_captcha
+            "has_captcha": False
         }, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
@@ -138,7 +145,7 @@ def browser_click_element(selector: str) -> str:
         try:
              page.wait_for_load_state("domcontentloaded", timeout=5000)
              time.sleep(1.0)
-        except:
+        except Exception:
              time.sleep(1.0)
         return json.dumps({"status": "success"})
     except Exception as e:
@@ -157,7 +164,7 @@ def browser_type_text(selector: str, text: str, press_enter: bool = False) -> st
             try:
                 page.wait_for_load_state("domcontentloaded", timeout=5000)
                 time.sleep(2.0)
-            except:
+            except Exception:
                 time.sleep(3.0)
         return json.dumps({"status": "success"})
     except Exception as e:
@@ -254,6 +261,18 @@ def browser_get_links() -> str:
     try:
         manager = BrowserManager.get_instance()
         page = manager.get_page()
+        
+        # Check if currently on a captcha/sorry page
+        current_url = page.url.lower()
+        content = page.content().lower()
+        captcha_indicators = ["sorry/index", "recaptcha", "unusual traffic", "captcha"]
+        if any(ind in current_url or ind in content for ind in captcha_indicators):
+            return json.dumps({
+                "status": "captcha",
+                "error": "Currently on CAPTCHA page - cannot get links. Use DuckDuckGo instead.",
+                "links": []
+            }, ensure_ascii=False)
+        
         links = page.evaluate("""
             () => {
                 const results = [];
@@ -268,6 +287,15 @@ def browser_get_links() -> str:
                 return results;
             }
         """)
+        
+        # Warn if no links found (possible blocked page)
+        if not links:
+            return json.dumps({
+                "status": "warning",
+                "message": "No links found - page may be blocked or empty",
+                "links": []
+            }, ensure_ascii=False)
+        
         return json.dumps({"status": "success", "links": links[:50]}, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
@@ -278,3 +306,55 @@ def browser_close() -> str:
         return json.dumps({"status": "success"})
     except Exception as e:
         return json.dumps({"status": "error", "error": str(e)})
+
+
+def browser_search_duckduckgo(query: str, headless: bool = False) -> str:
+    """Search using DuckDuckGo - CAPTCHA-resistant alternative to Google.
+    
+    Args:
+        query: Search query string
+        headless: Whether to run browser in headless mode
+        
+    Returns:
+        JSON with status, links found, and any errors
+    """
+    try:
+        import urllib.parse
+        manager = BrowserManager.get_instance()
+        page = manager.get_page(headless=headless)
+        
+        # DuckDuckGo search URL
+        encoded_query = urllib.parse.quote_plus(query)
+        url = f"https://duckduckgo.com/?q={encoded_query}"
+        
+        page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        time.sleep(2)  # Wait for results to load
+        
+        # Extract search result links
+        links = page.evaluate("""
+            () => {
+                const results = [];
+                // DuckDuckGo result links are in data-testid="result" or class="result__a"
+                const anchors = document.querySelectorAll('a[data-testid="result-title-a"], a.result__a, article a');
+                anchors.forEach(a => {
+                    const text = a.innerText.trim();
+                    const href = a.href;
+                    if (text && href && !href.includes('duckduckgo.com') && !href.startsWith('javascript:')) {
+                        results.push({text, href});
+                    }
+                });
+                return results;
+            }
+        """)
+        
+        return json.dumps({
+            "status": "success",
+            "url": page.url,
+            "query": query,
+            "links": links[:30],  # Top 30 results
+            "source": "duckduckgo"
+        }, ensure_ascii=False)
+        
+    except Exception as e:
+        return json.dumps({"status": "error", "error": str(e)})
+

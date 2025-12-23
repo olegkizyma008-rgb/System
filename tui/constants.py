@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Tuple
 
-from system_cli.state import MenuLevel
+from tui.state import MenuLevel
 
 
 MAIN_MENU_ITEMS: List[Tuple[str, MenuLevel]] = [

@@ -12,21 +12,21 @@
           "id": "deep_windsurf",
           "name": "Deep Windsurf Cleanup",
           "script": "./cleanup_scripts/deep_windsurf_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Глибоке очищення Windsurf (кеші, дані, профілі)"
         },
         {
           "id": "advanced_windsurf",
           "name": "Advanced Windsurf Identifier Cleanup",
           "script": "./cleanup_scripts/advanced_windsurf_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Розширене очищення ідентифікаторів / трекінгу Windsurf"
         },
         {
           "id": "windsurf_identifier_cleanup",
           "name": "Windsurf Identifier Quick Cleanup",
           "script": "./cleanup_scripts/windsurf_identifier_cleanup.sh",
-          "enabled": true,
+          "enabled": false,
           "description": "Швидке точкове очищення ідентифікаторів"
         },
         {
@@ -130,6 +130,23 @@
           "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
           "order": 35,
           "requires_password": true
+        },
+        {
+          "id": "hostname_spoof",
+          "name": "Hostname Spoofing",
+          "script": "./cleanup_scripts/hostname_spoof.sh",
+          "enabled": true,
+          "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
+          "order": 60,
+          "requires_password": true
+        },
+        {
+          "id": "editor_cleanup",
+          "name": "Universal Editor Cleanup",
+          "script": "./cleanup_scripts/editor_cleanup.sh",
+          "enabled": false,
+          "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
+          "order": 5
         }
       ]
     },
@@ -235,6 +252,23 @@
           "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
           "order": 35,
           "requires_password": true
+        },
+        {
+          "id": "hostname_spoof",
+          "name": "Hostname Spoofing",
+          "script": "./cleanup_scripts/hostname_spoof.sh",
+          "enabled": true,
+          "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
+          "order": 60,
+          "requires_password": true
+        },
+        {
+          "id": "editor_cleanup",
+          "name": "Universal Editor Cleanup",
+          "script": "./cleanup_scripts/editor_cleanup.sh",
+          "enabled": false,
+          "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
+          "order": 5
         }
       ]
     },
@@ -251,7 +285,7 @@
           "name": "Antigravity Basic Cleanup",
           "script": "./cleanup_scripts/antigraviti_cleanup.sh",
           "enabled": true,
-          "description": "Базове очищення Antigravity Editor"
+          "description": "Базове очищення Antigravity Editor (Вимкнено: дублює Advanced)"
         },
         {
           "id": "antigravity_advanced",
@@ -340,6 +374,23 @@
           "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
           "order": 35,
           "requires_password": true
+        },
+        {
+          "id": "hostname_spoof",
+          "name": "Hostname Spoofing",
+          "script": "./cleanup_scripts/hostname_spoof.sh",
+          "enabled": true,
+          "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
+          "order": 60,
+          "requires_password": true
+        },
+        {
+          "id": "editor_cleanup",
+          "name": "Universal Editor Cleanup",
+          "script": "./cleanup_scripts/editor_cleanup.sh",
+          "enabled": true,
+          "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
+          "order": 5
         }
       ]
     },
@@ -351,6 +402,13 @@
         "hint": "Відкриється офіційна сторінка завантаження Cursor"
       },
       "modules": [
+        {
+          "id": "cursor_cleanup",
+          "name": "Cursor IDE Cleanup",
+          "script": "./cleanup_scripts/cursor_cleanup.sh",
+          "enabled": true,
+          "description": "Глибоке очищення Cursor IDE (кеші, профілі, ідентифікатори)"
+        },
         {
           "id": "browser_fingerprint_cleanup",
           "name": "Browser Fingerprint Cleanup",
@@ -417,6 +475,23 @@
           "description": "Блокує macOS 14 специфічні детектори: Privacy Report, TPCD, Safari 17, WebKit",
           "order": 35,
           "requires_password": true
+        },
+        {
+          "id": "hostname_spoof",
+          "name": "Hostname Spoofing",
+          "script": "./cleanup_scripts/hostname_spoof.sh",
+          "enabled": true,
+          "description": "Генерує та встановлює випадкове ім'я хоста (HostName, LocalHostName, ComputerName)",
+          "order": 60,
+          "requires_password": true
+        },
+        {
+          "id": "editor_cleanup",
+          "name": "Universal Editor Cleanup",
+          "script": "./cleanup_scripts/editor_cleanup.sh",
+          "enabled": true,
+          "description": "Уніфікований cleanup для всіх редакторів (VS Code, Windsurf, Cursor, Antigravity)",
+          "order": 5
         }
       ]
     },

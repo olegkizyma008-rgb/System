@@ -1,0 +1,24 @@
+{
+  "name": "System Dev (pyenv 3.11.13)",
+  "build": { "dockerfile": "Dockerfile", "context": ".." },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-vscode-remote.remote-containers",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "settings": {
+    "python.defaultInterpreterPath": "/home/vscode/.pyenv/versions/3.11.13/bin/python",
+    "terminal.integrated.profiles.linux": {
+      "bash (pyenv)": { "path": "/bin/bash", "args": ["-l"] }
+    },
+    "terminal.integrated.defaultProfile.linux": "bash (pyenv)"
+  },
+  "postCreateCommand": "bash -lc 'export PYENV_ROOT=\"$HOME/.pyenv\" && export PATH=\"$PYENV_ROOT/bin:$PATH\" && eval \"$(pyenv init --path)\" && eval \"$(pyenv init -)\" && pyenv install -s 3.11.13 && pyenv local 3.11.13 && python -m pip install --upgrade pip'",
+  "remoteUser": "vscode",
+  "shutdownAction": "none"
+}

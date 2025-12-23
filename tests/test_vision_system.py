@@ -43,7 +43,7 @@ def test_vision_context_manager():
     })
     
     assert len(manager.history) == 1
-    assert "Text detected: 'Login screen detected...'" in manager.current_context
+    assert "Text: 'Login screen detected...'" in manager.current_context
     
     manager.update_context({
         "timestamp": "2025-01-01T00:00:01",
@@ -63,4 +63,4 @@ def test_vision_context_manager():
     })
     
     assert len(manager.history) == 2
-    assert "Success message shown" in manager.history[0]["data"]["context"]
+    assert "Success message shown" in manager.history[0].context_summary

@@ -11,5 +11,9 @@
   "terminal.integrated.suggest.showStatusBar": true,
   "terminal.integrated.suggest.upArrowNavigatesHistory": true,
   "terminal.integrated.suggest.inlineSuggestion": "auto",
-  "terminal.integrated.suggest.cdPath": true
+  "terminal.integrated.suggest.cdPath": true,
+  "sonarlint.connectedMode.project": {
+    "connectionId": "olegkizima01",
+    "projectKey": "olegkizima01_System2"
+  }
 }

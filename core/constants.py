@@ -14,7 +14,27 @@ DEV_KEYWORDS = [
     "код", "code", "python", "javascript", "typescript", "script", "function",
     "рефакторинг", "refactor", "тест", "test", "git", "commit", "branch",
     "архітектура", "architecture", "api", "database", "db", "sql",
-    "windsurf", "editor", "ide", "файл", "file", "write", "create"
+    "windsurf", "editor", "ide", "файл", "file", "write", "create",
+    "плагін", "plugin", "модуль", "module", "розширення", "extension"
+]
+
+# Keywords that indicate need for auto-plugin generation
+# Used by Doctor Vibe to detect when standard tools are insufficient
+AUTO_PLUGIN_INDICATORS = [
+    # API/Integration keywords
+    "rest api", "graphql", "webhook", "oauth", "api integration", "endpoint",
+    "інтеграція api", "веб-хук", "точка доступу",
+    # Database keywords
+    "postgresql", "mongodb", "mysql", "redis", "database query", "запит до бази",
+    # File format keywords
+    "pdf parsing", "excel processing", "csv transform", "парсинг pdf", "обробка excel",
+    # Cloud keywords
+    "aws", "s3", "lambda", "azure", "gcp", "cloud storage", "хмарне сховище",
+    # Automation keywords
+    "cron job", "scheduled task", "pipeline", "workflow automation", "автоматизація",
+    # Complex operations
+    "image processing", "video processing", "ocr", "machine learning",
+    "обробка зображень", "обробка відео", "машинне навчання"
 ]
 
 GENERAL_KEYWORDS = [
@@ -77,7 +97,10 @@ VISION_FAILURE_KEYWORDS = [
     "the task was not completed", "goal not achieved", "not playing",
     "not in fullscreen", "no active video", "no evidence of", "does not show",
     "не відтворюється", "відео не грає", "сторінка порожня", 
-    "помилка завантаження", "завдання не виконано", "ціль не досягнута"
+    "помилка завантаження", "завдання не виконано", "ціль не досягнута",
+    # CAPTCHA detection keywords
+    "captcha", "sorry/index", "unusual traffic", "blocked", "recaptcha",
+    "hcaptcha", "links: []", "empty links", "no search results", "verify you are human"
 ]
 
 # -----------------------------------------------------------------------------
@@ -103,3 +126,10 @@ MESSAGES = {
         "uncertainty_limit": "[SYSTEM] Ліміт невизначеності досягнуто. Помічаю як FAILED."
     }
 }
+# -----------------------------------------------------------------------------
+# INTERNAL CONSTANTS (Literal replacements)
+# -----------------------------------------------------------------------------
+UNKNOWN_STEP = "Unknown step"
+STEP_COMPLETED_MARKER = "[STEP_COMPLETED]"
+VOICE_MARKER = "[VOICE]"
+DEFAULT_MODEL_FALLBACK = "gpt-4.1"

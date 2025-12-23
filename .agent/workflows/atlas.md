@@ -1,9 +1,9 @@
 ---
-description: description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 meta-planning logic, Active Retrieval, and the continuous learning principles of the Trinity Graph runtime. Updated December 2025.
+description: Authoritative guide for Project Atlas architecture, Cognitive 2.0 meta-planning logic, Active Retrieval, and the continuous learning principles of the Trinity Graph runtime. Updated December 2025.
 ---
 
 # Project Atlas Workflow Guide
-**Cognitive 2.1 + Trinity Improvements v1.0 | Грудень 2025**
+**Cognitive 2.1 + Trinity Improvements v1.1 | Грудень 2025**
 
 Єдине джерело правди про фундаментальні принципи роботи системи Atlas (Trinity Runtime).
 
@@ -23,7 +23,7 @@ Atlas — **автономний мультиагентний оператор m
 
 5. **Continuous Learning 2.0** — Система витягує досвід (успішний та негативний) та зберігає його у Knowledge Base з оцінкою впевненості.
 
-6. **State Logging** — Деталізовані логи переходів агентів: `logs/trinity_state_*.log`
+6. **State Logging & Resilience** — Деталізовані логи переходів агентів (`logs/trinity_state_*.log`) та автоматичне відновлення LLM запитів (Retries/Timeouts).
 
 ---
 
@@ -34,15 +34,19 @@ Atlas — **автономний мультиагентний оператор m
 ```mermaid
 graph TD
     START((START)) --> MP[meta_planner<br/>Голова/Стратег]
-    MP -->|Policy & Strategy| C7[context7<br/>Контекст-Менеджер]
-    C7 -->|Normalized Context| A[atlas<br/>Архітектор Плану]
-    MP -->|план готовий| T[tetyana<br/>Виконавець]
-    MP -->|план готовий| G[grisha<br/>Верифікатор]
+    MP -->|план готовий| A[atlas<br/>Архітектор Плану]
     A --> MP
+    MP -->|затверджено| T[tetyana<br/>Виконавець]
+    MP -->|затверджено| G[grisha<br/>Верифікатор]
     T --> G
     G --> MP
     MP -->|завершено| K[knowledge<br/>Екстрактор Досвіду]
     K --> END((END))
+    
+    subgraph Context Management
+        C7[Context7 Layer]
+    end
+    MP -.-> C7
     
     subgraph Memory
         WM[Working] --> EM[Episodic] --> SM[Semantic]
@@ -57,8 +61,8 @@ graph TD
 | **Context7** | Context Manager | Token budget, sliding window з пріоритезацією недавніх кроків |
 | **Atlas** | Architect | Тактичний план на основі нормалізованого контексту |
 | **Tetyana** | Executor | Виконавець (Native/GUI/Playwright) |
-| **Grisha** | Verifier | Верифікатор з `enhanced_vision_analysis` для візуальної перевірки |
-| **Knowledge** | Learner | Етап рефлексії. Зберігає досвід (`success`/`failed`) |
+| **Grisha** | Verifier | Верифікатор з `enhanced_vision_analysis`. Вимагає доказів (evidence) від Тетяни для підтвердження. |
+| **Knowledge** | Learner | Етап рефлексії. Зберігає досвід (`success`/`failed`) та оновлює Knowledge Base. |
 
 ---
 
@@ -87,19 +91,11 @@ memory.consolidate_to_semantic()  # Promote knowledge
 - **Priority Weighting**: Пріоритезація недавніх кроків та критичної інформації
 - **ContextMetrics**: Відстеження використання токенів
 
-### 3.3 Agent Message Protocol (`core/agent_protocol.py`)
+### 3.3 Agent Message Protocol (`core/agent_protocol.py`) - Subsystem
+Модуль для структурованої чергової комунікації. Наразі доступний як бібліотека для складних розширень, але не є обов'язковим для базового циклу Trinity.
 
-Структурована комунікація між агентами:
-- **AgentMessage**: Типізовані повідомлення з метаданими
-- **PriorityMessageQueue**: Черга з пріоритетами
-- **MessageRouter**: Маршрутизація та доставка
-
-### 3.4 Parallel Tool Executor (`core/parallel_executor.py`)
-
-Паралельне виконання незалежних кроків:
-- **DependencyAnalyzer**: Аналіз залежностей між кроками
-- **Thread Pool**: Паралельне виконання незалежних операцій
-- **StepResult**: Відстеження статусу та метрик
+### 3.4 Parallel Tool Executor (`core/parallel_executor.py`) - Subsystem
+Двигун для паралельного виконання незалежних кроків. Використовується для RAG-запитів та пакетних операцій.
 
 ---
 
@@ -137,6 +133,7 @@ context_manager.update_context(result)
 | **Strategy** | `linear`, `rag_heavy`, `aggressive` | Тип побудови плану |
 | **Active Retrieval** | `retrieval_query` | Оптимізований запит Meta-Planner |
 | **Anti-patterns** | `status: failed` | Уникнення провалених стратегій |
+| **Fail Escalation** | `fail_count >= 4` | Автоматичне перепланування при повторних невдачах верифікації |
 | **Confidence Score** | `0.1...1.0` | Оцінка надійності на основі правок |
 | **Source Tracking** | `trinity_runtime`, `user` | Походження знання |
 
@@ -155,6 +152,11 @@ context_manager.update_context(result)
 - **PyAutoGUI MCP**: Альтернативна емуляція вводу
 - **Context7 MCP**: Доступ до документації бібліотек
 - **SonarQube MCP**: Quality gate та аналіз коду
+
+### Dual MCP Client Support
+Система підтримує два незалежних клієнти з можливістю автоматичного перемикання (`AUTO` mode):
+- **Open-MCP (LangGraph)**: Основний клієнт для складних агентних сценаріїв.
+- **Continue MCP (CLI)**: Оптимізований клієнт для розробки та локальних операцій з файлами.
 
 ---
 
@@ -181,10 +183,10 @@ from core.trinity_models import TrinityStateModel, MetaConfig
 
 state = TrinityStateModel(
     current_agent="meta_planner",
-    task_type="DEV",
-    meta_config=MetaConfig(strategy="linear")
+    task_type="GENERAL",
+    meta_config=MetaConfig(strategy="hybrid")
 )
-state.validate_state()  # ✅ Все перевірено
+state.validate_state()  # ✅ Повна валідація схеми
 ```
 
 ### 8.2 MyPy Type Checking
@@ -274,4 +276,4 @@ StateInitLogger().log_initial_state("Завдання", state_dict)
 
 ---
 
-*Останнє оновлення: 20 грудня 2025 р. - Trinity Improvements v1.0*
+*Останнє оновлення: 22 грудня 2025 р. - Trinity Improvements v1.1*

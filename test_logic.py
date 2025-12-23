@@ -7,36 +7,52 @@ sys.path.append(os.getcwd())
 
 from core.constants import SUCCESS_MARKERS, FAILURE_MARKERS, NEGATION_PATTERNS
 
+def check_verdict(content, lang="en"):
+    """Logic captured from trinity.py for testing."""
+    lower_content = content.lower()
+    
+    # 1. Explicit Fail
+    if any(f"[{m}]" in lower_content or m in lower_content for m in FAILURE_MARKERS):
+        return "failed"
+        
+    # 2. Explicit Complete
+    if any(f"[{m}]" in lower_content or m in lower_content for m in SUCCESS_MARKERS):
+        is_negated = _check_for_negation(lower_content, lang)
+        return "success" if not is_negated else "failed"
+        
+    return "uncertain"
+
+
+def _check_for_negation(lower_content: str, lang: str) -> bool:
+    """Check if success markers are preceded by negation patterns."""
+    lang_negations = NEGATION_PATTERNS.get(lang, NEGATION_PATTERNS["en"])
+    
+    for kw in SUCCESS_MARKERS:
+        if kw not in lower_content:
+            continue
+            
+        for match in re.finditer(re.escape(kw), lower_content):
+            idx = match.start()
+            pre_text = lower_content[max(0, idx-25):idx]
+            if re.search(lang_negations, pre_text):
+                return True
+    return False
+
+
+def run_test_case(content, lang, expected):
+    """Run a single test case and return success."""
+    actual = check_verdict(content, lang)
+    if actual == expected:
+        print(f"✅ PASSED: '{content}' ({lang}) -> {actual}")
+        return True
+    
+    print(f"❌ FAILED: '{content}' ({lang}) -> Expected {expected}, got {actual}")
+    return False
+
+
 def test_negation_logic():
     print("🧪 Testing Negation Logic...")
     
-    # Mocking the logic from trinity.py
-    def check_verdict(content, lang="en"):
-        lower_content = content.lower()
-        has_explicit_fail = any(f"[{m}]" in lower_content or m in lower_content for m in FAILURE_MARKERS)
-        has_explicit_complete = any(f"[{m}]" in lower_content or m in lower_content for m in SUCCESS_MARKERS)
-        
-        if has_explicit_fail:
-            return "failed"
-            
-        if has_explicit_complete:
-            is_negated = False
-            lang_negations = NEGATION_PATTERNS.get(lang, NEGATION_PATTERNS["en"])
-            
-            for kw in SUCCESS_MARKERS:
-                if kw in lower_content:
-                    for match in re.finditer(re.escape(kw), lower_content):
-                        idx = match.start()
-                        pre_text = lower_content[max(0, idx-25):idx]
-                        if re.search(lang_negations, pre_text):
-                            is_negated = True
-                            break
-                if is_negated: break
-            
-            return "success" if not is_negated else "failed"
-            
-        return "uncertain"
-
     test_cases = [
         # English
         ("The task is [VERIFIED]", "en", "success"),
@@ -52,20 +68,13 @@ def test_negation_logic():
         
         # Edge cases
         ("It is done, but not quite [VERIFIED] yet", "en", "failed"),
-        ("I [CONFIRMED] that it failed", "en", "failed"), # [CONFIRMED] is success marker, but if it has negation before...
+        ("I [CONFIRMED] that it failed", "en", "failed"),
     ]
     
-    passed = 0
-    for content, lang, expected in test_cases:
-        actual = check_verdict(content, lang)
-        if actual == expected:
-            print(f"✅ PASSED: '{content}' ({lang}) -> {actual}")
-            passed += 1
-        else:
-            print(f"❌ FAILED: '{content}' ({lang}) -> Expected {expected}, got {actual}")
-            
-    print(f"\n📊 Result: {passed}/{len(test_cases)} passed.")
-    return passed == len(test_cases)
+    passed_count = sum(1 for c, l, e in test_cases if run_test_case(c, l, e))
+    
+    print(f"\n📊 Result: {passed_count}/{len(test_cases)} passed.")
+    return passed_count == len(test_cases)
 
 if __name__ == "__main__":
     test_negation_logic()

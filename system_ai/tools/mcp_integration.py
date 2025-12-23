@@ -44,8 +44,9 @@ class MCPIntegrationTool:
         self.dev_project = None
         self.initialized = False
         
-        if MCP_AVAILABLE:
-            self._initialize_mcp_integration()
+        # NOTE: Do NOT auto-initialize on construction.
+        # This module is imported during Trinity startup; initializing MCP servers here can
+        # trigger slow/heavy dependencies (e.g., OCR model checks) and block unrelated tasks.
     
     def _initialize_mcp_integration(self):
         """Initialize MCP integration"""
@@ -72,10 +73,23 @@ class MCPIntegrationTool:
         except Exception as e:
             print(f"✗ Failed to initialize MCP integration: {e}")
             self.initialized = False
+
+    def ensure_initialized(self) -> bool:
+        """Initialize MCP integration on-demand."""
+        if not MCP_AVAILABLE:
+            return False
+        if self.initialized:
+            return True
+        # Allow disabling heavy MCP init entirely via env var.
+        disable = str(os.environ.get("TRINITY_DISABLE_MCP_INTEGRATION", "")).strip().lower()
+        if disable in {"1", "true", "yes", "on"}:
+            return False
+        self._initialize_mcp_integration()
+        return bool(self.initialized)
     
     def is_available(self) -> bool:
         """Check if MCP integration is available"""
-        return self.initialized and MCP_AVAILABLE
+        return self.ensure_initialized() and MCP_AVAILABLE
     
     def get_mcp_status(self) -> Dict[str, Any]:
         """Get status of all MCP servers"""
@@ -438,13 +452,15 @@ class MCPIntegrationTool:
         return capabilities
 
 
-# Global instance for easy access
-mcp_tool = MCPIntegrationTool()
+_mcp_tool: Optional[MCPIntegrationTool] = None
 
 
 def get_mcp_tool() -> MCPIntegrationTool:
     """Get the global MCP integration tool instance"""
-    return mcp_tool
+    global _mcp_tool
+    if _mcp_tool is None:
+        _mcp_tool = MCPIntegrationTool()
+    return _mcp_tool
 
 
 # Integration with Trinity's MCPToolRegistry
@@ -456,6 +472,8 @@ def register_mcp_tools_with_trinity(registry):
         registry: The MCPToolRegistry instance from core.mcp
     """
     try:
+        mcp_tool = get_mcp_tool()
+
         # Register MCP system diagnostics tool
         def mcp_system_diagnostics(task_data: Dict[str, Any]) -> Dict[str, Any]:
             """Run MCP system diagnostics"""
@@ -522,7 +540,7 @@ def register_mcp_tools_with_trinity(registry):
 
 # Auto-register with Trinity if available
 try:
-    from core.mcp import MCPToolRegistry
+    from core.mcp_registry import MCPToolRegistry
     
     # This will be called when Trinity initializes
     def _auto_register_with_trinity():

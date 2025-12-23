@@ -34,6 +34,10 @@ class _DummyRegistry:
     def list_tools(self):
         return ""
 
+    def get_all_tool_definitions(self):
+        """Return empty list of tool definitions for testing."""
+        return []
+
     def execute(self, name, args):
         self.executed.append((name, args))
         return json.dumps({"tool": name, "status": "success"}, ensure_ascii=False)

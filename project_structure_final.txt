@@ -1,15 +1,15 @@
 ## Metadata
-Generated: Sun Dec 21 04:38:33  2025
+Generated: Mon Dec 22 21:17:59  2025
 
 ## Program Execution Logs
 (See logs/cli.log for details)
 
 Recent Task Logs:
-  - task_20251220_204544.log (0.4 KB)
-  - task_20251220_204516.log (0.4 KB)
-  - task_20251220_204452.log (0.4 KB)
-  - task_20251220_204358.log (1.1 KB)
-  - task_20251220_204318.log (0.2 KB)
+  - task_20251222_193451.log (0.1 KB)
+  - task_20251222_192708.log (0.1 KB)
+  - task_20251222_192442.log (0.1 KB)
+  - task_20251222_190015.log (0.1 KB)
+  - task_20251222_185713.log (0.1 KB)
 
 ## Останні відповіді редакторів
 (Дивись atlas.md розділ 11 для інформації про інтеграцію)
@@ -18,13 +18,13 @@ Recent Task Logs:
 ```
 [Atlas] Final report
 
-Task: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегляду його онлайн. Після того включи його на весь екран для перегляду, пересвідчись що він запущений і на весь екран.
+Task: Перевірь модулі очистки антігравіті, перечитай базу даних моніторинга, і покращи ці модулі, вдоскональ їх.
 Outcome: completed
-Replans: 10
+Replans: 4
 Last agent: meta_planner
 
 Last message:
-[VOICE] Ліміт перепланувань вичерпано (10).
+[VOICE] Ліміт кроків вичерпано (50).
 
 Changed files:
 - (no uncommitted changes detected)
@@ -33,8 +33,8 @@ Verification:
 - status: unknown (no explicit signal)
 
 Tests:
-- not executed by Trinity (no deterministic test runner i
-[...скорочено...]
+- not executed by Trinity (no deterministic test runner in pipeline)
+
 ```
 
 ## Log Locations (Логи та Діагностика)
@@ -54,34 +54,35 @@ Tests:
 
 
 ### Project Statistics
-  - Python files: 20348
-  - Test files: 15
-  - Documentation files: 12
-  - Configuration sets: 38
+  - Python files: 20429
+  - Test files: 39
+  - Documentation files: 20
+  - Configuration sets: 44
 
 ## Git History (Last 10 Commits)
 ```
-  765f49fb feat: Add M1 Max Fingerprint Spoof and Sonoma Detection Bypass scripts
-  b008568d feat: Add VPN detection and mapping for locale and timezone adjustments
-  39f3c766 feat: Add comprehensive network isolation and DNS privacy script
-  e026165c Add MikroTik WiFi & MAC Address Spoofing Module
-  ad0cf019 refactor: Extract keyword lists and localized messages to `constants.py` and introduce `test_logic.py`.
-  1f578899 feat: implement learning mode toggle and clear incorrect memories
-  5f69175c feat: Enhance verification with dynamic descriptions and new keywords, refine agent planning to avoid re-executing completed steps, and clarify `[VERIFIED]` vs `[STEP_COMPLETED]` markers for robust goal achievement.
-  ab3a0139 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
-  042d8a16 fix(core): resolve premature task completion, improve negation handling, and fix vision summary truncation
-  77f98f97 Trinity task completed: Найди через гугл фільм сучасний якийсь про штучний інтелект для перегля…
+  ba870833 feat: implement dual MCP client architecture with Open-MCP and Continue CLI support
+  136d1586 feat: Add Memory Manager TUI and Learning Memory system
+  eb752ac8 fix: Update generated timestamp and correct Git history entries in project_structure_final.txt
+  5b6bd146 feat: Implement TaskAnalyzer for per-task logging and analysis, including dynamic status updates and cleanup of file handlers
+  d624d096 fix: Store result of execute_command in test_context7_fallback_on_too_many_args
+  68fcc81f fix: Store result of execute_command in test_context7_fallback_on_too_many_args
+  037c2f7a fix: Refactor error handling for Context7 command execution to improve fallback metric logging
+  69303086 feat: Add metrics for Context7 fallbacks and screenshot success/failure tracking
+  4a39d05a feat: Enhance error handling and logging in task analysis and Context7 command execution
+  9734007b feat: Add SonarQube integration and background scanning options for DEV context enrichment
 ```
 
 ## Project Structure
 ```
 .
+├── ASYNCIO_FIX_REPORT.md
+├── README.md
+├── SYSTEM_STATUS.md
+├── VERIFICATION_REPORT.md
 ├── archive
-│   ├── check_fastmcp.py
-│   ├── check_ssl.py
 │   ├── ERROR_ANALYSIS_REPORT.md
 │   ├── FINAL_MIGRATION_SUMMARY.md
-│   ├── generate_structure.py
 │   ├── PYTHON_311_MIGRATION_SUMMARY.md
 │   ├── RESPONSE_SAVING_WORKFLOW.md
 │   ├── SHELL_INTEGRATION_CONFIG.md
@@ -89,6 +90,9 @@ Tests:
 │   ├── SHELL_INTEGRATION_SETUP.md
 │   ├── SUPER_RAG_DEPENDENCY_ISSUE.md
 │   ├── TASK_ANALYSIS_GUIDE.md
+│   ├── check_fastmcp.py
+│   ├── check_ssl.py
+│   ├── generate_structure.py
 │   ├── task_analysis_system.py
 │   ├── test_integration.txt
 │   ├── test_loop_fix.py
@@ -101,24 +105,30 @@ Tests:
 ├── cleanup_memories.py
 ├── cleanup_modules.json
 ├── cleanup_scripts
+│   ├── QUICK_START_WIFI_SPOOF.sh
 │   ├── advanced_antigraviti_cleanup.sh
 │   ├── advanced_windsurf_cleanup.sh
 │   ├── antigraviti_cleanup.sh
 │   ├── antigravity_fresh_install.sh
 │   ├── behavior_randomization.sh
+│   ├── behavior_randomizer.sh
 │   ├── browser_fingerprint_cleanup.sh
+│   ├── browser_history_timestamps.sh
 │   ├── check_identifier_cleanup.sh
 │   ├── check_vscode_backup.sh
+│   ├── common_functions.sh
+│   ├── cursor_cleanup.sh
 │   ├── deep_hardware_spoof.sh
 │   ├── deep_vscode_cleanup.sh
 │   ├── deep_windsurf_cleanup.sh
+│   ├── editor_cleanup.sh
 │   ├── evercookie_killer.sh
 │   ├── hardware_spoof.sh
+│   ├── hostname_spoof.sh
 │   ├── locale_spoof.sh
 │   ├── m1_max_spoof.sh
 │   ├── mikrotik_wifi_spoof.sh
 │   ├── network_isolation.sh
-│   ├── QUICK_START_WIFI_SPOOF.sh
 │   ├── sonoma_detection_bypass.sh
 │   ├── stealth_cleanup.sh
 │   ├── sudo_helper.sh
@@ -130,210 +140,241 @@ Tests:
 ├── cli.sh
 ├── configs
 │   ├── Anna-Station
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Ariana-Server-01
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Avas-Work
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Averys-Mac
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Bradley-Station-Plus
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Bradleys-MBA
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
+│   ├── Bruce-Device-01
+│   │   ├── User
+│   │   │   └── globalStorage
+│   │   ├── hostname.txt
+│   │   └── metadata.json
 │   ├── Bryan-Core
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Desktop-Billy
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Elijah-Personal
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
+│   ├── Frank-Mac-Plus
+│   │   ├── User
+│   │   │   └── globalStorage
+│   │   ├── hostname.txt
+│   │   └── metadata.json
 │   ├── Gary-Studio
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── George-Terminal-02
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Grace-MBP-Plus
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Home-Eugene
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Host-Penelope
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Instance-Layla
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Jeffrey-Workspace
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Jerrys-Air
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Laptop-Natalie
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Layla-Office
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Main-Alan
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Main-Vincent
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
+│   ├── Michaels-iMac
+│   │   ├── User
+│   │   │   └── globalStorage
+│   │   ├── hostname.txt
+│   │   └── metadata.json
 │   ├── My-Benjamin
+│   │   ├── User
+│   │   │   └── globalStorage
+│   │   │       └── storage.json
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
-│   │           └── storage.json
+│   │   └── metadata.json
 │   ├── My-Lucy
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Nicholas-Machine
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Office-Bobby
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
-│   ├── original
+│   │   └── metadata.json
+│   ├── Office-Chloe
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── mac_address.txt
-│   │   ├── machineid
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
-│   │           └── storage.json
+│   │   └── metadata.json
 │   ├── Paul-Remote
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Penelope-Test-01
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Russell-Local-Plus
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Samanthas-Host
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Secondary-Tyler
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Steven-Backup-2
+│   │   ├── User
+│   │   │   └── globalStorage
+│   │   │       └── storage.json
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
-│   │           └── storage.json
+│   │   └── metadata.json
 │   ├── Timothy-Office
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Timothy-Tower
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Walters-Device
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
 │   ├── Willie-Build-02
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
+│   │   └── metadata.json
+│   ├── Work-Harold
+│   │   ├── User
+│   │   │   └── globalStorage
+│   │   ├── hostname.txt
+│   │   └── metadata.json
 │   ├── Workstation-Keith
+│   │   ├── User
+│   │   │   └── globalStorage
 │   │   ├── hostname.txt
-│   │   ├── metadata.json
-│   │   └── User
-│   │       └── globalStorage
-│   └── Workstation-Logan
-│       ├── hostname.txt
-│       ├── metadata.json
-│       └── User
-│           └── globalStorage
-├── configs_vscode
+│   │   └── metadata.json
+│   ├── Workstation-Logan
+│   │   ├── User
+│   │   │   └── globalStorage
+│   │   ├── hostname.txt
+│   │   └── metadata.json
+│   ├── Zoeys-Local
+│   │   ├── User
+│   │   │   └── globalStorage
+│   │   ├── hostname.txt
+│   │   └── metadata.json
 │   └── original
+│       ├── User
+│       │   └── globalStorage
+│       │       └── storage.json
 │       ├── hostname.txt
 │       ├── mac_address.txt
 │       ├── machineid
-│       ├── metadata.json
-│       └── User
-│           └── globalStorage
-│               └── storage.json
+│       └── metadata.json
+├── configs_vscode
+│   └── original
+│       ├── User
+│       │   └── globalStorage
+│       │       └── storage.json
+│       ├── hostname.txt
+│       ├── mac_address.txt
+│       ├── machineid
+│       └── metadata.json
 ├── core
+│   ├── agent_delegation.py
 │   ├── agent_protocol.py
 │   ├── agents
 │   │   ├── atlas.py
@@ -341,104 +382,200 @@ Tests:
 │   │   └── tetyana.py
 │   ├── constants.py
 │   ├── context7.py
+│   ├── learning_memory.py
 │   ├── mcp.py
 │   ├── memory.py
 │   ├── parallel_executor.py
 │   ├── self_healing.py
+│   ├── sonar_scanner.py
 │   ├── state_logger.py
-│   ├── trinity_models.py
+│   ├── task_analyzer.py
+│   ├── task_classifier.py
 │   ├── trinity.py
+│   ├── trinity_models.py
 │   ├── utils.py
 │   ├── verification.py
 │   ├── vibe_assistant.py
 │   ├── vision_context.py
 │   └── visualization
+├── critical_issues.json
+├── critical_issues_after.json
+├── critical_issues_v3.json
 ├── custom_tasks
 │   └── windsurf_registration.py
 ├── data
 ├── docs
-│   ├── analize.md
-│   ├── atlas.md
 │   ├── COMPREHENSIVE_ANONYMITY_SYSTEM.md
+│   ├── DELEGATION_FIX_SUMMARY.md
+│   ├── DOCTOR_VIBE_AUTO_PLUGIN_GUIDE.md
+│   ├── DOCTOR_VIBE_AUTO_PLUGIN_SUMMARY.md
 │   ├── MIKROTIK_WIFI_SPOOFING.md
-│   ├── sonar.md
+│   ├── PLUGIN_DEVELOPMENT.md
+│   ├── PLUGIN_SYSTEM_SUMMARY.md
+│   ├── SETUP_CHROMA.md
+│   ├── SONAR_INTEGRATION.md
 │   ├── TRINITY_COMPLETE_REPORT.md
 │   ├── TRINITY_DOCUMENTATION_INDEX.md
 │   ├── TRINITY_FIXES_REPORT.md
 │   ├── TRINITY_IMPROVEMENTS_IMPLEMENTATION.md
 │   ├── TRINITY_IMPROVEMENTS_QUICKSTART.md
 │   ├── TRINITY_SUMMARY.md
+│   ├── analize.md
+│   ├── atlas.md
+│   ├── atlas2.md
+│   ├── sonar.md
 │   └── vision.md
 ├── i18n.py
 ├── index.html
+├── issues.json
+├── keybindings_extracted.txt
 ├── logs
+│   ├── atlas_analysis.jsonl
 │   ├── left_screen.log
 │   ├── right_screen.log
 │   ├── right_screen.log.1
 │   ├── right_screen.log.2
 │   ├── right_screen.log.3
-│   └── trinity_state_20251220.log
+│   ├── trinity_state_20251220.log
+│   └── trinity_state_20251222.log
 ├── main.py
 ├── mcp_integration
+│   ├── INTEGRATION_REPORT.md
+│   ├── README.md
 │   ├── __init__.py
+│   ├── check_servers.py
+│   ├── chroma_utils.py
 │   ├── config
 │   │   ├── mcp_config.json
 │   │   └── server_specific
 │   ├── core
-│   │   └── mcp_manager.py
+│   │   ├── continue_mcp_client.py
+│   │   ├── copilot_mcp_client.py
+│   │   ├── mcp_client_manager.py
+│   │   ├── mcp_manager.py
+│   │   ├── open_mcp_client.py
+│   │   └── tool_examples
+│   │       ├── ai_examples.json
+│   │       ├── all_examples_combined.json
+│   │       ├── browser_examples.json
+│   │       ├── code_analysis_examples.json
+│   │       ├── filesystem_examples.json
+│   │       ├── gui_examples.json
+│   │       └── system_examples.json
+│   ├── data
+│   │   ├── chroma_db
+│   │   │   ├── 848a3188-15f7-4449-90d8-ab404a72361a
+│   │   │   │   ├── data_level0.bin
+│   │   │   │   ├── header.bin
+│   │   │   │   ├── index_metadata.pickle
+│   │   │   │   ├── length.bin
+│   │   │   │   └── link_lists.bin
+│   │   │   └── chroma.sqlite3
+│   │   ├── registration_report.json
+│   │   └── schemas
+│   │       ├── anthropic_schema.json
+│   │       ├── applescript_schema.json
+│   │       ├── context7-docs_schema.json
+│   │       ├── context7_schema.json
+│   │       ├── copilot_schema.json
+│   │       ├── filesystem_schema.json
+│   │       ├── local_fallback_schema.json
+│   │       ├── playwright_schema.json
+│   │       ├── pyautogui_schema.json
+│   │       └── sonarqube_schema.json
+│   ├── dump.rdb
+│   ├── generate_tool_examples.py
 │   ├── modes
 │   │   ├── atlas_healing_mode.py
+│   │   ├── dev_project_mode.py
 │   │   ├── dev_project_mode_fixed.py
-│   │   ├── dev_project_mode_minimal.py
-│   │   └── dev_project_mode.py
-│   ├── README.md
+│   │   └── dev_project_mode_minimal.py
+│   ├── rag_integration.py
+│   ├── register_all_servers.py
+│   ├── server_registration.log
+│   ├── servers
+│   │   ├── anthropic_server.py
+│   │   └── local_server.py
+│   ├── setup_all.sh
+│   ├── setup_mcp_servers.sh
+│   ├── setup_rag_database.py
+│   ├── test_copilot_mcp.py
 │   ├── test_integration.py
 │   ├── tests
+│   │   ├── test_context7_fallback.py
+│   │   └── test_sonarqube_context7_integration.py
 │   └── utils
+│       └── sonarqube_context7_helper.py
+├── plugins
+│   ├── README.md
+│   ├── __init__.py
+│   ├── api_helper
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── plugin.py
+│   │   └── tests
+│   │       └── test_plugin.py
+│   ├── doctor_vibe_extensions
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── plugin.py
+│   │   └── tests
+│   │       ├── __init__.py
+│   │       └── test_plugin.py
+│   ├── example_data_processor
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── plugin.py
+│   │   └── tests
+│   │       └── test_plugin.py
+│   ├── plugin_creator.py
+│   ├── test_api_plugin
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── plugin.py
+│   │   └── tests
+│   │       └── test_plugin.py
+│   ├── test_vibe_plugin
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── plugin.py
+│   │   └── tests
+│   │       └── test_plugin.py
+│   ├── vibe_automation_1766416707
+│   │   ├── README.md
+│   │   ├── __init__.py
+│   │   ├── plugin.py
+│   │   └── tests
+│   │       └── test_plugin.py
+│   └── vibe_automation_1766416724
+│       ├── README.md
+│       ├── __init__.py
+│       ├── plugin.py
+│       └── tests
+│           └── test_plugin.py
 ├── project_structure_final.txt
 ├── projects
-│   ├── dev_20251220_201052
-│   │   ├── assets
-│   │   ├── config
-│   │   │   └── config.json
-│   │   ├── docs
-│   │   ├── README.md
-│   │   ├── scripts
-│   │   ├── src
-│   │   └── tests
-│   ├── dev_20251220_202728
-│   │   ├── assets
-│   │   ├── config
-│   │   │   └── config.json
-│   │   ├── docs
-│   │   ├── README.md
-│   │   ├── scripts
-│   │   ├── src
-│   │   └── tests
-│   └── dev_20251220_202833
-│       ├── assets
-│       ├── config
-│       │   └── config.json
-│       ├── docs
-│       ├── README.md
-│       ├── scripts
-│       ├── src
-│       └── tests
 ├── providers
 │   ├── __init__.py
 │   ├── copilot.py
 │   └── mikrotik_wifi_spoofing.py
 ├── pytest.ini
-├── README.md
 ├── regenerate_structure.sh
 ├── requirements.txt
+├── run_sonar_analysis.sh
 ├── run_trinity_task.py
 ├── save_response.sh
 ├── script.js
 ├── scripts
-│   └── fix_mcp_server.py
+│   ├── demo_sonarqube_atlas.py
+│   ├── fetch_critical_issues.py
+│   ├── fix_mcp_server.py
+│   ├── setup_chroma.sh
+│   └── test_sonar_connection.py
+├── server_registration.log
 ├── setup.cfg
 ├── setup.sh
+├── sonar-project.properties
 ├── style.css
 ├── system_ai
 │   ├── __init__.py
@@ -473,51 +610,97 @@ Tests:
 ├── task_analysis.log
 ├── task_logs
 │   ├── task_20251220_204318.log
-│   ├── task_20251220_204358_data.json
 │   ├── task_20251220_204358.log
-│   ├── task_20251220_204452_data.json
+│   ├── task_20251220_204358_data.json
 │   ├── task_20251220_204452.log
-│   ├── task_20251220_204516_data.json
+│   ├── task_20251220_204452_data.json
 │   ├── task_20251220_204516.log
+│   ├── task_20251220_204516_data.json
+│   ├── task_20251220_204544.log
 │   ├── task_20251220_204544_data.json
-│   └── task_20251220_204544.log
+│   ├── task_20251221_183048.log
+│   ├── task_20251221_183048_data.json
+│   ├── task_20251221_183204.log
+│   ├── task_20251221_183204_data.json
+│   ├── task_20251221_183425.log
+│   ├── task_20251221_183425_data.json
+│   ├── task_20251221_183437.log
+│   ├── task_20251221_183437_data.json
+│   ├── task_20251221_183517.log
+│   ├── task_20251221_183517_data.json
+│   ├── task_20251222_185119.log
+│   ├── task_20251222_185310.log
+│   ├── task_20251222_185500.log
+│   ├── task_20251222_185713.log
+│   ├── task_20251222_190015.log
+│   ├── task_20251222_192442.log
+│   ├── task_20251222_192708.log
+│   └── task_20251222_193451.log
 ├── task_screenshots
+│   ├── task_20251221_183204_screenshot_1.jpg
+│   └── task_20251221_183517_screenshot_1.jpg
 ├── templates
 │   ├── bootstrap
+│   │   ├── README.md
 │   │   ├── generate_structure.py
 │   │   ├── post-commit
-│   │   ├── README.md
 │   │   ├── regenerate_structure.sh
 │   │   └── save_response_and_commit.py
 │   └── bootstrap_new_project.sh
 ├── test_logic.py
 ├── tests
 │   ├── conftest.py
+│   ├── test_agent_delegation.py
 │   ├── test_agent_protocol.py
 │   ├── test_bootstrap_e2e.py
+│   ├── test_chroma_persistence.py
 │   ├── test_cli_parsing.py
 │   ├── test_context7_sliding_window.py
+│   ├── test_dev_by_vibe.py
 │   ├── test_doctor_vibe_auto_repair.py
 │   ├── test_grisha_routing.py
 │   ├── test_hierarchical_memory.py
 │   ├── test_intent_routing.py
+│   ├── test_mcp_browser.py
 │   ├── test_mcp_registry.py
+│   ├── test_monitor_auto_select.py
+│   ├── test_monitor_ui_toggle.py
+│   ├── test_monitoring_trace.py
 │   ├── test_parallel_executor.py
+│   ├── test_plugin_creation.py
+│   ├── test_router_vibe_pause.py
+│   ├── test_screenshot_error.py
+│   ├── test_screenshot_metrics.py
+│   ├── test_self_healing_ignore_temp.py
+│   ├── test_self_healing_quick_repair.py
+│   ├── test_sonar_background_scanner.py
+│   ├── test_state_logger_basic.py
+│   ├── test_task_analyzer_basic.py
+│   ├── test_tetyana_vibe_content_pause.py
 │   ├── test_trinity_autocommit.py
+│   ├── test_trinity_env_helper.py
 │   ├── test_trinity_models.py
+│   ├── test_trinity_sonar_integration.py
 │   ├── test_tui_menu_struct.py
+│   ├── test_tui_tail_log_cleanup.py
+│   ├── test_vibe_auto_apply.py
+│   ├── test_vibe_diagnostics.py
+│   ├── test_vibe_ui_hint.py
 │   ├── test_vision_find_image.py
 │   ├── test_vision_system.py
+│   ├── test_windsurf_vibe_block.py
 │   └── verify_vision_fix.py
+├── tmp
+│   └── run_trinity_test.py
 ├── tui
 │   ├── __init__.py
 │   ├── agents.py
 │   ├── app.py
 │   ├── cleanup.py
+│   ├── cli.py
 │   ├── cli_defaults.py
 │   ├── cli_localization.py
 │   ├── cli_paths.py
-│   ├── cli.py
 │   ├── clipboard_utils.py
 │   ├── commands.py
 │   ├── constants.py
@@ -525,6 +708,7 @@ Tests:
 │   ├── keybindings.py
 │   ├── layout.py
 │   ├── logger.py
+│   ├── memory_manager.py
 │   ├── menu.py
 │   ├── messages.py
 │   ├── monitoring.py
@@ -534,8 +718,31 @@ Tests:
 │   ├── selection_tracker.py
 │   ├── themes.py
 │   └── tools.py
-└── verify_memory.py
+├── verify_memory.py
+└── weapon_shop
+    ├── IMPROVEMENTS_SUMMARY.md
+    ├── INSTRUCTIONS.md
+    ├── README.md
+    ├── css
+    │   ├── loading.css
+    │   └── style.css
+    ├── data
+    ├── images
+    │   └── placeholder.jpg
+    ├── index.html
+    ├── js
+    │   ├── loading.js
+    │   └── main.js
+    ├── launch_simple.py
+    ├── launch_website.py
+    ├── products
+    ├── server.py
+    ├── start.sh
+    ├── test_improvements.py
+    ├── test_loading.html
+    ├── test_modern_enhancements.py
+    └── verify_website.py
 
-172 directories, 288 files
+197 directories, 470 files
 
 ```

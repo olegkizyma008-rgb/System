@@ -1,10 +1,122 @@
 import os
 import time
 import subprocess
+import tempfile
+import logging
+import traceback
 from typing import Any, Dict, Optional, Tuple, Union, List
 from PIL import Image, ImageChops
 import mss
 import mss.tools
+from datetime import datetime
+
+# Module logger
+logger = logging.getLogger(__name__)
+
+# Simple in-memory metrics for observability
+METRICS = {
+    "screenshot_total": 0,
+    "screenshot_success": 0,
+    "screenshot_failure": 0
+}
+
+
+def get_frontmost_app() -> Dict[str, Any]:
+    """Get information about the currently active (frontmost) application on macOS.
+    
+    Returns:
+        dict with keys: app_name, window_title, bundle_id, or error
+    """
+    try:
+        # Get frontmost app name
+        script_app = '''
+        tell application "System Events"
+            set frontApp to first application process whose frontmost is true
+            set appName to name of frontApp
+            return appName
+        end tell
+        '''
+        proc_app = subprocess.run(["osascript", "-e", script_app], capture_output=True, text=True, timeout=3)
+        app_name = proc_app.stdout.strip() if proc_app.returncode == 0 else None
+        
+        if not app_name:
+            return {"status": "error", "error": "Cannot determine frontmost app"}
+        
+        # Get window title
+        script_title = f'''
+        tell application "System Events"
+            tell process "{app_name}"
+                try
+                    set winTitle to name of front window
+                    return winTitle
+                on error
+                    return ""
+                end try
+            end tell
+        end tell
+        '''
+        proc_title = subprocess.run(["osascript", "-e", script_title], capture_output=True, text=True, timeout=3)
+        window_title = proc_title.stdout.strip() if proc_title.returncode == 0 else ""
+        
+        return {
+            "status": "success",
+            "app_name": app_name,
+            "window_title": window_title
+        }
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+
+def get_all_windows() -> Dict[str, Any]:
+    """Get list of all visible windows on macOS.
+    
+    Returns:
+        dict with list of windows, each containing: app_name, window_title, position, size
+    """
+    try:
+        script = '''
+        set windowList to {}
+        tell application "System Events"
+            repeat with proc in (every process whose visible is true)
+                set procName to name of proc
+                try
+                    repeat with win in (every window of proc)
+                        try
+                            set winName to name of win
+                            set winPos to position of win
+                            set winSize to size of win
+                            set end of windowList to procName & "|" & winName & "|" & (item 1 of winPos as text) & "," & (item 2 of winPos as text) & "|" & (item 1 of winSize as text) & "," & (item 2 of winSize as text)
+                        end try
+                    end repeat
+                end try
+            end repeat
+        end tell
+        set AppleScript's text item delimiters to "\\n"
+        return windowList as text
+        '''
+        proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=5)
+        
+        if proc.returncode != 0:
+            return {"status": "error", "error": proc.stderr}
+        
+        windows = []
+        for line in proc.stdout.strip().split("\n"):
+            if "|" in line:
+                parts = line.split("|")
+                if len(parts) >= 4:
+                    pos_parts = parts[2].split(",")
+                    size_parts = parts[3].split(",")
+                    windows.append({
+                        "app_name": parts[0],
+                        "window_title": parts[1],
+                        "position": {"x": int(pos_parts[0]), "y": int(pos_parts[1])},
+                        "size": {"width": int(size_parts[0]), "height": int(size_parts[1])}
+                    })
+        
+        return {"status": "success", "windows": windows, "count": len(windows)}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
 
 class VisionDiffManager:
     """Manages screenshot lifecycle and calculates differences between frames."""
@@ -102,54 +214,150 @@ class VisionDiffManager:
             "bbox": bbox
         }
 
-def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] = None, activate: bool = False) -> Dict[str, Any]:
-    """Takes a smart screenshot of an app or the full screen.
-    
-    Args:
-        app_name: Name of the application (e.g. "Safari")
-        window_title: Optional substring to filter specific windows (e.g. "Google")
-        activate: If True, brings the application/window to the front before capturing.
-    """
+def take_screenshot(app_name: Optional[str] = None, window_title: Optional[str] = None, activate: bool = False, use_frontmost: bool = False) -> Dict[str, Any]:
+    """Takes a smart screenshot of an app or the full screen."""
     try:
+        if use_frontmost and not app_name:
+            app_name, window_title = _auto_detect_frontmost(window_title)
+        
         if activate and app_name:
-            # Dynamic Focus: Bring app to front
-            # If window_title is specific, we could try to raise just that window, but raising the App is safer/standard.
-            # We use ignoring application responses to avoid blocking if the app is hung, though basic activate is usually fine.
-            script = f'tell application "{app_name}" to activate'
-            subprocess.run(["osascript", "-e", script], capture_output=True, timeout=2)
-            time.sleep(0.5) # Wait for animation
+            _activate_app_safely(app_name)
             
         manager = VisionDiffManager.get_instance()
-        focus_id = "FULL"
-        if app_name:
-            focus_id = f"APP_{app_name}"
-            if window_title:
-                focus_id += f"_{window_title}"
+        focus_id = _build_focus_id(app_name, window_title)
         
-        with mss.mss() as sct:
-            # Multi-monitor support: monitor 0 is the union of all monitors
-            monitor = sct.monitors[0]
-            
-            # If app_name, try to get its window geometry
-            region = None
-            if app_name:
-                region = _get_app_geometry(app_name, window_title)
-            
-            sct_img = sct.grab(region or monitor)
-            img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
-            
+        region = _get_app_geometry(app_name, window_title) if app_name else None
+        
+        img, mss_error = _capture_with_mss(region)
+        
+        if img is None:
+            fallback_res = _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id)
+            # If fallback failed, count it in metrics
+            if fallback_res.get("status") == "error":
+                METRICS["screenshot_total"] += 1
+                METRICS["screenshot_failure"] += 1
+            return fallback_res
+
         res = manager.process_screenshot(img, focus_id)
+        # success metrics
+        METRICS["screenshot_total"] += 1
+        METRICS["screenshot_success"] += 1
+        return _build_success_response("take_screenshot", res, focus_id)
         
+    except Exception as e:
+        tb = traceback.format_exc()
+        try:
+            # Ensure we log full traceback for observability
+            logger.exception("take_screenshot failed")
+        except Exception:
+            pass
+        # failure metrics
+        METRICS["screenshot_total"] += 1
+        METRICS["screenshot_failure"] += 1
         return {
             "tool": "take_screenshot",
-            "status": "success",
-            "path": res["path"],
-            "mode": res["mode"],
-            "focus": focus_id,
-            "diff_bbox": res["bbox"]
+            "status": "error",
+            "error": str(e),
+            "traceback": tb
         }
+
+
+def get_metrics() -> Dict[str, int]:
+    """Return a copy of the current simple metrics."""
+    return dict(METRICS)
+
+def _auto_detect_frontmost(window_title: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    frontmost = get_frontmost_app()
+    if frontmost.get("status") == "success":
+        app_name = frontmost.get("app_name")
+        if not window_title:
+            window_title = frontmost.get("window_title")
+        return app_name, window_title
+    return None, window_title
+
+def _activate_app_safely(app_name: str):
+    script = f'tell application "{app_name}" to activate'
+    subprocess.run(["osascript", "-e", script], capture_output=True, timeout=2)
+    time.sleep(0.5)
+
+def _build_focus_id(app_name: Optional[str], window_title: Optional[str]) -> str:
+    if not app_name:
+        return "FULL"
+    fid = f"APP_{app_name}"
+    return fid + f"_{window_title}" if window_title else fid
+
+def _capture_with_mss(region: Optional[Dict[str, int]]) -> Tuple[Optional[Image.Image], Optional[str]]:
+    try:
+        with mss.mss() as sct:
+            monitor = sct.monitors[0]
+            for _ in range(2):
+                try:
+                    sct_img = sct.grab(region or monitor)
+                    img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
+                    return img, None
+                except Exception as e:
+                    last_err = str(e)
+                    time.sleep(0.2)
+            return None, last_err
     except Exception as e:
-        return {"tool": "take_screenshot", "status": "error", "error": str(e)}
+        tb = traceback.format_exc()
+        logger.exception("mss capture failed")
+        return None, f"{str(e)}\n{tb}"
+
+def _capture_with_fallback(app_name, window_title, mss_error, manager, focus_id):
+    try:
+        fd, tmp_path = tempfile.mkstemp(suffix=".png")
+        os.close(fd)
+        cmd = ["screencapture", "-x"]
+        region = _get_app_geometry(app_name, window_title) if app_name else None
+        if region:
+            cmd += ["-R", f"{region['left']},{region['top']},{region['width']},{region['height']}"]
+        cmd.append(tmp_path)
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        if result.returncode != 0:
+            return _handle_screencapture_error(result.stderr, mss_error)
+            
+        if not os.path.exists(tmp_path):
+            return {"tool": "take_screenshot", "status": "error", "error": "screencapture failed to create file"}
+
+        try:
+            img = Image.open(tmp_path)
+            res = manager.process_screenshot(img, focus_id)
+            return _build_success_response("take_screenshot", res, focus_id)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+    except Exception as e:
+        tb = traceback.format_exc()
+        logger.exception("screencapture fallback failed")
+        return {"tool": "take_screenshot", "status": "error", "error": str(e), "traceback": tb}
+
+def _handle_screencapture_error(stderr: str, mss_error: Optional[str]) -> Dict[str, Any]:
+    err = (stderr or "").strip()
+    low = err.lower()
+    if "screen recording" in low or "not permitted" in low:
+        return {
+            "tool": "take_screenshot",
+            "status": "error",
+            "error": err or "Screen recording permission required",
+            "error_type": "permission_required",
+            "permission": "screen_recording",
+            "settings_url": "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+            "hint": "Grant Screen Recording permission to Terminal/VS Code"
+        }
+    return {"tool": "take_screenshot", "status": "error", "error": err or (mss_error or "Unknown capture error")}
+
+def _build_success_response(tool: str, res: Dict[str, Any], focus_id: str) -> Dict[str, Any]:
+    return {
+        "tool": tool,
+        "status": "success",
+        "path": res["path"],
+        "mode": res["mode"],
+        "focus": focus_id,
+        "diff_bbox": res["bbox"]
+    }
+
 
 def _get_app_geometry(app_name: str, window_title: Optional[str] = None) -> Optional[Dict[str, int]]:
     # If window_title provided, filter by it. otherwise get window 1.

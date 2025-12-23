@@ -19,7 +19,7 @@ import time
 from collections import Counter
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from system_cli.state import state, MenuLevel
+from tui.state import state, MenuLevel
 from tui.cli_paths import SYSTEM_CLI_DIR, SCRIPT_DIR
 
 
