@@ -72,7 +72,13 @@ graph TD
 
 - Token Budget з динамічним керуванням
 - Priority Weighting для недавніх кроків
+- Priority Weighting для недавніх кроків
 - ContextMetrics для відстеження використання
+
+### MCP Prompt Engine (Dynamic Context)
+- **Active Retrieval**: Динамічний пошук релевантних промптів та схем для поточного завдання.
+- **Large-Scale Knowledge**: Індексація тисяч промптів з GitHub (Fabric, LangGPT).
+- **Context Injection**: Автоматичне збагачення контексту перед виконанням дій.
 
 ---
 
@@ -87,6 +93,8 @@ graph TD
 ### Зовнішні MCP Сервери
 - **Playwright MCP**: Контроль браузера (headless/headful)
 - **PyAutoGUI MCP**: Альтернативна емуляція вводу
+- **AppleScript MCP**: UI автоматизація macOS
+- **Anthropic MCP**: Генерація тексту та коду (Client-Side)
 - **Context7 MCP**: Документація бібліотек
 - **SonarQube MCP**: Quality gate та аналіз коду
 
@@ -199,5 +207,5 @@ chmod +x setup.sh
 
 ---
 
-*Останнє оновлення: 22 грудня 2025 р. (Trinity 2.1)*
+*Останнє оновлення: 23 грудня 2025 р. (Trinity 2.1 + MCP Engine)*
 *Детальна документація: [docs/atlas.md](docs/atlas.md)*

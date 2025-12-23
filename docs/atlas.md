@@ -97,6 +97,12 @@ memory.consolidate_to_semantic()  # Promote knowledge
 ### 3.4 Parallel Tool Executor (`core/parallel_executor.py`) - Subsystem
 Двигун для паралельного виконання незалежних кроків. Використовується для RAG-запитів та пакетних операцій.
 
+### 3.5 MCP Prompt Engine (`mcp_integration/prompt_engine.py`)
+Динамічний рушій контексту, що працює на базі ChromaDB:
+- **Large-Scale Ingestion**: Підтримка рекурсивної індексації репозиторіїв (Fabric, LangGPT).
+- **Active Retrieval**: Пошук "найкращих практик" та "експертних промптів" перед виконанням.
+- **Automatic Injection**: Прозоре додавання інструкцій до контексту агента (Tetyana/Atlas).
+
 ---
 
 ## 4. Vision Pipeline (Enhanced)
@@ -150,6 +156,8 @@ context_manager.update_context(result)
 ### External MCP Servers
 - **Playwright MCP**: Повний контроль браузера (headless/headful)
 - **PyAutoGUI MCP**: Альтернативна емуляція вводу
+- **AppleScript MCP**: Low-level UI automation for macOS
+- **Anthropic MCP**: Complex text/code generation delegator
 - **Context7 MCP**: Доступ до документації бібліотек
 - **SonarQube MCP**: Quality gate та аналіз коду
 
@@ -276,4 +284,4 @@ StateInitLogger().log_initial_state("Завдання", state_dict)
 
 ---
 
-*Останнє оновлення: 22 грудня 2025 р. - Trinity Improvements v1.1*
+*Останнє оновлення: 23 грудня 2025 р. - Trinity Improved + MCP Engine*

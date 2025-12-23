@@ -30,7 +30,23 @@ PROMPT_SOURCES = [
     {
         "name": "fabric_patterns",
         "url": "https://api.github.com/repos/danielmiessler/fabric/contents/patterns",
-        "type": "github_dir"
+        "type": "github_dir",
+        "recursive": True,
+        "target_file": "system.md"
+    },
+    {
+        "name": "langgpt_llms",
+        "url": "https://api.github.com/repos/langgptai/awesome-system-prompts/contents/LLMs",
+        "type": "github_dir",
+        "recursive": True,
+        "target_extension": ".md"
+    },
+    {
+        "name": "big_prompt_library_sys",
+        "url": "https://api.github.com/repos/0xeb/TheBigPromptLibrary/contents/SystemPrompts",
+        "type": "github_dir",
+        "recursive": True,
+        "target_extension": ".md"
     }
 ]
 
@@ -153,6 +169,108 @@ SERVER_DATA = {
                 }
             }
         ]
+    },
+    "applescript": {
+        "prompts": [
+            "Use AppleScript for macOS UI automation when specific low-level control is needed for an application.",
+            "Always handle potential permissions blocks (System Events) by checking permissions first if possible.",
+            "When clicking UI elements with AppleScript, use `click menu item` pattern for menu bar interactions.",
+            "Prefer `run_applescript` for executing raw scripts over shell invocation of `osascript`."
+        ],
+        "schemas": [
+            {
+                "name": "run_applescript",
+                "description": "Execute AppleScript code",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"script": {"type": "string"}},
+                    "required": ["script"]
+                }
+            }
+        ]
+    },
+    "anthropic": {
+        "prompts": [
+            "Use Anthropic tools for generating creative text, code snippets, or analyzing complex documents.",
+            "For sub-tasks requiring reasoning (e.g., 'summarize this text'), use `generate_text` directly instead of asking the main agent to do it internally.",
+            "When generating code, use `generate_code` to ensure proper markdown formatting and language specification."
+        ],
+        "schemas": [
+            {
+                "name": "generate_text",
+                "description": "Generate text using Claude",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"prompt": {"type": "string"}},
+                    "required": ["prompt"]
+                }
+            },
+            {
+                "name": "generate_code",
+                "description": "Generate code using Claude",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"prompt": {"type": "string"}, "language": {"type": "string"}},
+                    "required": ["prompt"]
+                }
+            }
+        ]
+    },
+    "sonarqube": {
+        "prompts": [
+            "Use SonarQube tools to check project health or finding specific code issues.",
+            "To check overall quality, use `get_project_status` and look for the 'quality_gate' status.",
+            "To find specific bugs or vulnerabilities, use `get_issues` with filters for severity or type.",
+            "If analyzing legacy code, prioritize 'blocker' and 'critical' issues first."
+        ],
+        "schemas": [
+            {
+                "name": "get_project_status",
+                "description": "Get quality gate status",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"project_key": {"type": "string"}},
+                    "required": ["project_key"]
+                }
+            },
+            {
+                "name": "get_issues",
+                "description": "Search for code issues",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"project_key": {"type": "string"}, "severity": {"type": "string"}},
+                    "required": ["project_key"]
+                }
+            }
+        ]
+    },
+    "context7": {
+        "prompts": [
+            "Context7 provides library documentation. Use it when you need to understand how to use a specific package.",
+            "First, use `resolve_library_id` to find the canonical ID for a library (e.g., 'react' -> '/npm/react').",
+            "Once you have an ID, use `get_library_docs` to fetch the actual API reference or guide.",
+            "Do NOT guess library IDs; always resolve them first."
+        ],
+        "schemas": [
+            {
+                "name": "resolve_library_id",
+                "description": "Find library ID",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"query": {"type": "string"}},
+                    "required": ["query"]
+                }
+            },
+            {
+                "name": "get_library_docs",
+                "description": "Get documentation",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {"library_id": {"type": "string"}},
+                    "required": ["library_id"]
+                }
+            }
+        ]
     }
 }
 
@@ -209,52 +327,6 @@ def setup_chroma():
         logger.error(f"❌ Chroma Setup Failed: {e}")
         return None, None
 
-def ingest_github_dir_prompts(source: Dict, collection):
-    """Ingest prompts from a GitHub directory (like Fabric)."""
-    logger.info(f"📥 Ingesting from {source['name']}...")
-    try:
-        # 1. List directory files
-        resp = requests.get(source['url'])
-        if resp.status_code != 200:
-            logger.error(f"Failed to fetch {source['url']}")
-            return
-            
-        items = resp.json()
-        documents = []
-        metadatas = []
-        ids = []
-        
-        for item in items:
-            if item['type'] == 'dir':
-                # Deep dive for system.md
-                pattern_name = item['name']
-                sys_url = f"{item['url']}/system.md".replace("api.github.com/repos", "raw.githubusercontent.com").replace("/contents/", "/")
-                # Fix raw url construction for reliability (basic attempt)
-                # Fabric specific: patterns/PATTERN_NAME/system.md
-                raw_url = f"https://raw.githubusercontent.com/danielmiessler/fabric/main/patterns/{pattern_name}/system.md"
-                
-                try:
-                    p_resp = requests.get(raw_url)
-                    if p_resp.status_code == 200:
-                        content = p_resp.text
-                        documents.append(content)
-                        metadatas.append({"source": source['name'], "pattern": pattern_name, "type": "system_prompt"})
-                        ids.append(f"fabric_{pattern_name}")
-                        logger.info(f"   - Loaded {pattern_name}")
-                except Exception as ex:
-                    logger.warning(f"   Skipped {pattern_name}: {ex}")
-
-        if documents:
-            collection.upsert(
-                documents=documents,
-                metadatas=metadatas,
-                ids=ids
-            )
-            logger.info(f"✅ Upserted {len(documents)} prompts from {source['name']}")
-            
-    except Exception as e:
-        logger.error(f"Error ingesting {source['name']}: {e}")
-
 def ingest_samples(collection):
     """Ingest sample prompts for verification."""
     logger.info("🧪 Ingesting sample prompts...")
@@ -309,6 +381,72 @@ def ingest_manual_server_data(prompts_col, schemas_col):
             
             schemas_col.upsert(documents=docs, metadatas=metas, ids=ids)
             logger.info(f"   - Ingested {len(docs)} schemas for {server}")
+
+def ingest_github_dir_prompts(source: Dict, collection):
+    """Ingest prompts from a GitHub directory (recursive support)."""
+    logger.info(f"📥 Ingesting from {source['name']} ({source['url']})...")
+    
+    def process_directory(url: str, depth=0):
+        if depth > 3: return # Safety limit
+        
+        try:
+            resp = requests.get(url)
+            if resp.status_code != 200:
+                logger.warning(f"Failed to fetch {url}: {resp.status_code}")
+                return
+                
+            items = resp.json()
+            if not isinstance(items, list): return
+
+            documents = []
+            metadatas = []
+            ids = []
+
+            for item in items:
+                if item['type'] == 'dir' and source.get('recursive'):
+                    # Recurse
+                    process_directory(item['url'], depth + 1)
+                
+                elif item['type'] == 'file':
+                    # Check if this is a target file
+                    is_target = False
+                    if 'target_file' in source and item['name'] == source['target_file']:
+                        is_target = True
+                    elif 'target_extension' in source and item['name'].endswith(source['target_extension']):
+                        is_target = True
+                        
+                    if is_target:
+                        # Construct raw URL
+                        raw_url = item['download_url']
+                        try:
+                            p_resp = requests.get(raw_url)
+                            if p_resp.status_code == 200:
+                                content = p_resp.text
+                                if len(content) > 50: # valid content check
+                                    name = item['path'].replace('/', '_').replace('.', '_')
+                                    score_val = 1.0 # Base score for high quality repos
+                                    
+                                    documents.append(content)
+                                    metadatas.append({
+                                        "source": source['name'], 
+                                        "path": item['path'], 
+                                        "type": "system_prompt",
+                                        "reputation_score": score_val
+                                    })
+                                    ids.append(f"{source['name']}_{name}")
+                                    logger.info(f"   - Loaded {item['path']}")
+                        except Exception as ex:
+                            logger.warning(f"   Skipped {item['name']}: {ex}")
+
+            if documents:
+                collection.upsert(documents=documents, metadatas=metadatas, ids=ids)
+                logger.info(f"✅ Upserted {len(documents)} prompts from {url}")
+
+        except Exception as e:
+            logger.error(f"Error processing dir {url}: {e}")
+
+    # Start processing
+    process_directory(source['url'])
 
 def main():
     parser = argparse.ArgumentParser(description="Ingest MCP Data")
